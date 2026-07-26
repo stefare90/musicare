@@ -14,7 +14,7 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 
 ## 🔌 Phase 2: Host SDK Services (`lib/features/plugins/data/host_services/`)
 *   [x] Implement `HostNetworkService` (using `package:http` with a 1-second rate-limiting delay)
-*   [ ] Implement `HostStorageService` (using `shared_preferences` with a safe prefix/namespace)
+*   [X] Implement `HostStorageService` (using `shared_preferences` with a safe prefix/namespace)
 *   [ ] Implement `HostUiService` (using native Flutter dialogs/bottom sheets to capture plugin form inputs)
 
 ## ⚙️ Phase 3: Dependency Injection & Routing (`lib/core/`)
