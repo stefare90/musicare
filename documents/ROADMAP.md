@@ -18,8 +18,8 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 *   [x] Implement `PluginUiService` (using native Flutter dynamic dialogs injected with `GlobalKey<NavigatorState>` and widget integration tests)
 
 ## ⚙️ Phase 3: Dependency Injection & Routing (`lib/core/`)
-*   [ ] Configure `GoRouter` with `StatefulShellRoute` in `app_router.dart` exposing `rootNavigatorKey` for persistent player navigation
-*   [ ] Configure GetIt in `injection.dart` to register host services (`INetworkService`, `IStorageService`, `IUIService`) as singletons
+*   [x] Configure `GoRouter` with `StatefulShellRoute` in `app_router.dart` exposing `rootNavigatorKey` for persistent player navigation
+*   [x] Configure GetIt in `injection.dart` to register host services (`INetworkService`, `IStorageService`, `IUIService`) as singletons
 
 ## 🧠 Phase 4: The Plugin Manager (`lib/features/plugin/data/`)
 *   [ ] Implement `PluginManager` to load `plugin.evc`, register the SDK bridge, and execute the plugin entry point
