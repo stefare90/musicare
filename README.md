@@ -115,3 +115,6 @@ lib/
     └── home/                       # Temporary presentation module (Proof of Concept)
         └── presentation/           # Home screen presentation and home Cubit
 ```
+## 🗺️ Project Roadmap
+
+To track our progressive implementation status and see what features are currently completed, in progress, or planned, please refer to our interactive [Roadmap](documents/ROADMAP.md).
