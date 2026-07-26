@@ -13,12 +13,12 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 *   [ ] Configure the native localization generator and create basic `.arb` files
 
 ## 🔌 Phase 2: Host SDK Services (`lib/features/plugins/data/host_services/`)
-*   [x] Implement `HostNetworkService` (using `package:http` with a 1-second rate-limiting delay)
-*   [X] Implement `HostStorageService` (using `shared_preferences` with a safe prefix/namespace)
-*   [ ] Implement `HostUiService` (using native Flutter dialogs/bottom sheets to capture plugin form inputs)
+*   [x] Implement `PluginNetworkService` (using `package:http` with a 1-second rate-limiting delay)
+*   [x] Implement `PluginStorageService` (using `shared_preferences` with a safe prefix/namespace)
+*   [x] Implement `PluginUiService` (using native Flutter dialogs/bottom sheets to capture plugin form inputs)
 
 ## ⚙️ Phase 3: Dependency Injection & Routing (`lib/core/`)
-*   [ ] Configure GetIt in `injection.dart` to register host services as singletons
+*   [ ] Configure GetIt in `injection.dart` to register plugin services as singletons
 *   [ ] Configure `GoRouter` with `StatefulShellRoute` in `app_router.dart` for persistent navigation
 
 ## 🧠 Phase 4: The Plugin Manager (`lib/features/plugins/data/`)
