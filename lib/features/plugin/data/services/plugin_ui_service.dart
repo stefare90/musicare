@@ -51,6 +51,7 @@ class DynamicPluginFormDialog extends StatefulWidget {
   final String cancelLabel;
 
   const DynamicPluginFormDialog({
+    super.key,
     required this.title,
     this.message,
     required this.fields,
