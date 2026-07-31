@@ -1,18 +1,34 @@
-/// Exception thrown when accessing an unloaded plugin
-class PluginNotLoadedException implements Exception {
-  final String message;
-  PluginNotLoadedException([
-    this.message = 'No active metadata plugin loaded.',
-  ]);
+abstract class PluginException implements Exception {}
 
-  @override
-  String toString() => 'PluginNotLoadedException: $message';
+class PluginNotLoadedException extends PluginException {}
+
+class PluginFileNotFoundException extends PluginException {
+  final String pluginId;
+  PluginFileNotFoundException(this.pluginId);
 }
 
-class PluginExecutionException implements Exception {
-  final String message;
-  PluginExecutionException(this.message);
+class InvalidPluginArchiveException extends PluginException {}
 
-  @override
-  String toString() => 'PluginExecutionException: $message';
+class IncompatibleSdkVersionException extends PluginException {
+  final String pluginVersion;
+  final String hostVersion;
+
+  IncompatibleSdkVersionException({
+    required this.pluginVersion,
+    required this.hostVersion,
+  });
 }
+
+class PluginEntryPointNullException extends PluginException {}
+
+class PluginDownloadException extends PluginException {
+  final String? url;
+  PluginDownloadException([this.url]);
+}
+
+class PluginSearchException extends PluginException {
+  final int? statusCode;
+  PluginSearchException([this.statusCode]);
+}
+
+class NavigationContextUnavailableException extends PluginException {}

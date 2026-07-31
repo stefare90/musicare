@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/features/plugin/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/presentation/cubit/plugin_cubit.dart';
 import 'package:music_are/features/plugin/presentation/cubit/plugin_discovery_cubit.dart';
@@ -23,17 +24,17 @@ class _PluginSelectionPageState extends State<PluginSelectionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('MusicAre Setup'), centerTitle: true),
+      appBar: AppBar(title: Text(context.l10n.setupTitle), centerTitle: true),
       body: BlocBuilder<PluginCubit, PluginState>(
         builder: (context, pluginState) {
           if (pluginState is PluginLoadingState) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
-                  Text('Installing and initializing plugin...'),
+                  Text(context.l10n.installingPlugin),
                 ],
               ),
             );
@@ -45,19 +46,19 @@ class _PluginSelectionPageState extends State<PluginSelectionPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Welcome to MusicAre',
+                  context.l10n.welcomeTitle,
                   style: Theme.of(context).textTheme.headlineMedium,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Select a music metadata provider to get started',
+                  context.l10n.selectProviderSubtitle,
                   style: Theme.of(context).textTheme.bodyMedium,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'Community Plugins (GitHub)',
+                  context.l10n.communityPluginsHeader,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 12),
@@ -78,7 +79,9 @@ class _PluginSelectionPageState extends State<PluginSelectionPage> {
                           child: Column(
                             children: [
                               Text(
-                                'Failed to fetch online plugins: ${discoveryState.message}',
+                                context.l10n.failedToFetchPlugins(
+                                  discoveryState.message,
+                                ),
                                 style: TextStyle(
                                   color: Theme.of(
                                     context,
@@ -93,7 +96,7 @@ class _PluginSelectionPageState extends State<PluginSelectionPage> {
                                       .fetchCommunityPlugins();
                                 },
                                 icon: const Icon(Icons.refresh),
-                                label: const Text('Retry'),
+                                label: Text(context.l10n.retry),
                               ),
                             ],
                           ),
@@ -103,11 +106,11 @@ class _PluginSelectionPageState extends State<PluginSelectionPage> {
 
                     if (discoveryState is PluginDiscoveryLoadedState) {
                       if (discoveryState.plugins.isEmpty) {
-                        return const Card(
+                        return Card(
                           child: Padding(
                             padding: EdgeInsets.all(16.0),
                             child: Text(
-                              'No plugins found on GitHub tagged with "musicare-plugin".',
+                              context.l10n.noPluginsFound,
                               textAlign: TextAlign.center,
                             ),
                           ),
@@ -177,7 +180,7 @@ class _PluginManifestCard extends StatelessWidget {
                   context.read<PluginCubit>().installDiscoveredPlugin(manifest);
                 },
                 icon: const Icon(Icons.download),
-                label: const Text('Install & Activate'),
+                label: Text(context.l10n.installAndActivate),
               ),
             ),
           ],

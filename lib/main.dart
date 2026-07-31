@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_are/core/di/injection.dart';
+import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/router/app_router.dart';
-import 'package:music_are/features/plugin/data/services/plugin_discovery_service.dart';
 import 'package:music_are/features/plugin/presentation/cubit/plugin_cubit.dart';
 import 'package:music_are/features/plugin/presentation/cubit/plugin_discovery_cubit.dart';
 import 'package:music_are/features/plugin/presentation/cubit/plugin_state.dart';
@@ -36,13 +36,14 @@ class MusicAreApp extends StatelessWidget {
       providers: [
         BlocProvider<PluginCubit>.value(value: pluginCubit),
         BlocProvider<PluginDiscoveryCubit>(
-          create: (context) =>
-              PluginDiscoveryCubit(sl<PluginDiscoveryService>()),
+          create: (context) => PluginDiscoveryCubit(sl()),
         ),
       ],
       child: MaterialApp.router(
         title: 'MusicAre',
         debugShowCheckedModeBanner: false,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(

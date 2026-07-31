@@ -23,7 +23,7 @@ class PluginEngine {
 
   IMetadataPlugin get metadata {
     if (_metadataPlugin == null) {
-      throw PluginNotLoadedException('No active metadata plugin loaded.');
+      throw PluginNotLoadedException();
     }
     return _metadataPlugin!;
   }
@@ -43,62 +43,48 @@ class PluginEngine {
   }
 
   Future<void> loadFromDisk(String pluginId) async {
-    try {
-      final appDir = await getApplicationSupportDirectory();
-      final jsonFile = File(
-        p.join(appDir.path, 'plugins', pluginId, 'plugin.json'),
-      );
-      final evcFile = File(
-        p.join(appDir.path, 'plugins', pluginId, 'plugin.evc'),
-      );
+    final appDir = await getApplicationSupportDirectory();
+    final jsonFile = File(
+      p.join(appDir.path, 'plugins', pluginId, 'plugin.json'),
+    );
+    final evcFile = File(
+      p.join(appDir.path, 'plugins', pluginId, 'plugin.evc'),
+    );
 
-      if (!jsonFile.existsSync() || !evcFile.existsSync()) {
-        throw PluginExecutionException(
-          'Plugin "$pluginId" files not found on local disk.',
-        );
-      }
-
-      final jsonContent = jsonFile.readAsStringSync();
-      final evcBytes = evcFile.readAsBytesSync();
-
-      await _initializeRuntime(jsonContent, evcBytes);
-    } catch (e) {
-      throw PluginExecutionException('Failed to load plugin from disk: $e');
+    if (!jsonFile.existsSync() || !evcFile.existsSync()) {
+      throw PluginFileNotFoundException(pluginId);
     }
+
+    final jsonContent = jsonFile.readAsStringSync();
+    final evcBytes = evcFile.readAsBytesSync();
+
+    await _initializeRuntime(jsonContent, evcBytes);
   }
 
   Future<void> loadFromZipBytes(Uint8List zipBytes) async {
-    try {
-      final archive = ZipDecoder().decodeBytes(zipBytes);
+    final archive = ZipDecoder().decodeBytes(zipBytes);
 
-      String? jsonContent;
-      Uint8List? evcBytes;
+    String? jsonContent;
+    Uint8List? evcBytes;
 
-      for (final file in archive) {
-        if (file.name == 'plugin.json') {
-          jsonContent = utf8.decode(file.content as List<int>);
-        } else if (file.name == 'plugin.evc') {
-          evcBytes = Uint8List.fromList(file.content as List<int>);
-        }
+    for (final file in archive) {
+      if (file.name == 'plugin.json') {
+        jsonContent = utf8.decode(file.content as List<int>);
+      } else if (file.name == 'plugin.evc') {
+        evcBytes = Uint8List.fromList(file.content as List<int>);
       }
-
-      if (jsonContent == null || evcBytes == null) {
-        throw PluginExecutionException(
-          'Invalid plugin archive: missing plugin.json or plugin.evc.',
-        );
-      }
-
-      final manifestMap = jsonDecode(jsonContent) as Map<String, dynamic>;
-      final manifest = PluginManifest.fromJson(manifestMap);
-
-      await _saveToDisk(manifest.id, jsonContent, evcBytes);
-
-      await _initializeRuntime(jsonContent, evcBytes);
-    } catch (e) {
-      throw PluginExecutionException(
-        'Failed to load plugin from zip bytes: $e',
-      );
     }
+
+    if (jsonContent == null || evcBytes == null) {
+      throw InvalidPluginArchiveException();
+    }
+
+    final manifestMap = jsonDecode(jsonContent) as Map<String, dynamic>;
+    final manifest = PluginManifest.fromJson(manifestMap);
+
+    await _saveToDisk(manifest.id, jsonContent, evcBytes);
+
+    await _initializeRuntime(jsonContent, evcBytes);
   }
 
   Future<void> _initializeRuntime(
@@ -114,9 +100,9 @@ class PluginEngine {
     final sdkConstraint = VersionConstraint.compatibleWith(pluginVersion);
 
     if (!sdkConstraint.allows(hostVersion)) {
-      throw PluginExecutionException(
-        'Incompatible plugin SDK version "${manifest.pluginSdkVersion}". '
-        'Host SDK "$hostVersion" does not satisfy requirement "$sdkConstraint".',
+      throw IncompatibleSdkVersionException(
+        pluginVersion: manifest.pluginSdkVersion,
+        hostVersion: HostEnv.sdkVersion,
       );
     }
 
@@ -137,7 +123,7 @@ class PluginEngine {
     );
 
     if (result == null) {
-      throw PluginExecutionException('Plugin entry point returned null.');
+      throw PluginEntryPointNullException();
     }
 
     _metadataPlugin = (result as $Value).$value as IMetadataPlugin;

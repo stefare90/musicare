@@ -1,0 +1,23 @@
+{
+    "@@locale": "en",
+    "appTitle": "MusicAre",
+    "setupTitle": "MusicAre Setup",
+    "welcomeTitle": "Welcome to MusicAre",
+    "selectProviderSubtitle": "Select a music metadata provider to get started",
+    "communityPluginsHeader": "Community Plugins (GitHub)",
+    "installAndActivate": "Install & Activate",
+    "installingPlugin": "Installing and initializing plugin...",
+    "noPluginsFound": "No plugins found on GitHub tagged with \"musicare-plugin\".",
+    "retry": "Retry",
+    "failedToFetchPlugins": "Failed to fetch online plugins: {error}",
+    "@failedToFetchPlugins": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "homeTab": "Home",
+    "searchTab": "Search",
+    "libraryTab": "Library"
+}

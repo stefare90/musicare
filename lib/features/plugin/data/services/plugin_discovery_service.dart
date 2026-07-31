@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:music_are/core/services/network_service.dart';
+import 'package:music_are/features/plugin/data/exceptions/plugin_engine_exceptions.dart';
 import 'package:music_are/features/plugin/data/models/plugin_manifest.dart';
 
 class PluginDiscoveryService {
@@ -21,9 +22,7 @@ class PluginDiscoveryService {
     final response = await _networkService.get(Uri.parse(githubSearchUrl));
 
     if (response.statusCode != 200) {
-      throw Exception(
-        'Failed to search GitHub plugins: ${response.statusCode}',
-      );
+      throw PluginSearchException(response.statusCode);
     }
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -58,34 +57,26 @@ class PluginDiscoveryService {
           }
 
           if (zipDownloadUrl != null) {
-            final zipResponse = await _networkService.get(
-              Uri.parse(zipDownloadUrl),
-            );
-            if (zipResponse.statusCode == 200) {
-              final zipBytes = zipResponse.bodyBytes;
+            final zipBytes = await downloadPluginZip(zipDownloadUrl);
 
-              final archive = ZipDecoder().decodeBytes(zipBytes);
-              String? jsonContent;
+            final archive = ZipDecoder().decodeBytes(zipBytes);
+            String? jsonContent;
 
-              for (final file in archive) {
-                if (file.name == 'plugin.json') {
-                  jsonContent = utf8.decode(file.content as List<int>);
-                  break;
-                }
+            for (final file in archive) {
+              if (file.name == 'plugin.json') {
+                jsonContent = utf8.decode(file.content as List<int>);
+                break;
               }
+            }
 
-              if (jsonContent != null) {
-                final manifestMap =
-                    jsonDecode(jsonContent) as Map<String, dynamic>;
-                final manifest = PluginManifest.fromJson(manifestMap);
+            if (jsonContent != null) {
+              final manifestMap =
+                  jsonDecode(jsonContent) as Map<String, dynamic>;
+              final manifest = PluginManifest.fromJson(manifestMap);
 
-                _cachedPluginZips[_buildCacheKey(
-                      manifest.id,
-                      manifest.version,
-                    )] =
-                    zipBytes;
-                manifests.add(manifest);
-              }
+              _cachedPluginZips[_buildCacheKey(manifest.id, manifest.version)] =
+                  zipBytes;
+              manifests.add(manifest);
             }
           }
         }
@@ -95,6 +86,14 @@ class PluginDiscoveryService {
     }
 
     return manifests;
+  }
+
+  Future<Uint8List> downloadPluginZip(String downloadUrl) async {
+    final response = await _networkService.get(Uri.parse(downloadUrl));
+    if (response.statusCode != 200) {
+      throw PluginDownloadException(downloadUrl);
+    }
+    return response.bodyBytes;
   }
 
   Uint8List? getZipBytesForPlugin(PluginManifest manifest) {

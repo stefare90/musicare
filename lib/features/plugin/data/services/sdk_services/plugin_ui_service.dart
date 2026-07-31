@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gyawun_metadata_sdk/metadata/interfaces/iui_service.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/form_input_field.dart';
+import 'package:music_are/features/plugin/data/exceptions/plugin_engine_exceptions.dart';
 
 class PluginUiService implements IUIService {
   final GlobalKey<NavigatorState> _navigatorKey;
@@ -19,9 +20,7 @@ class PluginUiService implements IUIService {
   }) async {
     final context = _currentContext;
     if (context == null || !context.mounted) {
-      throw Exception(
-        "Navigation context is not available to display the plugin form.",
-      );
+      throw NavigationContextUnavailableException();
     }
 
     final result = await showDialog<Map<String, String>>(
@@ -42,7 +41,6 @@ class PluginUiService implements IUIService {
   }
 }
 
-/// Dynamic form dialog rendering SDK [FormInputField] definitions.
 class DynamicPluginFormDialog extends StatefulWidget {
   final String title;
   final String? message;
