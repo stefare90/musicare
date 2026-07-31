@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:music_are/features/plugin/data/services/plugin_storage_service.dart';
+import 'package:music_are/features/plugin/data/services/sdk_services/plugin_storage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

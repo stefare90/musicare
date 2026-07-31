@@ -22,11 +22,13 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 *   [x] Configure GetIt in `injection.dart` to register host services (`INetworkService`, `IStorageService`, `IUIService`) as singletons
 
 ## 🧠 Phase 4: The Plugin Manager (`lib/features/plugin/data/`)
-*   [ ] Implement `PluginManager` to load `plugin.evc`, register the SDK bridge, and execute the plugin entry point
+*   [x] Implement `PluginManager` to load `plugin.evc`, register the SDK bridge, and execute the plugin entry point
 
 ## 📊 Phase 5: State Management (`lib/features/plugin/presentation/cubit/`)
-*   [ ] Define the `PluginState` machine states (Initial, Loading, Loaded, Error)
-*   [ ] Implement `PluginCubit` to manage async loading states and communicate with the UI
+*   [x] Define the `PluginState` machine states (Initial, Loading, Loaded, Error)
+*   [X] Implement `PluginCubit` to manage async loading states and communicate with the UI
+*   [ ] Add UnitTests
+*   [ ] Update and Improve Readme 
 
 ## 🖥️ Phase 6: UI Integration & Verification (`lib/features/home/presentation/` & `main.dart`)
 *   [ ] Initialize DI, Cubits, and GoRouter in `main.dart`

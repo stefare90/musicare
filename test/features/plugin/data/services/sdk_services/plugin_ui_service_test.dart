@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/form_input_field.dart';
-import 'package:music_are/features/plugin/data/services/plugin_ui_service.dart';
+import 'package:music_are/features/plugin/data/services/sdk_services/plugin_ui_service.dart';
 
 void main() {
   group('PluginUiService Widget Integration Tests', () {

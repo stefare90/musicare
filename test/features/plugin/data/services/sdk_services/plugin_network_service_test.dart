@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/plugin_request.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/plugin_response.dart';
-import 'package:music_are/features/plugin/data/services/plugin_network_service.dart';
+import 'package:music_are/features/plugin/data/services/sdk_services/plugin_network_service.dart';
 
 void main() {
   group('PluginNetworkService Real API Tests', () {

@@ -1,30 +1,49 @@
-# 🎵 MusicAre
-> Music are the plugins. We are the player.
+**Hai ragionissima!** 
 
-`MusicAre` is an innovative music player designed to be completely extensible, flexible, and lightweight. The core idea is simple: the application manages the visual interface, playback controls, and the audio player (the Host), while the entire delivery of music (tracks, albums, artists, search, and playlists) is delegated to interchangeable dynamic external modules (the Plugins). 
+Il Router (`AppRouter`) fa parte dell'infrastruttura di **Navigazione ed Interfaccia Grafica (Presentation Layer)**, non è un servizio dati o di business del Service Locator. Inserirlo nella scatola dei "Servizi Globali" creava una sovrapposizione concettuale.
 
-This allows for new music sources to be added or existing ones to be updated instantly, without having to reinstall the application or wait for long release cycles on various app stores.
+Inoltre, rinominare quel layer semplicemente in **`SERVICES LAYER (IoC)`** rende il diagramma molto più preciso ed esatto.
 
 ---
 
-## 🎯 Purpose of the Application
+### 🛠️ Diagramma e `README.md` Corretti
 
-The primary purpose of `MusicAre` is to provide a universal music playback framework. The application itself is not tied to any specific streaming service; instead, it defines a "contract" (the SDK) that anyone can implement by writing their own plugin.
+Ecco il `README.md` con il diagramma architetturale corretto:
 
-The key strengths of this architecture are:
-1.  **Unified Forces**: The application does an excellent job of audio playback and native graphical user interface, while the plugins focus solely on retrieving data and music.
-2.  **Real-Time Updates**: Plugins are downloaded and interpreted by the app at runtime. If a music source changes its API, the plugin can be updated instantly on the server, and the application will continue to work without needing a full app update.
+1. **`AppRouter`** spostato in alto nel **Presentation Layer** (dove risiede la navigazione dichiarativa di `GoRouter`).
+2. **`SERVICES LAYER (IoC)`** contiene ora esclusivamente i **servizi reali** dell'app (`PluginEngine`, `PluginDiscoveryService`, `PreferencesService`, `NetworkService` e gli `SDK Adapters`).
+
+---
+
+`README.md`
+
+```markdown
+# 🎵 MusicAre
+> Music are the plugins. We are the player.
+
+`MusicAre` is an extensible, flexible, and lightweight music playback application. The core concept is straightforward: **the host application handles the visual user interface, navigation, and playback controls, while all music metadata (tracks, albums, artists, search, playlists) and audio sources are provided by dynamic external plugins.**
+
+Plugins are compiled into `.evc` bytecode, packaged as compressed archives, and interpreted dynamically at runtime using `dart_eval`.
+
+---
+
+## 🎯 Architectural Vision
+
+The application serves as a universal, service-agnostic playback framework:
+* **Separation of Responsibilities**: The host application focuses on native performance, UI, and audio playback, delegating content delivery to modular plugins.
+* **Decentralized Discovery**: The application discovers community plugins on GitHub, fetches release archives, and installs them locally.
+* **Extensible & Updatable**: Plugins reside in local storage and can be updated over the air without requiring a full application release.
 
 ---
 
 ## 🏗️ System Architecture
 
-The application adopts a decoupled, layered design organized by features (Feature-First). The following diagram illustrates the system's communication and control flows:
+MusicAre follows a decoupled, Feature-First Clean Architecture organized into well-defined layers:
 
-```
+```text
 ┌────────────────────────────────────────────────────────┐
 │                  PRESENTATION LAYER                    │
-│      (UI / Graphical Interface and Navigation)         │
+│           (UI Pages, Widgets, &  Navigation)           │
 └──────────────────────────┬─────────────────────────────┘
                            │
                            ▼
@@ -34,87 +53,72 @@ The application adopts a decoupled, layered design organized by features (Featur
 │ ┌──────────────────────┐      ┌──────────────────────┐ │
 │ │ LOCAL STATE MACHINES │      │GLOBAL STATE MACHINES │ │
 │ │ (Screen-Level Cubit) │ ◄────│ (Global Cubits, e.g. │ │
-│ │ (es. Browse, Search) │      │  Player, AuthState)  │ │
+│ │ (es. Home, Search)   │      │  PluginCubit, Player)│ │
 │ └──────────┬───────────┘      └──────────┬───────────┘ │
 └────────────┼─────────────────────────────┼─────────────┘
                      │                             │
                      ▼                             ▼
 ┌────────────────────────────────────────────────────────┐
-│                  GLOBAL SERVICES (IoC)                 │
+│                  SERVICES LAYER (IoC)                  │
 │                                                        │
-│  * AppRouter (Route configuration and control)         │
-│  * PluginManager (Plugin loader and interpreter)       │
-│  * HostNetworkService (Real network calls)             │
-│  * HostStorageService (Local data persistence)         │
-│  * HostUIService (Native Dialog generator)             │
+│  * PluginEngine (Bytecode VM manager & SemVer check)   │
+│  * PluginDiscoveryService (GitHub plugin search)       │
+│  * PreferencesService (Native host settings)           │
+│  * NetworkService (Native host HTTP client)            │
+│  * SDK Adapters (PluginNetwork, PluginStorage, UI)     │
 └──────────────────────────┬─────────────────────────────┘
                            │ (Contract Injection)
                            ▼
 ┌────────────────────────────────────────────────────────┐
 │                    PLUGIN EXECUTION                    │
 │            (Dynamic interpreter dart_eval)             │
-└────────────────────────────────────────────────────────┘
+└──────────────────────────┬─────────────────────────────┘
+                           │
+            ┌──────────────┴──────────────┐
+            ▼                             ▼
+  ┌──────────────────┐          ┌──────────────────┐
+  │ METADATA PLUGINS │          │AUDIO SOURCE PLUGS│
+  └──────────────────┘          └──────────────────┘
 ```
 
-### 1. Presentation Layer (UI & Navigation)
-*   **Simple Interface**: Graphical widgets exclusively observe the state emitted by their local state machine to draw themselves on screen.
-*   **Persistent Navigation**: Uses a declarative router to manage navigation tabs while keeping the bottom floating audio player bar persistent, active, and visible in memory during navigation between different tabs [1, 4].
+### Layer Responsibilities
 
-### 2. State Management Layer (State Machines)
-The application state is strictly divided into two categories to optimize RAM footprint and ensure maximum scalability [1]:
-*   **Local State Machines (Screen-Level Cubit)**: Each screen has its own dedicated Cubit (e.g., `BrowseCubit`, `PlaylistCubit`). They are instantiated when the page opens and automatically destroyed when it closes, querying Global Services to populate the UI [1].
-*   **Global State Machines (App-Level States)**: These are singleton Cubits that remain active for the entire lifetime of the application. They manage information that affects the whole app, such as `AudioPlayerCubit` (currently playing track and play/pause state) or `AuthCubit` (user session state) [1].
-
-### 3. Global Services (IoC)
-Global Services represent the infrastructural logic of the application. They are registered at startup in a centralized Service Locator (IoC GetIt) so that any module can request them without direct coupling [2, 5]. 
-
-To maximize encapsulation and maintain a clean separation of concerns, the concrete implementations of the contracts required by the plugins' SDK are housed directly within the `plugins` feature folder rather than polluting the shared `core` directories [1]. If the plugin subsystem is ever removed, deleting the `features/plugins` folder completely wipes all plugin-related code from the host:
-*   **`AppRouter`**: Centralizes the app's route map, deep links, and navigation bar with the persistent player [1, 4].
-*   **`PluginManager`**: The core of the system. It handles reading the plugins' bytecode, starting the dynamic interpreter, injecting real Host Services, and returning the ready-to-use plugin interface [2, 5].
-*   **`HostNetworkService`**: Implements the SDK's network interface. It translates plugin requests into real system HTTP calls, managing headers and User-Agent [3].
-*   **`HostStorageService`**: Implements the SDK's persistence interface. It allows the plugin to securely and asynchronously persist session tokens or local settings on disk [1].
-*   **`HostUIService`**: Implements the SDK's graphical interface. It translates plugin requests (e.g., a request to show a login form) into real native Flutter dialogs, waiting for user input and returning the entered data [1].
+1. **Presentation Layer (UI & Navigation)**: Composed of UI pages, reusable widgets, and `GoRouter` declarative navigation configurations (such as the persistent shell and mini-player).
+2. **State Management Layer (Cubits & Blocs)**:
+   * **Global Cubits**: App-level singletons managing cross-cutting state (e.g., active plugin lifecycle, global audio player state).
+   * **Local Cubits**: Screen-scoped state machines instantiated for specific pages and destroyed when navigating away.
+3. **Services Layer (IoC / Dependency Injection)**: Houses central application services registered in `GetIt`, including host storage, native network clients, GitHub discovery, and the dynamic `PluginEngine`.
+4. **Plugin Sandbox Layer**: Sandboxed execution environment running interpreted bytecode via `dart_eval` and communicating with the host through SDK bridge adapters.
 
 ---
 
-## 📁 Project Directory Tree (PoC & Scalable)
-
-The project tree follows a Feature-First philosophy, where each feature encapsulates its own logic and presentation, while infrastructural services reside in a centralized core folder:
+## 📁 Project Directory Structure
 
 ```text
 lib/
-├── core/                           # Shared core services, configurations, and utilities
-│   ├── di/                         # Service Locator (IoC) setup and registration
-│   │   └── injection.dart          # Centralized GetIt registrations
-│   │
-│   ├── l10n/                       # Translations and localization (.arb files and l10n.yaml)
-│   │   ├── app_en.arb              # English translation source
-│   │   └── app_it.arb              # Italian translation source
-│   │
-│   ├── router/                     # Declarative navigation system
-│   │   └── app_router.dart         # GoRouter setup with persistent navigation Shell
-│   │
-│   └── theme/                      # App design system, styles, and themes
-│       ├── app_colors.dart         # Global color palettes
-│       ├── app_typography.dart     # Typography styles and sizes
-│       └── app_theme.dart          # Light and dark Flutter theme configurations
+├── core/                           # Shared core infrastructure, routing, DI, and host services
+│   ├── di/                         # Service locator configuration (GetIt)
+│   ├── l10n/                       # Localization and translations (.arb)
+│   ├── router/                     # Navigation rules and router configuration (GoRouter)
+│   ├── services/                   # Native I/O host services (NetworkService, PreferencesService)
+│   └── theme/                      # Styling and design system
 │
-└── features/                       # Vertical modular feature slices
-    ├── plugins/                    # Dynamic plugin execution and management feature
-    │   ├── data/                   # Domain services and dynamic loader implementations
-    │   │   ├── host_services/      # Concrete host implementations of the SDK contracts
-    │   │   │   ├── host_network_service.dart
-    │   │   │   ├── host_storage_service.dart
-    │   │   │   └── host_ui_service.dart
-    │   │   │
-    │   │   └── plugin_manager.dart # Loads and runs raw .evc bytecode via dart_eval
+└── features/                       # Modular vertical feature slices (Feature-First)
+    ├── plugin/                     # Dynamic plugin subsystem (Exemplar feature layout)
+    │   ├── data/                   # Feature data layer
+    │   │   ├── exceptions/         # Feature-specific exception classes
+    │   │   ├── models/             # Data models and JSON entities
+    │   │   └── services/           # Data services, engines, and discovery
     │   │
-    │   └── presentation/           # Loading indicators and plugin management UI
-    │       └── cubit/              # State machine for the active plugin (Loading, Loaded, Error)
+    │   └── presentation/           # Feature presentation layer
+    │       ├── cubit/              # State management machines (Cubits & States)
+    │       └── pages/              # User interface pages and graphical screens
     │
-    └── home/                       # Temporary presentation module (Proof of Concept)
-        └── presentation/           # Home screen presentation and home Cubit
+    └── [other_features]/           # Domain features (e.g. shell, home, search, library)
 ```
+
+---
+
 ## 🗺️ Project Roadmap
 
-To track our progressive implementation status and see what features are currently completed, in progress, or planned, please refer to our interactive [Roadmap](documents/ROADMAP.md).
+To track progressive implementation milestones and upcoming tasks, please refer to the [Implementation Roadmap](documents/ROADMAP.md).
