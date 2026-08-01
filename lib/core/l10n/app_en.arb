@@ -1,6 +1,7 @@
 {
     "@@locale": "en",
     "appTitle": "MusicAre",
+    "appSlogan": "Music are the plugins. We are the player.",
     "setupTitle": "MusicAre Setup",
     "welcomeTitle": "Welcome to MusicAre",
     "selectProviderSubtitle": "Select a music metadata provider to get started",

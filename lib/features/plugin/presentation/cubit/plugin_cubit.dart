@@ -39,6 +39,7 @@ class PluginCubit extends Cubit<PluginState> {
   }
 
   Future<void> installDiscoveredPlugin(PluginManifest manifest) async {
+    emit(PluginLoadingState());
     final zipBytes = _discoveryService.getZipBytesForPlugin(manifest);
 
     if (zipBytes == null) {

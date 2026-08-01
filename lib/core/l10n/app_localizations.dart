@@ -100,6 +100,12 @@ abstract class AppLocalizations {
   /// **'MusicAre'**
   String get appTitle;
 
+  /// No description provided for @appSlogan.
+  ///
+  /// In en, this message translates to:
+  /// **'Music are the plugins. We are the player.'**
+  String get appSlogan;
+
   /// No description provided for @setupTitle.
   ///
   /// In en, this message translates to:

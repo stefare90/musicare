@@ -166,19 +166,19 @@ void main() {
     );
 
     test(
-      'loadFromZipBytes throws PluginExecutionException when SDK version is incompatible',
+      'loadFromZipBytes throws IncompatibleSdkVersionException when SDK version is incompatible',
       () async {
         final incompatibleZipBytes = createTestPluginZip(sdkVersion: '2.0.0');
 
         expect(
           () async => await engine.loadFromZipBytes(incompatibleZipBytes),
-          throwsA(isA<PluginExecutionException>()),
+          throwsA(isA<IncompatibleSdkVersionException>()),
         );
       },
     );
 
     test(
-      'loadFromZipBytes throws PluginExecutionException when zip is missing plugin.json',
+      'loadFromZipBytes throws InvalidPluginArchiveException when zip is missing plugin.json',
       () async {
         final invalidZipBytes = createTestPluginZip(
           sdkVersion: HostEnv.sdkVersion,
@@ -187,17 +187,17 @@ void main() {
 
         expect(
           () async => await engine.loadFromZipBytes(invalidZipBytes),
-          throwsA(isA<PluginExecutionException>()),
+          throwsA(isA<InvalidPluginArchiveException>()),
         );
       },
     );
 
     test(
-      'loadFromDisk throws PluginExecutionException when files do not exist on disk',
+      'loadFromDisk throws PluginFileNotFoundException when files do not exist on disk',
       () async {
         expect(
           () async => await engine.loadFromDisk('non_existent_plugin'),
-          throwsA(isA<PluginExecutionException>()),
+          throwsA(isA<PluginFileNotFoundException>()),
         );
       },
     );

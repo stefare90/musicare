@@ -22,6 +22,6 @@ abstract class AppColors {
   static const Color lightTextSecondary = Color(0xFF5F6368);
 
   // Status
-  static const Color error = Color(0xFFE91E63);
-  static const Color onError = Color(0xFFFFFFFF);
+  static const Color error = Color.fromARGB(255, 255, 113, 113);
+  static const Color onError = Color.fromARGB(255, 255, 255, 255);
 }

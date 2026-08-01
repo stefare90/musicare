@@ -5,7 +5,6 @@ import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/router/app_router.dart';
 import 'package:music_are/core/theme/app_theme.dart';
 import 'package:music_are/features/plugin/presentation/cubit/plugin_cubit.dart';
-import 'package:music_are/features/plugin/presentation/cubit/plugin_discovery_cubit.dart';
 import 'package:music_are/features/plugin/presentation/cubit/plugin_state.dart';
 
 void main() async {
@@ -14,7 +13,7 @@ void main() async {
   final pluginCubit = sl<PluginCubit>();
   await pluginCubit.initialize();
   final String initialLocation = pluginCubit.state is PluginNotConfiguredState
-      ? '/select-plugin'
+      ? '/welcome'
       : '/';
   runApp(
     MusicAreApp(pluginCubit: pluginCubit, initialLocation: initialLocation),
@@ -33,13 +32,8 @@ class MusicAreApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<PluginCubit>.value(value: pluginCubit),
-        BlocProvider<PluginDiscoveryCubit>(
-          create: (context) => PluginDiscoveryCubit(sl()),
-        ),
-      ],
+    return BlocProvider<PluginCubit>.value(
+      value: pluginCubit,
       child: MaterialApp.router(
         title: 'MusicAre',
         debugShowCheckedModeBanner: false,
@@ -48,7 +42,6 @@ class MusicAreApp extends StatelessWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.dark,
-
         routerConfig: createRouter(initialLocation: initialLocation),
       ),
     );

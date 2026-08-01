@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:music_are/features/home/presentation/pages/home_page.dart';
 import 'package:music_are/features/library/presentation/pages/library_page.dart';
-import 'package:music_are/features/plugin/presentation/pages/plugin_selection_page.dart';
+import 'package:music_are/features/onboarding/presentation/pages/welcome_page.dart';
 import 'package:music_are/features/search/presentation/pages/search_page.dart';
 import 'package:music_are/features/shell/presentation/pages/shell_page.dart';
 
@@ -14,8 +14,8 @@ GoRouter createRouter({required String initialLocation}) {
     initialLocation: initialLocation,
     routes: [
       GoRoute(
-        path: '/select-plugin',
-        builder: (context, state) => const PluginSelectionPage(),
+        path: '/welcome',
+        builder: (context, state) => const WelcomePage(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

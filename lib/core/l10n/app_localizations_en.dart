@@ -12,6 +12,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'MusicAre';
 
   @override
+  String get appSlogan => 'Music are the plugins. We are the player.';
+
+  @override
   String get setupTitle => 'MusicAre Setup';
 
   @override
