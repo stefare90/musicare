@@ -6,6 +6,7 @@ import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/core/widgets/dialogs.dart';
 import 'package:music_are/features/plugin/presentation/cubit/plugin_cubit.dart';
 import 'package:music_are/features/plugin/presentation/cubit/plugin_state.dart';
+import 'package:music_are/features/plugin/presentation/utils/exception_localizer.dart';
 import 'package:music_are/features/plugin/presentation/widgets/plugin_discovery_widget.dart';
 
 class WelcomePage extends StatelessWidget {
@@ -27,7 +28,10 @@ class WelcomePage extends StatelessWidget {
               context.go('/');
             } else if (state is PluginErrorState) {
               Dialogs.hide(context);
-              Dialogs.showErrorSnackBar(context, message: state.message);
+              Dialogs.showErrorSnackBar(
+                context,
+                message: state.error.toLocalizedString(context),
+              );
             }
           },
           child: SingleChildScrollView(

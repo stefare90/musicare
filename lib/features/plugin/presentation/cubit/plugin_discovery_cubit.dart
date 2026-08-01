@@ -16,7 +16,7 @@ class PluginDiscoveryCubit extends Cubit<PluginDiscoveryState> {
       final plugins = await _discoveryService.fetchCommunityPlugins();
       emit(PluginDiscoveryLoadedState(plugins));
     } catch (e) {
-      emit(PluginDiscoveryErrorState(e.toString()));
+      emit(PluginDiscoveryErrorState(e));
     }
   }
 

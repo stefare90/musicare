@@ -41,9 +41,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get retry => 'Retry';
 
   @override
-  String failedToFetchPlugins(String error) {
-    return 'Failed to fetch online plugins: $error';
-  }
+  String get confirm => 'Confirm';
+
+  @override
+  String get cancel => 'Cancel';
 
   @override
   String get homeTab => 'Home';
@@ -53,4 +54,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libraryTab => 'Library';
+
+  @override
+  String get persistentPlayerArea => 'Persistent Mini Player Area';
+
+  @override
+  String failedToFetchPlugins(String error) {
+    return 'Failed to fetch online plugins: $error';
+  }
+
+  @override
+  String get pluginErrorIncompatibleSdkVersion =>
+      'The plugin is incompatible with this version of MusicAre.';
+
+  @override
+  String get pluginErrorInvalidArchive =>
+      'The plugin archive is corrupt or missing required files.';
+
+  @override
+  String get pluginErrorNotFound =>
+      'Plugin files were not found on local disk.';
+
+  @override
+  String get pluginErrorNotLoaded => 'No active metadata plugin is loaded.';
+
+  @override
+  String get pluginErrorDownloadFailed => 'Failed to download the plugin file.';
+
+  @override
+  String get pluginErrorNetwork =>
+      'Network error occurred. Please check your connection.';
+
+  @override
+  String get pluginErrorTimeout => 'Connection timed out. Please try again.';
+
+  @override
+  String pluginErrorUnknown(String details) {
+    return 'An unexpected error occurred: $details';
+  }
 }

@@ -96,7 +96,12 @@ class PluginDiscoveryService {
     return response.bodyBytes;
   }
 
-  Uint8List? getZipBytesForPlugin(PluginManifest manifest) {
-    return _cachedPluginZips[_buildCacheKey(manifest.id, manifest.version)];
+  Uint8List getZipBytesForPlugin(PluginManifest manifest) {
+    final bytes =
+        _cachedPluginZips[_buildCacheKey(manifest.id, manifest.version)];
+    if (bytes == null) {
+      throw InvalidPluginArchiveException();
+    }
+    return bytes;
   }
 }

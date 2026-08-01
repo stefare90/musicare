@@ -26,6 +26,6 @@ class PluginLoadedState extends PluginState {
 }
 
 class PluginErrorState extends PluginState {
-  final String message;
-  PluginErrorState(this.message);
+  final Object error;
+  PluginErrorState(this.error);
 }

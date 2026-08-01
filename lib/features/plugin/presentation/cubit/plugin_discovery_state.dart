@@ -12,6 +12,6 @@ class PluginDiscoveryLoadedState extends PluginDiscoveryState {
 }
 
 class PluginDiscoveryErrorState extends PluginDiscoveryState {
-  final String message;
-  PluginDiscoveryErrorState(this.message);
+  final Object error;
+  PluginDiscoveryErrorState(this.error);
 }

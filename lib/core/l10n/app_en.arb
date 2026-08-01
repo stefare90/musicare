@@ -10,6 +10,12 @@
     "installingPlugin": "Installing and initializing plugin...",
     "noPluginsFound": "No plugins found on GitHub tagged with \"musicare-plugin\".",
     "retry": "Retry",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "homeTab": "Home",
+    "searchTab": "Search",
+    "libraryTab": "Library",
+    "persistentPlayerArea": "Persistent Mini Player Area",
     "failedToFetchPlugins": "Failed to fetch online plugins: {error}",
     "@failedToFetchPlugins": {
         "placeholders": {
@@ -18,7 +24,19 @@
             }
         }
     },
-    "homeTab": "Home",
-    "searchTab": "Search",
-    "libraryTab": "Library"
+    "pluginErrorIncompatibleSdkVersion": "The plugin is incompatible with this version of MusicAre.",
+    "pluginErrorInvalidArchive": "The plugin archive is corrupt or missing required files.",
+    "pluginErrorNotFound": "Plugin files were not found on local disk.",
+    "pluginErrorNotLoaded": "No active metadata plugin is loaded.",
+    "pluginErrorDownloadFailed": "Failed to download the plugin file.",
+    "pluginErrorNetwork": "Network error occurred. Please check your connection.",
+    "pluginErrorTimeout": "Connection timed out. Please try again.",
+    "pluginErrorUnknown": "An unexpected error occurred: {details}",
+    "@pluginErrorUnknown": {
+        "placeholders": {
+            "details": {
+                "type": "String"
+            }
+        }
+    }
 }

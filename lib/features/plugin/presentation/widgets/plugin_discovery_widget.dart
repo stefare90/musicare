@@ -8,6 +8,7 @@ import 'package:music_are/features/plugin/data/services/plugin_discovery_service
 import 'package:music_are/features/plugin/presentation/cubit/plugin_cubit.dart';
 import 'package:music_are/features/plugin/presentation/cubit/plugin_discovery_cubit.dart';
 import 'package:music_are/features/plugin/presentation/cubit/plugin_discovery_state.dart';
+import 'package:music_are/features/plugin/presentation/utils/exception_localizer.dart';
 
 class PluginDiscoveryWidget extends StatelessWidget {
   const PluginDiscoveryWidget({super.key});
@@ -31,10 +32,21 @@ class _PluginDiscoveryView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          context.l10n.communityPluginsHeader,
-          style: context.textTheme.titleMedium,
-          textAlign: TextAlign.center,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              context.l10n.communityPluginsHeader,
+              style: context.textTheme.titleMedium,
+            ),
+            IconButton(
+              onPressed: () {
+                context.read<PluginDiscoveryCubit>().fetchCommunityPlugins();
+              },
+              icon: const Icon(Icons.refresh),
+              tooltip: context.l10n.retry,
+            ),
+          ],
         ),
         const SizedBox(height: 12),
         BlocBuilder<PluginDiscoveryCubit, PluginDiscoveryState>(
@@ -48,18 +60,13 @@ class _PluginDiscoveryView extends StatelessWidget {
 
             if (discoveryState is PluginDiscoveryErrorState) {
               return Card(
-                color: context.colorScheme.errorContainer,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
                       Text(
-                        context.l10n.failedToFetchPlugins(
-                          discoveryState.message,
-                        ),
-                        style: TextStyle(
-                          color: context.colorScheme.onErrorContainer,
-                        ),
+                        discoveryState.error.toLocalizedString(context),
+                        style: const TextStyle(),
                       ),
                       const SizedBox(height: 12),
                       ElevatedButton.icon(

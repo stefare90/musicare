@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_are/core/services/preferences_service.dart';
+import 'package:music_are/features/plugin/data/exceptions/plugin_engine_exceptions.dart';
 import 'package:music_are/features/plugin/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/data/services/plugin_discovery_service.dart';
 import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
@@ -34,20 +35,18 @@ class PluginCubit extends Cubit<PluginState> {
         emit(PluginNotConfiguredState());
       }
     } catch (e) {
-      emit(PluginErrorState('Failed to initialize plugin: $e'));
+      emit(PluginErrorState(e));
     }
   }
 
   Future<void> installDiscoveredPlugin(PluginManifest manifest) async {
     emit(PluginLoadingState());
-    final zipBytes = _discoveryService.getZipBytesForPlugin(manifest);
-
-    if (zipBytes == null) {
-      emit(PluginErrorState('Plugin binary zip not found in discovery cache.'));
-      return;
+    try {
+      final zipBytes = _discoveryService.getZipBytesForPlugin(manifest);
+      await loadFromZipBytes(zipBytes);
+    } catch (e) {
+      emit(PluginErrorState(e));
     }
-
-    await loadFromZipBytes(zipBytes);
   }
 
   Future<void> loadFromZipBytes(Uint8List zipBytes) async {
@@ -61,7 +60,7 @@ class PluginCubit extends Cubit<PluginState> {
       final isAuth = await _pluginEngine.metadata.auth.isAuthenticated();
       emit(PluginLoadedState(manifest: manifest, isAuthenticated: isAuth));
     } catch (e) {
-      emit(PluginErrorState(e.toString()));
+      emit(PluginErrorState(e));
     }
   }
 
@@ -76,7 +75,7 @@ class PluginCubit extends Cubit<PluginState> {
       final isAuth = await _pluginEngine.metadata.auth.isAuthenticated();
       emit(PluginLoadedState(manifest: manifest, isAuthenticated: isAuth));
     } catch (e) {
-      emit(PluginErrorState(e.toString()));
+      emit(PluginErrorState(e));
     }
   }
 

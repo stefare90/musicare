@@ -154,11 +154,17 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get retry;
 
-  /// No description provided for @failedToFetchPlugins.
+  /// No description provided for @confirm.
   ///
   /// In en, this message translates to:
-  /// **'Failed to fetch online plugins: {error}'**
-  String failedToFetchPlugins(String error);
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
 
   /// No description provided for @homeTab.
   ///
@@ -177,6 +183,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Library'**
   String get libraryTab;
+
+  /// No description provided for @persistentPlayerArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Persistent Mini Player Area'**
+  String get persistentPlayerArea;
+
+  /// No description provided for @failedToFetchPlugins.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to fetch online plugins: {error}'**
+  String failedToFetchPlugins(String error);
+
+  /// No description provided for @pluginErrorIncompatibleSdkVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin is incompatible with this version of MusicAre.'**
+  String get pluginErrorIncompatibleSdkVersion;
+
+  /// No description provided for @pluginErrorInvalidArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin archive is corrupt or missing required files.'**
+  String get pluginErrorInvalidArchive;
+
+  /// No description provided for @pluginErrorNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin files were not found on local disk.'**
+  String get pluginErrorNotFound;
+
+  /// No description provided for @pluginErrorNotLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'No active metadata plugin is loaded.'**
+  String get pluginErrorNotLoaded;
+
+  /// No description provided for @pluginErrorDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to download the plugin file.'**
+  String get pluginErrorDownloadFailed;
+
+  /// No description provided for @pluginErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error occurred. Please check your connection.'**
+  String get pluginErrorNetwork;
+
+  /// No description provided for @pluginErrorTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection timed out. Please try again.'**
+  String get pluginErrorTimeout;
+
+  /// No description provided for @pluginErrorUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'An unexpected error occurred: {details}'**
+  String pluginErrorUnknown(String details);
 }
 
 class _AppLocalizationsDelegate
