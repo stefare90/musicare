@@ -39,3 +39,6 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 *   [x] Implement `PluginSelectionPage` (Onboarding UI for GitHub community plugin selection)
 *   [ ] Implement `HomePage` and `HomeCubit` to fetch and render dynamic browse sections
 *   [ ] Conduct the first E2E integration verification (verifying dynamic section rendering)
+
+## To Fix Later:
+*   [ ] Add mosaic image generation for playlists that don't have a default image

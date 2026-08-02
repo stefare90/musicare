@@ -89,6 +89,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginErrorTimeout => 'Connection timed out. Please try again.';
 
   @override
+  String get pluginErrorNoContext => 'Navigation context is unavailable.';
+
+  @override
   String pluginErrorUnknown(String details) {
     return 'An unexpected error occurred: $details';
   }
@@ -102,4 +105,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noContentSubtitle =>
       'Your active music provider did not return any browse sections. Try refreshing.';
+
+  @override
+  String get mediaTypePlaylist => 'Playlist';
+
+  @override
+  String get mediaTypeAlbum => 'Album';
+
+  @override
+  String get mediaTypeSingle => 'Single';
+
+  @override
+  String get mediaTypeCompilation => 'Compilation';
+
+  @override
+  String get mediaTypeTrack => 'Track';
+
+  @override
+  String get mediaTypeArtist => 'Artist';
+
+  @override
+  String get mediaTypeUnknown => '';
 }

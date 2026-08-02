@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/playlist.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
+import 'package:music_are/core/models/media_item_metadata.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 
 class SectionItemCard extends StatelessWidget {
@@ -13,90 +11,89 @@ class SectionItemCard extends StatelessWidget {
     super.key,
     required this.item,
     this.onTap,
-    this.width = 135.0,
+    this.width = 150.0,
   });
 
   @override
   Widget build(BuildContext context) {
-    String title = 'Unknown';
-    String subtitle = '';
-    String? imageUrl;
-
-    if (item is Playlist) {
-      final playlist = item as Playlist;
-      title = playlist.name;
-      subtitle = playlist.description;
-      if (playlist.images.isNotEmpty) imageUrl = playlist.images.first.url;
-    } else if (item is Album) {
-      final album = item as Album;
-      title = album.name;
-      subtitle = album.artists.map((a) => a.name).join(', ');
-      if (album.images.isNotEmpty) imageUrl = album.images.first.url;
-    } else if (item is Track) {
-      final track = item as Track;
-      title = track.name;
-      subtitle = track.artists.map((a) => a.name).join(', ');
-      if (track.album.images.isNotEmpty) {
-        imageUrl = track.album.images.first.url;
-      }
-    }
+    final meta = MediaItemMetadata.from(item);
+    final subtitle = meta.toFormattedSubtitle(context);
 
     return Container(
       width: width,
       margin: const EdgeInsets.symmetric(horizontal: 4.0),
       child: Card(
         clipBehavior: Clip.antiAlias,
+        elevation: 1,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14.0),
+        ),
         child: InkWell(
           onTap: onTap,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: imageUrl != null && imageUrl.isNotEmpty
+              AspectRatio(
+                aspectRatio: 1.0,
+                child: meta.imageUrl != null && meta.imageUrl!.isNotEmpty
                     ? Image.network(
-                        imageUrl,
+                        meta.imageUrl!,
                         width: double.infinity,
+                        height: double.infinity,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Center(
-                          child: Icon(Icons.music_note, size: 40),
-                        ),
+                        errorBuilder: (_, __, ___) =>
+                            _buildPlaceholder(context, meta.fallbackIcon),
                       )
-                    : Container(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerHigh,
-                        child: const Center(
-                          child: Icon(Icons.music_note, size: 40),
-                        ),
-                      ),
+                    : _buildPlaceholder(context, meta.fallbackIcon),
               ),
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8.0,
+                  vertical: 6.0,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
-                      maxLines: 1,
+                      meta.title,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: context.textTheme.titleMedium?.copyWith(
-                        fontSize: 13,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.bold,
+                        color: context.colorScheme.primary,
+                        height: 1.15,
                       ),
                     ),
-                    if (subtitle.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                    const SizedBox(height: 2),
+                    if (subtitle.isNotEmpty)
                       Text(
                         subtitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: context.textTheme.labelSmall,
+                        style: context.textTheme.labelSmall?.copyWith(
+                          fontSize: 10.5,
+                          color: context.colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                    ],
                   ],
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlaceholder(BuildContext context, IconData icon) {
+    return Container(
+      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+      child: Center(
+        child: Icon(
+          icon,
+          size: 40,
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
         ),
       ),
     );

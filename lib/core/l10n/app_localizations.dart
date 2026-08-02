@@ -238,6 +238,12 @@ abstract class AppLocalizations {
   /// **'Connection timed out. Please try again.'**
   String get pluginErrorTimeout;
 
+  /// No description provided for @pluginErrorNoContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation context is unavailable.'**
+  String get pluginErrorNoContext;
+
   /// No description provided for @pluginErrorUnknown.
   ///
   /// In en, this message translates to:
@@ -261,6 +267,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your active music provider did not return any browse sections. Try refreshing.'**
   String get noContentSubtitle;
+
+  /// No description provided for @mediaTypePlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist'**
+  String get mediaTypePlaylist;
+
+  /// No description provided for @mediaTypeAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Album'**
+  String get mediaTypeAlbum;
+
+  /// No description provided for @mediaTypeSingle.
+  ///
+  /// In en, this message translates to:
+  /// **'Single'**
+  String get mediaTypeSingle;
+
+  /// No description provided for @mediaTypeCompilation.
+  ///
+  /// In en, this message translates to:
+  /// **'Compilation'**
+  String get mediaTypeCompilation;
+
+  /// No description provided for @mediaTypeTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Track'**
+  String get mediaTypeTrack;
+
+  /// No description provided for @mediaTypeArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get mediaTypeArtist;
+
+  /// No description provided for @mediaTypeUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get mediaTypeUnknown;
 }
 
 class _AppLocalizationsDelegate

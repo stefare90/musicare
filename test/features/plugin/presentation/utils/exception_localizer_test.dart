@@ -61,8 +61,8 @@ void main() {
       );
 
       expect(
-        NavigationContextUnavailableException().toLocalizedString(buildContext),
-        equals('An unexpected error occurred: Navigation context unavailable'),
+        PluginErrorNoContext().toLocalizedString(buildContext),
+        equals('Navigation context is unavailable.'),
       );
 
       expect(

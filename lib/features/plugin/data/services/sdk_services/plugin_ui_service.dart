@@ -20,7 +20,7 @@ class PluginUiService implements IUIService {
   }) async {
     final context = _currentContext;
     if (context == null || !context.mounted) {
-      throw NavigationContextUnavailableException();
+      throw PluginErrorNoContext();
     }
 
     final result = await showDialog<Map<String, String>>(

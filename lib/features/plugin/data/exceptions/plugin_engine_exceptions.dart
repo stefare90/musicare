@@ -31,4 +31,4 @@ class PluginSearchException extends PluginException {
   PluginSearchException([this.statusCode]);
 }
 
-class NavigationContextUnavailableException extends PluginException {}
+class PluginErrorNoContext extends PluginException {}
