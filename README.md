@@ -2,6 +2,7 @@
 <p align="center">
   <img src="assets/images/readme_header.png" alt="MusicAre Header" width="100%">
 </p>
+
 > Music are the plugins. We are the player.
 
 `MusicAre` is an extensible, flexible, and lightweight music playback application. The core concept is straightforward: **the host application handles the visual user interface, navigation, and playback controls, while all music metadata (tracks, albums, artists, search, playlists) and audio sources are provided by dynamic external plugins.**
