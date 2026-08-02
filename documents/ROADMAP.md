@@ -9,7 +9,7 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 *   [x] Design and create the encapsulated directory structure
 *   [x] Add required dependencies to `pubspec.yaml` (GetIt, flutter_bloc, go_router, shared_preferences, dart_eval, archive, path, path_provider, pub_semver)
 *   [x] Link the official SDK repository via Git dependency
-*   [ ] Configure the native localization generator and create basic `.arb` files
+*   [x] Configure the native localization generator and create basic `.arb` files
 
 ## 🔌 Phase 2: Host SDK Services (`lib/features/plugin/data/services/sdk_services/`)
 *   [x] Implement `PluginNetworkService` (using `package:http` with rate-limiting delay and tests)

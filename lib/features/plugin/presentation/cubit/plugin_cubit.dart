@@ -49,7 +49,9 @@ class PluginCubit extends Cubit<PluginState> {
   }
 
   Future<void> loadFromZipBytes(Uint8List zipBytes) async {
-    emit(PluginLoadingState());
+    if (state is! PluginLoadingState) {
+      emit(PluginLoadingState());
+    }
     try {
       await _pluginEngine.loadFromZipBytes(zipBytes);
       final manifest = _pluginEngine.metadataManifest!;

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
 abstract class Dialogs {
+  static const String _loadingDialogRouteName = 'loading_dialog';
+
   static void showLoading(BuildContext context, {required String message}) {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
+      routeSettings: const RouteSettings(name: _loadingDialogRouteName),
       builder: (dialogContext) {
         return PopScope(
           canPop: false,
@@ -23,7 +26,19 @@ abstract class Dialogs {
   }
 
   static void hide(BuildContext context) {
-    Navigator.of(context, rootNavigator: true).pop();
+    final navigator = Navigator.of(context, rootNavigator: true);
+    bool isLoadingDialogOnTop = false;
+
+    navigator.popUntil((route) {
+      if (route.settings.name == _loadingDialogRouteName) {
+        isLoadingDialogOnTop = true;
+      }
+      return true;
+    });
+
+    if (isLoadingDialogOnTop) {
+      navigator.pop();
+    }
   }
 
   static Future<bool> confirm(
