@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 abstract class AppColors {
   // Shared brand colors
-  static const Color primary = Color(0xFF1DB954);
-  static const Color primaryVariant = Color(0xFF1AA34A);
+  static const Color primary = Color.fromARGB(255, 193, 128, 255);
+  static const Color primaryVariant = Color.fromARGB(255, 235, 204, 251);
 
   // Dark Palette
   static const Color darkBackground = Color(0xFF121212);

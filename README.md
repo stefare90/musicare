@@ -1,24 +1,7 @@
-**Hai ragionissima!** 
-
-Il Router (`AppRouter`) fa parte dell'infrastruttura di **Navigazione ed Interfaccia Grafica (Presentation Layer)**, non è un servizio dati o di business del Service Locator. Inserirlo nella scatola dei "Servizi Globali" creava una sovrapposizione concettuale.
-
-Inoltre, rinominare quel layer semplicemente in **`SERVICES LAYER (IoC)`** rende il diagramma molto più preciso ed esatto.
-
----
-
-### 🛠️ Diagramma e `README.md` Corretti
-
-Ecco il `README.md` con il diagramma architetturale corretto:
-
-1. **`AppRouter`** spostato in alto nel **Presentation Layer** (dove risiede la navigazione dichiarativa di `GoRouter`).
-2. **`SERVICES LAYER (IoC)`** contiene ora esclusivamente i **servizi reali** dell'app (`PluginEngine`, `PluginDiscoveryService`, `PreferencesService`, `NetworkService` e gli `SDK Adapters`).
-
----
-
-`README.md`
-
-```markdown
 # 🎵 MusicAre
+<p align="center">
+  <img src="assets/images/readme_header.png" alt="MusicAre Header" width="100%">
+</p>
 > Music are the plugins. We are the player.
 
 `MusicAre` is an extensible, flexible, and lightweight music playback application. The core concept is straightforward: **the host application handles the visual user interface, navigation, and playback controls, while all music metadata (tracks, albums, artists, search, playlists) and audio sources are provided by dynamic external plugins.**

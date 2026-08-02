@@ -43,10 +43,15 @@ class WelcomePage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 24),
-                Icon(
-                  Icons.graphic_eq,
-                  size: 200,
-                  color: context.colorScheme.primary,
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.asset(
+                      'assets/images/app_icon.png',
+                      height: 200,
+                      width: 200,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Text(

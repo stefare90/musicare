@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_are/core/services/preferences_service.dart';
-import 'package:music_are/features/plugin/data/exceptions/plugin_engine_exceptions.dart';
 import 'package:music_are/features/plugin/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/data/services/plugin_discovery_service.dart';
 import 'package:music_are/features/plugin/data/services/plugin_engine.dart';

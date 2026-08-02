@@ -33,9 +33,9 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 *   [x] Add unit tests for `PluginCubit` and `PluginDiscoveryCubit`
 
 ## 🖥️ Phase 6: UI Integration & Verification (`lib/features/home/presentation/` & `main.dart`)
-*   [ ] Configure `main.dart` with `MultiBlocProvider` (`PluginCubit` and `PluginDiscoveryCubit`)
+*   [x] Configure `main.dart` with `BlocProvider` (`PluginCubit`)
 *   [x] Add translation and string management
 *   [x] Add theme management
-*   [ ] Implement `PluginSelectionPage` (Onboarding UI for GitHub community plugin selection and local zip import)
+*   [x] Implement `PluginSelectionPage` (Onboarding UI for GitHub community plugin selection)
 *   [ ] Implement `HomePage` and `HomeCubit` to fetch and render dynamic browse sections
 *   [ ] Conduct the first E2E integration verification (verifying dynamic section rendering)
