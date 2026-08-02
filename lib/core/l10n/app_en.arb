@@ -38,5 +38,8 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "noSectionsFound": "No browse sections found.",
+    "noContentTitle": "No Content Available",
+    "noContentSubtitle": "Your active music provider did not return any browse sections. Try refreshing."
 }

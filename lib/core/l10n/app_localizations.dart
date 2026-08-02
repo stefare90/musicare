@@ -243,6 +243,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An unexpected error occurred: {details}'**
   String pluginErrorUnknown(String details);
+
+  /// No description provided for @noSectionsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No browse sections found.'**
+  String get noSectionsFound;
+
+  /// No description provided for @noContentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No Content Available'**
+  String get noContentTitle;
+
+  /// No description provided for @noContentSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your active music provider did not return any browse sections. Try refreshing.'**
+  String get noContentSubtitle;
 }
 
 class _AppLocalizationsDelegate

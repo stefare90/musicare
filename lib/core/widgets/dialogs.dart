@@ -74,13 +74,28 @@ abstract class Dialogs {
     BuildContext context, {
     required String message,
   }) {
+    final theme = Theme.of(context);
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: Theme.of(context).colorScheme.error,
-        margin: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        backgroundColor: theme.colorScheme.surfaceContainerHigh,
+        content: Row(
+          children: [
+            Icon(Icons.error_outline_rounded, color: theme.colorScheme.error),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(color: theme.colorScheme.onSurface),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

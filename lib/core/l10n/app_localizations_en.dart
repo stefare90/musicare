@@ -92,4 +92,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String pluginErrorUnknown(String details) {
     return 'An unexpected error occurred: $details';
   }
+
+  @override
+  String get noSectionsFound => 'No browse sections found.';
+
+  @override
+  String get noContentTitle => 'No Content Available';
+
+  @override
+  String get noContentSubtitle =>
+      'Your active music provider did not return any browse sections. Try refreshing.';
 }
