@@ -1,4 +1,4 @@
-# 🗺️ MusicAre - Implementation Roadmap
+# 🗺️ MusicAre - Detailed Implementation Roadmap
 
 This roadmap tracks the step-by-step implementation of the MusicAre application framework and its integration with the dynamic plugin subsystem.
 
@@ -26,20 +26,65 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 *   [x] Implement `PluginDiscoveryService` to search community plugins on GitHub (`topic:musicare-plugin`) and extract release manifests
 *   [x] Add unit tests for `PluginEngine` and `PluginDiscoveryService`
 
-## 📊 Phase 5: State Management (`lib/features/plugin/presentation/cubit/`)
+## 📊 Phase 5: Plugin State Management (`lib/features/plugin/presentation/cubit/`)
 *   [x] Define `PluginState` machine states (Initial, Loading, NotConfigured, Loaded, Error)
 *   [x] Implement `PluginCubit` for active plugin lifecycle, disk recovery, installation, and authentication
 *   [x] Implement `PluginDiscoveryCubit` for online community plugin discovery
 *   [x] Add unit tests for `PluginCubit` and `PluginDiscoveryCubit`
 
-## 🖥️ Phase 6: UI Integration & Verification (`lib/features/home/presentation/` & `main.dart`)
+## 🖥️ Phase 6: Home & Dynamic Core UI (`lib/features/home/` & `lib/core/`)
 *   [x] Configure `main.dart` with `BlocProvider` (`PluginCubit`)
 *   [x] Add translation and string management
 *   [x] Add theme management
 *   [x] Implement `PluginSelectionPage` (Onboarding UI for GitHub community plugin selection)
-*   [x] Add Icon builder to mediaItem to manage offline in future
-*   [ ] Implement `HomePage` and `HomeCubit` to fetch and render dynamic browse sections
-*   [ ] Conduct the first E2E integration verification (verifying dynamic section rendering)
+*   [x] Implement `HomeCubit` & `HomeState` to fetch dynamic browse sections (`IBrowse`) with pull-to-refresh
+*   [x] Create reusable core UI components: `MediaCard`, `MediaCoverImage`, `SectionRow`, `InfoCard`, `ErrorCard`, `EmptyView`
+*   [x] Create pure Dart `MediaItemMetadata` model and `MediaType` enum with `MediaTypeLocalizer`
+*   [x] Add unit and widget tests for Home, Core Widgets, and `MediaItemMetadata`
 
-## To Fix Later:
-*   [ ] Add mosaic image generation for playlists that don't have a default image
+## 🎵 Phase 7: Media Navigation & Detail System (`lib/features/details/`)
+*   [ ] **Core Widgets**:
+    *   [ ] Implement `TrackListTile` for vertical track lists (index/play icon, title, artist, duration, options)
+    *   [ ] Add widget tests for `TrackListTile`
+*   [ ] **State Management**:
+    *   [ ] Define `MediaDetailState` (Initial, Loading, Loaded, Error)
+    *   [ ] Implement `MediaDetailCubit` for polymorphic data fetching (Playlist tracks, Album tracks, Artist top tracks & albums)
+    *   [ ] Add unit tests for `MediaDetailCubit`
+*   [ ] **Presentation & Navigation**:
+    *   [ ] Implement `MediaDetailPage` UI (SliverAppBar, large cover header, action bar, track list)
+    *   [ ] Register `/detail` route in `app_router.dart` accepting `extra: item`
+    *   [ ] Connect `MediaCard.onTap` in `HomePage` / `SectionRow` to `context.push('/detail', extra: item)`
+    *   [ ] Add widget tests for `MediaDetailPage`
+
+## 🔍 Phase 8: Search Feature (`lib/features/search/`)
+*   [ ] **State Management**:
+    *   [ ] Define `SearchState` (Initial, Loading, Loaded, Error)
+    *   [ ] Implement `SearchCubit` for debounced query execution via `pluginEngine.metadata.search`
+    *   [ ] Implement search filter chips (Tracks, Albums, Artists, Playlists) via `ISearch.chips()`
+*   [ ] **Presentation**:
+    *   [ ] Implement `SearchPage` UI (Search bar, Chip row, polymorphic results using `TrackListTile` & `MediaCard`)
+    *   [ ] Add unit and widget tests for `SearchCubit` and `SearchPage`
+
+## 📚 Phase 9: Library & User Library Feature (`lib/features/library/`)
+*   [ ] **Authentication & Profile**:
+    *   [ ] Integrate plugin authentication flow (`pluginEngine.metadata.auth.authenticate()`)
+    *   [ ] Fetch and display user profile details (`IUser.me()`)
+*   [ ] **State Management**:
+    *   [ ] Implement `LibraryCubit` and `LibraryState` to fetch saved tracks, albums, artists, and playlists (`IUser`)
+*   [ ] **Presentation**:
+    *   [ ] Implement `LibraryPage` UI (Categorized tabbed view for Playlists, Albums, Artists, Saved Songs)
+    *   [ ] Add unit and widget tests for `LibraryCubit` and `LibraryPage`
+
+## 🎧 Phase 10: Audio Player & Playback Engine (`lib/features/player/`)
+*   [ ] **Playback Architecture**:
+    *   [ ] Define Audio Source plugin contract & audio playback service adapter
+    *   [ ] Implement `PlayerCubit` & `PlayerState` (active track, play/pause, seek, queue, repeat, shuffle)
+*   [ ] **Presentation**:
+    *   [ ] Expand persistent mini-player in `ShellPage` (active track cover, progress bar, play/pause, skip)
+    *   [ ] Implement `FullPlayerPage` (large cover art, lyrics view, queue manager, audio controls)
+    *   [ ] Add unit and widget tests for `PlayerCubit` and player widgets
+
+## 🛠️ Phase 11: Advanced Features, Refactorings & Pending Tasks
+*   [ ] Implement mosaic image generator for playlists without a default cover image
+*   [ ] Add local disk caching for metadata responses and cover art
+*   [ ] Implement Settings page (active plugin management, theme switching, storage clearing)
