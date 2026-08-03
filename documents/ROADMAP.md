@@ -37,6 +37,7 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 *   [x] Add translation and string management
 *   [x] Add theme management
 *   [x] Implement `PluginSelectionPage` (Onboarding UI for GitHub community plugin selection)
+*   [x] Add Icon builder to mediaItem to manage offline in future
 *   [ ] Implement `HomePage` and `HomeCubit` to fetch and render dynamic browse sections
 *   [ ] Conduct the first E2E integration verification (verifying dynamic section rendering)
 

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:music_are/core/models/media_item_metadata.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
+import 'package:music_are/core/widgets/media_cover_image.dart';
 
-class SectionItemCard extends StatelessWidget {
+class MediaCard extends StatelessWidget {
   final dynamic item;
   final VoidCallback? onTap;
   final double width;
 
-  const SectionItemCard({
+  const MediaCard({
     super.key,
     required this.item,
     this.onTap,
@@ -35,16 +36,10 @@ class SectionItemCard extends StatelessWidget {
             children: [
               AspectRatio(
                 aspectRatio: 1.0,
-                child: meta.imageUrl != null && meta.imageUrl!.isNotEmpty
-                    ? Image.network(
-                        meta.imageUrl!,
-                        width: double.infinity,
-                        height: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            _buildPlaceholder(context, meta.fallbackIcon),
-                      )
-                    : _buildPlaceholder(context, meta.fallbackIcon),
+                child: MediaCoverImage(
+                  imageUrl: meta.imageUrl,
+                  fallbackIcon: meta.fallbackIcon,
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -81,19 +76,6 @@ class SectionItemCard extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPlaceholder(BuildContext context, IconData icon) {
-    return Container(
-      color: Theme.of(context).colorScheme.surfaceContainerHigh,
-      child: Center(
-        child: Icon(
-          icon,
-          size: 40,
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
         ),
       ),
     );

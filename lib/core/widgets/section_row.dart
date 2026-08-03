@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
-import 'package:music_are/core/widgets/section_item_card.dart';
+import 'package:music_are/core/widgets/media_card.dart';
 
 class SectionRow extends StatelessWidget {
   final String title;
@@ -44,7 +44,7 @@ class SectionRow extends StatelessWidget {
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];
-              return SectionItemCard(
+              return MediaCard(
                 item: item,
                 onTap: onItemTap != null ? () => onItemTap!(item) : null,
               );
