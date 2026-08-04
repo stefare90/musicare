@@ -43,9 +43,9 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 *   [x] Add unit and widget tests for Home, Core Widgets, and `MediaItemMetadata`
 
 ## 🎵 Phase 7: Media Navigation & Detail System (`lib/features/details/`)
-*   [ ] **Core Widgets**:
-    *   [ ] Implement `TrackListTile` for vertical track lists (index/play icon, title, artist, duration, options)
-    *   [ ] Add widget tests for `TrackListTile`
+*   [x] **Core Widgets**:
+    *   [x] Implement `TrackListTile` for vertical track lists (index/play icon, title, artist, duration, options)
+    *   [x] Add widget tests for `TrackListTile`
 *   [ ] **State Management**:
     *   [ ] Define `MediaDetailState` (Initial, Loading, Loaded, Error)
     *   [ ] Implement `MediaDetailCubit` for polymorphic data fetching (Playlist tracks, Album tracks, Artist top tracks & albums)
