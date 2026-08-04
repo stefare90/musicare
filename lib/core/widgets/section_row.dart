@@ -5,8 +5,8 @@ import 'package:music_are/core/widgets/media_card.dart';
 class SectionRow extends StatelessWidget {
   final String title;
   final String? description;
-  final List<dynamic> items;
-  final void Function(dynamic item)? onItemTap;
+  final List<Object> items;
+  final void Function(Object item)? onItemTap;
 
   const SectionRow({
     super.key,

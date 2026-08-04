@@ -4,7 +4,7 @@ import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/core/widgets/media_cover_image.dart';
 
 class MediaCard extends StatelessWidget {
-  final dynamic item;
+  final Object item;
   final VoidCallback? onTap;
   final double width;
 

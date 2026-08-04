@@ -2,7 +2,7 @@ import 'package:gyawun_metadata_sdk/metadata/models/section.dart';
 
 class SectionWithItems {
   final Section section;
-  final List<dynamic> items;
+  final List<Object> items;
 
   SectionWithItems({required this.section, required this.items});
 }
