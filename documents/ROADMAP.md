@@ -39,22 +39,26 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 *   [x] Implement `PluginSelectionPage` (Onboarding UI for GitHub community plugin selection)
 *   [x] Implement `HomeCubit` & `HomeState` to fetch dynamic browse sections (`IBrowse`) with pull-to-refresh
 *   [x] Create reusable core UI components: `MediaCard`, `MediaCoverImage`, `SectionRow`, `InfoCard`, `ErrorCard`, `EmptyView`
-*   [x] Create pure Dart `MediaItemMetadata` model and `MediaType` enum with `MediaTypeLocalizer`
+*   [x] Create pure Dart `MediaItemMetadata` model, `MediaType` enum, `unboxMediaItem` utility, and `MediaTypeLocalizer`
 *   [x] Add unit and widget tests for Home, Core Widgets, and `MediaItemMetadata`
 
 ## 🎵 Phase 7: Media Navigation & Detail System (`lib/features/details/`)
-*   [x] **Core Widgets**:
-    *   [x] Implement `TrackListTile` for vertical track lists (index/play icon, title, artist, duration, options)
-    *   [x] Add widget tests for `TrackListTile`
-*   [ ] **State Management**:
-    *   [ ] Define `MediaDetailState` (Initial, Loading, Loaded, Error)
-    *   [ ] Implement `MediaDetailCubit` for polymorphic data fetching (Playlist tracks, Album tracks, Artist top tracks & albums)
-    *   [ ] Add unit tests for `MediaDetailCubit`
-*   [ ] **Presentation & Navigation**:
-    *   [ ] Implement `MediaDetailPage` UI (SliverAppBar, large cover header, action bar, track list)
-    *   [ ] Register `/detail` route in `app_router.dart` accepting `extra: item`
-    *   [ ] Connect `MediaCard.onTap` in `HomePage` / `SectionRow` to `context.push('/detail', extra: item)`
-    *   [ ] Add widget tests for `MediaDetailPage`
+*   [ ] **Shared UI Slivers (`lib/core/widgets/`)**:
+    *   [x] Implement `mediaItem.open(context)` navigation extension (`lib/core/router/media_navigation_extension.dart`)
+    *   [x] Implement `TrackListTile` for vertical track lists & tests
+    *   [ ] Implement `SliverMediaHeader` (collapsible header with cover image, gradient, title, subtitle, and action buttons) & tests
+    *   [ ] Implement `SliverTrackList` (reusable sliver list wrapper for tracks with pagination spinner) & tests
+*   [ ] **Navigation & Routing**:
+    *   [ ] Register `/playlist`, `/album`, and `/artist` routes in `app_router.dart`
+*   [ ] **Playlist Detail Feature (`lib/features/details/`)**:
+    *   [ ] Implement `PlaylistCubit` & `PlaylistState` (fetching playlist tracks) and unit tests
+    *   [ ] Implement `PlaylistPage` UI using `SliverMediaHeader` & `SliverTrackList`
+*   [ ] **Album Detail Feature (`lib/features/details/`)**:
+    *   [ ] Implement `AlbumCubit` & `AlbumState` (fetching album tracks) and unit tests
+    *   [ ] Implement `AlbumPage` UI using `SliverMediaHeader` & `SliverTrackList`
+*   [ ] **Artist Detail Feature (`lib/features/details/`)**:
+    *   [ ] Implement `ArtistCubit` & `ArtistState` (fetching artist top tracks & albums) and unit tests
+    *   [ ] Implement `ArtistPage` UI using `SliverMediaHeader`, `SliverTrackList`, and `SectionRow` (Discography)
 
 ## 🔍 Phase 8: Search Feature (`lib/features/search/`)
 *   [ ] **State Management**:

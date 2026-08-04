@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:music_are/core/router/app_routes.dart';
 import 'package:music_are/features/home/presentation/pages/home_page.dart';
 import 'package:music_are/features/library/presentation/pages/library_page.dart';
 import 'package:music_are/features/onboarding/presentation/pages/welcome_page.dart';
@@ -14,7 +15,7 @@ GoRouter createRouter({required String initialLocation}) {
     initialLocation: initialLocation,
     routes: [
       GoRoute(
-        path: '/welcome',
+        path: AppRoutes.welcome,
         builder: (context, state) => const WelcomePage(),
       ),
       StatefulShellRoute.indexedStack(
@@ -30,7 +31,7 @@ GoRouter createRouter({required String initialLocation}) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/search',
+                path: AppRoutes.search,
                 builder: (context, state) => const SearchPage(),
               ),
             ],
@@ -38,7 +39,7 @@ GoRouter createRouter({required String initialLocation}) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/library',
+                path: AppRoutes.library,
                 builder: (context, state) => const LibraryPage(),
               ),
             ],
