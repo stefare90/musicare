@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
+import 'package:music_are/core/router/app_navigator.dart';
 import 'package:music_are/core/widgets/dialogs.dart';
 import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/info_card.dart';
@@ -86,9 +87,8 @@ class _HomeView extends StatelessWidget {
                     title: sectionData.section.title,
                     description: sectionData.section.description,
                     items: sectionData.items,
-                    onItemTap: (item) {
-                      // TODO: Navigazione verso il dettaglio
-                    },
+                    onItemTap: (item) =>
+                        AppNavigator.toMediaDetail(context, item),
                   );
                 },
               ),

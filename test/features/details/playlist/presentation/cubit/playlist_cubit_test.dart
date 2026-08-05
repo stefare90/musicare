@@ -1,0 +1,146 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:gyawun_metadata_sdk/metadata/interfaces/imetadata_plugin.dart';
+import 'package:gyawun_metadata_sdk/metadata/interfaces/iplaylist.dart';
+import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
+import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
+import 'package:gyawun_metadata_sdk/metadata/models/pagination.dart';
+import 'package:gyawun_metadata_sdk/metadata/models/playlist.dart';
+import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
+import 'package:gyawun_metadata_sdk/metadata/models/user.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:music_are/features/details/playlist/presentation/cubit/playlist_cubit.dart';
+import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
+import 'package:music_are/features/plugin/data/exceptions/plugin_engine_exceptions.dart';
+import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
+
+class MockPluginEngine extends Mock implements PluginEngine {}
+
+class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
+
+class MockPlaylistService extends Mock implements IPlaylist {}
+
+void main() {
+  group('PlaylistCubit Unit Tests', () {
+    late MockPluginEngine mockPluginEngine;
+    late MockMetadataPlugin mockMetadataPlugin;
+    late MockPlaylistService mockPlaylistService;
+    late PlaylistCubit cubit;
+
+    final testPlaylist = Playlist(
+      id: 'pl1',
+      name: 'Test Playlist',
+      description: 'Desc',
+      externalUri: '',
+      owner: User(id: 'u1', name: 'Dan', externalUri: ''),
+    );
+
+    final testTrack = Track(
+      id: 't1',
+      name: 'Test Track',
+      externalUri: '',
+      artists: [Artist(id: 'a1', name: 'Test Artist', externalUri: '')],
+      album: Album(
+        id: 'al1',
+        name: 'Test Album',
+        artists: [],
+        releaseDate: '',
+        externalUri: '',
+        totalTracks: 1,
+        albumType: AlbumType.album,
+      ),
+      durationMs: 180000,
+    );
+
+    setUp(() {
+      mockPluginEngine = MockPluginEngine();
+      mockMetadataPlugin = MockMetadataPlugin();
+      mockPlaylistService = MockPlaylistService();
+
+      cubit = PlaylistCubit(mockPluginEngine);
+    });
+
+    tearDown(() {
+      cubit.close();
+    });
+
+    test('initial state is PlaylistInitialState', () {
+      expect(cubit.state, isA<PlaylistInitialState>());
+    });
+
+    test('loadPlaylist emits ErrorState when hasMetadata is false', () async {
+      when(() => mockPluginEngine.hasMetadata).thenReturn(false);
+
+      expectLater(
+        cubit.stream,
+        emitsInOrder([
+          isA<PlaylistErrorState>().having(
+            (s) => s.error,
+            'error',
+            isA<PluginNotLoadedException>(),
+          ),
+        ]),
+      );
+
+      await cubit.loadPlaylist(testPlaylist);
+    });
+
+    test('loadPlaylist fetches playlist tracks successfully', () async {
+      when(() => mockPluginEngine.hasMetadata).thenReturn(true);
+      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+      when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
+
+      when(
+        () => mockPlaylistService.tracks('pl1', offset: 0, limit: 20),
+      ).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: [testTrack],
+          total: 1,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+
+      expectLater(
+        cubit.stream,
+        emitsInOrder([
+          isA<PlaylistLoadingState>(),
+          isA<PlaylistLoadedState>()
+              .having((s) => s.tracks.items.length, 'tracks length', 1)
+              .having(
+                (s) => s.tracks.items.first.name,
+                'track name',
+                'Test Track',
+              ),
+        ]),
+      );
+
+      await cubit.loadPlaylist(testPlaylist);
+    });
+
+    test('toggleSave updates isSaved state in PlaylistLoadedState', () async {
+      when(() => mockPluginEngine.hasMetadata).thenReturn(true);
+      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+      when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
+      when(() => mockPlaylistService.save('pl1')).thenAnswer((_) async {});
+
+      cubit.emit(
+        PlaylistLoadedState(
+          playlist: testPlaylist,
+          tracks: PaginatedResult<Track>(
+            items: [],
+            total: 0,
+            offset: 0,
+            limit: 20,
+          ),
+          isSaved: false,
+        ),
+      );
+
+      await cubit.toggleSave();
+
+      expect(cubit.state, isA<PlaylistLoadedState>());
+      expect((cubit.state as PlaylistLoadedState).isSaved, isTrue);
+      verify(() => mockPlaylistService.save('pl1')).called(1);
+    });
+  });
+}

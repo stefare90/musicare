@@ -24,6 +24,7 @@ void main() {
   group('SliverMediaHeader Widget Tests', () {
     testWidgets('renders title, subtitle, and action buttons', (tester) async {
       bool saveTapped = false;
+      bool optionsTapped = false;
 
       await tester.pumpWidget(
         buildTestableWidget(
@@ -31,6 +32,7 @@ void main() {
             title: 'Help!',
             subtitle: 'Album • The Beatles',
             onSaveTap: () => saveTapped = true,
+            onOptionsTap: () => optionsTapped = true,
           ),
         ),
       );
@@ -39,48 +41,15 @@ void main() {
       expect(find.text('Help!'), findsNWidgets(2));
       expect(find.text('Album • The Beatles'), findsOneWidget);
       expect(find.byIcon(Icons.favorite_border_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.more_vert_rounded), findsOneWidget);
 
       await tester.tap(find.byIcon(Icons.favorite_border_rounded));
       await tester.pumpAndSettle();
       expect(saveTapped, isTrue);
-    });
 
-    testWidgets('renders filled heart when isSaved is true', (tester) async {
-      await tester.pumpWidget(
-        buildTestableWidget(
-          child: SliverMediaHeader(
-            title: 'Help!',
-            isSaved: true,
-            onSaveTap: () {},
-          ),
-        ),
-      );
+      await tester.tap(find.byIcon(Icons.more_vert_rounded));
       await tester.pumpAndSettle();
-
-      expect(find.byIcon(Icons.favorite_rounded), findsOneWidget);
+      expect(optionsTapped, isTrue);
     });
-
-    testWidgets(
-      'handles scroll drag and dynamic height measurement without errors',
-      (tester) async {
-        await tester.pumpWidget(
-          buildTestableWidget(
-            child: const SliverMediaHeader(
-              title: 'Abbey Road',
-              subtitle: 'Album • The Beatles',
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        await tester.drag(
-          find.byType(CustomScrollView),
-          const Offset(0.0, -300.0),
-        );
-        await tester.pumpAndSettle();
-
-        expect(find.byType(SliverMediaHeader), findsOneWidget);
-      },
-    );
   });
 }

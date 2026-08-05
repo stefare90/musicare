@@ -11,8 +11,7 @@ class SliverMediaHeader extends StatefulWidget {
   final bool isCircular;
   final bool isSaved;
   final VoidCallback? onSaveTap;
-  final VoidCallback? onExternalLinkTap;
-  final VoidCallback? onShareTap;
+  final VoidCallback? onOptionsTap;
 
   static const double _coverSize = 160.0;
 
@@ -25,8 +24,7 @@ class SliverMediaHeader extends StatefulWidget {
     this.isCircular = false,
     this.isSaved = false,
     this.onSaveTap,
-    this.onExternalLinkTap,
-    this.onShareTap,
+    this.onOptionsTap,
   });
 
   @override
@@ -103,17 +101,11 @@ class _SliverMediaHeaderState extends State<SliverMediaHeader> {
                   onPressed: widget.onSaveTap,
                   tooltip: 'Favorite',
                 ),
-              if (widget.onExternalLinkTap != null)
+              if (widget.onOptionsTap != null)
                 IconButton(
-                  icon: const Icon(Icons.open_in_new_rounded),
-                  onPressed: widget.onExternalLinkTap,
-                  tooltip: 'Open link',
-                ),
-              if (widget.onShareTap != null)
-                IconButton(
-                  icon: const Icon(Icons.share_rounded),
-                  onPressed: widget.onShareTap,
-                  tooltip: 'Share',
+                  icon: const Icon(Icons.more_vert_rounded),
+                  onPressed: widget.onOptionsTap,
+                  tooltip: 'More options',
                 ),
             ],
           ),
