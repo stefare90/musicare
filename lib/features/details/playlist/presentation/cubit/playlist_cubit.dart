@@ -1,12 +1,12 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/pagination.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/playlist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
+import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
 import 'package:music_are/features/plugin/data/exceptions/plugin_engine_exceptions.dart';
 import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
 
-class PlaylistCubit extends Cubit<PlaylistState> {
+class PlaylistCubit extends SafeCubit<PlaylistState> {
   final PluginEngine _pluginEngine;
   bool _isFetchingMoreTracks = false;
 

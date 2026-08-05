@@ -1,10 +1,10 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/utils/media_item_unboxer.dart';
 import 'package:music_are/features/home/presentation/cubit/home_state.dart';
 import 'package:music_are/features/plugin/data/exceptions/plugin_engine_exceptions.dart';
 import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
 
-class HomeCubit extends Cubit<HomeState> {
+class HomeCubit extends SafeCubit<HomeState> {
   final PluginEngine _pluginEngine;
 
   HomeCubit(this._pluginEngine) : super(HomeInitialState());

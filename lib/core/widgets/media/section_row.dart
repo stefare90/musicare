@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
-import 'package:music_are/core/widgets/media_card.dart';
+import 'package:music_are/core/widgets/media/media_card.dart';
 
 class SectionRow extends StatelessWidget {
   final String title;

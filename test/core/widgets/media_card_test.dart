@@ -5,7 +5,7 @@ import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/playlist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/user.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
-import 'package:music_are/core/widgets/media_card.dart';
+import 'package:music_are/core/widgets/media/media_card.dart';
 
 void main() {
   Widget buildTestableWidget({required MediaCard child}) {

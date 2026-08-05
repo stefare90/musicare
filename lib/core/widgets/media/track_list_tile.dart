@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:gyawun_metadata_sdk/metadata/models/image.dart' as sdk;
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
+import 'package:music_are/core/models/media_type.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
-import 'package:music_are/core/widgets/media_cover_image.dart';
+import 'package:music_are/core/widgets/media/media_cover_image.dart';
 
 class TrackListTile extends StatelessWidget {
   final Track track;
@@ -22,7 +24,7 @@ class TrackListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final artistNames = track.artists.map((a) => a.name).join(', ');
-    final coverUrl = track.album.images.firstOrNull?.url;
+    final coverImages = track.album.images;
 
     return Container(
       color: isPlaying
@@ -34,7 +36,7 @@ class TrackListTile extends StatelessWidget {
           horizontal: 16.0,
           vertical: 2.0,
         ),
-        leading: _buildLeading(context, coverUrl),
+        leading: _buildLeading(context, coverImages),
         title: Text(
           track.name,
           maxLines: 1,
@@ -75,7 +77,7 @@ class TrackListTile extends StatelessWidget {
     );
   }
 
-  Widget _buildLeading(BuildContext context, String? coverUrl) {
+  Widget _buildLeading(BuildContext context, List<sdk.Image>? coverImages) {
     if (index != null) {
       return SizedBox(
         width: 32,
@@ -94,11 +96,11 @@ class TrackListTile extends StatelessWidget {
       );
     }
     return MediaCoverImage(
-      imageUrl: coverUrl,
+      images: coverImages,
+      mediaType: MediaType.track,
       width: 44,
       height: 44,
       borderRadius: BorderRadius.circular(8.0),
-      fallbackIcon: Icons.music_note_rounded,
     );
   }
 

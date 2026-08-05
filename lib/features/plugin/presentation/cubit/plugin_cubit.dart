@@ -1,12 +1,12 @@
 import 'dart:typed_data';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/services/preferences_service.dart';
 import 'package:music_are/features/plugin/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/data/services/plugin_discovery_service.dart';
 import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
 import 'package:music_are/features/plugin/presentation/cubit/plugin_state.dart';
 
-class PluginCubit extends Cubit<PluginState> {
+class PluginCubit extends SafeCubit<PluginState> {
   final PluginEngine _pluginEngine;
   final PreferencesService _preferences;
   final PluginDiscoveryService _discoveryService;

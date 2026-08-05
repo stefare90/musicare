@@ -4,8 +4,8 @@ import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:music_are/core/theme/app_theme.dart';
-import 'package:music_are/core/widgets/media_cover_image.dart';
-import 'package:music_are/core/widgets/track_list_tile.dart';
+import 'package:music_are/core/widgets/media/media_cover_image.dart';
+import 'package:music_are/core/widgets/media/track_list_tile.dart';
 
 void main() {
   Widget buildTestableWidget({required TrackListTile child}) {

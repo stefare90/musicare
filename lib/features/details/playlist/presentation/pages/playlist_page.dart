@@ -5,8 +5,9 @@ import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/widgets/bottom_sheets/bottom_sheets.dart';
 import 'package:music_are/core/widgets/dialogs.dart';
 import 'package:music_are/core/widgets/error_card.dart';
-import 'package:music_are/core/widgets/sliver_media_header.dart';
-import 'package:music_are/core/widgets/sliver_track_list.dart';
+import 'package:music_are/core/widgets/media/sliver_media_app_bar.dart';
+import 'package:music_are/core/widgets/media/sliver_media_header.dart';
+import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
 import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
@@ -27,8 +28,37 @@ class PlaylistPage extends StatelessWidget {
   }
 }
 
-class _PlaylistView extends StatelessWidget {
+class _PlaylistView extends StatefulWidget {
   const _PlaylistView();
+
+  @override
+  State<_PlaylistView> createState() => _PlaylistViewState();
+}
+
+class _PlaylistViewState extends State<_PlaylistView> {
+  final GlobalKey _largeTitleKey = GlobalKey();
+  final ValueNotifier<bool> _isScrolledPast = ValueNotifier<bool>(false);
+
+  @override
+  void dispose() {
+    _isScrolledPast.dispose();
+    super.dispose();
+  }
+
+  void _checkTitlePosition(BuildContext context) {
+    final renderBox =
+        _largeTitleKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox != null && renderBox.hasSize) {
+      final position = renderBox.localToGlobal(Offset.zero);
+      final topPadding = MediaQuery.of(context).padding.top;
+      final appBarBottom = topPadding + kToolbarHeight;
+      final largeTitleBottomY = position.dy + renderBox.size.height;
+      final isPast = largeTitleBottomY <= appBarBottom;
+      if (isPast != _isScrolledPast.value) {
+        _isScrolledPast.value = isPast;
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,24 +77,19 @@ class _PlaylistView extends StatelessWidget {
         builder: (context, state) {
           final metadata = state.metadata;
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              if (state is PlaylistLoadedState) {
-                await context.read<PlaylistCubit>().loadPlaylist(
-                  state.playlist,
-                );
-              }
+          return NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              _checkTitlePosition(context);
+              return false;
             },
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 if (metadata != null)
-                  SliverMediaHeader(
+                  SliverMediaAppBar(
                     title: metadata.title,
-                    subtitle: metadata.toFormattedSubtitle(context),
-                    imageUrl: metadata.imageUrl,
-                    fallbackIcon: metadata.fallbackIcon,
                     isSaved: state is PlaylistLoadedState && state.isSaved,
+                    isScrolledPast: _isScrolledPast,
                     onSaveTap: state is PlaylistLoadedState
                         ? () => context.read<PlaylistCubit>().toggleSave()
                         : null,
@@ -77,6 +102,8 @@ class _PlaylistView extends StatelessWidget {
                           )
                         : null,
                   ),
+                if (metadata != null)
+                  SliverMediaHeader(meta: metadata, titleKey: _largeTitleKey),
                 if (state is PlaylistErrorState)
                   SliverFillRemaining(
                     child: Center(

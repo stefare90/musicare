@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
-import 'package:music_are/core/widgets/track_list_tile.dart';
+import 'package:music_are/core/widgets/media/track_list_tile.dart';
 
 class SliverTrackList extends StatelessWidget {
   final List<Track> tracks;

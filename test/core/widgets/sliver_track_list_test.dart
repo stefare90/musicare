@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
-import 'package:music_are/core/widgets/sliver_track_list.dart';
+import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 
 void main() {
   Widget buildTestableWidget({required SliverTrackList child}) {

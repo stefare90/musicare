@@ -6,7 +6,7 @@ import 'package:music_are/core/router/app_navigator.dart';
 import 'package:music_are/core/widgets/dialogs.dart';
 import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/info_card.dart';
-import 'package:music_are/core/widgets/section_row.dart';
+import 'package:music_are/core/widgets/media/section_row.dart';
 import 'package:music_are/features/home/presentation/cubit/home_cubit.dart';
 import 'package:music_are/features/home/presentation/cubit/home_state.dart';
 import 'package:music_are/features/plugin/data/services/plugin_engine.dart';

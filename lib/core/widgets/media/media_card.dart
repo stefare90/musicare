@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:music_are/core/models/media_item_metadata.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
-import 'package:music_are/core/widgets/media_cover_image.dart';
+import 'package:music_are/core/widgets/media/media_cover_image.dart';
 
 class MediaCard extends StatelessWidget {
   final Object item;
@@ -37,8 +37,8 @@ class MediaCard extends StatelessWidget {
               AspectRatio(
                 aspectRatio: 1.0,
                 child: MediaCoverImage(
-                  imageUrl: meta.imageUrl,
-                  fallbackIcon: meta.fallbackIcon,
+                  images: meta.images,
+                  mediaType: meta.mediaType,
                 ),
               ),
               Padding(

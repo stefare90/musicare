@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:music_are/core/models/media_item_metadata.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
-import 'package:music_are/core/widgets/media_cover_image.dart';
+import 'package:music_are/core/widgets/media/media_cover_image.dart';
 
 class MediaOptionsBottomSheet extends StatelessWidget {
   final Object item;
@@ -50,7 +50,8 @@ class MediaOptionsBottomSheet extends StatelessWidget {
           const SizedBox(height: 8),
           ListTile(
             leading: MediaCoverImage(
-              imageUrl: meta.imageUrl,
+              images: meta.images,
+              mediaType: meta.mediaType,
               width: 44,
               height: 44,
               borderRadius: BorderRadius.circular(8),
