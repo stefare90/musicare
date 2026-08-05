@@ -46,7 +46,7 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 *   [ ] **Shared UI Slivers (`lib/core/widgets/`)**:
     *   [x] Implement `mediaItem.open(context)` navigation extension (`lib/core/router/media_navigation_extension.dart`)
     *   [x] Implement `TrackListTile` for vertical track lists & tests
-    *   [ ] Implement `SliverMediaHeader` (collapsible header with cover image, gradient, title, subtitle, and action buttons) & tests
+    *   [x] Implement `SliverMediaHeader` (collapsible header with cover image, gradient, title, subtitle, and action buttons) & tests
     *   [ ] Implement `SliverTrackList` (reusable sliver list wrapper for tracks with pagination spinner) & tests
 *   [ ] **Navigation & Routing**:
     *   [ ] Register `/playlist`, `/album`, and `/artist` routes in `app_router.dart`
