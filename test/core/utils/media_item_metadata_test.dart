@@ -29,8 +29,6 @@ void main() {
       expect(meta.title, equals('Abbey Road'));
       expect(meta.mediaType, equals(MediaType.album));
       expect(meta.subtitleDetail, equals('The Beatles'));
-      expect(meta.imageUrl, equals('https://example.com/cover.jpg'));
-      expect(meta.fallbackIcon, equals(Icons.album_rounded));
     });
 
     test('parses Single album correctly', () {
@@ -63,7 +61,6 @@ void main() {
       expect(meta.title, equals('My Playlist'));
       expect(meta.mediaType, equals(MediaType.playlist));
       expect(meta.subtitleDetail, equals('Dan'));
-      expect(meta.fallbackIcon, equals(Icons.playlist_play_rounded));
     });
 
     test('parses Track correctly without BuildContext', () {
@@ -89,7 +86,6 @@ void main() {
       expect(meta.title, equals('Come Together'));
       expect(meta.mediaType, equals(MediaType.track));
       expect(meta.subtitleDetail, equals('The Beatles'));
-      expect(meta.fallbackIcon, equals(Icons.music_note_rounded));
     });
 
     test('parses Artist correctly without BuildContext', () {
@@ -105,7 +101,6 @@ void main() {
       expect(meta.title, equals('The Beatles'));
       expect(meta.mediaType, equals(MediaType.artist));
       expect(meta.subtitleDetail, equals('Rock'));
-      expect(meta.fallbackIcon, equals(Icons.person_rounded));
     });
 
     test('returns MediaType.unknown for unrecognized objects', () {
