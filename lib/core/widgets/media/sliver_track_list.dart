@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
+import 'package:music_are/core/models/media_type.dart';
 import 'package:music_are/core/widgets/media/track_list_tile.dart';
 
 class SliverTrackList extends StatelessWidget {
   final List<Track> tracks;
+  final MediaType listType;
   final bool hasMore;
   final String? activeTrackId;
   final VoidCallback? onLoadMore;
@@ -13,12 +15,17 @@ class SliverTrackList extends StatelessWidget {
   const SliverTrackList({
     super.key,
     required this.tracks,
+    required this.listType,
     this.hasMore = false,
     this.activeTrackId,
     this.onLoadMore,
     this.onTrackTap,
     this.onTrackOptionsTap,
   });
+
+  bool get _shouldShowTrackNumbers {
+    return listType == MediaType.album || listType == MediaType.single;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +47,7 @@ class SliverTrackList extends StatelessWidget {
         final isPlaying = activeTrackId != null && activeTrackId == track.id;
         return TrackListTile(
           track: track,
-          index: index + 1,
+          index: _shouldShowTrackNumbers ? index + 1 : null,
           isPlaying: isPlaying,
           onTap: onTrackTap != null ? () => onTrackTap!(track) : null,
           onOptionsTap: onTrackOptionsTap != null
