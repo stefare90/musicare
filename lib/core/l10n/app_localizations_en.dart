@@ -98,7 +98,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unknownTitle => 'Unknown';
 
   @override
-  String failedToFetchPlugins(Object error) {
+  String failedToFetchPlugins(String error) {
     return 'Failed to fetch online plugins: $error';
   }
 
@@ -131,7 +131,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginErrorNoContext => 'Navigation context is unavailable.';
 
   @override
-  String pluginErrorUnknown(Object details) {
+  String pluginErrorUnknown(String details) {
     return 'An unexpected error occurred: $details';
   }
 

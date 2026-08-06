@@ -272,7 +272,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Failed to fetch online plugins: {error}'**
-  String failedToFetchPlugins(Object error);
+  String failedToFetchPlugins(String error);
 
   /// No description provided for @pluginErrorIncompatibleSdkVersion.
   ///
@@ -326,7 +326,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'An unexpected error occurred: {details}'**
-  String pluginErrorUnknown(Object details);
+  String pluginErrorUnknown(String details);
 
   /// No description provided for @noSectionsFound.
   ///
