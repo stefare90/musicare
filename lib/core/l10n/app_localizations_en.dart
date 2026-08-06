@@ -59,7 +59,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get persistentPlayerArea => 'Persistent Mini Player Area';
 
   @override
-  String failedToFetchPlugins(String error) {
+  String get tooltipFavorite => 'Favorite';
+
+  @override
+  String get tooltipMoreOptions => 'More options';
+
+  @override
+  String get tooltipOptions => 'Options';
+
+  @override
+  String get savePlaylist => 'Save Playlist';
+
+  @override
+  String get sharePlaylist => 'Share Playlist';
+
+  @override
+  String get deletePlaylist => 'Delete Playlist';
+
+  @override
+  String get saveAlbum => 'Save Album';
+
+  @override
+  String get shareAlbum => 'Share Album';
+
+  @override
+  String get addToQueue => 'Add to Queue';
+
+  @override
+  String get saveToFavorites => 'Save to Favorites';
+
+  @override
+  String get goToAlbum => 'Go to Album';
+
+  @override
+  String get goToArtist => 'Go to Artist';
+
+  @override
+  String get unknownTitle => 'Unknown';
+
+  @override
+  String failedToFetchPlugins(Object error) {
     return 'Failed to fetch online plugins: $error';
   }
 
@@ -92,7 +131,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginErrorNoContext => 'Navigation context is unavailable.';
 
   @override
-  String pluginErrorUnknown(String details) {
+  String pluginErrorUnknown(Object details) {
     return 'An unexpected error occurred: $details';
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/widgets/info_card.dart';
 import 'package:music_are/features/plugin/presentation/utils/exception_localizer.dart';
 
@@ -23,7 +24,7 @@ class ErrorCard extends StatelessWidget {
       iconColor: Theme.of(context).colorScheme.error,
       title: error.toLocalizedString(context),
       onAction: onRetry,
-      actionLabel: 'Retry',
+      actionLabel: context.l10n.retry,
       margin: margin,
     );
   }

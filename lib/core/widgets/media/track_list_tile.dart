@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/image.dart' as sdk;
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
+import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/models/media_type.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/core/widgets/media/media_cover_image.dart';
@@ -69,7 +70,7 @@ class TrackListTile extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.more_vert),
               onPressed: onOptionsTap,
-              tooltip: 'Options',
+              tooltip: context.l10n.tooltipOptions,
             ),
           ],
         ),

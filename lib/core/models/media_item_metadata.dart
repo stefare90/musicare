@@ -4,6 +4,7 @@ import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/image.dart' as sdk;
 import 'package:gyawun_metadata_sdk/metadata/models/playlist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
+import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/models/media_type.dart';
 import 'package:music_are/core/utils/media_item_unboxer.dart';
 import 'package:music_are/core/utils/media_type_localizer.dart';
@@ -53,11 +54,15 @@ class MediaItemMetadata {
         images: art.images,
       ),
       _ => const MediaItemMetadata(
-        title: 'Unknown',
+        title: '',
         mediaType: MediaType.unknown,
         subtitleDetail: '',
       ),
     };
+  }
+
+  String getDisplayTitle(BuildContext context) {
+    return title.isNotEmpty ? title : context.l10n.unknownTitle;
   }
 
   String toFormattedSubtitle(BuildContext context) {

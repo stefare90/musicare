@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:music_are/core/l10n/l10n_extension.dart';
 
 abstract class Dialogs {
   static const String _loadingDialogRouteName = 'loading_dialog';
@@ -45,8 +46,8 @@ abstract class Dialogs {
     BuildContext context, {
     required String title,
     required String message,
-    String confirmLabel = 'Confirm',
-    String cancelLabel = 'Cancel',
+    String? confirmLabel,
+    String? cancelLabel,
   }) async {
     final result = await showDialog<bool>(
       context: context,
@@ -57,11 +58,11 @@ abstract class Dialogs {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(cancelLabel),
+              child: Text(cancelLabel ?? context.l10n.cancel),
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(confirmLabel),
+              child: Text(confirmLabel ?? context.l10n.confirm),
             ),
           ],
         );

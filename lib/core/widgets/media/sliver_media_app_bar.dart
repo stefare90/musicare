@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/router/app_navigator.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 
@@ -53,13 +54,13 @@ class SliverMediaAppBar extends StatelessWidget {
               color: isSaved ? context.colorScheme.primary : null,
             ),
             onPressed: onSaveTap,
-            tooltip: 'Favorite',
+            tooltip: context.l10n.tooltipFavorite,
           ),
         if (onOptionsTap != null)
           IconButton(
             icon: const Icon(Icons.more_vert_rounded),
             onPressed: onOptionsTap,
-            tooltip: 'More options',
+            tooltip: context.l10n.tooltipMoreOptions,
           ),
       ],
     );

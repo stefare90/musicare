@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
+import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/router/app_navigator.dart';
 import 'package:music_are/core/widgets/bottom_sheets/media_options_bottom_sheet.dart';
 
@@ -10,13 +11,14 @@ abstract class AlbumOptionsBottomSheet {
     VoidCallback? onToggleSave,
     VoidCallback? onShare,
   }) {
+    final l10n = context.l10n;
     return MediaOptionsBottomSheet.show(
       context: context,
       item: album,
       options: [
         ListTile(
           leading: const Icon(Icons.favorite_border_rounded),
-          title: const Text('Save Album'),
+          title: Text(l10n.saveAlbum),
           onTap: () {
             Navigator.of(context).pop();
             onToggleSave?.call();
@@ -25,7 +27,7 @@ abstract class AlbumOptionsBottomSheet {
         if (album.artists.isNotEmpty)
           ListTile(
             leading: const Icon(Icons.person_rounded),
-            title: const Text('Go to Artist'),
+            title: Text(l10n.goToArtist),
             onTap: () {
               Navigator.of(context).pop();
               AppNavigator.toArtistDetail(context, album.artists.first);
@@ -33,7 +35,7 @@ abstract class AlbumOptionsBottomSheet {
           ),
         ListTile(
           leading: const Icon(Icons.share_rounded),
-          title: const Text('Share Album'),
+          title: Text(l10n.shareAlbum),
           onTap: () {
             Navigator.of(context).pop();
             onShare?.call();

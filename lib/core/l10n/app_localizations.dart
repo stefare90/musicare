@@ -190,11 +190,89 @@ abstract class AppLocalizations {
   /// **'Persistent Mini Player Area'**
   String get persistentPlayerArea;
 
+  /// No description provided for @tooltipFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get tooltipFavorite;
+
+  /// No description provided for @tooltipMoreOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get tooltipMoreOptions;
+
+  /// No description provided for @tooltipOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Options'**
+  String get tooltipOptions;
+
+  /// No description provided for @savePlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Playlist'**
+  String get savePlaylist;
+
+  /// No description provided for @sharePlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Playlist'**
+  String get sharePlaylist;
+
+  /// No description provided for @deletePlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Playlist'**
+  String get deletePlaylist;
+
+  /// No description provided for @saveAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Album'**
+  String get saveAlbum;
+
+  /// No description provided for @shareAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Album'**
+  String get shareAlbum;
+
+  /// No description provided for @addToQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Queue'**
+  String get addToQueue;
+
+  /// No description provided for @saveToFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to Favorites'**
+  String get saveToFavorites;
+
+  /// No description provided for @goToAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Album'**
+  String get goToAlbum;
+
+  /// No description provided for @goToArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Artist'**
+  String get goToArtist;
+
+  /// No description provided for @unknownTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknownTitle;
+
   /// No description provided for @failedToFetchPlugins.
   ///
   /// In en, this message translates to:
   /// **'Failed to fetch online plugins: {error}'**
-  String failedToFetchPlugins(String error);
+  String failedToFetchPlugins(Object error);
 
   /// No description provided for @pluginErrorIncompatibleSdkVersion.
   ///
@@ -248,7 +326,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'An unexpected error occurred: {details}'**
-  String pluginErrorUnknown(String details);
+  String pluginErrorUnknown(Object details);
 
   /// No description provided for @noSectionsFound.
   ///
