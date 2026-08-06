@@ -11,6 +11,30 @@ import 'package:music_are/features/shell/presentation/pages/shell_page.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
+final List<RouteBase> _sharedDetailRoutes = [
+  GoRoute(
+    path: 'playlist',
+    builder: (context, state) {
+      final playlist = state.extra as Playlist;
+      return PlaylistPage(playlist: playlist);
+    },
+  ),
+  // GoRoute(
+  //   path: 'album',
+  //   builder: (context, state) {
+  //     final album = state.extra as Album;
+  //     return AlbumPage(album: album);
+  //   },
+  // ),
+  // GoRoute(
+  //   path: 'artist',
+  //   builder: (context, state) {
+  //     final artist = state.extra as Artist;
+  //     return ArtistPage(artist: artist);
+  //   },
+  // ),
+];
+
 GoRouter createRouter({required String initialLocation}) {
   return GoRouter(
     navigatorKey: rootNavigatorKey,
@@ -20,27 +44,6 @@ GoRouter createRouter({required String initialLocation}) {
         path: AppRoutes.welcome,
         builder: (context, state) => const WelcomePage(),
       ),
-      GoRoute(
-        path: AppRoutes.playlist,
-        builder: (context, state) {
-          final playlist = state.extra as Playlist;
-          return PlaylistPage(playlist: playlist);
-        },
-      ),
-      // GoRoute(
-      //   path: AppRoutes.album,
-      //   builder: (context, state) {
-      //     final album = state.extra as Album;
-      //     return AlbumPage(album: album);
-      //   },
-      // ),
-      // GoRoute(
-      //   path: AppRoutes.artist,
-      //   builder: (context, state) {
-      //     final artist = state.extra as Artist;
-      //     return ArtistPage(artist: artist);
-      //   },
-      // ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return ShellPage(navigationShell: navigationShell);
@@ -48,7 +51,11 @@ GoRouter createRouter({required String initialLocation}) {
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/', builder: (context, state) => const HomePage()),
+              GoRoute(
+                path: AppRoutes.home,
+                builder: (context, state) => const HomePage(),
+                routes: _sharedDetailRoutes,
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -56,6 +63,7 @@ GoRouter createRouter({required String initialLocation}) {
               GoRoute(
                 path: AppRoutes.search,
                 builder: (context, state) => const SearchPage(),
+                routes: _sharedDetailRoutes,
               ),
             ],
           ),
@@ -64,6 +72,7 @@ GoRouter createRouter({required String initialLocation}) {
               GoRoute(
                 path: AppRoutes.library,
                 builder: (context, state) => const LibraryPage(),
+                routes: _sharedDetailRoutes,
               ),
             ],
           ),
