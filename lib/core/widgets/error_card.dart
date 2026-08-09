@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
+import 'package:music_are/core/widgets/dialogs.dart';
 import 'package:music_are/core/widgets/info_card.dart';
 import 'package:music_are/features/plugin/presentation/utils/exception_localizer.dart';
 
@@ -19,12 +21,20 @@ class ErrorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final fullErrorDetails = error.toString();
+
     return InfoCard(
       icon: icon,
       iconColor: Theme.of(context).colorScheme.error,
       title: error.toLocalizedString(context),
       onAction: onRetry,
       actionLabel: context.l10n.retry,
+      onSecondaryAction: () {
+        Clipboard.setData(ClipboardData(text: fullErrorDetails));
+        Dialogs.showSnackBar(context, message: "Errore copiato negli appunti!");
+      },
+      secondaryActionLabel: "Copia errore",
+      secondaryActionIcon: Icons.copy_rounded,
       margin: margin,
     );
   }
