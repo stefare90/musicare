@@ -101,7 +101,7 @@ class PluginEngine {
 
     if (!sdkConstraint.allows(hostVersion)) {
       throw IncompatibleSdkVersionException(
-        pluginVersion: manifest.pluginSdkVersion,
+        manifest: manifest,
         hostVersion: HostEnv.sdkVersion,
       );
     }

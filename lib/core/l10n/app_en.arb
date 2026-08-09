@@ -64,5 +64,48 @@
     "mediaTypeArtist": "Artist",
     "copyError": "Copy full Error",
     "errorCopiedToClipboard": "Error copied to clipboard!",
-    "mediaTypeUnknown": ""
+    "mediaTypeUnknown": "",
+    "actionRequiredTitle": "Action Required",
+    "obsoleteProviderLabel": "Obsolete Provider",
+    "installedVersion": "Installed version: v{version}",
+    "@installedVersion": {
+        "placeholders": {
+            "version": {
+                "type": "String",
+                "example": "1.0.0"
+            }
+        }
+    },
+    "providerIncompatibleMessage": "This provider is no longer compatible with the current version of MusicAre and must be updated to continue.",
+    "activeProviderName": "Active Provider: {name}",
+    "@activeProviderName": {
+        "placeholders": {
+            "name": {
+                "type": "String",
+                "example": "MusicBrainz"
+            }
+        }
+    },
+    "providerVersion": "Version {version}",
+    "@providerVersion": {
+        "placeholders": {
+            "version": {
+                "type": "String",
+                "example": "2.0.0"
+            }
+        }
+    },
+    "disconnect": "Disconnect",
+    "updateAndActivate": "Update & Activate",
+    "activeProvider": "Active Provider",
+    "byAuthor": "By {author}",
+    "@byAuthor": {
+        "placeholders": {
+            "author": {
+                "type": "String",
+                "example": "MusicAre Team"
+            }
+        }
+    },
+    "updateRequiredMessage": "Update required for this version of MusicAre"
 }

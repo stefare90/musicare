@@ -8,6 +8,11 @@ class PluginLoadingState extends PluginState {}
 
 class PluginNotConfiguredState extends PluginState {}
 
+class PluginIncompatibleState extends PluginState {
+  final PluginManifest obsoleteManifest;
+  PluginIncompatibleState(this.obsoleteManifest);
+}
+
 class PluginLoadedState extends PluginState {
   final PluginManifest manifest;
   final bool isAuthenticated;

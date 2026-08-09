@@ -1,3 +1,5 @@
+import 'package:music_are/features/plugin/data/models/plugin_manifest.dart';
+
 abstract class PluginException implements Exception {}
 
 class PluginNotLoadedException extends PluginException {}
@@ -10,11 +12,11 @@ class PluginFileNotFoundException extends PluginException {
 class InvalidPluginArchiveException extends PluginException {}
 
 class IncompatibleSdkVersionException extends PluginException {
-  final String pluginVersion;
+  final PluginManifest manifest;
   final String hostVersion;
 
   IncompatibleSdkVersionException({
-    required this.pluginVersion,
+    required this.manifest,
     required this.hostVersion,
   });
 }

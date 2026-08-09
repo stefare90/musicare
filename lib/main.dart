@@ -12,9 +12,12 @@ void main() async {
   await initDependencies();
   final pluginCubit = sl<PluginCubit>();
   await pluginCubit.initialize();
-  final String initialLocation = pluginCubit.state is PluginNotConfiguredState
-      ? '/welcome'
-      : '/';
+  final String initialLocation = switch (pluginCubit.state) {
+    PluginLoadedState() => '/',
+    PluginIncompatibleState() => '/plugin-update',
+    PluginNotConfiguredState() => '/welcome',
+    _ => '/welcome',
+  };
   runApp(
     MusicAreApp(pluginCubit: pluginCubit, initialLocation: initialLocation),
   );

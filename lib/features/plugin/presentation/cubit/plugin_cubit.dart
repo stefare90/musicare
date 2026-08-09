@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/services/preferences_service.dart';
+import 'package:music_are/features/plugin/data/exceptions/plugin_engine_exceptions.dart';
 import 'package:music_are/features/plugin/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/data/services/plugin_discovery_service.dart';
 import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
@@ -33,6 +34,8 @@ class PluginCubit extends SafeCubit<PluginState> {
       } else {
         emit(PluginNotConfiguredState());
       }
+    } on IncompatibleSdkVersionException catch (e) {
+      emit(PluginIncompatibleState(e.manifest));
     } catch (e) {
       emit(PluginErrorState(e));
     }

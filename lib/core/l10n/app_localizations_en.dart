@@ -171,4 +171,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mediaTypeUnknown => '';
+
+  @override
+  String get actionRequiredTitle => 'Action Required';
+
+  @override
+  String get obsoleteProviderLabel => 'Obsolete Provider';
+
+  @override
+  String installedVersion(String version) {
+    return 'Installed version: v$version';
+  }
+
+  @override
+  String get providerIncompatibleMessage =>
+      'This provider is no longer compatible with the current version of MusicAre and must be updated to continue.';
+
+  @override
+  String activeProviderName(String name) {
+    return 'Active Provider: $name';
+  }
+
+  @override
+  String providerVersion(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get disconnect => 'Disconnect';
+
+  @override
+  String get updateAndActivate => 'Update & Activate';
+
+  @override
+  String get activeProvider => 'Active Provider';
+
+  @override
+  String byAuthor(String author) {
+    return 'By $author';
+  }
+
+  @override
+  String get updateRequiredMessage =>
+      'Update required for this version of MusicAre';
 }

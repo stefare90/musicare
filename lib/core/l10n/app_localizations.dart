@@ -399,6 +399,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **''**
   String get mediaTypeUnknown;
+
+  /// No description provided for @actionRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Action Required'**
+  String get actionRequiredTitle;
+
+  /// No description provided for @obsoleteProviderLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Obsolete Provider'**
+  String get obsoleteProviderLabel;
+
+  /// No description provided for @installedVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed version: v{version}'**
+  String installedVersion(String version);
+
+  /// No description provided for @providerIncompatibleMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This provider is no longer compatible with the current version of MusicAre and must be updated to continue.'**
+  String get providerIncompatibleMessage;
+
+  /// No description provided for @activeProviderName.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Provider: {name}'**
+  String activeProviderName(String name);
+
+  /// No description provided for @providerVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String providerVersion(String version);
+
+  /// No description provided for @disconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get disconnect;
+
+  /// No description provided for @updateAndActivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Update & Activate'**
+  String get updateAndActivate;
+
+  /// No description provided for @activeProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Provider'**
+  String get activeProvider;
+
+  /// No description provided for @byAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'By {author}'**
+  String byAuthor(String author);
+
+  /// No description provided for @updateRequiredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Update required for this version of MusicAre'**
+  String get updateRequiredMessage;
 }
 
 class _AppLocalizationsDelegate
