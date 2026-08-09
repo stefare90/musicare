@@ -19,6 +19,9 @@ class SliverMediaHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final formattedTitle = meta.getFormattedTitle(context);
+    final formattedDetails = meta.getFormattedDetails(context);
+
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.only(
@@ -40,7 +43,7 @@ class SliverMediaHeader extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              meta.title,
+              formattedTitle,
               key: titleKey,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -50,15 +53,31 @@ class SliverMediaHeader extends StatelessWidget {
                 color: context.colorScheme.primary,
               ),
             ),
-            if (meta.subtitleDetail.isNotEmpty) ...[
+            if (meta.subtitle.isNotEmpty) ...[
               const SizedBox(height: 6),
               Text(
-                meta.subtitleDetail,
+                meta.subtitle,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: context.textTheme.bodyMedium?.copyWith(
                   color: context.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+            if (formattedDetails.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                formattedDetails,
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: context.textTheme.bodyMedium?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.5,
+                  ),
+                  fontSize: 13,
                 ),
               ),
             ],

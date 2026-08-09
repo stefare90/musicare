@@ -65,7 +65,7 @@ class MediaOptionsBottomSheet extends StatelessWidget {
               ),
             ),
             subtitle: Text(
-              meta.toFormattedSubtitle(context),
+              meta.getFormattedDetails(context),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: context.textTheme.bodyMedium?.copyWith(

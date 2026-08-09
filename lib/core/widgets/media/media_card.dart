@@ -18,7 +18,7 @@ class MediaCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final meta = MediaItemMetadata.from(item);
-    final subtitle = meta.toFormattedSubtitle(context);
+    final subtitle = meta.getFormattedDetails(context);
 
     return Container(
       width: width,

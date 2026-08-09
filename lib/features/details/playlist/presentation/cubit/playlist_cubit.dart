@@ -28,13 +28,15 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
     }
 
     try {
+      final fullPlaylist = await _pluginEngine.metadata.playlist.getPlaylist(
+        playlist.id,
+      );
       final result = await _pluginEngine.metadata.playlist.tracks(
         playlist.id,
         offset: 0,
         limit: 20,
       );
-
-      emit(PlaylistLoadedState(playlist: playlist, tracks: result));
+      emit(PlaylistLoadedState(playlist: fullPlaylist, tracks: result));
     } catch (e) {
       if (state is PlaylistLoadedState) {
         final currentState = state as PlaylistLoadedState;
