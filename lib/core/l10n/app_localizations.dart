@@ -382,6 +382,18 @@ abstract class AppLocalizations {
   /// **'Artist'**
   String get mediaTypeArtist;
 
+  /// No description provided for @copyError.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy full Error'**
+  String get copyError;
+
+  /// No description provided for @errorCopiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Error copied to clipboard!'**
+  String get errorCopiedToClipboard;
+
   /// No description provided for @mediaTypeUnknown.
   ///
   /// In en, this message translates to:

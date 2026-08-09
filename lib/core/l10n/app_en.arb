@@ -62,5 +62,7 @@
     "mediaTypeCompilation": "Compilation",
     "mediaTypeTrack": "Track",
     "mediaTypeArtist": "Artist",
+    "copyError": "Copy full Error",
+    "errorCopiedToClipboard": "Error copied to clipboard!",
     "mediaTypeUnknown": ""
 }

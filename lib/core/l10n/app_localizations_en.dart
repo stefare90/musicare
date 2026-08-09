@@ -164,5 +164,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaTypeArtist => 'Artist';
 
   @override
+  String get copyError => 'Copy full Error';
+
+  @override
+  String get errorCopiedToClipboard => 'Error copied to clipboard!';
+
+  @override
   String get mediaTypeUnknown => '';
 }

@@ -21,6 +21,7 @@ class ErrorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final fullErrorDetails = error.toString();
 
     return InfoCard(
@@ -31,9 +32,9 @@ class ErrorCard extends StatelessWidget {
       actionLabel: context.l10n.retry,
       onSecondaryAction: () {
         Clipboard.setData(ClipboardData(text: fullErrorDetails));
-        Dialogs.showSnackBar(context, message: "Errore copiato negli appunti!");
+        Dialogs.showSnackBar(context, message: l10n.errorCopiedToClipboard);
       },
-      secondaryActionLabel: "Copia errore",
+      secondaryActionLabel: l10n.copyError,
       secondaryActionIcon: Icons.copy_rounded,
       margin: margin,
     );
