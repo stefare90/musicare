@@ -53,9 +53,9 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 *   [x] **Playlist Detail Feature (`lib/features/details/`)**:
     *   [x] Implement `PlaylistCubit` & `PlaylistState` (fetching playlist tracks) and unit tests
     *   [x] Implement `PlaylistPage` UI using `SliverMediaHeader` & `SliverTrackList`
-*   [ ] **Album Detail Feature (`lib/features/details/`)**:
-    *   [ ] Implement `AlbumCubit` & `AlbumState` (fetching album tracks) and unit tests
-    *   [ ] Implement `AlbumPage` UI using `SliverMediaHeader` & `SliverTrackList`
+*   [x] **Album Detail Feature (`lib/features/details/`)**:
+    *   [x] Implement `AlbumCubit` & `AlbumState` (fetching album tracks) and unit tests
+    *   [x] Implement `AlbumPage` UI using `SliverMediaHeader` & `SliverTrackList`
 *   [ ] **Artist Detail Feature (`lib/features/details/`)**:
     *   [ ] Implement `ArtistCubit` & `ArtistState` (fetching artist top tracks & albums) and unit tests
     *   [ ] Implement `ArtistPage` UI using `SliverMediaHeader`, `SliverTrackList`, and `SectionRow` (Discography)
