@@ -95,8 +95,3 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 
 ## Future improvements
 *   [ ] Fast up media cover image show
-
-## Errori da risolvere:
--Aggiornare tutti gli unitest e aggiungere quelli mancanti
-- Alcune playlisti vanno in eccezione e non stampano il messaggio d'errore correto
-- messaggi Eccezioni da gestire

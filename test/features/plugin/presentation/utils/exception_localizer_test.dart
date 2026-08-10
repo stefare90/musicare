@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dart_eval/stdlib/core.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/features/plugin/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/data/exceptions/plugin_engine_exceptions.dart';
@@ -96,8 +95,8 @@ void main() {
       );
 
       expect(
-        $String('Dart eval wrapped error').toLocalizedString(buildContext),
-        equals('An unexpected error occurred: Dart eval wrapped error'),
+        Exception('Plugin wrapped error').toLocalizedString(buildContext),
+        equals('An unexpected error occurred: Plugin wrapped error'),
       );
     });
   });
