@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/image.dart' as sdk;
 import 'package:music_are/core/models/media_type.dart';
@@ -44,19 +45,17 @@ class MediaCoverImage extends StatelessWidget {
     } else {
       final bestUrl = _getBestImageUrl(validUrls);
       if (bestUrl != null) {
-        imageWidget = Image.network(
-          bestUrl,
+        imageWidget = CachedNetworkImage(
+          imageUrl: bestUrl,
           width: width,
           height: height,
           fit: fit,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return _buildPlaceholder(context);
-          },
-          errorBuilder: (_, __, ___) => _buildPlaceholder(context),
+          fadeInDuration: const Duration(milliseconds: 200),
+          placeholder: (context, url) => _buildLoadingPlaceholder(context),
+          errorWidget: (context, url, error) => _buildFallbackIcon(context),
         );
       } else {
-        imageWidget = _buildPlaceholder(context);
+        imageWidget = _buildFallbackIcon(context);
       }
     }
     if (borderRadius != null) {
@@ -93,17 +92,28 @@ class MediaCoverImage extends StatelessWidget {
   }
 
   Widget _buildTileImage(BuildContext context, String url) {
-    return Image.network(
-      url,
+    return CachedNetworkImage(
+      imageUrl: url,
       width: double.infinity,
       height: double.infinity,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) =>
+      placeholder: (_, _) => _buildLoadingPlaceholder(context),
+      errorWidget: (_, _, _) =>
           Container(color: Theme.of(context).colorScheme.surfaceContainerHigh),
     );
   }
 
-  Widget _buildPlaceholder(BuildContext context) {
+  Widget _buildLoadingPlaceholder(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      color: Theme.of(
+        context,
+      ).colorScheme.surfaceContainerHigh.withValues(alpha: 0.7),
+    );
+  }
+
+  Widget _buildFallbackIcon(BuildContext context) {
     return Container(
       width: width,
       height: height,
