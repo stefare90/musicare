@@ -43,16 +43,16 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 *   [x] Add unit and widget tests for Home, Core Widgets, and `MediaItemMetadata`
 
 ## 🎵 Phase 7: Media Navigation & Detail System (`lib/features/details/`)
-*   [ ] **Shared UI Slivers (`lib/core/widgets/`)**:
+*   [x] **Shared UI Slivers (`lib/core/widgets/`)**:
     *   [x] Implement `mediaItem.open(context)` navigation extension (`lib/core/router/media_navigation_extension.dart`)
     *   [x] Implement `TrackListTile` for vertical track lists & tests
     *   [x] Implement `SliverMediaHeader` (collapsible header with cover image, gradient, title, subtitle, and action buttons) & tests
     *   [x] Implement `SliverTrackList` (reusable sliver list wrapper for tracks with pagination spinner) & tests
-*   [ ] **Navigation & Routing**:
-    *   [ ] Register `/playlist`, `/album`, and `/artist` routes in `app_router.dart`
-*   [ ] **Playlist Detail Feature (`lib/features/details/`)**:
-    *   [ ] Implement `PlaylistCubit` & `PlaylistState` (fetching playlist tracks) and unit tests
-    *   [ ] Implement `PlaylistPage` UI using `SliverMediaHeader` & `SliverTrackList`
+*   [x] **Navigation & Routing**:
+    *   [x] Register `/playlist`, `/album`, and `/artist` routes in `app_router.dart`
+*   [x] **Playlist Detail Feature (`lib/features/details/`)**:
+    *   [x] Implement `PlaylistCubit` & `PlaylistState` (fetching playlist tracks) and unit tests
+    *   [x] Implement `PlaylistPage` UI using `SliverMediaHeader` & `SliverTrackList`
 *   [ ] **Album Detail Feature (`lib/features/details/`)**:
     *   [ ] Implement `AlbumCubit` & `AlbumState` (fetching album tracks) and unit tests
     *   [ ] Implement `AlbumPage` UI using `SliverMediaHeader` & `SliverTrackList`

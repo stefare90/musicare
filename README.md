@@ -72,7 +72,7 @@ MusicAre follows a decoupled, Feature-First Clean Architecture organized into we
    * **Global Cubits**: App-level singletons managing cross-cutting state (e.g., active plugin lifecycle, global audio player state).
    * **Local Cubits**: Screen-scoped state machines instantiated for specific pages and destroyed when navigating away.
 3. **Services Layer (IoC / Dependency Injection)**: Houses central application services registered in `GetIt`, including host storage, native network clients, GitHub discovery, and the dynamic `PluginEngine`.
-4. **Plugin Sandbox Layer**: Sandboxed execution environment running interpreted bytecode via `dart_eval` and communicating with the host through SDK bridge adapters.
+4. **Plugin Sandbox Layer**: Sandboxed execution environment running interpreted bytecode via `dart_eval`. The SDK bridge automatically unboxes return values and normalizes runtime exceptions, ensuring the Presentation and State Management layers interact exclusively with pure, strongly-typed native Dart entities and standard exceptions.
 
 ---
 
