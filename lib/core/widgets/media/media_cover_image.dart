@@ -31,6 +31,16 @@ class MediaCoverImage extends StatelessWidget {
     return validUrls.first;
   }
 
+  List<String> _getMosaicUrls(List<String> urls) {
+    if (urls.length == 2) {
+      return [urls[0], urls[1], urls[1], urls[0]];
+    }
+    if (urls.length == 3) {
+      return [urls[0], urls[1], urls[2], urls[0]];
+    }
+    return urls.take(4).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final validUrls =
@@ -40,8 +50,8 @@ class MediaCoverImage extends StatelessWidget {
             .toList() ??
         [];
     Widget imageWidget;
-    if (mediaType == MediaType.playlist && validUrls.length >= 4) {
-      imageWidget = _buildMosaic(context, validUrls.take(4).toList());
+    if (mediaType == MediaType.playlist && validUrls.length >= 2) {
+      imageWidget = _buildMosaic(context, _getMosaicUrls(validUrls));
     } else {
       final bestUrl = _getBestImageUrl(validUrls);
       if (bestUrl != null) {
@@ -50,7 +60,7 @@ class MediaCoverImage extends StatelessWidget {
           width: width,
           height: height,
           fit: fit,
-          fadeInDuration: const Duration(milliseconds: 200),
+          fadeInDuration: const Duration(milliseconds: 180),
           placeholder: (context, url) => _buildLoadingPlaceholder(context),
           errorWidget: (context, url, error) => _buildFallbackIcon(context),
         );
@@ -97,6 +107,7 @@ class MediaCoverImage extends StatelessWidget {
       width: double.infinity,
       height: double.infinity,
       fit: BoxFit.cover,
+      fadeInDuration: const Duration(milliseconds: 180),
       placeholder: (_, _) => _buildLoadingPlaceholder(context),
       errorWidget: (_, _, _) =>
           Container(color: Theme.of(context).colorScheme.surfaceContainerHigh),
