@@ -27,7 +27,7 @@ void main() {
   final testPlaylist = Playlist(
     id: 'pl1',
     name: 'Top 50 Hits',
-    description: '',
+    description: 'Best songs',
     externalUri: '',
     owner: User(id: 'u1', name: 'Spotify', externalUri: ''),
   );
@@ -63,10 +63,7 @@ void main() {
       await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('Top 50 Hits'),
-        findsNWidgets(2),
-      ); // Header + SliverAppBar
+      expect(find.text('Top 50 Hits'), findsNWidgets(2)); // Header + AppBar
       expect(find.text('Spotify'), findsOneWidget);
     });
   });
