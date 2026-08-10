@@ -1,18 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:dart_eval/dart_eval_bridge.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/features/plugin/data/exceptions/plugin_engine_exceptions.dart';
 
 extension ExceptionLocalizer on Object {
   String toLocalizedString(BuildContext context) {
-    Object error = this;
-    if (error is $Value) {
-      error = error.$value ?? error;
-    }
-
-    return switch (error) {
+    return switch (this) {
       IncompatibleSdkVersionException() =>
         context.l10n.pluginErrorIncompatibleSdkVersion,
       InvalidPluginArchiveException() => context.l10n.pluginErrorInvalidArchive,
@@ -24,7 +18,7 @@ extension ExceptionLocalizer on Object {
       TimeoutException() => context.l10n.pluginErrorTimeout,
       PluginErrorNoContext() => context.l10n.pluginErrorNoContext,
       _ => context.l10n.pluginErrorUnknown(
-        error.toString().replaceAll('Exception: ', ''),
+        toString().replaceAll('Exception: ', ''),
       ),
     };
   }

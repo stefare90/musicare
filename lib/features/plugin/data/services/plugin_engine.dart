@@ -5,7 +5,7 @@ import 'package:archive/archive.dart';
 import 'package:dart_eval/dart_eval_bridge.dart';
 import 'package:get_it/get_it.dart';
 import 'package:gyawun_metadata_sdk/eval/eval_plugin.dart';
-import 'package:gyawun_metadata_sdk/eval/host_env.eval.dart';
+import 'package:gyawun_metadata_sdk/eval/eval_loader.dart';
 import 'package:gyawun_metadata_sdk/metadata/host_env.dart';
 import 'package:gyawun_metadata_sdk/metadata/interfaces/imetadata_plugin.dart';
 import 'package:gyawun_metadata_sdk/metadata/interfaces/inetwork_service.dart';
@@ -116,17 +116,11 @@ class PluginEngine {
       ui: sl<IUIService>(),
     );
 
-    final result = runtime.executeLib(
-      'package:${manifest.packageId}/main.dart',
-      'getPlugin',
-      [$HostEnv.wrap(hostEnv)],
+    _metadataPlugin = loadPluginFromRuntime(
+      runtime: runtime,
+      packageId: manifest.packageId,
+      hostEnv: hostEnv,
     );
-
-    if (result == null) {
-      throw PluginEntryPointNullException();
-    }
-
-    _metadataPlugin = (result as $Value).$value as IMetadataPlugin;
     _metadataManifest = manifest;
   }
 

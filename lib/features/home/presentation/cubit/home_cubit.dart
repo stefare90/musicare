@@ -1,5 +1,4 @@
 import 'package:music_are/core/cubit/safe_cubit.dart';
-import 'package:music_are/core/utils/media_item_unboxer.dart';
 import 'package:music_are/features/home/presentation/cubit/home_state.dart';
 import 'package:music_are/features/plugin/data/exceptions/plugin_engine_exceptions.dart';
 import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
@@ -37,7 +36,7 @@ class HomeCubit extends SafeCubit<HomeState> {
         );
         final List<Object> safeItems = itemsResult.items
             .where((item) => item != null)
-            .map((item) => unboxMediaItem(item))
+            .cast<Object>()
             .toList();
         loadedSections.add(
           SectionWithItems(section: section, items: safeItems),

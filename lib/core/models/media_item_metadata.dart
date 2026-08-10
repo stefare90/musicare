@@ -6,7 +6,6 @@ import 'package:gyawun_metadata_sdk/metadata/models/playlist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/models/media_type.dart';
-import 'package:music_are/core/utils/media_item_unboxer.dart';
 import 'package:music_are/core/utils/media_type_localizer.dart';
 
 class MediaItemMetadata {
@@ -73,8 +72,7 @@ class MediaItemMetadata {
   }
 
   factory MediaItemMetadata.from(Object? item) {
-    final rawItem = unboxMediaItem(item);
-    return switch (rawItem) {
+    return switch (item) {
       Playlist p => MediaItemMetadata(
         title: p.name,
         mediaType: MediaType.playlist,

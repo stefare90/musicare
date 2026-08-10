@@ -274,10 +274,10 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: a31dc175303f62e8e357581af3f61369d44044ed
+      resolved-ref: "4424ef4d7afc519ef58022c9129e00cb3b37a88c"
       url: "https://github.com/stefare90/gyawun_metadata_sdk.git"
     source: git
-    version: "2.0.0"
+    version: "2.0.1"
   hooks:
     dependency: transitive
     description:
