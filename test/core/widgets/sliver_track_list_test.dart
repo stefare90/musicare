@@ -3,11 +3,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
+import 'package:music_are/core/l10n/app_localizations.dart'; // <--- Import aggiunto
+import 'package:music_are/core/models/media_type.dart';
 import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 
 void main() {
   Widget buildTestableWidget({required SliverTrackList child}) {
     return MaterialApp(
+      localizationsDelegates:
+          AppLocalizations.localizationsDelegates, // <--- Aggiunto
+      supportedLocales: AppLocalizations.supportedLocales, // <--- Aggiunto
       home: Scaffold(body: CustomScrollView(slivers: [child])),
     );
   }
@@ -50,7 +55,10 @@ void main() {
     testWidgets('renders list of tracks using TrackListTile', (tester) async {
       await tester.pumpWidget(
         buildTestableWidget(
-          child: SliverTrackList(tracks: [testTrack1, testTrack2]),
+          child: SliverTrackList(
+            tracks: [testTrack1, testTrack2],
+            listType: MediaType.album,
+          ),
         ),
       );
 
@@ -71,6 +79,7 @@ void main() {
               tracks: [testTrack1],
               hasMore: true,
               onLoadMore: () => loadMoreCalled = true,
+              listType: MediaType.playlist,
             ),
           ),
         );
@@ -87,6 +96,7 @@ void main() {
         buildTestableWidget(
           child: SliverTrackList(
             tracks: [testTrack1],
+            listType: MediaType.album,
             onTrackTap: (track) => tappedTrack = track,
           ),
         ),

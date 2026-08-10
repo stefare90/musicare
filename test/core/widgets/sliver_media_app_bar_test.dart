@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:music_are/core/l10n/app_localizations.dart'; // <--- Importazione aggiunta
 import 'package:music_are/core/widgets/media/sliver_media_app_bar.dart';
 
 void main() {
   Widget buildTestableWidget({required SliverMediaAppBar child}) {
     return MaterialApp(
+      localizationsDelegates:
+          AppLocalizations.localizationsDelegates, // <--- Aggiunto
+      supportedLocales: AppLocalizations.supportedLocales, // <--- Aggiunto
       home: Scaffold(body: CustomScrollView(slivers: [child])),
     );
   }

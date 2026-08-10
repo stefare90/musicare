@@ -4,6 +4,10 @@ import 'package:music_are/core/router/app_navigator.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 
 class SliverMediaAppBar extends StatelessWidget {
+  static final ValueNotifier<bool> _defaultScrolledPast = ValueNotifier<bool>(
+    true,
+  );
+
   final String title;
   final bool isSaved;
   final ValueNotifier<bool>? isScrolledPast;
@@ -30,7 +34,7 @@ class SliverMediaAppBar extends StatelessWidget {
         onPressed: () => AppNavigator.pop(context),
       ),
       title: ValueListenableBuilder<bool>(
-        valueListenable: isScrolledPast ?? ValueNotifier(true),
+        valueListenable: isScrolledPast ?? _defaultScrolledPast,
         builder: (context, isPast, child) {
           return AnimatedOpacity(
             duration: const Duration(milliseconds: 180),

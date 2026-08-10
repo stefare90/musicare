@@ -28,7 +28,7 @@ void main() {
 
       expect(meta.title, equals('Abbey Road'));
       expect(meta.mediaType, equals(MediaType.album));
-      expect(meta.subtitleDetail, equals('The Beatles'));
+      expect(meta.subtitle, equals('The Beatles'));
     });
 
     test('parses Single album correctly', () {
@@ -60,7 +60,7 @@ void main() {
 
       expect(meta.title, equals('My Playlist'));
       expect(meta.mediaType, equals(MediaType.playlist));
-      expect(meta.subtitleDetail, equals('Dan'));
+      expect(meta.subtitle, equals('Dan'));
     });
 
     test('parses Track correctly without BuildContext', () {
@@ -85,7 +85,7 @@ void main() {
 
       expect(meta.title, equals('Come Together'));
       expect(meta.mediaType, equals(MediaType.track));
-      expect(meta.subtitleDetail, equals('The Beatles'));
+      expect(meta.subtitle, equals('The Beatles'));
     });
 
     test('parses Artist correctly without BuildContext', () {
@@ -100,15 +100,15 @@ void main() {
 
       expect(meta.title, equals('The Beatles'));
       expect(meta.mediaType, equals(MediaType.artist));
-      expect(meta.subtitleDetail, equals('Rock'));
+      expect(meta.subtitle, equals('Rock'));
     });
 
     test('returns MediaType.unknown for unrecognized objects', () {
       final meta = MediaItemMetadata.from('unknown_object');
 
-      expect(meta.title, equals('Unknown'));
+      expect(meta.title, equals(''));
       expect(meta.mediaType, equals(MediaType.unknown));
-      expect(meta.subtitleDetail, isEmpty);
+      expect(meta.subtitle, isEmpty);
     });
   });
 
@@ -143,7 +143,7 @@ void main() {
       await tester.pumpWidget(
         buildTestableWidget((context) {
           final meta = MediaItemMetadata.from(album);
-          subtitle = meta.toFormattedSubtitle(context);
+          subtitle = meta.getFormattedSubtitle(context);
         }),
       );
 
@@ -163,7 +163,7 @@ void main() {
       await tester.pumpWidget(
         buildTestableWidget((context) {
           final meta = MediaItemMetadata.from(playlist);
-          subtitle = meta.toFormattedSubtitle(context);
+          subtitle = meta.getFormattedSubtitle(context);
         }),
       );
 

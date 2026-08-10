@@ -92,3 +92,11 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 *   [ ] Implement mosaic image generator for playlists without a default cover image
 *   [ ] Add local disk caching for metadata responses and cover art
 *   [ ] Implement Settings page (active plugin management, theme switching, storage clearing)
+
+## Future improvements
+*   [ ] Fast up media cover image show
+
+## Errori da risolvere:
+-Aggiornare tutti gli unitest e aggiungere quelli mancanti
+- Alcune playlisti vanno in eccezione e non stampano il messaggio d'errore correto
+- messaggi Eccezioni da gestire

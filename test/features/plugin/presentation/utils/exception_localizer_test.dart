@@ -3,7 +3,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dart_eval/stdlib/core.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
+import 'package:music_are/features/plugin/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/data/exceptions/plugin_engine_exceptions.dart';
 import 'package:music_are/features/plugin/presentation/utils/exception_localizer.dart';
 
@@ -27,10 +29,21 @@ void main() {
         ),
       );
 
+      final dummyManifest = PluginManifest(
+        id: 'dummy',
+        packageId: 'dummy',
+        type: 'metadata',
+        name: 'Dummy',
+        version: '1.0',
+        pluginSdkVersion: '1.0',
+        author: 'Author',
+        description: 'Desc',
+      );
+
       expect(
         IncompatibleSdkVersionException(
+          manifest: dummyManifest,
           hostVersion: '1.0.0',
-          pluginVersion: '2.0.0',
         ).toLocalizedString(buildContext),
         equals('The plugin is incompatible with this version of MusicAre.'),
       );
@@ -80,6 +93,11 @@ void main() {
       expect(
         Exception('Custom unexpected error').toLocalizedString(buildContext),
         equals('An unexpected error occurred: Custom unexpected error'),
+      );
+
+      expect(
+        $String('Dart eval wrapped error').toLocalizedString(buildContext),
+        equals('An unexpected error occurred: Dart eval wrapped error'),
       );
     });
   });

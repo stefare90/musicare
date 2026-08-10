@@ -168,7 +168,7 @@ void main() {
     test(
       'loadFromZipBytes throws IncompatibleSdkVersionException when SDK version is incompatible',
       () async {
-        final incompatibleZipBytes = createTestPluginZip(sdkVersion: '2.0.0');
+        final incompatibleZipBytes = createTestPluginZip(sdkVersion: '1.0.0');
 
         expect(
           () async => await engine.loadFromZipBytes(incompatibleZipBytes),
