@@ -107,5 +107,21 @@
             }
         }
     },
-    "updateRequiredMessage": "Update required for this version of MusicAre"
+    "updateRequiredMessage": "Update required for this version of MusicAre",
+    "ok": "OK",
+    "error": "'Error",
+    "popularTracks": "Popular Tracks",
+    "discography": "Discography",
+    "fansAlsoLike": "Fans Also Like",
+    "viewLog": "View Log",
+    "refresh": "Refresh",
+    "logErrorTitle": "{title} - Log",
+    "@logErrorTitle": {
+        "placeholders": {
+            "title": {
+                "type": "String",
+                "example": "Fans Also Like"
+            }
+        }
+    }
 }

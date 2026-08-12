@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
+import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/playlist.dart';
 import 'package:music_are/core/router/app_routes.dart';
 import 'package:music_are/features/details/album/presentation/pages/album_page.dart';
+import 'package:music_are/features/details/artist/presentation/pages/artist_page.dart';
 import 'package:music_are/features/details/playlist/presentation/pages/playlist_page.dart';
 import 'package:music_are/features/home/presentation/pages/home_page.dart';
 import 'package:music_are/features/library/presentation/pages/library_page.dart';
@@ -29,13 +31,13 @@ final List<RouteBase> _sharedDetailRoutes = [
       return AlbumPage(album: album);
     },
   ),
-  // GoRoute(
-  //   path: 'artist',
-  //   builder: (context, state) {
-  //     final artist = state.extra as Artist;
-  //     return ArtistPage(artist: artist);
-  //   },
-  // ),
+  GoRoute(
+    path: 'artist',
+    builder: (context, state) {
+      final artist = state.extra as Artist;
+      return ArtistPage(artist: artist);
+    },
+  ),
 ];
 
 GoRouter createRouter({required String initialLocation}) {

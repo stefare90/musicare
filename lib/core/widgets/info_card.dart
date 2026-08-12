@@ -45,21 +45,22 @@ class InfoCard extends StatelessWidget {
     final hasIcon = icon != null;
 
     if (hasLabel && hasIcon) {
-      return createIconButton(Icon(icon), Text(label));
+      return createIconButton(Icon(icon, size: 18), Text(label));
     }
     if (hasLabel) {
       return createButton(Text(label));
     }
     if (hasIcon) {
-      return createButton(Icon(icon));
+      return createButton(Icon(icon, size: 18));
     }
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final effectiveIconColor =
-        iconColor ?? Theme.of(context).colorScheme.primary;
+        iconColor ?? theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7);
 
     final primaryBtn = _buildButton(
       onPressed: onAction,
@@ -85,16 +86,23 @@ class InfoCard extends StatelessWidget {
     );
 
     return Card(
-      elevation: 2,
+      elevation: 0,
+      color: theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.4),
       margin: margin,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.25),
+          width: 0.8,
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 44, color: effectiveIconColor),
+              Icon(icon, size: 36, color: effectiveIconColor),
               const SizedBox(height: 12),
             ],
             Text(
@@ -102,7 +110,11 @@ class InfoCard extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
-              style: context.textTheme.titleMedium,
+              style: context.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.85),
+                fontWeight: FontWeight.w600,
+                fontSize: 15.0,
+              ),
             ),
             if (message != null && message!.isNotEmpty) ...[
               const SizedBox(height: 8),
@@ -111,7 +123,12 @@ class InfoCard extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
-                style: context.textTheme.bodyMedium,
+                style: context.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.65,
+                  ),
+                  fontSize: 13.0,
+                ),
               ),
             ],
             if (primaryBtn != null || secondaryBtn != null) ...[

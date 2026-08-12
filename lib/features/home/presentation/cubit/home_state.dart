@@ -1,43 +1,54 @@
 import 'package:gyawun_metadata_sdk/metadata/models/section.dart';
+import 'package:music_are/core/models/section_state.dart';
 
 class SectionWithItems {
   final Section section;
-  final List<Object> items;
+  final SectionState<List<Object>> itemsState;
 
-  SectionWithItems({required this.section, required this.items});
+  const SectionWithItems({
+    required this.section,
+    this.itemsState = const SectionState(data: [], isLoading: true),
+  });
 }
 
-abstract class HomeState {}
-
-class HomeInitialState extends HomeState {}
-
-class HomeLoadingState extends HomeState {}
-
-class HomeLoadedState extends HomeState {
+class HomeState {
   final List<SectionWithItems> sections;
-  final bool isRefreshing;
-  final Object? refreshError;
 
-  HomeLoadedState({
-    required this.sections,
-    this.isRefreshing = false,
-    this.refreshError,
+  const HomeState({
+    this.sections = const [
+      SectionWithItems(
+        section: Section(id: '0', title: ''),
+      ),
+      SectionWithItems(
+        section: Section(id: '1', title: ''),
+      ),
+      SectionWithItems(
+        section: Section(id: '2', title: ''),
+      ),
+    ],
   });
 
-  HomeLoadedState copyWith({
-    List<SectionWithItems>? sections,
-    bool? isRefreshing,
-    Object? refreshError,
-  }) {
-    return HomeLoadedState(
-      sections: sections ?? this.sections,
-      isRefreshing: isRefreshing ?? this.isRefreshing,
-      refreshError: refreshError,
-    );
-  }
-}
+  bool get isLoading => sections.any((s) => s.itemsState.isLoading);
 
-class HomeErrorState extends HomeState {
-  final Object error;
-  HomeErrorState(this.error);
+  bool get hasAnyDataLoaded =>
+      sections.any((s) => s.itemsState.data.isNotEmpty);
+
+  bool get hasError =>
+      sections.isNotEmpty &&
+      !isLoading &&
+      !hasAnyDataLoaded &&
+      sections.every((s) => s.itemsState.hasError);
+
+  Object? get error {
+    if (hasError) {
+      for (final s in sections) {
+        if (s.itemsState.hasError) return s.itemsState.error;
+      }
+    }
+    return null;
+  }
+
+  HomeState copyWith({List<SectionWithItems>? sections}) {
+    return HomeState(sections: sections ?? this.sections);
+  }
 }

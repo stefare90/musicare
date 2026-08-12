@@ -1,4 +1,6 @@
+import 'package:gyawun_metadata_sdk/metadata/models/section.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
+import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/features/home/presentation/cubit/home_state.dart';
 import 'package:music_are/features/plugin/data/exceptions/plugin_engine_exceptions.dart';
 import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
@@ -6,51 +8,109 @@ import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
 class HomeCubit extends SafeCubit<HomeState> {
   final PluginEngine _pluginEngine;
 
-  HomeCubit(this._pluginEngine) : super(HomeInitialState());
+  HomeCubit(this._pluginEngine) : super(const HomeState());
 
   Future<void> fetchSections() async {
     if (!_pluginEngine.hasMetadata) {
-      emit(HomeErrorState(PluginNotLoadedException()));
+      final err = PluginNotLoadedException();
+      emit(
+        HomeState(
+          sections: [
+            SectionWithItems(
+              section: Section(id: '0', title: ''),
+              itemsState: SectionState.error(err, const []),
+            ),
+          ],
+        ),
+      );
       return;
-    }
-
-    if (state is HomeLoadedState &&
-        (state as HomeLoadedState).sections.isNotEmpty) {
-      final currentState = state as HomeLoadedState;
-      emit(currentState.copyWith(isRefreshing: true, refreshError: null));
-    } else {
-      emit(HomeLoadingState());
     }
 
     try {
       final browse = _pluginEngine.metadata.browse;
       final sectionsResult = await browse.sections(offset: 0, limit: 10);
 
-      final List<SectionWithItems> loadedSections = [];
-
-      for (final section in sectionsResult.items) {
-        final itemsResult = await browse.sectionItems(
-          section.id,
-          offset: 0,
-          limit: 10,
-        );
-        final List<Object> safeItems = itemsResult.items
-            .where((item) => item != null)
-            .cast<Object>()
-            .toList();
-        loadedSections.add(
-          SectionWithItems(section: section, items: safeItems),
-        );
+      if (sectionsResult.items.isEmpty) {
+        emit(const HomeState(sections: []));
+        return;
       }
 
-      emit(HomeLoadedState(sections: loadedSections, isRefreshing: false));
+      final initialSections = sectionsResult.items
+          .map(
+            (s) => SectionWithItems(
+              section: s,
+              itemsState: const SectionState(data: [], isLoading: true),
+            ),
+          )
+          .toList();
+
+      emit(HomeState(sections: initialSections));
+
+      for (final sectionData in initialSections) {
+        _fetchSectionItems(sectionData.section.id);
+      }
     } catch (e) {
-      if (state is HomeLoadedState) {
-        final currentState = state as HomeLoadedState;
-        emit(currentState.copyWith(isRefreshing: false, refreshError: e));
-      } else {
-        emit(HomeErrorState(e));
-      }
+      emit(
+        HomeState(
+          sections: [
+            SectionWithItems(
+              section: Section(id: '0', title: ''),
+              itemsState: SectionState.error(e, const []),
+            ),
+          ],
+        ),
+      );
     }
+  }
+
+  void _fetchSectionItems(String sectionId) {
+    _pluginEngine.metadata.browse
+        .sectionItems(sectionId, offset: 0, limit: 10)
+        .then((itemsResult) {
+          final List<Object> safeItems = itemsResult.items
+              .where((item) => item != null)
+              .cast<Object>()
+              .toList();
+
+          final updatedSections = state.sections.map((s) {
+            if (s.section.id == sectionId) {
+              return SectionWithItems(
+                section: s.section,
+                itemsState: SectionState.success(safeItems),
+              );
+            }
+            return s;
+          }).toList();
+
+          emit(state.copyWith(sections: updatedSections));
+        })
+        .catchError((e) {
+          final updatedSections = state.sections.map((s) {
+            if (s.section.id == sectionId) {
+              return SectionWithItems(
+                section: s.section,
+                itemsState: SectionState.error(e, s.itemsState.data),
+              );
+            }
+            return s;
+          }).toList();
+
+          emit(state.copyWith(sections: updatedSections));
+        });
+  }
+
+  Future<void> retrySection(String sectionId) async {
+    final updatingSections = state.sections.map((s) {
+      if (s.section.id == sectionId) {
+        return SectionWithItems(
+          section: s.section,
+          itemsState: SectionState.loading(s.itemsState.data),
+        );
+      }
+      return s;
+    }).toList();
+
+    emit(state.copyWith(sections: updatingSections));
+    _fetchSectionItems(sectionId);
   }
 }

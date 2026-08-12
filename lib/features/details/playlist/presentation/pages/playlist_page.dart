@@ -5,7 +5,8 @@ import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/models/media_type.dart';
 import 'package:music_are/core/widgets/bottom_sheets/bottom_sheets.dart';
 import 'package:music_are/core/widgets/dialogs.dart';
-import 'package:music_are/core/widgets/media/sliver_media_detail_layout.dart';
+import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
+import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
 import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
@@ -44,39 +45,37 @@ class _PlaylistView extends StatelessWidget {
       },
       builder: (context, state) {
         if (state is PlaylistErrorState) {
-          return SliverMediaDetailLayout(
+          return SliverMediaScaffold(
             metadata: state.metadata,
             error: state.error,
-            listType: MediaType.playlist,
             onRetry: () =>
                 context.read<PlaylistCubit>().loadPlaylist(state.playlist),
           );
         }
         if (state is PlaylistLoadedState) {
-          return SliverMediaDetailLayout(
+          return SliverMediaScaffold(
             metadata: state.metadata,
             isSaved: state.isSaved,
-            tracks: state.tracks.items,
-            hasMoreTracks: state.hasMoreTracks,
-            listType: MediaType.playlist,
-            onRetry: () =>
-                context.read<PlaylistCubit>().loadPlaylist(state.playlist),
-            onLoadMore: () => context.read<PlaylistCubit>().loadMoreTracks(),
             onSaveTap: () => context.read<PlaylistCubit>().toggleSave(),
             onOptionsTap: () => PlaylistOptionsBottomSheet.show(
               context,
               state.playlist,
               onToggleSave: () => context.read<PlaylistCubit>().toggleSave(),
             ),
-            onTrackOptionsTap: (track) =>
-                TrackOptionsBottomSheet.show(context, track),
+            slivers: [
+              SliverTrackList(
+                tracks: state.tracks.items,
+                listType: MediaType.playlist,
+                hasMore: state.hasMoreTracks,
+                onLoadMore: () =>
+                    context.read<PlaylistCubit>().loadMoreTracks(),
+                onTrackOptionsTap: (track) =>
+                    TrackOptionsBottomSheet.show(context, track),
+              ),
+            ],
           );
         }
-        return SliverMediaDetailLayout(
-          metadata: state.metadata,
-          isLoading: true,
-          listType: MediaType.playlist,
-        );
+        return SliverMediaScaffold(metadata: state.metadata, isLoading: true);
       },
     );
   }

@@ -214,4 +214,30 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get updateRequiredMessage =>
       'Update required for this version of MusicAre';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get error => '\'Error';
+
+  @override
+  String get popularTracks => 'Popular Tracks';
+
+  @override
+  String get discography => 'Discography';
+
+  @override
+  String get fansAlsoLike => 'Fans Also Like';
+
+  @override
+  String get viewLog => 'View Log';
+
+  @override
+  String get refresh => 'Refresh';
+
+  @override
+  String logErrorTitle(String title) {
+    return '$title - Log';
+  }
 }

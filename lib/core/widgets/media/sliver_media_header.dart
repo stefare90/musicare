@@ -1,26 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:music_are/core/models/media_item_metadata.dart';
+import 'package:music_are/core/models/media_type.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/core/widgets/media/media_cover_image.dart';
 
 class SliverMediaHeader extends StatelessWidget {
   final MediaItemMetadata meta;
-  final bool isCircular;
   final Key? titleKey;
 
   static const double _coverSize = 160.0;
 
-  const SliverMediaHeader({
-    super.key,
-    required this.meta,
-    this.isCircular = false,
-    this.titleKey,
-  });
+  const SliverMediaHeader({super.key, required this.meta, this.titleKey});
 
   @override
   Widget build(BuildContext context) {
     final formattedTitle = meta.getFormattedTitle(context);
     final formattedDetails = meta.getFormattedDetails(context);
+    final bool isCircular = meta.mediaType == MediaType.artist;
 
     return SliverToBoxAdapter(
       child: Padding(

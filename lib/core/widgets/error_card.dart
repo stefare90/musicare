@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/widgets/dialogs.dart';
 import 'package:music_are/core/widgets/info_card.dart';
@@ -22,20 +21,19 @@ class ErrorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final fullErrorDetails = error.toString();
+    final theme = Theme.of(context);
 
     return InfoCard(
       icon: icon,
-      iconColor: Theme.of(context).colorScheme.error,
+      iconColor: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
       title: error.toLocalizedString(context),
       onAction: onRetry,
-      actionLabel: context.l10n.retry,
-      onSecondaryAction: () {
-        Clipboard.setData(ClipboardData(text: fullErrorDetails));
-        Dialogs.showSnackBar(context, message: l10n.errorCopiedToClipboard);
-      },
-      secondaryActionLabel: l10n.copyError,
-      secondaryActionIcon: Icons.copy_rounded,
+      actionLabel: l10n.retry,
+      actionIcon: Icons.refresh_rounded,
+      onSecondaryAction: () =>
+          Dialogs.showError(context, title: l10n.error, error: error),
+      secondaryActionLabel: l10n.viewLog,
+      secondaryActionIcon: Icons.article_outlined,
       margin: margin,
     );
   }

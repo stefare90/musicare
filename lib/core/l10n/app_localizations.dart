@@ -465,6 +465,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Update required for this version of MusicAre'**
   String get updateRequiredMessage;
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
+  /// No description provided for @error.
+  ///
+  /// In en, this message translates to:
+  /// **'\'Error'**
+  String get error;
+
+  /// No description provided for @popularTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular Tracks'**
+  String get popularTracks;
+
+  /// No description provided for @discography.
+  ///
+  /// In en, this message translates to:
+  /// **'Discography'**
+  String get discography;
+
+  /// No description provided for @fansAlsoLike.
+  ///
+  /// In en, this message translates to:
+  /// **'Fans Also Like'**
+  String get fansAlsoLike;
+
+  /// No description provided for @viewLog.
+  ///
+  /// In en, this message translates to:
+  /// **'View Log'**
+  String get viewLog;
+
+  /// No description provided for @refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh;
+
+  /// No description provided for @logErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} - Log'**
+  String logErrorTitle(String title);
 }
 
 class _AppLocalizationsDelegate
