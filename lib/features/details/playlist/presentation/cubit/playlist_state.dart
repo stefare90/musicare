@@ -24,13 +24,11 @@ class PlaylistLoadedState extends PlaylistState {
   final Playlist playlist;
   final PaginatedResult<Track> tracks;
   final bool isSaved;
-  final Object? refreshError;
 
   PlaylistLoadedState({
     required this.playlist,
     required this.tracks,
     this.isSaved = false,
-    this.refreshError,
   });
 
   @override
@@ -41,15 +39,24 @@ class PlaylistLoadedState extends PlaylistState {
     Playlist? playlist,
     PaginatedResult<Track>? tracks,
     bool? isSaved,
-    Object? refreshError,
   }) {
     return PlaylistLoadedState(
       playlist: playlist ?? this.playlist,
       tracks: tracks ?? this.tracks,
       isSaved: isSaved ?? this.isSaved,
-      refreshError: refreshError,
     );
   }
+}
+
+class PlaylistLoadMoreErrorState extends PlaylistLoadedState {
+  final Object error;
+
+  PlaylistLoadMoreErrorState({
+    required super.playlist,
+    required super.tracks,
+    required super.isSaved,
+    required this.error,
+  });
 }
 
 class PlaylistErrorState extends PlaylistState {

@@ -167,6 +167,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get copyError => 'Copy full Error';
 
   @override
+  String get moreTracks => 'More tracks';
+
+  @override
   String get errorCopiedToClipboard => 'Error copied to clipboard!';
 
   @override

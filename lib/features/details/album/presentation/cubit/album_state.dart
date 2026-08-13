@@ -24,13 +24,11 @@ class AlbumLoadedState extends AlbumState {
   final Album album;
   final PaginatedResult<Track> tracks;
   final bool isSaved;
-  final Object? refreshError;
 
   AlbumLoadedState({
     required this.album,
     required this.tracks,
     this.isSaved = false,
-    this.refreshError,
   });
 
   @override
@@ -41,15 +39,24 @@ class AlbumLoadedState extends AlbumState {
     Album? album,
     PaginatedResult<Track>? tracks,
     bool? isSaved,
-    Object? refreshError,
   }) {
     return AlbumLoadedState(
       album: album ?? this.album,
       tracks: tracks ?? this.tracks,
       isSaved: isSaved ?? this.isSaved,
-      refreshError: refreshError,
     );
   }
+}
+
+class AlbumLoadMoreErrorState extends AlbumLoadedState {
+  final Object error;
+
+  AlbumLoadMoreErrorState({
+    required super.album,
+    required super.tracks,
+    required super.isSaved,
+    required this.error,
+  });
 }
 
 class AlbumErrorState extends AlbumState {

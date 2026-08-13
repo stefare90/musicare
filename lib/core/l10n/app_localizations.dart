@@ -388,6 +388,12 @@ abstract class AppLocalizations {
   /// **'Copy full Error'**
   String get copyError;
 
+  /// No description provided for @moreTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'More tracks'**
+  String get moreTracks;
+
   /// No description provided for @errorCopiedToClipboard.
   ///
   /// In en, this message translates to:

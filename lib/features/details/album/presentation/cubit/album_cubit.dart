@@ -35,12 +35,7 @@ class AlbumCubit extends SafeCubit<AlbumState> {
 
       emit(AlbumLoadedState(album: fullAlbum, tracks: result));
     } catch (e) {
-      if (state is AlbumLoadedState) {
-        final currentState = state as AlbumLoadedState;
-        emit(currentState.copyWith(refreshError: e));
-      } else {
-        emit(AlbumErrorState(error: e, album: album));
-      }
+      emit(AlbumErrorState(error: e, album: album));
     }
   }
 
@@ -50,6 +45,16 @@ class AlbumCubit extends SafeCubit<AlbumState> {
     if (!currentState.hasMoreTracks) return;
 
     _isFetchingMoreTracks = true;
+
+    if (state is AlbumLoadMoreErrorState) {
+      emit(
+        AlbumLoadedState(
+          album: currentState.album,
+          tracks: currentState.tracks,
+          isSaved: currentState.isSaved,
+        ),
+      );
+    }
 
     try {
       final offset = currentState.tracks.items.length;
@@ -69,7 +74,14 @@ class AlbumCubit extends SafeCubit<AlbumState> {
 
       emit(currentState.copyWith(tracks: updatedResult));
     } catch (e) {
-      emit(currentState.copyWith(refreshError: e));
+      emit(
+        AlbumLoadMoreErrorState(
+          album: currentState.album,
+          tracks: currentState.tracks,
+          isSaved: currentState.isSaved,
+          error: e,
+        ),
+      );
     } finally {
       _isFetchingMoreTracks = false;
     }

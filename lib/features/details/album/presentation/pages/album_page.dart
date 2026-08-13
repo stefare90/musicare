@@ -4,13 +4,11 @@ import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
 import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/models/media_type.dart';
 import 'package:music_are/core/widgets/bottom_sheets/bottom_sheets.dart';
-import 'package:music_are/core/widgets/dialogs.dart';
 import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
 import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 import 'package:music_are/features/details/album/presentation/cubit/album_cubit.dart';
 import 'package:music_are/features/details/album/presentation/cubit/album_state.dart';
 import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
-import 'package:music_are/features/plugin/presentation/utils/exception_localizer.dart';
 
 class AlbumPage extends StatelessWidget {
   final Album album;
@@ -31,17 +29,7 @@ class _AlbumView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<AlbumCubit, AlbumState>(
-      listenWhen: (prev, curr) =>
-          curr is AlbumLoadedState && curr.refreshError != null,
-      listener: (context, state) {
-        if (state is AlbumLoadedState && state.refreshError != null) {
-          Dialogs.showErrorSnackBar(
-            context,
-            message: state.refreshError!.toLocalizedString(context),
-          );
-        }
-      },
+    return BlocBuilder<AlbumCubit, AlbumState>(
       builder: (context, state) {
         if (state is AlbumErrorState) {
           return SliverMediaScaffold(
@@ -65,6 +53,9 @@ class _AlbumView extends StatelessWidget {
                 tracks: state.tracks.items,
                 listType: MediaType.album,
                 hasMore: state.hasMoreTracks,
+                loadMoreError: state is AlbumLoadMoreErrorState
+                    ? state.error
+                    : null,
                 onLoadMore: () => context.read<AlbumCubit>().loadMoreTracks(),
                 onTrackOptionsTap: (track) =>
                     TrackOptionsBottomSheet.show(context, track),

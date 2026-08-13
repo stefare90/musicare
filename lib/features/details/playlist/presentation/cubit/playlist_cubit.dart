@@ -35,12 +35,7 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
       );
       emit(PlaylistLoadedState(playlist: playlist, tracks: result));
     } catch (e) {
-      if (state is PlaylistLoadedState) {
-        final currentState = state as PlaylistLoadedState;
-        emit(currentState.copyWith(refreshError: e));
-      } else {
-        emit(PlaylistErrorState(error: e, playlist: playlist));
-      }
+      emit(PlaylistErrorState(error: e, playlist: playlist));
     }
   }
 
@@ -50,6 +45,16 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
     if (!currentState.hasMoreTracks) return;
 
     _isFetchingMoreTracks = true;
+
+    if (state is PlaylistLoadMoreErrorState) {
+      emit(
+        PlaylistLoadedState(
+          playlist: currentState.playlist,
+          tracks: currentState.tracks,
+          isSaved: currentState.isSaved,
+        ),
+      );
+    }
 
     try {
       final offset = currentState.tracks.items.length;
@@ -69,7 +74,14 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
 
       emit(currentState.copyWith(tracks: updatedResult));
     } catch (e) {
-      emit(currentState.copyWith(refreshError: e));
+      emit(
+        PlaylistLoadMoreErrorState(
+          playlist: currentState.playlist,
+          tracks: currentState.tracks,
+          isSaved: currentState.isSaved,
+          error: e,
+        ),
+      );
     } finally {
       _isFetchingMoreTracks = false;
     }

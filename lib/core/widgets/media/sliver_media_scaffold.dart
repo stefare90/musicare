@@ -44,15 +44,20 @@ class _SliverMediaScaffoldState extends State<SliverMediaScaffold> {
   void _checkTitlePosition(BuildContext context) {
     final renderBox =
         _largeTitleKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox != null && renderBox.hasSize) {
-      final position = renderBox.localToGlobal(Offset.zero);
-      final topPadding = MediaQuery.of(context).padding.top;
-      final appBarBottom = topPadding + kToolbarHeight;
-      final largeTitleBottomY = position.dy + renderBox.size.height;
-      final isPast = largeTitleBottomY <= appBarBottom;
-      if (isPast != _isScrolledPast.value) {
-        _isScrolledPast.value = isPast;
-      }
+    if (renderBox != null &&
+        renderBox.hasSize &&
+        renderBox.attached &&
+        !renderBox.debugNeedsLayout) {
+      try {
+        final position = renderBox.localToGlobal(Offset.zero);
+        final topPadding = MediaQuery.of(context).padding.top;
+        final appBarBottom = topPadding + kToolbarHeight;
+        final largeTitleBottomY = position.dy + renderBox.size.height;
+        final isPast = largeTitleBottomY <= appBarBottom;
+        if (isPast != _isScrolledPast.value) {
+          _isScrolledPast.value = isPast;
+        }
+      } catch (_) {}
     }
   }
 
@@ -62,7 +67,11 @@ class _SliverMediaScaffoldState extends State<SliverMediaScaffold> {
     return Scaffold(
       body: NotificationListener<ScrollNotification>(
         onNotification: (notification) {
-          _checkTitlePosition(context);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _checkTitlePosition(context);
+            }
+          });
           return false;
         },
         child: CustomScrollView(
@@ -88,7 +97,7 @@ class _SliverMediaScaffoldState extends State<SliverMediaScaffold> {
                 ),
               )
             else if (widget.isLoading)
-              SliverSkeletonTrackList(showTitle: false, count: 6)
+              const SliverSkeletonTrackList(count: 6)
             else
               ...widget.slivers,
           ],

@@ -6,13 +6,13 @@ import 'package:music_are/features/plugin/presentation/utils/exception_localizer
 class ErrorTile extends StatelessWidget {
   final String title;
   final Object error;
-  final VoidCallback onRetry;
+  final VoidCallback? onRetry;
 
   const ErrorTile({
     super.key,
     required this.title,
     required this.error,
-    required this.onRetry,
+    this.onRetry,
   });
 
   @override
@@ -79,15 +79,17 @@ class ErrorTile extends StatelessWidget {
             onPressed: () =>
                 Dialogs.showError(context, title: title, error: error),
           ),
-          const SizedBox(width: 2),
-          IconButton(
-            icon: Icon(Icons.refresh_rounded, size: 16, color: iconColor),
-            tooltip: l10n.refresh,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-            padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
-            onPressed: onRetry,
-          ),
+          if (onRetry != null) ...[
+            const SizedBox(width: 2),
+            IconButton(
+              icon: Icon(Icons.refresh_rounded, size: 16, color: iconColor),
+              tooltip: l10n.refresh,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              onPressed: onRetry,
+            ),
+          ],
         ],
       ),
     );

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:music_are/core/widgets/skeletons/shimmer_box.dart';
+import 'package:music_are/core/widgets/skeletons/skeleton_track_list.dart';
 
 class SliverSkeletonTrackList extends StatelessWidget {
   final bool showTitle;
@@ -13,51 +13,8 @@ class SliverSkeletonTrackList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sliverList = SliverList(
-      delegate: SliverChildBuilderDelegate((context, index) {
-        return const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Row(
-            children: [
-              ShimmerBox(
-                width: 44.0,
-                height: 44.0,
-                borderRadius: BorderRadius.all(Radius.circular(8.0)),
-              ),
-              SizedBox(width: 12.0),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ShimmerBox(width: 150.0, height: 14.0),
-                    SizedBox(height: 6.0),
-                    ShimmerBox(width: 90.0, height: 10.0),
-                  ],
-                ),
-              ),
-              SizedBox(width: 12.0),
-              ShimmerBox(width: 32.0, height: 10.0),
-            ],
-          ),
-        );
-      }, childCount: count),
+    return SliverToBoxAdapter(
+      child: SkeletonTrackList(showTitle: showTitle, count: count),
     );
-    if (showTitle) {
-      return SliverMainAxisGroup(
-        slivers: [
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: ShimmerBox(width: 200.0, height: 20.0),
-              ),
-            ),
-          ),
-          sliverList,
-        ],
-      );
-    }
-    return sliverList;
   }
 }

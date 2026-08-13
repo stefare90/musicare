@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/models/media_type.dart';
+import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/core/widgets/error_tile.dart';
 import 'package:music_are/core/widgets/media/track_list_tile.dart';
+import 'package:music_are/core/widgets/skeletons/skeleton_track_list.dart';
 import 'package:music_are/core/widgets/skeletons/sliver_skeleton_track_list.dart';
 
 class SliverTrackList extends StatelessWidget {
@@ -12,6 +14,7 @@ class SliverTrackList extends StatelessWidget {
   final MediaType listType;
   final bool isLoading;
   final Object? error;
+  final Object? loadMoreError;
   final VoidCallback? onRetry;
   final bool hasMore;
   final String? activeTrackId;
@@ -26,6 +29,7 @@ class SliverTrackList extends StatelessWidget {
     required this.listType,
     this.isLoading = false,
     this.error,
+    this.loadMoreError,
     this.onRetry,
     this.hasMore = false,
     this.activeTrackId,
@@ -45,26 +49,33 @@ class SliverTrackList extends StatelessWidget {
         child: ErrorTile(
           title: title ?? context.l10n.error,
           error: error!,
-          onRetry: onRetry!,
+          onRetry: onRetry,
         ),
       );
     }
     if (isLoading) {
-      return SliverSkeletonTrackList(showTitle: title != null, count: 5);
+      return SliverSkeletonTrackList(
+        showTitle: title != null && title!.isNotEmpty,
+        count: 5,
+      );
     }
     if (tracks.isEmpty) {
-      return const SliverToBoxAdapter(child: SizedBox.shrink());
+      return const SliverToBoxAdapter(child: SizedBox(height: 0));
     }
-    final silverList = SliverList(
+    final sliverlist = SliverList(
       delegate: SliverChildBuilderDelegate((context, index) {
         if (index == tracks.length) {
+          if (loadMoreError != null) {
+            return ErrorTile(
+              title: context.l10n.moreTracks,
+              error: loadMoreError!,
+              onRetry: () => onLoadMore?.call(),
+            );
+          }
           WidgetsBinding.instance.addPostFrameCallback((_) {
             onLoadMore?.call();
           });
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16.0),
-            child: Center(child: CircularProgressIndicator()),
-          );
+          return const SkeletonTrackList(count: 1, showTitle: false);
         }
         final track = tracks[index];
         final isPlaying = activeTrackId != null && activeTrackId == track.id;
@@ -88,17 +99,14 @@ class SliverTrackList extends StatelessWidget {
                 horizontal: 16.0,
                 vertical: 8.0,
               ),
-              child: Text(
-                title!,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              child: Text(title!, style: context.textTheme.titleLarge),
             ),
           ),
-          silverList,
+          sliverlist,
         ],
       );
     }
 
-    return silverList;
+    return sliverlist;
   }
 }
