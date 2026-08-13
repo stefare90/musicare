@@ -3,16 +3,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
-import 'package:music_are/core/l10n/app_localizations.dart'; // <--- Import aggiunto
+import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/models/media_type.dart';
 import 'package:music_are/core/widgets/media/sliver_track_list.dart';
+import 'package:music_are/core/widgets/skeletons/skeleton_track_list.dart';
 
 void main() {
   Widget buildTestableWidget({required SliverTrackList child}) {
     return MaterialApp(
-      localizationsDelegates:
-          AppLocalizations.localizationsDelegates, // <--- Aggiunto
-      supportedLocales: AppLocalizations.supportedLocales, // <--- Aggiunto
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(body: CustomScrollView(slivers: [child])),
     );
   }
@@ -69,7 +69,7 @@ void main() {
     });
 
     testWidgets(
-      'renders progress indicator and calls onLoadMore when hasMore is true',
+      'renders SkeletonTrackList indicator and calls onLoadMore when hasMore is true',
       (tester) async {
         bool loadMoreCalled = false;
 
@@ -84,7 +84,7 @@ void main() {
           ),
         );
 
-        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        expect(find.byType(SkeletonTrackList), findsOneWidget);
         expect(loadMoreCalled, isTrue);
       },
     );

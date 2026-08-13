@@ -6,7 +6,8 @@ import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/models/media_item_metadata.dart';
 import 'package:music_are/core/models/media_type.dart';
-import 'package:music_are/core/widgets/media/sliver_media_detail_layout.dart';
+import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
+import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 
 void main() {
   final testAlbum = Album(
@@ -36,19 +37,20 @@ void main() {
     );
   }
 
-  group('SliverMediaDetailLayout Widget Tests', () {
-    testWidgets('renders header, track list and handles callbacks', (
+  group('SliverMediaScaffold Widget Tests', () {
+    testWidgets('renders header, track list and handles save callback', (
       tester,
     ) async {
       bool saveTapped = false;
 
       await tester.pumpWidget(
         buildTestableWidget(
-          child: SliverMediaDetailLayout(
+          child: SliverMediaScaffold(
             metadata: MediaItemMetadata.from(testAlbum),
-            tracks: [testTrack],
-            listType: MediaType.album,
             onSaveTap: () => saveTapped = true,
+            slivers: [
+              SliverTrackList(tracks: [testTrack], listType: MediaType.album),
+            ],
           ),
         ),
       );
@@ -58,7 +60,7 @@ void main() {
       expect(
         find.text('The Beatles'),
         findsNWidgets(2),
-      ); // Header Subtitle + Track Tile Subtitle
+      ); // Subtitle Header + Subtitle Track
       expect(find.text('Come Together'), findsOneWidget);
 
       await tester.tap(find.byIcon(Icons.favorite_border_rounded));
@@ -72,10 +74,9 @@ void main() {
 
       await tester.pumpWidget(
         buildTestableWidget(
-          child: SliverMediaDetailLayout(
+          child: SliverMediaScaffold(
             metadata: MediaItemMetadata.from(testAlbum),
             error: Exception('Network error'),
-            listType: MediaType.album,
             onRetry: () => retryTapped = true,
           ),
         ),
@@ -94,20 +95,19 @@ void main() {
       expect(retryTapped, isTrue);
     });
 
-    testWidgets('renders loading indicator when isLoading is true', (
+    testWidgets('renders skeleton loading list when isLoading is true', (
       tester,
     ) async {
       await tester.pumpWidget(
         buildTestableWidget(
-          child: SliverMediaDetailLayout(
+          child: SliverMediaScaffold(
             metadata: MediaItemMetadata.from(testAlbum),
             isLoading: true,
-            listType: MediaType.album,
           ),
         ),
       );
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(CustomScrollView), findsOneWidget);
     });
   });
 }

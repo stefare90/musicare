@@ -23,7 +23,7 @@ void main() {
     late MockBrowseService mockBrowse;
     late HomeCubit cubit;
 
-    final testSection = Section(
+    final testSection = const Section(
       id: 's1',
       title: 'Top Charts',
       description: 'Popular now',
@@ -49,23 +49,26 @@ void main() {
       cubit.close();
     });
 
-    test('initial state is HomeInitialState', () {
-      expect(cubit.state, isA<HomeInitialState>());
+    test('initial state has default skeleton sections', () {
+      expect(cubit.state.sections.length, equals(3));
+      expect(cubit.state.isLoading, isTrue);
     });
 
     test(
-      'fetchSections emits HomeErrorState when plugin is not loaded',
+      'fetchSections sets error section when plugin is not loaded',
       () async {
         when(() => mockEngine.hasMetadata).thenReturn(false);
 
         expectLater(
           cubit.stream,
           emitsInOrder([
-            isA<HomeErrorState>().having(
-              (s) => s.error,
-              'error',
-              isA<PluginNotLoadedException>(),
-            ),
+            isA<HomeState>()
+                .having((s) => s.hasError, 'hasError', isTrue)
+                .having(
+                  (s) => s.error,
+                  'error',
+                  isA<PluginNotLoadedException>(),
+                ),
           ]),
         );
 
@@ -74,7 +77,7 @@ void main() {
     );
 
     test(
-      'fetchSections emits LoadedState with section items on success',
+      'fetchSections populates browse sections and items on success',
       () async {
         when(() => mockEngine.hasMetadata).thenReturn(true);
         when(() => mockEngine.metadata).thenReturn(mockMetadata);
@@ -103,9 +106,17 @@ void main() {
         expectLater(
           cubit.stream,
           emitsInOrder([
-            isA<HomeLoadingState>(),
-            isA<HomeLoadedState>()
-                .having((s) => s.sections.length, 'sections length', 1)
+            isA<HomeState>().having(
+              (s) => s.sections.length,
+              'sections length',
+              1,
+            ),
+            isA<HomeState>()
+                .having(
+                  (s) => s.sections.first.itemsState.data.length,
+                  'items length',
+                  1,
+                )
                 .having(
                   (s) => s.sections.first.section.title,
                   'section title',
