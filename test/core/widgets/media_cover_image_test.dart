@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/image.dart' as sdk;
@@ -25,7 +26,7 @@ void main() {
         );
 
         expect(find.byIcon(Icons.music_note_rounded), findsOneWidget);
-        expect(find.byType(Image), findsNothing);
+        expect(find.byType(CachedNetworkImage), findsNothing);
       },
     );
 
@@ -42,11 +43,11 @@ void main() {
         );
 
         expect(find.byIcon(Icons.person_rounded), findsOneWidget);
-        expect(find.byType(Image), findsNothing);
+        expect(find.byType(CachedNetworkImage), findsNothing);
       },
     );
 
-    testWidgets('renders Image.network when valid image URL is provided', (
+    testWidgets('renders CachedNetworkImage when valid image URL is provided', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -58,30 +59,106 @@ void main() {
         ),
       );
 
-      expect(find.byType(Image), findsOneWidget);
+      expect(find.byType(CachedNetworkImage), findsOneWidget);
     });
 
     testWidgets(
-      'renders single image for Album even if it has 4 resolution variants',
+      'selects smallest image equal or greater than requested target size',
       (tester) async {
-        final albumVariants = [
-          sdk.Image(url: 'https://example.com/64x64.jpg'),
-          sdk.Image(url: 'https://example.com/300x300.jpg'),
-          sdk.Image(url: 'https://example.com/600x600.jpg'),
-          sdk.Image(url: 'https://example.com/1000x1000.jpg'),
+        final variants = [
+          sdk.Image(
+            url: 'https://example.com/small.jpg',
+            width: 250,
+            height: 250,
+          ),
+          sdk.Image(
+            url: 'https://example.com/medium.jpg',
+            width: 500,
+            height: 500,
+          ),
+          sdk.Image(
+            url: 'https://example.com/large.jpg',
+            width: 1200,
+            height: 1200,
+          ),
         ];
 
         await tester.pumpWidget(
           buildTestableWidget(
             child: MediaCoverImage(
-              images: albumVariants,
+              images: variants,
+              mediaType: MediaType.track,
+              width: 44, // Miniatura -> Seleziona la prima >= 132px (250px)
+              height: 44,
+            ),
+          ),
+        );
+
+        final imageWidget = tester.widget<CachedNetworkImage>(
+          find.byType(CachedNetworkImage),
+        );
+        expect(imageWidget.imageUrl, equals('https://example.com/small.jpg'));
+      },
+    );
+
+    testWidgets(
+      'selects largest image when width and height are null and width metadata is present',
+      (tester) async {
+        final variants = [
+          sdk.Image(
+            url: 'https://example.com/small.jpg',
+            width: 250,
+            height: 250,
+          ),
+          sdk.Image(
+            url: 'https://example.com/medium.jpg',
+            width: 500,
+            height: 500,
+          ),
+          sdk.Image(
+            url: 'https://example.com/large.jpg',
+            width: 1200,
+            height: 1200,
+          ),
+        ];
+
+        await tester.pumpWidget(
+          buildTestableWidget(
+            child: MediaCoverImage(
+              images: variants,
               mediaType: MediaType.album,
             ),
           ),
         );
 
-        // Deve mostrare 1 sola immagine (non il mosaico)
-        expect(find.byType(Image), findsOneWidget);
+        final imageWidget = tester.widget<CachedNetworkImage>(
+          find.byType(CachedNetworkImage),
+        );
+        expect(imageWidget.imageUrl, equals('https://example.com/large.jpg'));
+      },
+    );
+
+    testWidgets(
+      'falls back to first image when images do not have width metadata',
+      (tester) async {
+        final variants = [
+          sdk.Image(url: 'https://example.com/first.jpg'),
+          sdk.Image(url: 'https://example.com/second.jpg'),
+        ];
+
+        await tester.pumpWidget(
+          buildTestableWidget(
+            child: MediaCoverImage(
+              images: variants,
+              mediaType: MediaType.album,
+            ),
+          ),
+        );
+
+        final imageWidget = tester.widget<CachedNetworkImage>(
+          find.byType(CachedNetworkImage),
+        );
+        expect(imageWidget.imageUrl, equals('https://example.com/first.jpg'));
       },
     );
 

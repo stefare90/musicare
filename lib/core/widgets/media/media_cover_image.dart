@@ -23,12 +23,30 @@ class MediaCoverImage extends StatelessWidget {
 
   IconData get _effectiveFallbackIcon => mediaType.defaultIcon;
 
-  String? _getBestImageUrl(List<String> validUrls) {
-    if (validUrls.isEmpty) return null;
-    if (width != null && width! < 100 && validUrls.length > 1) {
-      return validUrls.last;
+  String? _getBestImageUrl(BuildContext context, List<sdk.Image>? images) {
+    if (images == null || images.isEmpty) return null;
+    final validImages = images.where((i) => i.url.trim().isNotEmpty).toList();
+    if (validImages.isEmpty) return null;
+    final withWidth = validImages
+        .where((i) => i.width != null && i.width! > 0)
+        .toList();
+    if (withWidth.isNotEmpty) {
+      withWidth.sort((a, b) => a.width!.compareTo(b.width!));
+      final double? targetDp = width ?? height;
+      if (targetDp == null) {
+        return withWidth.last.url;
+      }
+      final mediaQuery = MediaQuery.maybeOf(context);
+      final pixelRatio = mediaQuery?.devicePixelRatio ?? 2.0;
+      final targetPx = targetDp * pixelRatio;
+      for (final img in withWidth) {
+        if (img.width! >= targetPx) {
+          return img.url;
+        }
+      }
+      return withWidth.last.url;
     }
-    return validUrls.first;
+    return validImages.first.url;
   }
 
   List<String> _getMosaicUrls(List<String> urls) {
@@ -53,7 +71,7 @@ class MediaCoverImage extends StatelessWidget {
     if (mediaType == MediaType.playlist && validUrls.length >= 2) {
       imageWidget = _buildMosaic(context, _getMosaicUrls(validUrls));
     } else {
-      final bestUrl = _getBestImageUrl(validUrls);
+      final bestUrl = _getBestImageUrl(context, images);
       if (bestUrl != null) {
         imageWidget = CachedNetworkImage(
           imageUrl: bestUrl,
