@@ -63,9 +63,21 @@ class _ArtistView extends StatelessWidget {
               child: SectionRow(
                 title: context.l10n.discography,
                 items: state.albums.data.items,
-                isLoading: state.albums.isLoading,
-                error: state.albums.error,
+                isLoading:
+                    state.albums.isLoading && state.albums.data.items.isEmpty,
+                isLoadingMore:
+                    state.albums.isLoading &&
+                    state.albums.data.items.isNotEmpty,
+                hasMore:
+                    state.albums.data.items.length < state.albums.data.total,
+                error: state.albums.data.items.isEmpty
+                    ? state.albums.error
+                    : null,
+                loadMoreError: state.albums.data.items.isNotEmpty
+                    ? state.albums.error
+                    : null,
                 onRetry: () => context.read<ArtistCubit>().fetchAlbums(),
+                onLoadMore: () => context.read<ArtistCubit>().fetchMoreAlbums(),
                 onItemTap: (item) => AppNavigator.toMediaDetail(context, item),
               ),
             ),
@@ -73,9 +85,22 @@ class _ArtistView extends StatelessWidget {
               child: SectionRow(
                 title: context.l10n.fansAlsoLike,
                 items: state.related.data.items,
-                isLoading: state.related.isLoading,
-                error: state.related.error,
+                isLoading:
+                    state.related.isLoading && state.related.data.items.isEmpty,
+                isLoadingMore:
+                    state.related.isLoading &&
+                    state.related.data.items.isNotEmpty,
+                hasMore:
+                    state.related.data.items.length < state.related.data.total,
+                error: state.related.data.items.isEmpty
+                    ? state.related.error
+                    : null,
+                loadMoreError: state.related.data.items.isNotEmpty
+                    ? state.related.error
+                    : null,
                 onRetry: () => context.read<ArtistCubit>().fetchRelated(),
+                onLoadMore: () =>
+                    context.read<ArtistCubit>().fetchMoreRelated(),
                 onItemTap: (item) => AppNavigator.toMediaDetail(context, item),
               ),
             ),
