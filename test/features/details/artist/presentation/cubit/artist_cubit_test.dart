@@ -35,22 +35,24 @@ void main() {
       genres: ['Rock', 'Pop'],
     );
 
-    final testTrack = Track(
-      id: 't1',
-      name: 'Hey Jude',
-      externalUri: '',
-      artists: [initialArtist],
-      album: Album(
-        id: 'al1',
-        name: 'Single',
-        artists: [],
-        releaseDate: '',
+    Track createTrack(String id, String name) {
+      return Track(
+        id: id,
+        name: name,
         externalUri: '',
-        totalTracks: 1,
-        albumType: AlbumType.single,
-      ),
-      durationMs: 431000,
-    );
+        artists: [initialArtist],
+        album: Album(
+          id: 'al1',
+          name: 'Single',
+          artists: [],
+          releaseDate: '',
+          externalUri: '',
+          totalTracks: 1,
+          albumType: AlbumType.single,
+        ),
+        durationMs: 431000,
+      );
+    }
 
     final testAlbum = Album(
       id: 'al1',
@@ -92,7 +94,7 @@ void main() {
     );
 
     test(
-      'loadArtist fetches full artist, top tracks, albums and related artists',
+      'loadArtist fetches full artist, top tracks (limit 6), albums and related artists',
       () async {
         when(() => mockPluginEngine.hasMetadata).thenReturn(true);
         when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
@@ -103,35 +105,35 @@ void main() {
         ).thenAnswer((_) async => fullArtist);
 
         when(
-          () => mockArtistService.topTracks('a1', offset: 0, limit: 10),
+          () => mockArtistService.topTracks('a1', offset: 0, limit: 6),
         ).thenAnswer(
           (_) async => PaginatedResult(
-            items: [testTrack],
-            total: 1,
+            items: [createTrack('t1', 'Hey Jude')],
+            total: 10,
             offset: 0,
-            limit: 10,
+            limit: 6,
           ),
         );
 
         when(
-          () => mockArtistService.albums('a1', offset: 0, limit: 10),
+          () => mockArtistService.albums('a1', offset: 0, limit: 6),
         ).thenAnswer(
           (_) async => PaginatedResult(
             items: [testAlbum],
             total: 1,
             offset: 0,
-            limit: 10,
+            limit: 6,
           ),
         );
 
         when(
-          () => mockArtistService.related('a1', offset: 0, limit: 10),
+          () => mockArtistService.related('a1', offset: 0, limit: 6),
         ).thenAnswer(
           (_) async => PaginatedResult(
             items: [initialArtist],
             total: 1,
             offset: 0,
-            limit: 10,
+            limit: 6,
           ),
         );
 
@@ -145,6 +147,54 @@ void main() {
         expect(cubit.state.hasAnyDataLoaded, isTrue);
       },
     );
+
+    test('fetchMoreTopTracks appends next chunk of tracks', () async {
+      when(() => mockPluginEngine.hasMetadata).thenReturn(true);
+      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+      when(() => mockMetadataPlugin.artist).thenReturn(mockArtistService);
+
+      when(
+        () => mockArtistService.getArtist('a1'),
+      ).thenAnswer((_) async => fullArtist);
+
+      when(
+        () => mockArtistService.topTracks('a1', offset: 0, limit: 6),
+      ).thenAnswer(
+        (_) async => PaginatedResult(
+          items: [createTrack('t1', 'Track 1')],
+          total: 2,
+          offset: 0,
+          limit: 6,
+        ),
+      );
+
+      when(
+        () => mockArtistService.albums('a1', offset: 0, limit: 6),
+      ).thenAnswer((_) async => const PaginatedResult.empty());
+
+      when(
+        () => mockArtistService.related('a1', offset: 0, limit: 6),
+      ).thenAnswer((_) async => const PaginatedResult.empty());
+
+      when(
+        () => mockArtistService.topTracks('a1', offset: 1, limit: 6),
+      ).thenAnswer(
+        (_) async => PaginatedResult(
+          items: [createTrack('t2', 'Track 2')],
+          total: 2,
+          offset: 1,
+          limit: 6,
+        ),
+      );
+
+      await cubit.loadArtist();
+      await Future.delayed(const Duration(milliseconds: 50));
+      expect(cubit.state.topTracks.data.items.length, equals(1));
+
+      await cubit.fetchMoreTopTracks(limit: 6);
+      expect(cubit.state.topTracks.data.items.length, equals(2));
+      expect(cubit.state.topTracks.data.items[1].name, equals('Track 2'));
+    });
 
     test(
       'toggleSave updates isSaved state and calls plugin save/unsave',

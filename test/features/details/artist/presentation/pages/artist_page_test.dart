@@ -9,6 +9,7 @@ import 'package:gyawun_metadata_sdk/metadata/models/pagination.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
+import 'package:music_are/core/widgets/media/track_matrix.dart';
 import 'package:music_are/features/details/artist/presentation/pages/artist_page.dart';
 import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
 
@@ -78,33 +79,33 @@ void main() {
 
   group('ArtistPage Widget Tests', () {
     testWidgets(
-      'renders artist header, popular tracks, discography and related sections',
+      'renders artist header, TrackMatrix popular tracks, discography and related sections',
       (tester) async {
         when(
           () => mockArtist.getArtist('a1'),
         ).thenAnswer((_) async => testArtist);
-        when(() => mockArtist.topTracks('a1', offset: 0, limit: 10)).thenAnswer(
+        when(() => mockArtist.topTracks('a1', offset: 0, limit: 6)).thenAnswer(
           (_) async => PaginatedResult(
             items: [testTrack],
             total: 1,
             offset: 0,
-            limit: 10,
+            limit: 6,
           ),
         );
-        when(() => mockArtist.albums('a1', offset: 0, limit: 10)).thenAnswer(
+        when(() => mockArtist.albums('a1', offset: 0, limit: 6)).thenAnswer(
           (_) async => PaginatedResult(
             items: [testAlbum],
             total: 1,
             offset: 0,
-            limit: 10,
+            limit: 6,
           ),
         );
-        when(() => mockArtist.related('a1', offset: 0, limit: 10)).thenAnswer(
+        when(() => mockArtist.related('a1', offset: 0, limit: 6)).thenAnswer(
           (_) async => PaginatedResult(
             items: [testArtist],
             total: 1,
             offset: 0,
-            limit: 10,
+            limit: 6,
           ),
         );
 
@@ -113,6 +114,7 @@ void main() {
 
         expect(find.text('The Beatles'), findsWidgets);
         expect(find.text('Popular Tracks'), findsOneWidget);
+        expect(find.byType(TrackMatrix), findsOneWidget);
         expect(find.text('Yesterday'), findsOneWidget);
         expect(find.text('Discography'), findsOneWidget);
         expect(find.text('Abbey Road'), findsOneWidget);
@@ -132,13 +134,13 @@ void main() {
         () => mockArtist.getArtist('a1'),
       ).thenAnswer((_) async => throw Exception('API error'));
       when(
-        () => mockArtist.topTracks('a1', offset: 0, limit: 10),
+        () => mockArtist.topTracks('a1', offset: 0, limit: 6),
       ).thenAnswer((_) async => throw Exception('API error'));
       when(
-        () => mockArtist.albums('a1', offset: 0, limit: 10),
+        () => mockArtist.albums('a1', offset: 0, limit: 6),
       ).thenAnswer((_) async => throw Exception('API error'));
       when(
-        () => mockArtist.related('a1', offset: 0, limit: 10),
+        () => mockArtist.related('a1', offset: 0, limit: 6),
       ).thenAnswer((_) async => throw Exception('API error'));
 
       await tester.pumpWidget(buildTestableWidget());

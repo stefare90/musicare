@@ -93,5 +93,13 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 *   [ ] Add local disk caching for metadata responses and cover art
 *   [ ] Implement Settings page (active plugin management, theme switching, storage clearing)
 
-## Future improvements
+## To Fix Now
+
+## To Fix Later
 *   [ ] Fast up media cover image show
+*   [ ] Fix media cover image sometimes don't appear
+*   [ ] manage http request to be compliant with used api (to manage in sdk)
+*   [ ] Improve Fans Like Also to avoid exceptions 
+*   [ ] Add artist list e album name in bottom modal options
+*   [ ] Manage orizontal layout |===|
+*   [ ] Add Favorites function to Artists, Albums and Songs

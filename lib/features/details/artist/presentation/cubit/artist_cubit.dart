@@ -1,6 +1,7 @@
 import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/pagination.dart';
+import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/features/details/artist/presentation/cubit/artist_state.dart';
@@ -9,6 +10,7 @@ import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
 
 class ArtistCubit extends SafeCubit<ArtistState> {
   final PluginEngine _pluginEngine;
+  bool _isFetchingMoreTopTracks = false;
   bool _isFetchingMoreAlbums = false;
   bool _isFetchingMoreRelated = false;
 
@@ -29,7 +31,7 @@ class ArtistCubit extends SafeCubit<ArtistState> {
     }
 
     _fetchFullArtist(state.artist.id);
-    fetchTopTracks();
+    fetchTopTracks(limit: 6);
     fetchAlbums(limit: 6);
     fetchRelated(limit: 6);
   }
@@ -45,11 +47,11 @@ class ArtistCubit extends SafeCubit<ArtistState> {
     } catch (_) {}
   }
 
-  void fetchTopTracks() {
+  void fetchTopTracks({int offset = 0, int limit = 6}) {
     emit(state.copyWith(topTracks: SectionState.loading(state.topTracks.data)));
 
     _pluginEngine.metadata.artist
-        .topTracks(state.artist.id, offset: 0, limit: 10)
+        .topTracks(state.artist.id, offset: offset, limit: limit)
         .then((tracks) {
           emit(state.copyWith(topTracks: SectionState.success(tracks)));
         })
@@ -60,6 +62,38 @@ class ArtistCubit extends SafeCubit<ArtistState> {
             ),
           );
         });
+  }
+
+  Future<void> fetchMoreTopTracks({int limit = 6}) async {
+    if (state.topTracks.isLoading || _isFetchingMoreTopTracks) return;
+    final currentData = state.topTracks.data;
+    if (currentData.items.length >= currentData.total) return;
+
+    _isFetchingMoreTopTracks = true;
+    emit(state.copyWith(topTracks: SectionState.loading(currentData)));
+
+    try {
+      final offset = currentData.items.length;
+      final result = await _pluginEngine.metadata.artist.topTracks(
+        state.artist.id,
+        offset: offset,
+        limit: limit,
+      );
+
+      final combined = [...currentData.items, ...result.items];
+      final updatedResult = PaginatedResult<Track>(
+        items: combined,
+        total: result.total,
+        offset: offset,
+        limit: limit,
+      );
+
+      emit(state.copyWith(topTracks: SectionState.success(updatedResult)));
+    } catch (e) {
+      emit(state.copyWith(topTracks: SectionState.error(e, currentData)));
+    } finally {
+      _isFetchingMoreTopTracks = false;
+    }
   }
 
   void fetchAlbums({int offset = 0, int limit = 6}) {
