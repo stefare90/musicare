@@ -7,10 +7,12 @@ import 'package:gyawun_metadata_sdk/metadata/models/section.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/features/home/presentation/cubit/home_cubit.dart';
 import 'package:music_are/features/home/presentation/cubit/home_state.dart';
-import 'package:music_are/features/plugin/data/exceptions/plugin_engine_exceptions.dart';
-import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 
-class MockPluginEngine extends Mock implements PluginEngine {}
+class MockPluginEngine extends Mock implements MetadataPluginEngine {}
+
+class MetadataPlugin {}
 
 class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
 

@@ -60,30 +60,36 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
     *   [x] Implement `ArtistCubit` & `ArtistState` (fetching artist top tracks & albums) and unit tests
     *   [x] Implement `ArtistPage` UI using `SliverMediaHeader`, `SliverTrackList`, and `SectionRow` (Discography)
 
-## 🔄 Phase 8: Metadata Plugin Renaming & Architecture Segmentation (`lib/features/plugin/`)
-*   [ ] **Core Domain & Unified Discovery**:
-    *   [ ] Create `lib/features/plugin/core/` with `PluginType` enum (`metadata`, `audioSource`), `PluginManifest`, and shared exception classes
-    *   [ ] Update `PluginDiscoveryService` to support in-memory filtering by `PluginType` using single GitHub search (`topic:musicare-plugin`)
-*   [ ] **Metadata Subsystem Renaming**:
-    *   [ ] Move metadata files to `lib/features/plugin/metadata/`
-    *   [ ] Rename `PluginEngine` to `MetadataPluginEngine`
-    *   [ ] Rename `PluginCubit` / `PluginState` to `MetadataPluginCubit` / `MetadataPluginState`
-    *   [ ] Update local disk storage isolation to `plugins/metadata/<id>/`
-    *   [ ] Update DI registrations in `injection.dart`, router, page usages, and all test suites
+## 🔄 Phase 8: Plugin Architecture Segmentation & Metadata Renaming (`lib/features/plugin/`)
+*   [x] **Shared Module (`lib/features/plugin/shared/`)**:
+    *   [x] Create `shared/data/models/` (`PluginType` enum and `PluginManifest` with `pluginType` getter)
+    *   [x] Create `shared/data/exceptions/` (`PluginException` base classes)
+    *   [x] Create `shared/presentation/utils/` (`ExceptionLocalizer` extension)
+*   [x] **Discovery Module (`lib/features/plugin/discovery/`)**:
+    *   [x] Move `PluginDiscoveryService` to `discovery/data/services/` with in-memory `PluginType` filtering
+    *   [x] Move `PluginDiscoveryCubit` / `PluginDiscoveryState` to `discovery/presentation/cubit/`
+    *   [x] Move `PluginDiscoveryWidget` to `discovery/presentation/widgets/` (supporting optional `pluginType` filter parameter)
+*   [x] **Metadata Subsystem Renaming (`lib/features/plugin/metadata/`)**:
+    *   [x] Move metadata engine and SDK host adapters to `metadata/data/services/`
+    *   [x] Rename `PluginEngine` to `MetadataPluginEngine`
+    *   [x] Move cubits to `metadata/presentation/cubit/` and rename `PluginCubit` / `PluginState` to `MetadataPluginCubit` / `MetadataPluginState`
+    *   [x] Move update page to `metadata/presentation/pages/metadata_plugin_update_page.dart`
+    *   [x] Update local disk storage isolation to `plugins/metadata/<id>/`
+    *   [x] Update DI in `injection.dart`, router, page usages, and all test suites
 
 ## 🐍 Phase 9: Audio Source Plugin Engine & Subsystem (`lib/features/plugin/audio_source/`)
 *   [ ] **Dependencies & Models**:
     *   [ ] Add `serious_python` dependency to `pubspec.yaml`
-    *   [ ] Define `AudioStreamResponse` (url, quality, bitrate, codec, expiresAt, headers) and `AudioQuality` enum (`low`, `medium`, `high`)
+    *   [ ] Create `audio_source/data/models/`: `AudioStreamResponse` and `AudioQuality` enum (`low`, `medium`, `high`)
 *   [ ] **Lifecycle & Daemon Engine**:
     *   [ ] Implement ephemeral port allocator helper (`getUnusedPort`)
-    *   [ ] Implement `AudioSourcePluginEngine`: `.zip` extraction, local disk persistence in `plugins/audio_source/<id>/`, background Python daemon spawn/terminate via `serious_python`
+    *   [ ] Implement `AudioSourcePluginEngine`: `.zip` archive extraction, local disk persistence in `plugins/audio_source/<id>/`, background Python daemon spawn/terminate via `serious_python`
     *   [ ] Implement readiness polling mechanism (`GET /ping` health-check)
 *   [ ] **REST IPC Client**:
     *   [ ] Implement `AudioSourceClient`: execute `POST /get_stream` on `127.0.0.1:$PORT` serializing `Track` payload
     *   [ ] Parse candidate stream list and handle fallback heuristics
 *   [ ] **State Management**:
-    *   [ ] Implement `AudioSourcePluginCubit` & `AudioSourcePluginState` (Initial, Loading, NotConfigured, Loaded, Error)
+    *   [ ] Implement `AudioSourcePluginCubit` & `AudioSourcePluginState` in `audio_source/presentation/cubit/`
     *   [ ] Persist active audio source ID in `PreferencesService` (`active_audio_source_plugin_id`)
 *   [ ] **Testing**:
     *   [ ] Add unit tests for `AudioSourcePluginEngine`, `AudioSourceClient`, and `AudioSourcePluginCubit` with mocktail HTTP client
@@ -94,7 +100,6 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
         *   **Step 1**: Select & install Metadata Provider (`MetadataPluginCubit`)
         *   **Step 2**: Select & install Audio Source Provider (`AudioSourcePluginCubit`)
     *   [ ] Navigate to Home (`/`) once both subsystems are configured
-    *   [ ] Update `PluginUpdatePage` to support recovery for both metadata and audio source incompatibility
     *   [ ] Add widget tests for multi-step onboarding flow
 
 ## 🎧 Phase 11: Audio Player & Playback Engine (`lib/features/player/`)

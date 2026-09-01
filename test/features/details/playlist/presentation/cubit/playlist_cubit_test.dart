@@ -10,10 +10,10 @@ import 'package:gyawun_metadata_sdk/metadata/models/user.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
-import 'package:music_are/features/plugin/data/exceptions/plugin_engine_exceptions.dart';
-import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 
-class MockPluginEngine extends Mock implements PluginEngine {}
+class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
 class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
 

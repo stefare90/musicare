@@ -11,9 +11,9 @@ import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/widgets/media/track_matrix.dart';
 import 'package:music_are/features/details/artist/presentation/pages/artist_page.dart';
-import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
-class MockPluginEngine extends Mock implements PluginEngine {}
+class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
 class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
 
@@ -62,7 +62,7 @@ void main() {
     mockMetadata = MockMetadataPlugin();
     mockArtist = MockArtistService();
 
-    sl.registerLazySingleton<PluginEngine>(() => mockEngine);
+    sl.registerLazySingleton<MetadataPluginEngine>(() => mockEngine);
 
     when(() => mockEngine.hasMetadata).thenReturn(true);
     when(() => mockEngine.metadata).thenReturn(mockMetadata);

@@ -8,7 +8,7 @@ import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
 import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
-import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
 class PlaylistPage extends StatelessWidget {
   final Playlist playlist;
@@ -19,7 +19,7 @@ class PlaylistPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<PlaylistCubit>(
       create: (context) =>
-          PlaylistCubit(sl<PluginEngine>())..loadPlaylist(playlist),
+          PlaylistCubit(sl<MetadataPluginEngine>())..loadPlaylist(playlist),
       child: const _PlaylistView(),
     );
   }

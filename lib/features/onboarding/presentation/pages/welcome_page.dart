@@ -4,10 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/core/widgets/dialogs.dart';
-import 'package:music_are/features/plugin/presentation/cubit/plugin_cubit.dart';
-import 'package:music_are/features/plugin/presentation/cubit/plugin_state.dart';
-import 'package:music_are/features/plugin/presentation/utils/exception_localizer.dart';
-import 'package:music_are/features/plugin/presentation/widgets/plugin_discovery_widget.dart';
+import 'package:music_are/features/plugin/discovery/presentation/widgets/plugin_discovery_widget.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
+import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
+import 'package:music_are/features/plugin/shared/presentation/utils/exception_localizer.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -16,17 +17,17 @@ class WelcomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: BlocListener<PluginCubit, PluginState>(
+        child: BlocListener<MetadataPluginCubit, MetadataPluginState>(
           listener: (context, state) {
-            if (state is PluginLoadingState) {
+            if (state is MetadataPluginLoadingState) {
               Dialogs.showLoading(
                 context,
                 message: context.l10n.installingPlugin,
               );
-            } else if (state is PluginLoadedState) {
+            } else if (state is MetadataPluginLoadedState) {
               Dialogs.hide(context);
               context.go('/');
-            } else if (state is PluginErrorState) {
+            } else if (state is MetadataPluginErrorState) {
               Dialogs.hide(context);
               Dialogs.showErrorSnackBar(
                 context,
@@ -72,7 +73,7 @@ class WelcomePage extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
-                const PluginDiscoveryWidget(),
+                const PluginDiscoveryWidget(pluginType: PluginType.metadata),
               ],
             ),
           ),

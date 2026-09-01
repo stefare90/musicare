@@ -10,7 +10,7 @@ import 'package:music_are/features/details/playlist/presentation/pages/playlist_
 import 'package:music_are/features/home/presentation/pages/home_page.dart';
 import 'package:music_are/features/library/presentation/pages/library_page.dart';
 import 'package:music_are/features/onboarding/presentation/pages/welcome_page.dart';
-import 'package:music_are/features/plugin/presentation/pages/plugin_update_page.dart';
+import 'package:music_are/features/plugin/metadata/presentation/pages/metadata_plugin_update_page.dart';
 import 'package:music_are/features/search/presentation/pages/search_page.dart';
 import 'package:music_are/features/shell/presentation/pages/shell_page.dart';
 
@@ -51,7 +51,7 @@ GoRouter createRouter({required String initialLocation}) {
       ),
       GoRoute(
         path: AppRoutes.pluginUpdate,
-        builder: (context, state) => const PluginUpdatePage(),
+        builder: (context, state) => const MetadataPluginUpdatePage(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

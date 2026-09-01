@@ -7,9 +7,9 @@ import 'package:gyawun_metadata_sdk/metadata/models/pagination.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/features/details/artist/presentation/cubit/artist_cubit.dart';
-import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
-class MockPluginEngine extends Mock implements PluginEngine {}
+class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
 class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
 

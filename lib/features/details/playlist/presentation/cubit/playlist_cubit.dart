@@ -3,11 +3,11 @@ import 'package:gyawun_metadata_sdk/metadata/models/playlist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
-import 'package:music_are/features/plugin/data/exceptions/plugin_engine_exceptions.dart';
-import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 
 class PlaylistCubit extends SafeCubit<PlaylistState> {
-  final PluginEngine _pluginEngine;
+  final MetadataPluginEngine _pluginEngine;
   bool _isFetchingMoreTracks = false;
 
   PlaylistCubit(this._pluginEngine) : super(PlaylistInitialState());

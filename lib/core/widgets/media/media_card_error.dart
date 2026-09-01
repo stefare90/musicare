@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/widgets/dialogs.dart';
-import 'package:music_are/features/plugin/presentation/utils/exception_localizer.dart';
+import 'package:music_are/features/plugin/shared/presentation/utils/exception_localizer.dart';
 
 class MediaCardError extends StatelessWidget {
   final String title;

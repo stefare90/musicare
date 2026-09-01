@@ -5,11 +5,11 @@ import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/features/details/artist/presentation/cubit/artist_state.dart';
-import 'package:music_are/features/plugin/data/exceptions/plugin_engine_exceptions.dart';
-import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 
 class ArtistCubit extends SafeCubit<ArtistState> {
-  final PluginEngine _pluginEngine;
+  final MetadataPluginEngine _pluginEngine;
   bool _isFetchingMoreTopTracks = false;
   bool _isFetchingMoreAlbums = false;
   bool _isFetchingMoreRelated = false;

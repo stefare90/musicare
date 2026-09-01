@@ -10,7 +10,7 @@ import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
 import 'package:music_are/core/widgets/media/track_matrix.dart';
 import 'package:music_are/features/details/artist/presentation/cubit/artist_cubit.dart';
 import 'package:music_are/features/details/artist/presentation/cubit/artist_state.dart';
-import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
 class ArtistPage extends StatelessWidget {
   final Artist artist;
@@ -21,7 +21,7 @@ class ArtistPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<ArtistCubit>(
       create: (context) =>
-          ArtistCubit(sl<PluginEngine>(), artist)..loadArtist(),
+          ArtistCubit(sl<MetadataPluginEngine>(), artist)..loadArtist(),
       child: const _ArtistView(),
     );
   }

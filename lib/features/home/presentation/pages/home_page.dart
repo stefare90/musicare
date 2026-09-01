@@ -8,7 +8,7 @@ import 'package:music_are/core/widgets/info_card.dart';
 import 'package:music_are/core/widgets/media/section_row.dart';
 import 'package:music_are/features/home/presentation/cubit/home_cubit.dart';
 import 'package:music_are/features/home/presentation/cubit/home_state.dart';
-import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -16,7 +16,8 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<HomeCubit>(
-      create: (context) => HomeCubit(sl<PluginEngine>())..fetchSections(),
+      create: (context) =>
+          HomeCubit(sl<MetadataPluginEngine>())..fetchSections(),
       child: const _HomeView(),
     );
   }

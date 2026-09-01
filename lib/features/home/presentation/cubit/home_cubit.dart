@@ -2,11 +2,11 @@ import 'package:gyawun_metadata_sdk/metadata/models/section.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/features/home/presentation/cubit/home_state.dart';
-import 'package:music_are/features/plugin/data/exceptions/plugin_engine_exceptions.dart';
-import 'package:music_are/features/plugin/data/services/plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 
 class HomeCubit extends SafeCubit<HomeState> {
-  final PluginEngine _pluginEngine;
+  final MetadataPluginEngine _pluginEngine;
 
   HomeCubit(this._pluginEngine) : super(const HomeState());
 
