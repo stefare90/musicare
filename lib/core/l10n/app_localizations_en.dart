@@ -21,10 +21,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcomeTitle => 'Welcome to MusicAre';
 
   @override
-  String get selectProviderSubtitle =>
-      'Select a music metadata provider to get started';
-
-  @override
   String get communityPluginsHeader => 'Community Plugins (GitHub)';
 
   @override
@@ -243,4 +239,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String logErrorTitle(String title) {
     return '$title - Log';
   }
+
+  @override
+  String get selectMetadataProvider => 'Select Metadata Provider';
+
+  @override
+  String get continueToAudioSource => 'Continue to Audio Source';
+
+  @override
+  String get finishSetup => 'Finish Setup';
+
+  @override
+  String get welcomeSetupHint =>
+      'Configure your music catalog and audio stream providers in two quick steps to get started.';
+
+  @override
+  String get onboardingStepMetadata => 'Metadata Provider';
+
+  @override
+  String get onboardingStepAudioSource => 'Audio Stream Provider';
+
+  @override
+  String get selectProviderSubtitle =>
+      'Select a music catalog provider to discover albums, artists, and playlists';
+
+  @override
+  String get selectAudioSourceSubtitle =>
+      'Select an audio stream provider to enable music playback';
+
+  @override
+  String get activeLabel => 'Active';
 }

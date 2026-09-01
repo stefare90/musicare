@@ -4,39 +4,61 @@ import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/router/app_router.dart';
 import 'package:music_are/core/theme/app_theme.dart';
+import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
+import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_state.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initDependencies();
-  final pluginCubit = sl<MetadataPluginCubit>();
-  await pluginCubit.initialize();
-  final String initialLocation = switch (pluginCubit.state) {
-    MetadataPluginLoadedState() => '/',
-    MetadataPluginIncompatibleState() => '/plugin-update',
-    MetadataPluginNotConfiguredState() => '/welcome',
-    _ => '/welcome',
-  };
+
+  final metadataCubit = sl<MetadataPluginCubit>();
+  final audioSourceCubit = sl<AudioSourcePluginCubit>();
+
+  await metadataCubit.initialize();
+  await audioSourceCubit.initialize();
+
+  final String initialLocation;
+  if (metadataCubit.state is MetadataPluginIncompatibleState) {
+    initialLocation = '/plugin-update';
+  } else if (metadataCubit.state is MetadataPluginLoadedState &&
+      audioSourceCubit.state is AudioSourcePluginLoadedState) {
+    initialLocation = '/';
+  } else {
+    initialLocation = '/welcome';
+  }
+
   runApp(
-    MusicAreApp(pluginCubit: pluginCubit, initialLocation: initialLocation),
+    MusicAreApp(
+      metadataPluginCubit: metadataCubit,
+      audioSourcePluginCubit: audioSourceCubit,
+      initialLocation: initialLocation,
+    ),
   );
 }
 
 class MusicAreApp extends StatelessWidget {
-  final MetadataPluginCubit pluginCubit;
+  final MetadataPluginCubit metadataPluginCubit;
+  final AudioSourcePluginCubit audioSourcePluginCubit;
   final String initialLocation;
 
   const MusicAreApp({
     super.key,
-    required this.pluginCubit,
+    required this.metadataPluginCubit,
+    required this.audioSourcePluginCubit,
     required this.initialLocation,
   });
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<MetadataPluginCubit>.value(
-      value: pluginCubit,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<MetadataPluginCubit>.value(value: metadataPluginCubit),
+        BlocProvider<AudioSourcePluginCubit>.value(
+          value: audioSourcePluginCubit,
+        ),
+      ],
       child: MaterialApp.router(
         title: 'MusicAre',
         debugShowCheckedModeBanner: false,

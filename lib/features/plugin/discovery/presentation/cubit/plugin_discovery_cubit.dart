@@ -11,10 +11,18 @@ class PluginDiscoveryCubit extends SafeCubit<PluginDiscoveryState> {
   PluginDiscoveryCubit(this._discoveryService)
     : super(PluginDiscoveryInitialState());
 
-  Future<void> fetchCommunityPlugins({PluginType? type}) async {
-    emit(PluginDiscoveryLoadingState());
+  Future<void> fetchCommunityPlugins({
+    PluginType? type,
+    bool forceRefresh = false,
+  }) async {
+    if (state is! PluginDiscoveryLoadedState || forceRefresh) {
+      emit(PluginDiscoveryLoadingState());
+    }
     try {
-      final plugins = await _discoveryService.fetchCommunityPlugins(type: type);
+      final plugins = await _discoveryService.fetchCommunityPlugins(
+        type: type,
+        forceRefresh: forceRefresh,
+      );
       emit(PluginDiscoveryLoadedState(plugins));
     } catch (e) {
       emit(PluginDiscoveryErrorState(e));

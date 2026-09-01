@@ -118,12 +118,6 @@ abstract class AppLocalizations {
   /// **'Welcome to MusicAre'**
   String get welcomeTitle;
 
-  /// No description provided for @selectProviderSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Select a music metadata provider to get started'**
-  String get selectProviderSubtitle;
-
   /// No description provided for @communityPluginsHeader.
   ///
   /// In en, this message translates to:
@@ -519,6 +513,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{title} - Log'**
   String logErrorTitle(String title);
+
+  /// No description provided for @selectMetadataProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Metadata Provider'**
+  String get selectMetadataProvider;
+
+  /// No description provided for @continueToAudioSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to Audio Source'**
+  String get continueToAudioSource;
+
+  /// No description provided for @finishSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish Setup'**
+  String get finishSetup;
+
+  /// No description provided for @welcomeSetupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure your music catalog and audio stream providers in two quick steps to get started.'**
+  String get welcomeSetupHint;
+
+  /// No description provided for @onboardingStepMetadata.
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata Provider'**
+  String get onboardingStepMetadata;
+
+  /// No description provided for @onboardingStepAudioSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio Stream Provider'**
+  String get onboardingStepAudioSource;
+
+  /// No description provided for @selectProviderSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a music catalog provider to discover albums, artists, and playlists'**
+  String get selectProviderSubtitle;
+
+  /// No description provided for @selectAudioSourceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an audio stream provider to enable music playback'**
+  String get selectAudioSourceSubtitle;
+
+  /// Badge label indicating an active/configured plugin
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get activeLabel;
 }
 
 class _AppLocalizationsDelegate

@@ -95,12 +95,12 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
     *   [x] Add unit tests for `AudioSourcePluginEngine`, `AudioSourceClient`, and `AudioSourcePluginCubit` with mocktail HTTP client
 
 ## 🧙‍♂️ Phase 10: Step-by-Step Onboarding Wizard (`lib/features/onboarding/`)
-*   [ ] **Wizard Flow**:
-    *   [ ] Refactor `WelcomePage` into a multi-step onboarding wizard:
+*   [x] **Wizard Flow**:
+    *   [x] Refactor `WelcomePage` into a multi-step onboarding wizard:
         *   **Step 1**: Select & install Metadata Provider (`MetadataPluginCubit`)
         *   **Step 2**: Select & install Audio Source Provider (`AudioSourcePluginCubit`)
-    *   [ ] Navigate to Home (`/`) once both subsystems are configured
-    *   [ ] Add widget tests for multi-step onboarding flow
+    *   [x] Navigate to Home (`/`) once both subsystems are configured
+    *   [x] Add widget tests for multi-step onboarding flow
 
 ## 🎧 Phase 11: Audio Player & Playback Engine (`lib/features/player/`)
 *   [ ] **Core Audio Service & Platform Handler**:

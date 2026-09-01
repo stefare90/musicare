@@ -4,7 +4,6 @@
     "appSlogan": "Music are the plugins. We are the player.",
     "setupTitle": "MusicAre Setup",
     "welcomeTitle": "Welcome to MusicAre",
-    "selectProviderSubtitle": "Select a music metadata provider to get started",
     "communityPluginsHeader": "Community Plugins (GitHub)",
     "installAndActivate": "Install & Activate",
     "installingPlugin": "Installing and initializing plugin...",
@@ -124,5 +123,17 @@
                 "example": "Fans Also Like"
             }
         }
+    },
+    "selectMetadataProvider": "Select Metadata Provider",
+    "continueToAudioSource": "Continue to Audio Source",
+    "finishSetup": "Finish Setup",
+    "welcomeSetupHint": "Configure your music catalog and audio stream providers in two quick steps to get started.",
+    "onboardingStepMetadata": "Metadata Provider",
+    "onboardingStepAudioSource": "Audio Stream Provider",
+    "selectProviderSubtitle": "Select a music catalog provider to discover albums, artists, and playlists",
+    "selectAudioSourceSubtitle": "Select an audio stream provider to enable music playback",
+    "activeLabel": "Active",
+    "@activeLabel": {
+        "description": "Badge label indicating an active/configured plugin"
     }
 }

@@ -6,16 +6,22 @@ import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/features/plugin/discovery/data/services/plugin_discovery_service.dart';
 import 'package:music_are/features/plugin/discovery/presentation/cubit/plugin_discovery_cubit.dart';
 import 'package:music_are/features/plugin/discovery/presentation/cubit/plugin_discovery_state.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
+import 'package:music_are/features/plugin/discovery/presentation/widgets/plugin_manifest_card.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/exception_localizer.dart';
 
 class PluginDiscoveryWidget extends StatelessWidget {
   final PluginType? pluginType;
+  final String? activePluginId;
   final void Function(PluginManifest manifest)? onInstallTap;
 
-  const PluginDiscoveryWidget({super.key, this.pluginType, this.onInstallTap});
+  const PluginDiscoveryWidget({
+    super.key,
+    this.pluginType,
+    this.activePluginId,
+    this.onInstallTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +31,7 @@ class PluginDiscoveryWidget extends StatelessWidget {
             ..fetchCommunityPlugins(type: pluginType),
       child: _PluginDiscoveryView(
         pluginType: pluginType,
+        activePluginId: activePluginId,
         onInstallTap: onInstallTap,
       ),
     );
@@ -33,9 +40,14 @@ class PluginDiscoveryWidget extends StatelessWidget {
 
 class _PluginDiscoveryView extends StatelessWidget {
   final PluginType? pluginType;
+  final String? activePluginId;
   final void Function(PluginManifest manifest)? onInstallTap;
 
-  const _PluginDiscoveryView({this.pluginType, this.onInstallTap});
+  const _PluginDiscoveryView({
+    this.pluginType,
+    this.activePluginId,
+    this.onInstallTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +65,7 @@ class _PluginDiscoveryView extends StatelessWidget {
               onPressed: () {
                 context.read<PluginDiscoveryCubit>().fetchCommunityPlugins(
                   type: pluginType,
+                  forceRefresh: true,
                 );
               },
               icon: const Icon(Icons.refresh),
@@ -85,7 +98,10 @@ class _PluginDiscoveryView extends StatelessWidget {
                         onPressed: () {
                           context
                               .read<PluginDiscoveryCubit>()
-                              .fetchCommunityPlugins(type: pluginType);
+                              .fetchCommunityPlugins(
+                                type: pluginType,
+                                forceRefresh: true,
+                              );
                         },
                         icon: const Icon(Icons.refresh),
                         label: Text(context.l10n.retry),
@@ -111,8 +127,11 @@ class _PluginDiscoveryView extends StatelessWidget {
 
               return Column(
                 children: discoveryState.plugins.map((manifest) {
-                  return _PluginManifestCard(
+                  final isActive = manifest.id == activePluginId;
+
+                  return PluginManifestCard(
                     manifest: manifest,
+                    isActive: isActive,
                     onInstallTap: onInstallTap,
                   );
                 }).toList(),
@@ -123,64 +142,6 @@ class _PluginDiscoveryView extends StatelessWidget {
           },
         ),
       ],
-    );
-  }
-}
-
-class _PluginManifestCard extends StatelessWidget {
-  final PluginManifest manifest;
-  final void Function(PluginManifest manifest)? onInstallTap;
-
-  const _PluginManifestCard({required this.manifest, this.onInstallTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    manifest.name,
-                    style: context.textTheme.titleLarge,
-                  ),
-                ),
-                Chip(
-                  label: Text('v${manifest.version}'),
-                  visualDensity: VisualDensity.compact,
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text('By ${manifest.author}', style: context.textTheme.labelSmall),
-            const SizedBox(height: 12),
-            Text(manifest.description, style: context.textTheme.bodyMedium),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  if (onInstallTap != null) {
-                    onInstallTap!(manifest);
-                  } else {
-                    context.read<MetadataPluginCubit>().installDiscoveredPlugin(
-                      manifest,
-                    );
-                  }
-                },
-                icon: const Icon(Icons.download),
-                label: Text(context.l10n.installAndActivate),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

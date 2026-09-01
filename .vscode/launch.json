@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "music_are",
+            "request": "launch",
+            "type": "dart",
+            "env": {
+                "SERIOUS_PYTHON_SITE_PACKAGES": "/tmp"
+            }
+        }
+    ]
+}

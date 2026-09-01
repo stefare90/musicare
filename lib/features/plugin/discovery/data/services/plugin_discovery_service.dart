@@ -12,17 +12,32 @@ class PluginDiscoveryService {
 
   final NetworkService _networkService;
   final Map<String, Uint8List> _cachedPluginZips = {};
+  List<PluginManifest>? _cachedManifests;
 
-  PluginDiscoveryService({required NetworkService networkService})
-    : _networkService = networkService;
+  PluginDiscoveryService({required this._networkService});
 
   String _buildCacheKey(String id, String version) => '${id}_$version';
 
-  Future<List<PluginManifest>> fetchCommunityPlugins({PluginType? type}) async {
+  Future<List<PluginManifest>> fetchCommunityPlugins({
+    PluginType? type,
+    bool forceRefresh = false,
+  }) async {
+    if (_cachedManifests != null && !forceRefresh) {
+      if (type != null) {
+        return _cachedManifests!.where((m) => m.pluginType == type).toList();
+      }
+      return _cachedManifests!;
+    }
+    _cachedManifests = null;
     _cachedPluginZips.clear();
     final response = await _networkService.get(Uri.parse(githubSearchUrl));
-
     if (response.statusCode != 200) {
+      if (_cachedManifests != null) {
+        if (type != null) {
+          return _cachedManifests!.where((m) => m.pluginType == type).toList();
+        }
+        return _cachedManifests!;
+      }
       throw PluginSearchException(response.statusCode);
     }
 
@@ -82,6 +97,8 @@ class PluginDiscoveryService {
         // Skip individual repository failures
       }
     }
+
+    _cachedManifests = manifests;
 
     if (type != null) {
       return manifests.where((m) => m.pluginType == type).toList();
