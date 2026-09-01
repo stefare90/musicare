@@ -1,21 +1,26 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PreferencesService {
-  static const String _activePluginIdKey = 'active_metadata_plugin_id';
+  static const String _activeMetadataPluginIdKey = 'active_metadata_plugin_id';
+  static const String _activeAudioSourcePluginIdKey =
+      'active_audio_source_plugin_id';
 
   final SharedPreferences _prefs;
 
   PreferencesService(this._prefs);
 
-  String? getActivePluginId() {
-    return _prefs.getString(_activePluginIdKey);
-  }
+  // Metadata plugin
+  String? getActivePluginId() => _prefs.getString(_activeMetadataPluginIdKey);
+  Future<bool> setActivePluginId(String pluginId) =>
+      _prefs.setString(_activeMetadataPluginIdKey, pluginId);
+  Future<bool> removeActivePluginId() =>
+      _prefs.remove(_activeMetadataPluginIdKey);
 
-  Future<bool> setActivePluginId(String pluginId) {
-    return _prefs.setString(_activePluginIdKey, pluginId);
-  }
-
-  Future<bool> removeActivePluginId() {
-    return _prefs.remove(_activePluginIdKey);
-  }
+  // Audio source plugin
+  String? getActiveAudioSourcePluginId() =>
+      _prefs.getString(_activeAudioSourcePluginIdKey);
+  Future<bool> setActiveAudioSourcePluginId(String pluginId) =>
+      _prefs.setString(_activeAudioSourcePluginIdKey, pluginId);
+  Future<bool> removeActiveAudioSourcePluginId() =>
+      _prefs.remove(_activeAudioSourcePluginIdKey);
 }

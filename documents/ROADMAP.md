@@ -78,21 +78,21 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
     *   [x] Update DI in `injection.dart`, router, page usages, and all test suites
 
 ## 🐍 Phase 9: Audio Source Plugin Engine & Subsystem (`lib/features/plugin/audio_source/`)
-*   [ ] **Dependencies & Models**:
-    *   [ ] Add `serious_python` dependency to `pubspec.yaml`
-    *   [ ] Create `audio_source/data/models/`: `AudioStreamResponse` and `AudioQuality` enum (`low`, `medium`, `high`)
-*   [ ] **Lifecycle & Daemon Engine**:
-    *   [ ] Implement ephemeral port allocator helper (`getUnusedPort`)
-    *   [ ] Implement `AudioSourcePluginEngine`: `.zip` archive extraction, local disk persistence in `plugins/audio_source/<id>/`, background Python daemon spawn/terminate via `serious_python`
-    *   [ ] Implement readiness polling mechanism (`GET /ping` health-check)
-*   [ ] **REST IPC Client**:
-    *   [ ] Implement `AudioSourceClient`: execute `POST /get_stream` on `127.0.0.1:$PORT` serializing `Track` payload
-    *   [ ] Parse candidate stream list and handle fallback heuristics
-*   [ ] **State Management**:
-    *   [ ] Implement `AudioSourcePluginCubit` & `AudioSourcePluginState` in `audio_source/presentation/cubit/`
-    *   [ ] Persist active audio source ID in `PreferencesService` (`active_audio_source_plugin_id`)
-*   [ ] **Testing**:
-    *   [ ] Add unit tests for `AudioSourcePluginEngine`, `AudioSourceClient`, and `AudioSourcePluginCubit` with mocktail HTTP client
+*   [x] **Dependencies & Models**:
+    *   [x] Add `serious_python` dependency to `pubspec.yaml`
+    *   [x] Create `audio_source/data/models/`: `AudioStreamResponse` and `AudioQuality` enum (`low`, `medium`, `high`)
+*   [x] **Lifecycle & Daemon Engine**:
+    *   [x] Implement ephemeral port allocator helper (`getUnusedPort`)
+    *   [x] Implement `AudioSourcePluginEngine`: `.zip` archive extraction, local disk persistence in `plugins/audio_source/<id>/`, background Python daemon spawn/terminate via `serious_python`
+    *   [x] Implement readiness polling mechanism (`GET /ping` health-check)
+*   [x] **REST IPC Client**:
+    *   [x] Implement `AudioSourceClient`: execute `POST /get_stream` on `127.0.0.1:$PORT` serializing `Track` payload
+    *   [x] Parse candidate stream list and handle fallback heuristics
+*   [x] **State Management**:
+    *   [x] Implement `AudioSourcePluginCubit` & `AudioSourcePluginState` in `audio_source/presentation/cubit/`
+    *   [x] Persist active audio source ID in `PreferencesService` (`active_audio_source_plugin_id`)
+*   [x] **Testing**:
+    *   [x] Add unit tests for `AudioSourcePluginEngine`, `AudioSourceClient`, and `AudioSourcePluginCubit` with mocktail HTTP client
 
 ## 🧙‍♂️ Phase 10: Step-by-Step Onboarding Wizard (`lib/features/onboarding/`)
 *   [ ] **Wizard Flow**:

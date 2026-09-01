@@ -21,6 +21,31 @@ class IncompatibleSdkVersionException extends PluginException {
   });
 }
 
+class InvalidPluginTypeException extends PluginException {
+  final String expectedType;
+  final String actualType;
+
+  InvalidPluginTypeException({
+    required this.expectedType,
+    required this.actualType,
+  });
+}
+
+class AudioSourceDaemonStartupTimeoutException extends PluginException {
+  final int port;
+  AudioSourceDaemonStartupTimeoutException(this.port);
+}
+
+class AudioSourceStreamResolutionException extends PluginException {
+  final int statusCode;
+  final String message;
+
+  AudioSourceStreamResolutionException({
+    required this.statusCode,
+    required this.message,
+  });
+}
+
 class PluginEntryPointNullException extends PluginException {}
 
 class PluginDownloadException extends PluginException {

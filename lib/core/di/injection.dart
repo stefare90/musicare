@@ -6,6 +6,9 @@ import 'package:gyawun_metadata_sdk/metadata/interfaces/iui_service.dart';
 import 'package:music_are/core/router/app_router.dart';
 import 'package:music_are/core/services/network_service.dart';
 import 'package:music_are/core/services/preferences_service.dart';
+import 'package:music_are/features/plugin/audio_source/data/services/audio_source_client.dart';
+import 'package:music_are/features/plugin/audio_source/data/services/audio_source_plugin_engine.dart';
+import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
 import 'package:music_are/features/plugin/discovery/data/services/plugin_discovery_service.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/metadata/data/services/sdk_services/plugin_network_service.dart';
@@ -33,12 +36,23 @@ Future<void> initDependencies() async {
     () => PluginUiService(navigatorKey: sl<GlobalKey<NavigatorState>>()),
   );
   sl.registerLazySingleton<MetadataPluginEngine>(() => MetadataPluginEngine());
-  sl.registerLazySingleton<PluginDiscoveryService>(
-    () => PluginDiscoveryService(networkService: sl<NetworkService>()),
-  );
   sl.registerLazySingleton<MetadataPluginCubit>(
     () => MetadataPluginCubit(
       sl<MetadataPluginEngine>(),
+      sl<PreferencesService>(),
+      sl<PluginDiscoveryService>(),
+    ),
+  );
+  sl.registerLazySingleton<PluginDiscoveryService>(
+    () => PluginDiscoveryService(networkService: sl<NetworkService>()),
+  );
+  sl.registerLazySingleton<AudioSourceClient>(() => AudioSourceClient());
+  sl.registerLazySingleton<AudioSourcePluginEngine>(
+    () => AudioSourcePluginEngine(client: sl<AudioSourceClient>()),
+  );
+  sl.registerLazySingleton<AudioSourcePluginCubit>(
+    () => AudioSourcePluginCubit(
+      sl<AudioSourcePluginEngine>(),
       sl<PreferencesService>(),
       sl<PluginDiscoveryService>(),
     ),
