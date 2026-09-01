@@ -7,7 +7,9 @@
 
 `MusicAre` is an extensible, flexible, and lightweight music playback application. The core concept is straightforward: **the host application handles the visual user interface, navigation, and playback controls, while all music metadata (tracks, albums, artists, search, playlists) and audio sources are provided by dynamic external plugins.**
 
-Plugins are compiled into `.evc` bytecode, packaged as compressed archives, and interpreted dynamically at runtime using `dart_eval`.
+The application supports two plugin ecosystems:
+* **Metadata Plugins**: Compiled into `.evc` bytecode, packaged as `.zip` archives, and interpreted dynamically at runtime using `dart_eval`.
+* **Audio Source Plugins**: Written in Pure-Python, packaged as `.zip` archives, and executed in the background as a local REST daemon via `serious_python` and `yt-dlp`.
 
 ---
 
@@ -15,7 +17,7 @@ Plugins are compiled into `.evc` bytecode, packaged as compressed archives, and 
 
 The application serves as a universal, service-agnostic playback framework:
 * **Separation of Responsibilities**: The host application focuses on native performance, UI, and audio playback, delegating content delivery to modular plugins.
-* **Decentralized Discovery**: The application discovers community plugins on GitHub, fetches release archives, and installs them locally.
+* **Decentralized Discovery**: The application discovers community plugins on GitHub (`topic:musicare-plugin`), fetches release archives, and installs them locally.
 * **Extensible & Updatable**: Plugins reside in local storage and can be updated over the air without requiring a full application release.
 
 ---
@@ -46,6 +48,7 @@ MusicAre follows a decoupled, Feature-First Clean Architecture organized into we
 │                  SERVICES LAYER (IoC)                  │
 │                                                        │
 │  * PluginEngine (Bytecode VM manager & SemVer check)   │
+│  * AudioSourceEngine (serious_python local REST daemon)│
 │  * PluginDiscoveryService (GitHub plugin search)       │
 │  * PreferencesService (Native host settings)           │
 │  * NetworkService (Native host HTTP client)            │
@@ -55,14 +58,10 @@ MusicAre follows a decoupled, Feature-First Clean Architecture organized into we
                            ▼
 ┌────────────────────────────────────────────────────────┐
 │                    PLUGIN EXECUTION                    │
-│            (Dynamic interpreter dart_eval)             │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-            ┌──────────────┴──────────────┐
-            ▼                             ▼
-  ┌──────────────────┐          ┌──────────────────┐
-  │ METADATA PLUGINS │          │AUDIO SOURCE PLUGS│
-  └──────────────────┘          └──────────────────┘
+├────────────────────────────┬───────────────────────────┤
+│     METADATA PLUGINS       │   AUDIO SOURCE PLUGINS    │
+│  (dart_eval Interpreter)   │ (serious_python + Flask)  │
+└────────────────────────────┴───────────────────────────┘
 ```
 
 ### Layer Responsibilities
@@ -71,8 +70,10 @@ MusicAre follows a decoupled, Feature-First Clean Architecture organized into we
 2. **State Management Layer (Cubits & Blocs)**:
    * **Global Cubits**: App-level singletons managing cross-cutting state (e.g., active plugin lifecycle, global audio player state).
    * **Local Cubits**: Screen-scoped state machines instantiated for specific pages and destroyed when navigating away.
-3. **Services Layer (IoC / Dependency Injection)**: Houses central application services registered in `GetIt`, including host storage, native network clients, GitHub discovery, and the dynamic `PluginEngine`.
-4. **Plugin Sandbox Layer**: Sandboxed execution environment running interpreted bytecode via `dart_eval`. The SDK bridge automatically unboxes return values and normalizes runtime exceptions, ensuring the Presentation and State Management layers interact exclusively with pure, strongly-typed native Dart entities and standard exceptions.
+3. **Services Layer (IoC / Dependency Injection)**: Houses central application services registered in `GetIt`, including host storage, native network clients, GitHub discovery, dynamic `PluginEngine`, and `AudioSourceEngine`.
+4. **Plugin Sandbox Layer**: Sandboxed execution environments:
+   * **Metadata**: Runs interpreted `.evc` bytecode via `dart_eval`.
+   * **Audio Source**: Runs local background daemon with ephemeral port via `serious_python`, resolving candidate streams via localhost `POST /get_stream`.
 
 ---
 
@@ -88,8 +89,8 @@ lib/
 │   └── theme/                      # Styling and design system
 │
 └── features/                       # Modular vertical feature slices (Feature-First)
-    ├── plugin/                     # Dynamic plugin subsystem (Exemplar feature layout)
-    │   ├── data/                   # Feature data layer
+    ├── plugin/                     # Dynamic plugin subsystem (Metadata & Audio Source engines)
+    │   ├── data/                   # Feature data layer (Engines, models, and services)
     │   │   ├── exceptions/         # Feature-specific exception classes
     │   │   ├── models/             # Data models and JSON entities
     │   │   └── services/           # Data services, engines, and discovery
@@ -98,7 +99,7 @@ lib/
     │       ├── cubit/              # State management machines (Cubits & States)
     │       └── pages/              # User interface pages and graphical screens
     │
-    └── [other_features]/           # Domain features (e.g. shell, home, search, library)
+    └── [other_features]/           # Domain features (e.g. shell, home, search, library, player)
 ```
 
 ---
