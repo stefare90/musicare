@@ -6,7 +6,8 @@
             "request": "launch",
             "type": "dart",
             "env": {
-                "SERIOUS_PYTHON_SITE_PACKAGES": "/tmp"
+                "SERIOUS_PYTHON_SITE_PACKAGES": "${workspaceFolder}/build/site-packages",
+                "SERIOUS_PYTHON_APP": "${workspaceFolder}/build/python-app"
             }
         }
     ]

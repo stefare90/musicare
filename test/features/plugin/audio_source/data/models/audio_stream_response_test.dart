@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:music_are/features/plugin/audio_source/data/models/audio_quality.dart';
-import 'package:music_are/features/plugin/audio_source/data/models/audio_stream_response.dart';
+import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
 
 void main() {
   group('AudioStreamResponse Model Tests', () {

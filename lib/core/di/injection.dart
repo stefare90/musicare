@@ -6,7 +6,6 @@ import 'package:gyawun_metadata_sdk/metadata/interfaces/iui_service.dart';
 import 'package:music_are/core/router/app_router.dart';
 import 'package:music_are/core/services/network_service.dart';
 import 'package:music_are/core/services/preferences_service.dart';
-import 'package:music_are/features/plugin/audio_source/data/services/audio_source_client.dart';
 import 'package:music_are/features/plugin/audio_source/data/services/audio_source_plugin_engine.dart';
 import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
 import 'package:music_are/features/plugin/discovery/data/services/plugin_discovery_service.dart';
@@ -15,6 +14,7 @@ import 'package:music_are/features/plugin/metadata/data/services/sdk_services/pl
 import 'package:music_are/features/plugin/metadata/data/services/sdk_services/plugin_storage_service.dart';
 import 'package:music_are/features/plugin/metadata/data/services/sdk_services/plugin_ui_service.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
+import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final sl = GetIt.instance;

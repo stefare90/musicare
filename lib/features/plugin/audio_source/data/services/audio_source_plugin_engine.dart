@@ -2,21 +2,21 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:archive/archive.dart';
+import 'package:flutter/foundation.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
-import 'package:music_are/features/plugin/audio_source/data/models/audio_quality.dart';
-import 'package:music_are/features/plugin/audio_source/data/models/audio_stream_response.dart';
-import 'package:music_are/features/plugin/audio_source/data/services/audio_source_client.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
+import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:serious_python/serious_python.dart';
 
 class AudioSourcePluginEngine {
   final AudioSourceClient _client;
   PluginManifest? _activeManifest;
+  String? _activePluginDir;
 
   AudioSourcePluginEngine({AudioSourceClient? client})
     : _client = client ?? AudioSourceClient();
@@ -24,14 +24,8 @@ class AudioSourcePluginEngine {
   int? get activePort => _client.port;
   PluginManifest? get activeManifest => _activeManifest;
   String? get activePluginId => _activeManifest?.id;
-  bool get isRunning => _client.isConfigured && _activeManifest != null;
-
-  Future<int> getUnusedPort() async {
-    final socket = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
-    final port = socket.port;
-    await socket.close();
-    return port;
-  }
+  String? get activePluginDir => _activePluginDir;
+  bool get isRunning => _client.isStarted && _activeManifest != null;
 
   Future<bool> isPluginInstalledOnDisk(String pluginId) async {
     final appDir = await getApplicationSupportDirectory();
@@ -49,7 +43,9 @@ class AudioSourcePluginEngine {
     );
     final jsonFile = File(p.join(pluginDir.path, 'plugin.json'));
 
+    debugPrint('📁 [Engine] Checking disk: ${pluginDir.path}');
     if (!pluginDir.existsSync() || !jsonFile.existsSync()) {
+      debugPrint('❌ [Engine] Files not found on disk for $pluginId');
       throw PluginFileNotFoundException(pluginId);
     }
 
@@ -64,26 +60,20 @@ class AudioSourcePluginEngine {
       );
     }
 
-    await terminate();
+    _activePluginDir = pluginDir.path;
 
-    final port = await getUnusedPort();
-    _client.setPort(port);
-
-    final entryPointPath = p.join(pluginDir.path, 'src', 'main.py');
-    Directory.current = pluginDir;
-
-    SeriousPython.runProgram(
-      entryPointPath,
-      modulePaths: [pluginDir.path],
-      environmentVariables: {'PORT': port.toString()},
-      sync: false,
-    );
-
-    final isReady = await _waitForServerReady();
-    if (!isReady) {
-      await terminate();
-      throw AudioSourceDaemonStartupTimeoutException(port);
+    // 1. Ensure the fixed SeriousPython host daemon is running
+    if (!_client.isStarted) {
+      debugPrint('🚀 [Engine] Starting SeriousPython host daemon...');
+      await _client.start();
     }
+
+    // 2. Dynamically inject the unzipped plugin into the Python runtime
+    debugPrint('🔌 [Engine] Dynamically injecting plugin: ${pluginDir.path}');
+    final loadResult = await _client.loadPlugin(pluginDir.path);
+    debugPrint(
+      '✅ [Engine] Plugin "${loadResult['loaded']}" loaded successfully on port ${_client.port}!',
+    );
 
     _activeManifest = manifest;
   }
@@ -137,18 +127,6 @@ class AudioSourcePluginEngine {
     await loadFromDisk(manifest.id);
   }
 
-  Future<bool> _waitForServerReady({
-    Duration timeout = const Duration(seconds: 15),
-  }) async {
-    final stopwatch = Stopwatch()..start();
-    while (stopwatch.elapsed < timeout) {
-      final isReady = await _client.ping();
-      if (isReady) return true;
-      await Future.delayed(const Duration(milliseconds: 250));
-    }
-    return false;
-  }
-
   Future<List<AudioStreamResponse>> resolveStream(
     Track track, {
     AudioQuality quality = AudioQuality.high,
@@ -156,16 +134,20 @@ class AudioSourcePluginEngine {
     if (!isRunning) {
       throw PluginNotLoadedException();
     }
-    return _client.getStream(track: track, quality: quality);
+
+    return _client.getStream(
+      title: track.name,
+      artists: track.artists.map((a) => a.name).toList(),
+      durationMs: track.durationMs,
+      quality: quality,
+    );
   }
 
   Future<void> terminate() async {
-    if (isRunning || _client.isConfigured) {
-      try {
-        SeriousPython.terminate();
-      } catch (_) {}
-      _client.reset();
+    if (isRunning) {
+      _client.stop();
       _activeManifest = null;
+      _activePluginDir = null;
     }
   }
 }
