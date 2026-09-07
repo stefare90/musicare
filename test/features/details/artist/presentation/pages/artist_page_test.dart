@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:gyawun_metadata_sdk/metadata/interfaces/iartist.dart';
@@ -11,6 +12,8 @@ import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/widgets/media/track_matrix.dart';
 import 'package:music_are/features/details/artist/presentation/pages/artist_page.dart';
+import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
+import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
@@ -19,12 +22,15 @@ class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
 
 class MockArtistService extends Mock implements IArtist {}
 
+class MockPlayerCubit extends Mock implements PlayerCubit {}
+
 void main() {
   final sl = GetIt.instance;
 
   late MockPluginEngine mockEngine;
   late MockMetadataPlugin mockMetadata;
   late MockArtistService mockArtist;
+  late MockPlayerCubit mockPlayerCubit;
 
   final testArtist = Artist(id: 'a1', name: 'The Beatles', externalUri: '');
 
@@ -61,6 +67,10 @@ void main() {
     mockEngine = MockPluginEngine();
     mockMetadata = MockMetadataPlugin();
     mockArtist = MockArtistService();
+    mockPlayerCubit = MockPlayerCubit();
+
+    when(() => mockPlayerCubit.state).thenReturn(const PlayerState());
+    when(() => mockPlayerCubit.stream).thenAnswer((_) => const Stream.empty());
 
     sl.registerLazySingleton<MetadataPluginEngine>(() => mockEngine);
 
@@ -73,7 +83,10 @@ void main() {
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: ArtistPage(artist: testArtist),
+      home: BlocProvider<PlayerCubit>.value(
+        value: mockPlayerCubit,
+        child: ArtistPage(artist: testArtist),
+      ),
     );
   }
 

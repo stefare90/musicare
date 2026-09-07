@@ -6,6 +6,9 @@ import 'package:gyawun_metadata_sdk/metadata/interfaces/iui_service.dart';
 import 'package:music_are/core/router/app_router.dart';
 import 'package:music_are/core/services/network_service.dart';
 import 'package:music_are/core/services/preferences_service.dart';
+import 'package:music_are/features/player/data/services/audio_player_service.dart';
+import 'package:music_are/features/player/data/services/audio_stream_resolver.dart';
+import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/audio_source/data/services/audio_source_plugin_engine.dart';
 import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
 import 'package:music_are/features/plugin/discovery/data/services/plugin_discovery_service.dart';
@@ -55,6 +58,16 @@ Future<void> initDependencies() async {
       sl<AudioSourcePluginEngine>(),
       sl<PreferencesService>(),
       sl<PluginDiscoveryService>(),
+    ),
+  );
+  sl.registerLazySingleton<AudioPlayerService>(() => AudioPlayerService());
+  sl.registerLazySingleton<AudioStreamResolver>(
+    () => AudioStreamResolver(sl<AudioSourcePluginEngine>()),
+  );
+  sl.registerLazySingleton<PlayerCubit>(
+    () => PlayerCubit(
+      audioService: sl<AudioPlayerService>(),
+      resolver: sl<AudioStreamResolver>(),
     ),
   );
 }

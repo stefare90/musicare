@@ -8,6 +8,7 @@ import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
 import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
+import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
 class PlaylistPage extends StatelessWidget {
@@ -60,6 +61,13 @@ class _PlaylistView extends StatelessWidget {
                     : null,
                 onLoadMore: () =>
                     context.read<PlaylistCubit>().loadMoreTracks(),
+                activeTrackId: context
+                    .watch<PlayerCubit>()
+                    .state
+                    .currentTrack
+                    ?.id,
+                onTrackTap: (track) =>
+                    context.read<PlayerCubit>().playTrack(track),
                 onTrackOptionsTap: (track) =>
                     TrackOptionsBottomSheet.show(context, track),
               ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
+import 'package:music_are/features/player/presentation/widgets/mini_player.dart';
 
 class ShellPage extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -14,12 +15,7 @@ class ShellPage extends StatelessWidget {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            height: 60,
-            width: double.infinity,
-            color: Theme.of(context).colorScheme.surfaceContainerHigh,
-            child: const Center(child: Text('Persistent Mini Player Area')),
-          ),
+          const MiniPlayer(),
           NavigationBar(
             selectedIndex: navigationShell.currentIndex,
             onDestinationSelected: (index) {

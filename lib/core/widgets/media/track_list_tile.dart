@@ -27,7 +27,7 @@ class TrackListTile extends StatelessWidget {
     final artistNames = track.artists.map((a) => a.name).join(', ');
     final coverImages = track.album.images;
 
-    return Container(
+    return Material(
       color: isPlaying
           ? context.colorScheme.primary.withValues(alpha: 0.08)
           : Colors.transparent,

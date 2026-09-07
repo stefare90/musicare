@@ -102,17 +102,74 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
     *   [x] Add widget tests for multi-step onboarding flow
 
 ## 🎧 Phase 11: Audio Player & Playback Engine (`lib/features/player/`)
-*   [ ] **Core Audio Service & Platform Handler**:
-    *   [ ] Integrate native playback engine (e.g. `just_audio` + `audio_service`)
-    *   [ ] Implement background audio playback, lock screen media controls, and audio focus management
-*   [ ] **Player State Management**:
-    *   [ ] Implement `PlayerCubit` & `PlayerState` (active track, play/pause, buffering, seek position, playback queue, repeat, shuffle)
-    *   [ ] Automatic stream resolution via `AudioSourceClient` on track change with transparent fallback to candidate #2 if primary stream fails
-*   [ ] **Presentation**:
-    *   [ ] Expand persistent Mini-Player in `ShellPage` (cover art, track title, artist, progress indicator, play/pause, skip)
-    *   [ ] Implement `FullPlayerPage` modal/sheet (large artwork, interactive scrub slider, playback controls, stream quality badge, reorderable queue manager)
-*   [ ] **Testing**:
-    *   [ ] Add unit and widget tests for `PlayerCubit`, `MiniPlayer`, and `FullPlayerPage`
+
+## 🎧 Phase 11: Audio Player & Playback Engine (`lib/features/player/`)
+
+### 11.1. Native Audio Infrastructure & Service Layer
+*   [x] **Dependencies Setup**:
+    *   [x] Add `just_audio` and `just_audio_background` to `pubspec.yaml`
+*   [x] **Android Platform Configuration**:
+    *   [x] Configure `AndroidManifest.xml` with permissions (`INTERNET`, `WAKE_LOCK`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `POST_NOTIFICATIONS` for Android 13+)
+    *   [x] Enable `android:usesCleartextTraffic="true"` for local proxy/stream playback
+    *   [x] Declare `AudioService` and `MediaButtonReceiver` in manifest
+    *   [x] Configure main activity with `com.ryanheise.audioservice.AudioServiceActivity`
+*   [x] **Audio Service Layer & Background Setup**:
+    *   [x] Initialize `JustAudioBackground.init(...)` with notification channel, icon, and ongoing parameters in `main.dart`
+    *   [x] Implement `AudioPlayerService` wrapper around `AudioPlayer` isolating hardware playback, streams, and controls
+    *   [x] Register `AudioPlayerService` in GetIt (`injection.dart`)
+    *   [x] Verified on real Android hardware (Moto G84, Android 15) with native notification, lock screen controls, and background playback
+
+### 11.2. Stream Resolution & Candidate Fallback Service
+*   [x] **Models & Resolution Service**:
+    *   [x] Implement `ResolvedPlaybackTrack` model with candidate tracking, fallback navigation, and `expiresAt` expiration check
+    *   [x] Implement `AudioStreamResolver` querying `AudioSourcePluginEngine.resolveStream()` and generating `AudioSource` with HTTP headers (`User-Agent`, etc.) and `MediaItem` tag
+    *   [x] Unit tests for `ResolvedPlaybackTrack` (`test/features/player/data/models/resolved_playback_track_test.dart`)
+    *   [x] Unit tests for `AudioStreamResolver` (`test/features/player/data/services/audio_stream_resolver_test.dart`)
+
+### 11.3. Player State Management & Queue Model (`lib/features/player/presentation/cubit/`)
+*   [x] **Queue Domain Model**:
+    *   [x] Implement `PlaybackQueue` model and `RepeatMode` enum (`off`, `all`, `one`) with shuffle and queue manipulation logic
+    *   [x] Unit tests for `PlaybackQueue` (`test/features/player/data/models/playback_queue_test.dart`)
+*   [ ] **State & Cubit Integration**:
+    *   [ ] Integrate `PlaybackQueue` into `PlayerState` and `PlayerCubit`
+    *   [ ] Implement queue navigation commands (`next()`, `previous()`, `skipToIndex()`)
+    *   [ ] Implement auto-advance on track playback completion
+    *   [ ] Implement candidate retry/fallback on network or CDN failure during `setAudioSource`
+    *   [ ] Expose repeat mode cycling and shuffle toggling
+    *   [ ] Comprehensive unit tests for `PlayerCubit` with queue operations
+
+### 11.4. Presentation: Persistent Mini-Player (`lib/features/player/presentation/widgets/`)
+*   [ ] **MiniPlayer Widget**:
+    *   [x] Basic `MiniPlayer` layout in `ShellPage` (thumbnail, title, artist, progress bar, play/pause toggle)
+    *   [ ] Add skip next button
+    *   [ ] Add tap gesture to open full-screen player modal
+    *   [ ] Widget tests for `MiniPlayer`
+
+### 11.5. Presentation: Full-Player Modal Sheet (`lib/features/player/presentation/pages/`)
+*   [ ] **FullPlayerPage UI**:
+    *   [ ] Full-screen draggable modal bottom sheet with smooth transition
+    *   [ ] Large cover art, title, artists with navigation
+    *   [ ] Interactive scrubber / slider with current position and duration labels
+    *   [ ] Playback control row: Shuffle, Previous, Play/Pause, Next, Repeat
+    *   [ ] Stream quality badge and queue button
+*   [ ] **QueueBottomSheet**:
+    *   [ ] Reorderable queue view (`ReorderableListView`) with swipe-to-remove
+*   [ ] **Widget Tests**:
+    *   [ ] Widget tests for `FullPlayerPage` and `QueueBottomSheet`
+
+### 11.6. Global App Integration & Media Tap Wiring
+*   [ ] **App-wide Playback Integration**:
+    *   [ ] Connect tap-to-play with context queue on `AlbumPage`, `PlaylistPage`, `ArtistPage`
+    *   [ ] Active track visual indicator on all lists (`isPlaying`)
+    *   [ ] Wire "Add to Queue" option in `TrackOptionsBottomSheet`
+
+### 11.7. Test Suite (`test/features/player/`)
+*   [ ] **Unit Tests**:
+    *   [ ] `AudioStreamResolverTest`: test di fallback sui candidati alternativi in caso di errore 403 o eccezione del primo stream.
+    *   [ ] `PlayerCubitTest`: test del ciclo di vita completo (play, pause, next, prev, repeat modes, shuffle, gestione coda, seek).
+*   [ ] **Widget Tests**:
+    *   [ ] `MiniPlayerTest`: verifica rendering, cambi di stato play/pause, tap per apertura full player, barra di avanzamento.
+    *   [ ] `FullPlayerPageTest`: verifica controlli, slider seek, visualizzazione metadati e apertura coda.
 
 ## 🔍 Phase 12: Search Feature (`lib/features/search/`)
 *   [ ] **State Management**:

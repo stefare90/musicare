@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:gyawun_metadata_sdk/metadata/interfaces/ialbum.dart';
@@ -10,6 +11,8 @@ import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/features/details/album/presentation/pages/album_page.dart';
+import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
+import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
@@ -18,12 +21,15 @@ class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
 
 class MockAlbumService extends Mock implements IAlbum {}
 
+class MockPlayerCubit extends Mock implements PlayerCubit {}
+
 void main() {
   final sl = GetIt.instance;
 
   late MockPluginEngine mockEngine;
   late MockMetadataPlugin mockMetadata;
   late MockAlbumService mockAlbum;
+  late MockPlayerCubit mockPlayerCubit;
 
   final testAlbum = Album(
     id: 'al1',
@@ -51,6 +57,10 @@ void main() {
     mockEngine = MockPluginEngine();
     mockMetadata = MockMetadataPlugin();
     mockAlbum = MockAlbumService();
+    mockPlayerCubit = MockPlayerCubit();
+
+    when(() => mockPlayerCubit.state).thenReturn(const PlayerState());
+    when(() => mockPlayerCubit.stream).thenAnswer((_) => const Stream.empty());
 
     sl.registerLazySingleton<MetadataPluginEngine>(() => mockEngine);
 
@@ -63,7 +73,10 @@ void main() {
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: AlbumPage(album: testAlbum),
+      home: BlocProvider<PlayerCubit>.value(
+        value: mockPlayerCubit,
+        child: AlbumPage(album: testAlbum),
+      ),
     );
   }
 

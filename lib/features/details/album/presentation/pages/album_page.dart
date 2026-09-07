@@ -8,6 +8,7 @@ import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
 import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 import 'package:music_are/features/details/album/presentation/cubit/album_cubit.dart';
 import 'package:music_are/features/details/album/presentation/cubit/album_state.dart';
+import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
 class AlbumPage extends StatelessWidget {
@@ -58,6 +59,13 @@ class _AlbumView extends StatelessWidget {
                     ? state.error
                     : null,
                 onLoadMore: () => context.read<AlbumCubit>().loadMoreTracks(),
+                activeTrackId: context
+                    .watch<PlayerCubit>()
+                    .state
+                    .currentTrack
+                    ?.id,
+                onTrackTap: (track) =>
+                    context.read<PlayerCubit>().playTrack(track),
                 onTrackOptionsTap: (track) =>
                     TrackOptionsBottomSheet.show(context, track),
               ),

@@ -10,6 +10,7 @@ import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
 import 'package:music_are/core/widgets/media/track_matrix.dart';
 import 'package:music_are/features/details/artist/presentation/cubit/artist_cubit.dart';
 import 'package:music_are/features/details/artist/presentation/cubit/artist_state.dart';
+import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
 class ArtistPage extends StatelessWidget {
@@ -52,6 +53,13 @@ class _ArtistView extends StatelessWidget {
               child: TrackMatrix(
                 title: context.l10n.popularTracks,
                 tracks: state.topTracks.data.items,
+                activeTrackId: context
+                    .watch<PlayerCubit>()
+                    .state
+                    .currentTrack
+                    ?.id,
+                onTrackTap: (track) =>
+                    context.read<PlayerCubit>().playTrack(track),
                 isLoading:
                     state.topTracks.isLoading &&
                     state.topTracks.data.items.isEmpty,
