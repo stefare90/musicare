@@ -15,6 +15,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initDependencies();
 
+  // Print full error details even if repeated
+  FlutterError.onError = (details) {
+    FlutterError.dumpErrorToConsole(details, forceReport: true);
+  };
+
   await JustAudioBackground.init(
     androidNotificationChannelId: 'com.musicare.audio',
     androidNotificationChannelName: 'MusicAre Playback',

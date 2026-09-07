@@ -42,15 +42,15 @@ class _SliverMediaScaffoldState extends State<SliverMediaScaffold> {
   }
 
   void _checkTitlePosition(BuildContext context) {
-    final renderBox =
-        _largeTitleKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox != null &&
-        renderBox.hasSize &&
-        renderBox.attached &&
-        !renderBox.debugNeedsLayout) {
+    if (!mounted) return;
+    final titleContext = _largeTitleKey.currentContext;
+    if (titleContext == null || !titleContext.mounted) return;
+
+    final renderBox = titleContext.findRenderObject() as RenderBox?;
+    if (renderBox != null && renderBox.hasSize && renderBox.attached) {
       try {
         final position = renderBox.localToGlobal(Offset.zero);
-        final topPadding = MediaQuery.of(context).padding.top;
+        final topPadding = MediaQuery.paddingOf(context).top;
         final appBarBottom = topPadding + kToolbarHeight;
         final largeTitleBottomY = position.dy + renderBox.size.height;
         final isPast = largeTitleBottomY <= appBarBottom;
@@ -67,11 +67,13 @@ class _SliverMediaScaffoldState extends State<SliverMediaScaffold> {
     return Scaffold(
       body: NotificationListener<ScrollNotification>(
         onNotification: (notification) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              _checkTitlePosition(context);
-            }
-          });
+          if (notification is ScrollUpdateNotification) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                _checkTitlePosition(context);
+              }
+            });
+          }
           return false;
         },
         child: CustomScrollView(

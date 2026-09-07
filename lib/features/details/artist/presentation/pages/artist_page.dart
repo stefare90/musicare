@@ -53,13 +53,13 @@ class _ArtistView extends StatelessWidget {
               child: TrackMatrix(
                 title: context.l10n.popularTracks,
                 tracks: state.topTracks.data.items,
-                activeTrackId: context
-                    .watch<PlayerCubit>()
-                    .state
-                    .currentTrack
-                    ?.id,
-                onTrackTap: (track) =>
-                    context.read<PlayerCubit>().playTrack(track),
+                activeTrackId: context.select<PlayerCubit, String?>(
+                  (c) => c.state.currentTrack?.id,
+                ),
+                onTrackTap: (track) => context.read<PlayerCubit>().playTrack(
+                  track,
+                  queue: state.topTracks.data.items,
+                ),
                 isLoading:
                     state.topTracks.isLoading &&
                     state.topTracks.data.items.isEmpty,

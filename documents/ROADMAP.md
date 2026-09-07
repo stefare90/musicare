@@ -130,20 +130,20 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 *   [x] **Queue Domain Model**:
     *   [x] Implement `PlaybackQueue` model and `RepeatMode` enum (`off`, `all`, `one`) with shuffle and queue manipulation logic
     *   [x] Unit tests for `PlaybackQueue` (`test/features/player/data/models/playback_queue_test.dart`)
-*   [ ] **State & Cubit Integration**:
-    *   [ ] Integrate `PlaybackQueue` into `PlayerState` and `PlayerCubit`
-    *   [ ] Implement queue navigation commands (`next()`, `previous()`, `skipToIndex()`)
-    *   [ ] Implement auto-advance on track playback completion
-    *   [ ] Implement candidate retry/fallback on network or CDN failure during `setAudioSource`
-    *   [ ] Expose repeat mode cycling and shuffle toggling
-    *   [ ] Comprehensive unit tests for `PlayerCubit` with queue operations
+*   [x] **State & Cubit Integration**:
+    *   [x] Integrate `PlaybackQueue` into `PlayerState` and `PlayerCubit`
+    *   [x] Implement queue navigation commands (`next()`, `previous()`, `skipToIndex()`)
+    *   [x] Implement auto-advance on track playback completion
+    *   [x] Implement candidate retry/fallback on network or CDN failure during `setAudioSource`
+    *   [x] Expose repeat mode cycling and shuffle toggling
+    *   [x] Comprehensive unit tests for `PlayerCubit` with queue operations
 
 ### 11.4. Presentation: Persistent Mini-Player (`lib/features/player/presentation/widgets/`)
-*   [ ] **MiniPlayer Widget**:
+*   [x] **MiniPlayer Widget**:
     *   [x] Basic `MiniPlayer` layout in `ShellPage` (thumbnail, title, artist, progress bar, play/pause toggle)
-    *   [ ] Add skip next button
-    *   [ ] Add tap gesture to open full-screen player modal
-    *   [ ] Widget tests for `MiniPlayer`
+    *   [x] Add skip next button
+    *   [x] Add tap gesture to open full-screen player modal
+    *   [x] Widget tests for `MiniPlayer`
 
 ### 11.5. Presentation: Full-Player Modal Sheet (`lib/features/player/presentation/pages/`)
 *   [ ] **FullPlayerPage UI**:

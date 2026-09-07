@@ -8,6 +8,8 @@ class AudioPlayerService {
 
   ja.AudioPlayer get rawPlayer => _player;
 
+  ja.PlayerState get playerState => _player.playerState;
+
   Stream<Duration> get positionStream => _player.positionStream;
   Stream<Duration?> get durationStream => _player.durationStream;
   Stream<ja.PlayerState> get playerStateStream => _player.playerStateStream;

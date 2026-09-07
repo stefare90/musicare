@@ -14,8 +14,9 @@ class ShellPage extends StatelessWidget {
       body: navigationShell,
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const MiniPlayer(),
+          const RepaintBoundary(child: MiniPlayer()),
           NavigationBar(
             selectedIndex: navigationShell.currentIndex,
             onDestinationSelected: (index) {
@@ -26,18 +27,18 @@ class ShellPage extends StatelessWidget {
             },
             destinations: [
               NavigationDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
+                icon: const Icon(Icons.home_outlined),
+                selectedIcon: const Icon(Icons.home),
                 label: context.l10n.homeTab,
               ),
               NavigationDestination(
-                icon: Icon(Icons.search_outlined),
-                selectedIcon: Icon(Icons.search),
+                icon: const Icon(Icons.search_outlined),
+                selectedIcon: const Icon(Icons.search),
                 label: context.l10n.searchTab,
               ),
               NavigationDestination(
-                icon: Icon(Icons.library_music_outlined),
-                selectedIcon: Icon(Icons.library_music),
+                icon: const Icon(Icons.library_music_outlined),
+                selectedIcon: const Icon(Icons.library_music),
                 label: context.l10n.libraryTab,
               ),
             ],

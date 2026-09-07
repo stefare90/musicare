@@ -61,13 +61,13 @@ class _PlaylistView extends StatelessWidget {
                     : null,
                 onLoadMore: () =>
                     context.read<PlaylistCubit>().loadMoreTracks(),
-                activeTrackId: context
-                    .watch<PlayerCubit>()
-                    .state
-                    .currentTrack
-                    ?.id,
-                onTrackTap: (track) =>
-                    context.read<PlayerCubit>().playTrack(track),
+                activeTrackId: context.select<PlayerCubit, String?>(
+                  (c) => c.state.currentTrack?.id,
+                ),
+                onTrackTap: (track) => context.read<PlayerCubit>().playTrack(
+                  track,
+                  queue: state.tracks.items,
+                ),
                 onTrackOptionsTap: (track) =>
                     TrackOptionsBottomSheet.show(context, track),
               ),
