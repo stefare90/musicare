@@ -111,5 +111,51 @@ void main() {
 
       expect(queueTapped, isTrue);
     });
+    testWidgets('AlbumOptionsBottomSheet renders save and share options', (
+      tester,
+    ) async {
+      bool saveTapped = false;
+      bool shareTapped = false;
+
+      final testAlbum = Album(
+        id: 'al1',
+        name: 'Abbey Road',
+        artists: [Artist(id: 'a1', name: 'The Beatles', externalUri: '')],
+        releaseDate: '1969',
+        externalUri: '',
+        totalTracks: 17,
+        albumType: AlbumType.album,
+      );
+
+      await tester.pumpWidget(
+        buildTestableWidget(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () {
+                AlbumOptionsBottomSheet.show(
+                  context,
+                  testAlbum,
+                  onToggleSave: () => saveTapped = true,
+                  onShare: () => shareTapped = true,
+                );
+              },
+              child: const Text('Show Album Options'),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Show Album Options'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Abbey Road'), findsOneWidget);
+      expect(find.text('Save Album'), findsOneWidget);
+      expect(find.text('Share Album'), findsOneWidget);
+      expect(find.text('Go to Artist'), findsOneWidget);
+
+      await tester.tap(find.text('Save Album'));
+      await tester.pumpAndSettle();
+      expect(saveTapped, isTrue);
+    });
   });
 }

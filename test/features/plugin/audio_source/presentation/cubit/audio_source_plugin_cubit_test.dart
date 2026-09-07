@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
+import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/services/preferences_service.dart';
 import 'package:music_are/features/plugin/audio_source/data/services/audio_source_plugin_engine.dart';
@@ -8,6 +10,7 @@ import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_
 import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_state.dart';
 import 'package:music_are/features/plugin/discovery/data/services/plugin_discovery_service.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
+import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
 
 class MockAudioSourcePluginEngine extends Mock
     implements AudioSourcePluginEngine {}
@@ -102,6 +105,120 @@ void main() {
 
       expect(cubit.state, isA<AudioSourcePluginNotConfiguredState>());
       verify(() => mockEngine.terminate()).called(1);
+    });
+
+    test(
+      'initialize emits AudioSourcePluginNotConfiguredState when no plugin is saved',
+      () async {
+        when(
+          () => mockPreferences.getActiveAudioSourcePluginId(),
+        ).thenReturn(null);
+
+        expectLater(
+          cubit.stream,
+          emitsInOrder([
+            isA<AudioSourcePluginLoadingState>(),
+            isA<AudioSourcePluginNotConfiguredState>(),
+          ]),
+        );
+
+        await cubit.initialize();
+      },
+    );
+
+    test(
+      'initialize emits AudioSourcePluginErrorState when disk load throws',
+      () async {
+        when(
+          () => mockPreferences.getActiveAudioSourcePluginId(),
+        ).thenReturn('org.musicare.audiosource.youtube');
+        when(
+          () => mockEngine.isPluginInstalledOnDisk(
+            'org.musicare.audiosource.youtube',
+          ),
+        ).thenAnswer((_) async => true);
+        when(
+          () => mockEngine.loadFromDisk('org.musicare.audiosource.youtube'),
+        ).thenThrow(Exception('Disk read failed'));
+
+        expectLater(
+          cubit.stream,
+          emitsInOrder([
+            isA<AudioSourcePluginLoadingState>(),
+            isA<AudioSourcePluginErrorState>(),
+          ]),
+        );
+
+        await cubit.initialize();
+      },
+    );
+
+    test(
+      'installDiscoveredPlugin gets zip bytes and loads successfully',
+      () async {
+        final zipBytes = Uint8List.fromList([1, 2, 3]);
+        when(
+          () => mockDiscovery.getZipBytesForPlugin(testManifest),
+        ).thenReturn(zipBytes);
+        when(
+          () => mockEngine.loadFromZipBytes(zipBytes),
+        ).thenAnswer((_) async {});
+        when(() => mockEngine.activeManifest).thenReturn(testManifest);
+        when(() => mockEngine.activePort).thenReturn(8765);
+        when(
+          () => mockPreferences.setActiveAudioSourcePluginId(
+            'org.musicare.audiosource.youtube',
+          ),
+        ).thenAnswer((_) async => true);
+
+        expectLater(
+          cubit.stream,
+          emitsInOrder([
+            isA<AudioSourcePluginLoadingState>(),
+            isA<AudioSourcePluginLoadedState>()
+                .having(
+                  (s) => s.manifest.id,
+                  'id',
+                  'org.musicare.audiosource.youtube',
+                )
+                .having((s) => s.port, 'port', 8765),
+          ]),
+        );
+
+        await cubit.installDiscoveredPlugin(testManifest);
+      },
+    );
+
+    test('resolveStream forwards call to engine', () async {
+      final track = Track(
+        id: 't1',
+        name: 'Track',
+        externalUri: '',
+        artists: [],
+        album: Album(
+          id: 'al1',
+          name: 'Alb',
+          artists: [],
+          releaseDate: '',
+          externalUri: '',
+          totalTracks: 1,
+          albumType: AlbumType.single,
+        ),
+        durationMs: 100,
+      );
+
+      when(
+        () => mockEngine.resolveStream(track, quality: AudioQuality.high),
+      ).thenAnswer((_) async => []);
+
+      final result = await cubit.resolveStream(
+        track,
+        quality: AudioQuality.high,
+      );
+      expect(result, isEmpty);
+      verify(
+        () => mockEngine.resolveStream(track, quality: AudioQuality.high),
+      ).called(1);
     });
   });
 }

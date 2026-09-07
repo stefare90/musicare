@@ -142,5 +142,83 @@ void main() {
       expect((cubit.state as PlaylistLoadedState).isSaved, isTrue);
       verify(() => mockPlaylistService.save('pl1')).called(1);
     });
+    test(
+      'loadMoreTracks appends newly fetched tracks to current tracks',
+      () async {
+        when(() => mockPluginEngine.hasMetadata).thenReturn(true);
+        when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+        when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
+
+        when(
+          () => mockPlaylistService.tracks('pl1', offset: 1, limit: 20),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [
+              Track(
+                id: 't2',
+                name: 'Track 2',
+                externalUri: '',
+                artists: [],
+                album: testTrack.album,
+                durationMs: 120000,
+              ),
+            ],
+            total: 2,
+            offset: 1,
+            limit: 20,
+          ),
+        );
+
+        cubit.emit(
+          PlaylistLoadedState(
+            playlist: testPlaylist,
+            tracks: PaginatedResult<Track>(
+              items: [testTrack],
+              total: 2,
+              offset: 0,
+              limit: 20,
+            ),
+          ),
+        );
+
+        await cubit.loadMoreTracks();
+
+        final state = cubit.state as PlaylistLoadedState;
+        expect(state.tracks.items.length, equals(2));
+        expect(state.tracks.items.last.name, equals('Track 2'));
+        expect(state.hasMoreTracks, isFalse);
+      },
+    );
+
+    test(
+      'loadMoreTracks emits PlaylistLoadMoreErrorState on failure',
+      () async {
+        when(() => mockPluginEngine.hasMetadata).thenReturn(true);
+        when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+        when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
+
+        when(
+          () => mockPlaylistService.tracks('pl1', offset: 1, limit: 20),
+        ).thenThrow(Exception('Pagination network timeout'));
+
+        cubit.emit(
+          PlaylistLoadedState(
+            playlist: testPlaylist,
+            tracks: PaginatedResult<Track>(
+              items: [testTrack],
+              total: 2,
+              offset: 0,
+              limit: 20,
+            ),
+          ),
+        );
+
+        await cubit.loadMoreTracks();
+
+        expect(cubit.state, isA<PlaylistLoadMoreErrorState>());
+        final errorState = cubit.state as PlaylistLoadMoreErrorState;
+        expect(errorState.tracks.items.length, equals(1));
+      },
+    );
   });
 }

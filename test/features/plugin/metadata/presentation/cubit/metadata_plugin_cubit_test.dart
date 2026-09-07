@@ -9,6 +9,7 @@ import 'package:music_are/features/plugin/discovery/data/services/plugin_discove
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
+import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 
 class MockMetadataPluginEngine extends Mock implements MetadataPluginEngine {}
@@ -117,5 +118,88 @@ void main() {
         expect(cubit.state, isA<MetadataPluginNotConfiguredState>());
       },
     );
+
+    test(
+      'initialize emits MetadataPluginIncompatibleState when SDK is incompatible',
+      () async {
+        when(
+          () => mockPreferences.getActivePluginId(),
+        ).thenReturn('org.gyawun.musicbrainz');
+        when(
+          () => mockPluginEngine.isPluginInstalledOnDisk(
+            'org.gyawun.musicbrainz',
+          ),
+        ).thenAnswer((_) async => true);
+        when(
+          () => mockPluginEngine.loadFromDisk('org.gyawun.musicbrainz'),
+        ).thenThrow(
+          IncompatibleSdkVersionException(
+            manifest: testManifest,
+            hostVersion: '2.0.3',
+          ),
+        );
+
+        expectLater(
+          cubit.stream,
+          emitsInOrder([
+            isA<MetadataPluginLoadingState>(),
+            isA<MetadataPluginIncompatibleState>().having(
+              (s) => s.obsoleteManifest.id,
+              'id',
+              'org.gyawun.musicbrainz',
+            ),
+          ]),
+        );
+
+        await cubit.initialize();
+      },
+    );
+
+    test(
+      'authenticate updates isAuthenticated to true in loaded state',
+      () async {
+        cubit.emit(
+          MetadataPluginLoadedState(
+            manifest: testManifest,
+            isAuthenticated: false,
+          ),
+        );
+
+        when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+        when(() => mockMetadataPlugin.auth).thenReturn(mockAuth);
+        when(() => mockAuth.authenticate()).thenAnswer((_) async {});
+        when(() => mockAuth.isAuthenticated()).thenAnswer((_) async => true);
+
+        await cubit.authenticate();
+
+        expect(
+          (cubit.state as MetadataPluginLoadedState).isAuthenticated,
+          isTrue,
+        );
+        verify(() => mockAuth.authenticate()).called(1);
+      },
+    );
+
+    test('logout updates isAuthenticated to false in loaded state', () async {
+      cubit.emit(
+        MetadataPluginLoadedState(
+          manifest: testManifest,
+          isAuthenticated: true,
+        ),
+      );
+
+      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+      when(() => mockMetadataPlugin.auth).thenReturn(mockAuth);
+      when(() => mockAuth.logout()).thenAnswer((_) async {});
+      when(() => mockAuth.isAuthenticated()).thenAnswer((_) async => false);
+
+      await cubit.logout();
+
+      expect(
+        (cubit.state as MetadataPluginLoadedState).isAuthenticated,
+        isFalse,
+      );
+      verify(() => mockAuth.logout()).called(1);
+    });
   });
 }

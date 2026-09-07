@@ -5,6 +5,7 @@ import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/pagination.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/section.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/features/home/presentation/cubit/home_cubit.dart';
 import 'package:music_are/features/home/presentation/cubit/home_state.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
@@ -128,6 +129,42 @@ void main() {
         );
 
         await cubit.fetchSections();
+      },
+    );
+    test(
+      'retrySection sets section state to loading and re-fetches items',
+      () async {
+        when(() => mockEngine.hasMetadata).thenReturn(true);
+        when(() => mockEngine.metadata).thenReturn(mockMetadata);
+        when(() => mockMetadata.browse).thenReturn(mockBrowse);
+
+        when(
+          () => mockBrowse.sectionItems('s1', offset: 0, limit: 10),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Object>(
+            items: [testAlbum],
+            total: 1,
+            offset: 0,
+            limit: 10,
+          ),
+        );
+
+        cubit.emit(
+          HomeState(
+            sections: [
+              SectionWithItems(
+                section: testSection,
+                itemsState: SectionState.error(Exception('Failed'), const []),
+              ),
+            ],
+          ),
+        );
+
+        await cubit.retrySection('s1');
+        await Future.delayed(const Duration(milliseconds: 30));
+
+        expect(cubit.state.sections.first.itemsState.data.length, equals(1));
+        expect(cubit.state.sections.first.itemsState.hasError, isFalse);
       },
     );
   });
