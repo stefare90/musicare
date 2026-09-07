@@ -133,6 +133,7 @@ class _WelcomePageState extends State<WelcomePage> {
                 Expanded(
                   child: PageView(
                     controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(),
                     onPageChanged: (page) =>
                         setState(() => _currentPage = page),
                     children: [

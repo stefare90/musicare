@@ -9,7 +9,7 @@
 
 The application supports two distinct plugin subsystems:
 * **Metadata Plugins**: Compiled into `.evc` bytecode, packaged as `.zip` archives, and interpreted dynamically at runtime using `dart_eval`.
-* **Audio Source Plugins**: Written in Pure-Python, packaged as `.zip` archives, and executed in the background as a local REST daemon via `serious_python` and `yt-dlp`.
+* **Audio Source Plugins**: Written in 100% Pure-Python, packaged as `.zip` archives, and dynamically injected at runtime into a persistent embedded CPython daemon via `serious_python` and `musicare_dart_host_sdk`.
 
 ---
 
@@ -21,7 +21,7 @@ The application serves as a universal, service-agnostic playback framework:
   * **Metadata Providers**: Query music catalogs and database entities (e.g. MusicBrainz, Spotify, Deezer).
   * **Audio Source Providers**: Resolve playable audio streams in real-time via scraping or streaming APIs (e.g. YouTube Music, SoundCloud, Invidious), returning fault-tolerant candidate streams.
 * **Decentralized Discovery**: The application discovers community plugins on GitHub (`topic:musicare-plugin`), fetches release archives, and installs them locally.
-* **Extensible & Updatable**: Plugins reside in local storage and can be updated over the air without requiring a full application release.
+* **Extensible & Updatable**: Plugins reside in local storage and are injected into memory on the fly without requiring host application restarts or recompilations.
 
 ---
 
@@ -52,8 +52,8 @@ MusicAre follows a decoupled, Feature-First Clean Architecture organized into we
 │                  SERVICES LAYER (IoC)                  │
 │                                                        │
 │  * MetadataPluginEngine (Bytecode VM & SemVer check)   │
-│  * AudioSourcePluginEngine (Python Daemon Lifecycle)   │
-│  * AudioSourceClient (Localhost REST IPC Client)       │
+│  * AudioSourcePluginEngine (High-Level Orchestrator)   │
+│  * AudioSourceClient (package:musicare_dart_host_sdk)  │
 │  * PluginDiscoveryService (GitHub Release Downloader)  │
 │  * PreferencesService (Native host settings)           │
 │  * NetworkService (Native host HTTP client)            │
@@ -65,11 +65,12 @@ MusicAre follows a decoupled, Feature-First Clean Architecture organized into we
 │                   PLUGIN SUBSYSTEMS                    │
 ├────────────────────────────┬───────────────────────────┤
 │     METADATA SANDBOX       │   AUDIO SOURCE DAEMON     │
-│  (dart_eval Runtime / VM)  │ (serious_python + Flask)  │
+│  (dart_eval Runtime / VM)  │ (SeriousPython + Flask)   │
 │                            │                           │
-│  * In-memory Bytecode .evc │  * Ephemeral Port REST    │
-│  * Host SDK Bridge         │  * POST /get_stream       │
-│  * Pure Native Dart Types  │  * Ordered Fallbacks      │
+│  * In-memory Bytecode .evc │  * Fixed Host Runtime     │
+│  * Host SDK Bridge         │  * Dynamic /load_plugin   │
+│  * Pure Native Dart Types  │  * Ephemeral Port REST    │
+│                            │  * Ordered Fallbacks      │
 └────────────────────────────┴───────────────────────────┘
 ```
 
@@ -80,9 +81,9 @@ MusicAre follows a decoupled, Feature-First Clean Architecture organized into we
    * **Global Cubits**: App-level singletons managing cross-cutting state (`MetadataPluginCubit`, `AudioSourcePluginCubit`, `PlayerCubit`).
    * **Local Cubits**: Screen-scoped state machines instantiated for specific pages and destroyed when navigating away.
 3. **Services Layer (IoC / Dependency Injection)**: Houses central application services registered in `GetIt`, including host storage, native network clients, GitHub discovery, `MetadataPluginEngine`, and `AudioSourcePluginEngine`.
-4. **Plugin Sandbox Layer**: Sandboxed execution environments:
-   * **Metadata**: Runs interpreted `.evc` bytecode via `dart_eval`.
-   * **Audio Source**: Runs a local background daemon with ephemeral port via `serious_python`, resolving candidate streams via localhost `POST /get_stream`.
+4. **Plugin Subsystems**:
+   * **Metadata**: Interprets `.evc` bytecode in an isolated VM via `dart_eval`.
+   * **Audio Source**: Boots a fixed, pre-compiled CPython host daemon on an ephemeral localhost port via `serious_python`. External pure-Python plugins (`plugin.zip`) are extracted to app storage and dynamically injected via `POST /load_plugin`, resolving stream queries over `POST /get_stream`.
 
 ---
 
@@ -102,10 +103,10 @@ lib/
 │
 └── features/                       # Modular vertical feature slices (Feature-First)
     ├── plugin/                     # Dynamic plugin subsystem
-    │   ├── shared/                 # Common manifest, types (PluginType), exceptions & utils
+    │   ├── shared/                 # Common manifest (PluginManifest), types (PluginType), exceptions
     │   ├── discovery/              # GitHub topic:musicare-plugin discovery engine & UI
-    │   ├── metadata/               # Dart bytecode VM engine & SDK host services
-    │   └── audio_source/           # Python daemon engine, REST client & audio stream models
+    │   ├── metadata/               # Dart bytecode VM engine & SDK host services (dart_eval)
+    │   └── audio_source/           # Audio source orchestrator & cubit (consumes musicare_dart_host_sdk)
     │
     ├── onboarding/                 # Multi-step onboarding wizard
     │   └── presentation/
@@ -124,25 +125,29 @@ lib/
 
 ## ⚙️ Development Environment Setup
 
-### Android Build Prerequisites
-When building for Android, the embedded Python runtime plugin (`serious_python_android`) requires the `SERIOUS_PYTHON_SITE_PACKAGES` environment variable during the Gradle build step.
+### 1. Prerequisites
+* **Flutter SDK**: `v3.12.0` or higher
+* **Python**: `3.10+` (used by SeriousPython's standalone packaging tool)
+* **Android SDK / NDK**: Standard Android toolchain for mobile deployments
 
-Since MusicAre downloads and installs plugins dynamically at runtime (OTA), set this variable to any valid temporary directory:
+---
 
-#### Linux / macOS
-Add this line to your `~/.bashrc` or `~/.zshrc`:
+### 2. SeriousPython Staging Setup
+MusicAre embeds a fixed Python host runtime daemon from the `musicare_audiosource_sdk` monorepo. 
+
+Before building the Flutter app for the first time (or after updating the SDK), run the staging script to bundle Flask and the host runtime:
+
+#### Target Android
 ```bash
-export SERIOUS_PYTHON_SITE_PACKAGES="/tmp"
-```
-Then reload your shell:
-```bash
-source ~/.bashrc
+./tool/build_python.sh Android
 ```
 
-#### Windows (PowerShell)
-```powershell
-[System.Environment]::SetEnvironmentVariable('SERIOUS_PYTHON_SITE_PACKAGES', "$env:TEMP", 'User')
+#### Target Linux Desktop
+```bash
+./tool/build_python.sh Linux
 ```
+
+This script automatically prepares the runtime in `build/python-app` and installs dependencies into `build/site-packages`.
 
 ---
 

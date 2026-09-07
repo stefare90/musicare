@@ -39,6 +39,8 @@ class MediaCard extends StatelessWidget {
                 child: MediaCoverImage(
                   images: meta.images,
                   mediaType: meta.mediaType,
+                  width: width,
+                  height: width,
                 ),
               ),
               Padding(

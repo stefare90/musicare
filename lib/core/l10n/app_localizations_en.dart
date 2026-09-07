@@ -103,6 +103,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'The plugin is incompatible with this version of MusicAre.';
 
   @override
+  String get pluginErrorInvalidType => 'Plugin type is invalid.';
+
+  @override
   String get pluginErrorInvalidArchive =>
       'The plugin archive is corrupt or missing required files.';
 
@@ -218,7 +221,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ok => 'OK';
 
   @override
-  String get error => '\'Error';
+  String get error => 'Error';
 
   @override
   String get popularTracks => 'Popular Tracks';

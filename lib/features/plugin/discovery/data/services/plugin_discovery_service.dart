@@ -32,12 +32,6 @@ class PluginDiscoveryService {
     _cachedPluginZips.clear();
     final response = await _networkService.get(Uri.parse(githubSearchUrl));
     if (response.statusCode != 200) {
-      if (_cachedManifests != null) {
-        if (type != null) {
-          return _cachedManifests!.where((m) => m.pluginType == type).toList();
-        }
-        return _cachedManifests!;
-      }
       throw PluginSearchException(response.statusCode);
     }
 

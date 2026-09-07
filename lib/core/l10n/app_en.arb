@@ -37,6 +37,7 @@
         }
     },
     "pluginErrorIncompatibleSdkVersion": "The plugin is incompatible with this version of MusicAre.",
+    "pluginErrorInvalidType": "Plugin type is invalid.",
     "pluginErrorInvalidArchive": "The plugin archive is corrupt or missing required files.",
     "pluginErrorNotFound": "Plugin files were not found on local disk.",
     "pluginErrorNotLoaded": "No active metadata plugin is loaded.",
@@ -109,7 +110,7 @@
     },
     "updateRequiredMessage": "Update required for this version of MusicAre",
     "ok": "OK",
-    "error": "'Error",
+    "error": "Error",
     "popularTracks": "Popular Tracks",
     "discography": "Discography",
     "fansAlsoLike": "Fans Also Like",

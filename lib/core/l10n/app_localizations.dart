@@ -274,6 +274,12 @@ abstract class AppLocalizations {
   /// **'The plugin is incompatible with this version of MusicAre.'**
   String get pluginErrorIncompatibleSdkVersion;
 
+  /// No description provided for @pluginErrorInvalidType.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin type is invalid.'**
+  String get pluginErrorInvalidType;
+
   /// No description provided for @pluginErrorInvalidArchive.
   ///
   /// In en, this message translates to:
@@ -475,7 +481,7 @@ abstract class AppLocalizations {
   /// No description provided for @error.
   ///
   /// In en, this message translates to:
-  /// **'\'Error'**
+  /// **'Error'**
   String get error;
 
   /// No description provided for @popularTracks.

@@ -105,7 +105,12 @@ class MetadataPluginEngine {
       );
     }
 
-    final runtime = Runtime(evcBytes.buffer.asByteData());
+    final runtime = Runtime(
+      evcBytes.buffer.asByteData(
+        evcBytes.offsetInBytes,
+        evcBytes.lengthInBytes,
+      ),
+    );
     runtime.addPlugin(GyawunMetadataSdkPlugin());
 
     final sl = GetIt.instance;

@@ -10,7 +10,7 @@ extension ExceptionLocalizer on Object {
       IncompatibleSdkVersionException() =>
         context.l10n.pluginErrorIncompatibleSdkVersion,
       InvalidPluginArchiveException() => context.l10n.pluginErrorInvalidArchive,
-      InvalidPluginTypeException() => context.l10n.pluginErrorInvalidArchive,
+      InvalidPluginTypeException() => context.l10n.pluginErrorInvalidType,
       AudioSourceDaemonStartupTimeoutException() =>
         context.l10n.pluginErrorTimeout,
       AudioSourceStreamResolutionException(message: final msg) =>

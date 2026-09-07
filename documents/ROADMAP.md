@@ -77,22 +77,21 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
     *   [x] Update local disk storage isolation to `plugins/metadata/<id>/`
     *   [x] Update DI in `injection.dart`, router, page usages, and all test suites
 
-## 🐍 Phase 9: Audio Source Plugin Engine & Subsystem (`lib/features/plugin/audio_source/`)
-*   [x] **Dependencies & Models**:
-    *   [x] Add `serious_python` dependency to `pubspec.yaml`
-    *   [x] Create `audio_source/data/models/`: `AudioStreamResponse` and `AudioQuality` enum (`low`, `medium`, `high`)
-*   [x] **Lifecycle & Daemon Engine**:
-    *   [x] Implement ephemeral port allocator helper (`getUnusedPort`)
-    *   [x] Implement `AudioSourcePluginEngine`: `.zip` archive extraction, local disk persistence in `plugins/audio_source/<id>/`, background Python daemon spawn/terminate via `serious_python`
-    *   [x] Implement readiness polling mechanism (`GET /ping` health-check)
-*   [x] **REST IPC Client**:
-    *   [x] Implement `AudioSourceClient`: execute `POST /get_stream` on `127.0.0.1:$PORT` serializing `Track` payload
-    *   [x] Parse candidate stream list and handle fallback heuristics
-*   [x] **State Management**:
-    *   [x] Implement `AudioSourcePluginCubit` & `AudioSourcePluginState` in `audio_source/presentation/cubit/`
-    *   [x] Persist active audio source ID in `PreferencesService` (`active_audio_source_plugin_id`)
-*   [x] **Testing**:
-    *   [x] Add unit tests for `AudioSourcePluginEngine`, `AudioSourceClient`, and `AudioSourcePluginCubit` with mocktail HTTP client
+## 🐍 Phase 9: Audio Source Subsystem Architecture & SDK Decoupling
+*   [x] **Standalone SDK Monorepo (`musicare_audiosource_sdk`)**:
+    *   [x] Implement `python/plugin_sdk/` (`musicare-plugin-sdk`): domain contracts (`Track`, `AudioStreamResponse`), `BaseAudioSourcePlugin`, `TrackMatcher`, and CLI tools (`musicare-build`, `musicare-play`)
+    *   [x] Implement `python/host_runtime/`: persistent Flask daemon with dynamic `importlib.util.spec_from_file_location` plugin loader
+    *   [x] Implement `dart/host_sdk/` (`musicare_dart_host_sdk`): `AudioSourceClient` managing SeriousPython lifecycle, ephemeral port binding, dynamic plugin injection (`/load_plugin`), and stream resolution (`/get_stream`)
+    *   [x] Implement `dart/harness/`: automated E2E compliance test harness validating unzipped plugins on Android and Linux desktop
+*   [x] **Official Template Plugin (`musicare_audiosource_youtube_plugin`)**:
+    *   [x] Implement 100% pure-Python YouTube audio source provider using `yt-dlp` and `certifi`
+    *   [x] Add offline unit tests and live E2E CDN Range handshake tests
+*   [x] **Host Application Refactoring (`music_are`)**:
+    *   [x] Add `musicare_dart_host_sdk` dependency via Git
+    *   [x] Implement `tool/build_python.sh` for staging and compiling SeriousPython host runtime
+    *   [x] Refactor `AudioSourcePluginEngine` to eliminate fragile `runProgram` re-boots, delegating to `AudioSourceClient`
+    *   [x] Remove duplicate local models and unify DI in `injection.dart`
+    *   [x] Successfully verify dynamic plugin download, unpacking, and runtime injection on Android 15 hardware (Moto G84)
 
 ## 🧙‍♂️ Phase 10: Step-by-Step Onboarding Wizard (`lib/features/onboarding/`)
 *   [x] **Wizard Flow**:
