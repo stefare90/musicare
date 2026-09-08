@@ -13,15 +13,26 @@ The application supports two distinct plugin subsystems:
 
 ---
 
-## 🎯 Architectural Vision
+## ✨ Current Features
 
-The application serves as a universal, service-agnostic playback framework:
-* **Separation of Responsibilities**: The host application focuses on native performance, UI, and audio playback, delegating content delivery to modular plugins.
-* **Dual-Plugin Architecture**:
-  * **Metadata Providers**: Query music catalogs and database entities (e.g. MusicBrainz, Spotify, Deezer).
-  * **Audio Source Providers**: Resolve playable audio streams in real-time via scraping or streaming APIs (e.g. YouTube Music, SoundCloud, Invidious), returning fault-tolerant candidate streams.
-* **Decentralized Discovery**: The application discovers community plugins on GitHub (`topic:musicare-plugin`), fetches release archives, and installs them locally.
-* **Extensible & Updatable**: Plugins reside in local storage and are injected into memory on the fly without requiring host application restarts or recompilations.
+* **Dynamic Onboarding Wizard**: Effortlessly discover, download, and configure your preferred Metadata and Audio Source plugins straight from GitHub releases.
+* **Universal Media Player**: Native background playback support (`just_audio_background`) with lock-screen controls, gapless transitions, and hardware media key bindings.
+* **Smart Queue Management**: Advanced immutable queue system supporting shuffle (preserving history), repeat modes (One, All, Off), and dynamic inserts.
+* **Fault-Tolerant Streaming**: Automatic candidate resolution—if a stream URL expires or returns a 403 Forbidden, the player automatically falls back to the next available stream.
+* **Dynamic UI Generation**: The Home screen is generated entirely based on the sections (e.g., "Top Charts", "New Releases") returned by the active Metadata plugin.
+* **Modular Details Views**: Rich Slivers-based UI for Artists, Albums, and Playlists.
+
+---
+
+## 🛠️ Tech Stack
+
+* **Framework**: Flutter 3.12+ (Material 3 Design System)
+* **State Management**: `flutter_bloc` (Cubits)
+* **Routing & DI**: `go_router` (Stateful Shell Routes) & `get_it`
+* **Audio Engine**: `just_audio` & `just_audio_background`
+* **Plugin Subsystems**:
+  * `dart_eval` (Sandboxed Dart Bytecode execution)
+  * `serious_python` (Embedded CPython 3.10+ host daemon)
 
 ---
 
@@ -41,9 +52,9 @@ MusicAre follows a decoupled, Feature-First Clean Architecture organized into we
 │                                                        │
 │ ┌──────────────────────┐      ┌──────────────────────┐ │
 │ │ LOCAL STATE MACHINES │      │GLOBAL STATE MACHINES │ │
-│ │ (Screen-Level Cubit) │ ◄────│ (MetadataPluginCubit,│ │
-│ │ (e.g. Home, Search)  │      │  AudioSourceCubit,   │ │
-│ └──────────┬───────────┘      │  PlayerCubit)        │ │
+│ │ (Screen-Level Cubit) │ ◄────│ (Metadata, Audio,    │ │
+│ │ (e.g. Home, Details) │      │  Player & Queue)     │ │
+│ └──────────┬───────────┘      │                      │ │
 │            │                  └──────────┬───────────┘ │
 └────────────┼─────────────────────────────┼─────────────┘
              │                             │
@@ -53,10 +64,8 @@ MusicAre follows a decoupled, Feature-First Clean Architecture organized into we
 │                                                        │
 │  * MetadataPluginEngine (Bytecode VM & SemVer check)   │
 │  * AudioSourcePluginEngine (High-Level Orchestrator)   │
-│  * AudioSourceClient (package:musicare_dart_host_sdk)  │
+│  * AudioPlayerService (Playback & Fallback driver)     │
 │  * PluginDiscoveryService (GitHub Release Downloader)  │
-│  * PreferencesService (Native host settings)           │
-│  * NetworkService (Native host HTTP client)            │
 │  * SDK Adapters (PluginNetwork, PluginStorage, UI)     │
 └──────────────────────────┬─────────────────────────────┘
                            │ (Contract Injection)
@@ -70,20 +79,17 @@ MusicAre follows a decoupled, Feature-First Clean Architecture organized into we
 │  * In-memory Bytecode .evc │  * Fixed Host Runtime     │
 │  * Host SDK Bridge         │  * Dynamic /load_plugin   │
 │  * Pure Native Dart Types  │  * Ephemeral Port REST    │
-│                            │  * Ordered Fallbacks      │
 └────────────────────────────┴───────────────────────────┘
 ```
 
 ### Layer Responsibilities
 
-1. **Presentation Layer (UI & Navigation)**: Composed of UI pages, reusable widgets, and `GoRouter` declarative navigation configurations (such as the persistent shell, onboarding wizard, and mini-player).
-2. **State Management Layer (Cubits & Blocs)**:
+1. **Presentation Layer (UI & Navigation)**: Composed of UI pages, reusable widgets, and `GoRouter` declarative navigation configurations.
+2. **State Management Layer (Cubits)**:
    * **Global Cubits**: App-level singletons managing cross-cutting state (`MetadataPluginCubit`, `AudioSourcePluginCubit`, `PlayerCubit`).
    * **Local Cubits**: Screen-scoped state machines instantiated for specific pages and destroyed when navigating away.
-3. **Services Layer (IoC / Dependency Injection)**: Houses central application services registered in `GetIt`, including host storage, native network clients, GitHub discovery, `MetadataPluginEngine`, and `AudioSourcePluginEngine`.
-4. **Plugin Subsystems**:
-   * **Metadata**: Interprets `.evc` bytecode in an isolated VM via `dart_eval`.
-   * **Audio Source**: Boots a fixed, pre-compiled CPython host daemon on an ephemeral localhost port via `serious_python`. External pure-Python plugins (`plugin.zip`) are extracted to app storage and dynamically injected via `POST /load_plugin`, resolving stream queries over `POST /get_stream`.
+3. **Services Layer (IoC / Dependency Injection)**: Houses central application services registered in `GetIt`, including host storage, native network clients, `AudioPlayerDriver`, and Plugin Engines.
+4. **Plugin Subsystems**: Interpreters acting as data providers decoupled from the Flutter UI thread.
 
 ---
 
@@ -91,63 +97,60 @@ MusicAre follows a decoupled, Feature-First Clean Architecture organized into we
 
 ```text
 lib/
-├── core/                           # Shared core infrastructure, routing, DI, and host services
+├── core/                           # Shared infrastructure, routing, DI, and services
 │   ├── cubit/                      # SafeCubit and reactive state utilities
 │   ├── di/                         # Service locator configuration (GetIt)
 │   ├── l10n/                       # Localization and translations (.arb)
-│   ├── models/                     # Universal UI models (MediaItemMetadata, MediaType, SectionState)
-│   ├── router/                     # Navigation rules and router configuration (GoRouter)
-│   ├── services/                   # Native I/O host services (NetworkService, PreferencesService)
-│   ├── theme/                      # Styling and design system
-│   └── widgets/                    # Reusable UI components (Slivers, matrices, carousels, modal sheets)
+│   ├── models/                     # Universal UI models (MediaItemMetadata, MediaType)
+│   ├── router/                     # Navigation rules and router configuration
+│   └── widgets/                    # Reusable UI components (Slivers, matrices, carousels)
 │
-└── features/                       # Modular vertical feature slices (Feature-First)
-    ├── plugin/                     # Dynamic plugin subsystem
-    │   ├── shared/                 # Common manifest (PluginManifest), types (PluginType), exceptions
-    │   ├── discovery/              # GitHub topic:musicare-plugin discovery engine & UI
-    │   ├── metadata/               # Dart bytecode VM engine & SDK host services (dart_eval)
-    │   └── audio_source/           # Audio source orchestrator & cubit (consumes musicare_dart_host_sdk)
-    │
+└── features/                       # Modular vertical feature slices
+    ├── plugin/                     # Dynamic plugin subsystem (Discovery, Metadata, Audio Source)
     ├── onboarding/                 # Multi-step onboarding wizard
-    │   └── presentation/
-    │       ├── pages/              # welcome_page, welcome_intro_page, welcome_metadata_page, welcome_audio_source_page
-    │       └── widgets/            # onboarding_step_scaffold, onboarding_bottom_action_button, onboarding_dots_indicator
-    │
     ├── home/                       # Home page with dynamic browse sections
     ├── details/                    # Detail views (Album, Artist, Playlist)
     ├── search/                     # Polymorphic search (Tracks, Albums, Artists, Playlists)
     ├── library/                    # User library synced with active metadata provider
-    ├── player/                     # Native audio playback engine, MiniPlayer & FullPlayer
-    └── shell/                      # Root scaffold with bottom navigation & persistent MiniPlayer
+    ├── player/                     # Native audio playback engine, Queue, MiniPlayer
+    └── shell/                      # Root scaffold with bottom navigation
 ```
 
 ---
 
-## ⚙️ Development Environment Setup
+## 🚀 Quickstart & Setup
 
 ### 1. Prerequisites
 * **Flutter SDK**: `v3.12.0` or higher
 * **Python**: `3.10+` (used by SeriousPython's standalone packaging tool)
-* **Android SDK / NDK**: Standard Android toolchain for mobile deployments
-
----
+* **Android Target**: Android SDK / NDK configured (for mobile deployments)
 
 ### 2. SeriousPython Staging Setup
-MusicAre embeds a fixed Python host runtime daemon from the `musicare_audiosource_sdk` monorepo. 
+MusicAre embeds a fixed Python host runtime daemon from the `musicare_audiosource_sdk` monorepo. Before running the app for the first time, you **must** stage the Python runtime.
 
-Before building the Flutter app for the first time (or after updating the SDK), run the staging script to bundle Flask and the host runtime:
+Fetch the Dart dependencies:
+```bash
+flutter pub get
+```
 
-#### Target Android
+Then run the staging script for your target platform:
+
+**For Android:**
 ```bash
 ./tool/build_python.sh Android
 ```
 
-#### Target Linux Desktop
+**For Linux Desktop:**
 ```bash
 ./tool/build_python.sh Linux
 ```
+*This script automatically bundles Flask, the host runtime, and installs PIP dependencies into `build/site-packages`.*
 
-This script automatically prepares the runtime in `build/python-app` and installs dependencies into `build/site-packages`.
+### 3. Run the App
+Once the Python backend is staged, you can run the app normally:
+```bash
+flutter run
+```
 
 ---
 

@@ -11,7 +11,7 @@ class PlayerCubit extends SafeCubit<PlayerState> {
   PlayerCubit({required AudioPlayerService audioService})
     : _service = audioService,
       super(PlayerState.fromPlaybackData(audioService.playbackData)) {
-    _stateSub = _service.playbackDataStream
+    _stateSub = audioService.playbackDataStream
         .map(PlayerState.fromPlaybackData)
         .listen(emit);
   }
