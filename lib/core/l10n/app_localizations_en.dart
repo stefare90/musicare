@@ -135,6 +135,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get pluginErrorStreamResolution =>
+      'No playable audio stream could be found for this track.';
+
+  @override
   String get noSectionsFound => 'No browse sections found.';
 
   @override

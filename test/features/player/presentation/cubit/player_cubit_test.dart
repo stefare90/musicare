@@ -19,8 +19,6 @@ class MockAudioStreamResolver extends Mock implements AudioStreamResolver {}
 
 class FakeAudioSource extends Fake implements ja.AudioSource {}
 
-class FakeResolvedPlaybackTrack extends Fake implements ResolvedPlaybackTrack {}
-
 Track createTestTrack(String id, String name) {
   return Track(
     id: id,
@@ -43,9 +41,14 @@ Track createTestTrack(String id, String name) {
 void main() {
   setUpAll(() {
     registerFallbackValue(FakeAudioSource());
-    registerFallbackValue(FakeResolvedPlaybackTrack());
     registerFallbackValue(Duration.zero);
     registerFallbackValue(createTestTrack('fallback', 'fallback'));
+    registerFallbackValue(
+      const AudioStreamResponse(
+        url: 'https://fallback.example.com',
+        quality: AudioQuality.high,
+      ),
+    );
   });
 
   group('PlayerCubit Unit Tests with Queue', () {
@@ -76,10 +79,6 @@ void main() {
       playerStateController = StreamController<ja.PlayerState>.broadcast();
 
       when(
-        () => mockAudioService.playerState,
-      ).thenReturn(ja.PlayerState(true, ja.ProcessingState.ready));
-
-      when(
         () => mockAudioService.positionStream,
       ).thenAnswer((_) => positionController.stream);
       when(
@@ -89,6 +88,12 @@ void main() {
         () => mockAudioService.playerStateStream,
       ).thenAnswer((_) => playerStateController.stream);
 
+      when(
+        () => mockAudioService.createAudioSource(
+          track: any(named: 'track'),
+          stream: any(named: 'stream'),
+        ),
+      ).thenReturn(FakeAudioSource());
       when(
         () => mockAudioService.setAudioSource(any()),
       ).thenAnswer((_) async {});
@@ -104,9 +109,6 @@ void main() {
           candidates: [testCandidate],
         ),
       );
-      when(
-        () => mockResolver.createAudioSource(any()),
-      ).thenReturn(FakeAudioSource());
 
       cubit = PlayerCubit(
         audioService: mockAudioService,
@@ -142,6 +144,37 @@ void main() {
         verify(() => mockAudioService.play()).called(1);
       },
     );
+
+    test('playTrack retries with candidate #2 if candidate #1 fails', () async {
+      const candidate2 = AudioStreamResponse(
+        url: 'https://cdn2.example.com/audio2.m4a',
+        quality: AudioQuality.high,
+        bitrate: 128000,
+      );
+
+      final resolved = ResolvedPlaybackTrack(
+        track: track1,
+        candidates: [testCandidate, candidate2],
+      );
+
+      when(
+        () => mockResolver.resolveTrack(track1),
+      ).thenAnswer((_) async => resolved);
+
+      var attempts = 0;
+      when(() => mockAudioService.setAudioSource(any())).thenAnswer((_) async {
+        attempts++;
+        if (attempts == 1) {
+          throw Exception('CDN 403 Forbidden');
+        }
+      });
+
+      await cubit.playTrack(track1);
+
+      expect(attempts, equals(2));
+      expect(resolved.currentCandidateIndex, equals(1));
+      verify(() => mockAudioService.play()).called(1);
+    });
 
     test('next advances to next track and starts resolution', () async {
       await cubit.playTrack(track1, queue: [track1, track2]);
@@ -195,5 +228,18 @@ void main() {
       cubit.removeFromQueue(2);
       expect(cubit.state.queue.length, equals(2));
     });
+
+    test(
+      'togglePlayPause pauses when playing and resumes when paused',
+      () async {
+        cubit.emit(cubit.state.copyWith(status: PlayerStatus.playing));
+        await cubit.togglePlayPause();
+        verify(() => mockAudioService.pause()).called(1);
+
+        cubit.emit(cubit.state.copyWith(status: PlayerStatus.paused));
+        await cubit.togglePlayPause();
+        verify(() => mockAudioService.play()).called(1);
+      },
+    );
   });
 }

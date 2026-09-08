@@ -127,7 +127,10 @@ class PlayerCubit extends SafeCubit<PlayerState> {
       bool isLoaded = false;
       while (!isLoaded) {
         try {
-          final audioSource = _resolver.createAudioSource(resolved);
+          final audioSource = _audioService.createAudioSource(
+            track: resolved.track,
+            stream: resolved.currentStream,
+          );
           await _audioService.setAudioSource(audioSource);
           isLoaded = true;
         } catch (e) {

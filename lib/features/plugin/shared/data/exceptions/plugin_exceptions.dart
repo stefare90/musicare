@@ -31,23 +31,6 @@ class InvalidPluginTypeException extends PluginException {
   });
 }
 
-class AudioSourceDaemonStartupTimeoutException extends PluginException {
-  final int port;
-  AudioSourceDaemonStartupTimeoutException(this.port);
-}
-
-class AudioSourceStreamResolutionException extends PluginException {
-  final int statusCode;
-  final String message;
-
-  AudioSourceStreamResolutionException({
-    required this.statusCode,
-    required this.message,
-  });
-}
-
-class PluginEntryPointNullException extends PluginException {}
-
 class PluginDownloadException extends PluginException {
   final String? url;
   PluginDownloadException([this.url]);

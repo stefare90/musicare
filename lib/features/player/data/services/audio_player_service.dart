@@ -1,5 +1,7 @@
+import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:just_audio/just_audio.dart' as ja;
 import 'package:just_audio_background/just_audio_background.dart';
+import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
 
 class AudioPlayerService {
   final ja.AudioPlayer _player;
@@ -18,12 +20,35 @@ class AudioPlayerService {
   }
 
   ja.AudioPlayer get rawPlayer => _player;
-
   ja.PlayerState get playerState => _player.playerState;
 
   Stream<Duration> get positionStream => _player.positionStream;
   Stream<Duration?> get durationStream => _player.durationStream;
   Stream<ja.PlayerState> get playerStateStream => _player.playerStateStream;
+
+  ja.AudioSource createAudioSource({
+    required Track track,
+    required AudioStreamResponse stream,
+  }) {
+    final mediaItem = MediaItem(
+      id: track.id,
+      album: track.album.name,
+      title: track.name,
+      artist: track.artists.map((a) => a.name).join(', '),
+      duration: track.durationMs > 0
+          ? Duration(milliseconds: track.durationMs)
+          : null,
+      artUri: track.album.images.isNotEmpty
+          ? Uri.tryParse(track.album.images.first.url)
+          : null,
+    );
+
+    return ja.AudioSource.uri(
+      Uri.parse(stream.url),
+      headers: stream.headers.isNotEmpty ? stream.headers : null,
+      tag: mediaItem,
+    );
+  }
 
   Future<void> setAudioSource(ja.AudioSource source) =>
       _player.setAudioSource(source);

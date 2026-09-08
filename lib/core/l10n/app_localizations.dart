@@ -328,6 +328,12 @@ abstract class AppLocalizations {
   /// **'An unexpected error occurred: {details}'**
   String pluginErrorUnknown(String details);
 
+  /// Error message when no audio stream candidates can be resolved for a track
+  ///
+  /// In en, this message translates to:
+  /// **'No playable audio stream could be found for this track.'**
+  String get pluginErrorStreamResolution;
+
   /// No description provided for @noSectionsFound.
   ///
   /// In en, this message translates to:

@@ -46,6 +46,10 @@
     "pluginErrorTimeout": "Connection timed out. Please try again.",
     "pluginErrorNoContext": "Navigation context is unavailable.",
     "pluginErrorUnknown": "An unexpected error occurred: {details}",
+    "pluginErrorStreamResolution": "No playable audio stream could be found for this track.",
+    "@pluginErrorStreamResolution": {
+        "description": "Error message when no audio stream candidates can be resolved for a track"
+    },
     "@pluginErrorUnknown": {
         "placeholders": {
             "details": {
