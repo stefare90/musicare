@@ -56,10 +56,13 @@ class _ArtistView extends StatelessWidget {
                 activeTrackId: context.select<PlayerCubit, String?>(
                   (c) => c.state.currentTrack?.id,
                 ),
-                onTrackTap: (track) => context.read<PlayerCubit>().playTrack(
-                  track,
-                  queue: state.topTracks.data.items,
-                ),
+                onTrackTap: (track) {
+                  final index = state.topTracks.data.items.indexOf(track);
+                  context.read<PlayerCubit>().playQueue(
+                    state.topTracks.data.items,
+                    index: index >= 0 ? index : 0,
+                  );
+                },
                 isLoading:
                     state.topTracks.isLoading &&
                     state.topTracks.data.items.isEmpty,

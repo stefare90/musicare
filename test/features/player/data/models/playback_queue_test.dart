@@ -3,6 +3,7 @@ import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:music_are/features/player/data/models/playback_queue.dart';
+import 'package:music_are/features/player/data/models/repeat_mode.dart';
 
 Track createTestTrack(String id, String name) {
   return Track(
@@ -24,12 +25,12 @@ Track createTestTrack(String id, String name) {
 }
 
 void main() {
-  group('PlaybackQueue Unit Tests', () {
+  group('PlaybackQueue Immutable Model Unit Tests', () {
     late PlaybackQueue queue;
     late List<Track> tracks;
 
     setUp(() {
-      queue = PlaybackQueue();
+      queue = const PlaybackQueue();
       tracks = [
         createTestTrack('1', 'Song 1'),
         createTestTrack('2', 'Song 2'),
@@ -44,140 +45,155 @@ void main() {
       expect(queue.isShuffled, isFalse);
     });
 
-    test('setQueue initializes tracks and sets initial pointer', () {
-      queue.setQueue(tracks, startIndex: 1);
+    test('setQueue returns new queue and sets initial pointer', () {
+      final updated = queue.setQueue(tracks, startIndex: 1);
 
-      expect(queue.length, equals(3));
-      expect(queue.currentIndex, equals(1));
-      expect(queue.currentTrack?.name, equals('Song 2'));
-      expect(queue.hasNext, isTrue);
-      expect(queue.hasPrevious, isTrue);
+      expect(updated.length, equals(3));
+      expect(updated.currentIndex, equals(1));
+      expect(updated.currentTrack?.name, equals('Song 2'));
+      expect(updated.hasNext, isTrue);
+      expect(updated.hasPrevious, isTrue);
     });
 
     test(
-      'next advances sequentially and stops at end when RepeatMode is off',
+      'next advances sequentially and returns null at end when RepeatMode is off',
       () {
-        queue.setQueue(tracks, startIndex: 1);
+        final initial = queue.setQueue(tracks, startIndex: 1);
 
-        final nextTrack = queue.next();
-        expect(nextTrack?.name, equals('Song 3'));
-        expect(queue.currentIndex, equals(2));
-        expect(queue.hasNext, isFalse);
+        final nextQueue = initial.next();
+        expect(nextQueue?.currentTrack?.name, equals('Song 3'));
+        expect(nextQueue?.currentIndex, equals(2));
+        expect(nextQueue?.hasNext, isFalse);
 
-        final endTrack = queue.next();
-        expect(endTrack, isNull);
-        expect(queue.currentIndex, equals(2));
+        final endQueue = nextQueue?.next();
+        expect(endQueue, isNull);
       },
     );
 
     test('next loops back to start when RepeatMode is all', () {
-      queue.setQueue(tracks, startIndex: 2);
-      queue.setRepeatMode(RepeatMode.all);
+      final initial = queue
+          .setQueue(tracks, startIndex: 2)
+          .setRepeatMode(RepeatMode.all);
 
-      expect(queue.hasNext, isTrue);
-      final loopedTrack = queue.next();
+      expect(initial.hasNext, isTrue);
+      final looped = initial.next();
 
-      expect(loopedTrack?.name, equals('Song 1'));
-      expect(queue.currentIndex, equals(0));
+      expect(looped?.currentTrack?.name, equals('Song 1'));
+      expect(looped?.currentIndex, equals(0));
     });
 
     test('next repeats current track when RepeatMode is one', () {
-      queue.setQueue(tracks, startIndex: 1);
-      queue.setRepeatMode(RepeatMode.one);
+      final initial = queue
+          .setQueue(tracks, startIndex: 1)
+          .setRepeatMode(RepeatMode.one);
 
-      final repeatedTrack = queue.next();
-      expect(repeatedTrack?.name, equals('Song 2'));
-      expect(queue.currentIndex, equals(1));
+      final repeated = initial.next();
+      expect(repeated?.currentTrack?.name, equals('Song 2'));
+      expect(repeated?.currentIndex, equals(1));
     });
 
     test('previous moves backward and loops to end when RepeatMode is all', () {
-      queue.setQueue(tracks, startIndex: 0);
-      queue.setRepeatMode(RepeatMode.all);
+      final initial = queue
+          .setQueue(tracks, startIndex: 0)
+          .setRepeatMode(RepeatMode.all);
 
-      final loopedTrack = queue.previous();
-      expect(loopedTrack?.name, equals('Song 3'));
-      expect(queue.currentIndex, equals(2));
+      final looped = initial.previous();
+      expect(looped?.currentTrack?.name, equals('Song 3'));
+      expect(looped?.currentIndex, equals(2));
     });
 
     test('jumpToIndex sets current index when in range', () {
-      queue.setQueue(tracks, startIndex: 0);
+      final initial = queue.setQueue(tracks, startIndex: 0);
 
-      final track = queue.jumpToIndex(2);
-      expect(track?.name, equals('Song 3'));
-      expect(queue.currentIndex, equals(2));
+      final jumped = initial.jumpToIndex(2);
+      expect(jumped?.currentTrack?.name, equals('Song 3'));
+      expect(jumped?.currentIndex, equals(2));
 
-      final invalid = queue.jumpToIndex(10);
+      final invalid = initial.jumpToIndex(10);
       expect(invalid, isNull);
-      expect(queue.currentIndex, equals(2));
     });
 
     test(
       'toggleShuffle maintains current track at index 0 and unshuffle restores original order',
       () {
-        queue.setQueue(tracks, startIndex: 1); // Current: Song 2
+        final initial = queue.setQueue(
+          tracks,
+          startIndex: 1,
+        ); // Current: Song 2
 
-        queue.toggleShuffle();
-        expect(queue.isShuffled, isTrue);
-        expect(queue.currentIndex, equals(0));
-        expect(queue.currentTrack?.name, equals('Song 2'));
-        expect(queue.length, equals(3));
+        final shuffled = initial.toggleShuffle();
+        expect(shuffled.isShuffled, isTrue);
+        expect(shuffled.currentIndex, equals(0));
+        expect(shuffled.currentTrack?.name, equals('Song 2'));
+        expect(shuffled.length, equals(3));
 
-        queue.toggleShuffle();
-        expect(queue.isShuffled, isFalse);
-        expect(queue.currentTrack?.name, equals('Song 2'));
-        expect(queue.currentIndex, equals(1));
-        expect(queue.tracks[0].name, equals('Song 1'));
-        expect(queue.tracks[1].name, equals('Song 2'));
-        expect(queue.tracks[2].name, equals('Song 3'));
+        final unshuffled = shuffled.toggleShuffle();
+        expect(unshuffled.isShuffled, isFalse);
+        expect(unshuffled.currentTrack?.name, equals('Song 2'));
+        expect(unshuffled.currentIndex, equals(1));
+        expect(unshuffled.tracks[0].name, equals('Song 1'));
+        expect(unshuffled.tracks[1].name, equals('Song 2'));
+        expect(unshuffled.tracks[2].name, equals('Song 3'));
       },
     );
 
     test('cycleRepeatMode transitions off -> all -> one -> off', () {
-      expect(queue.cycleRepeatMode(), equals(RepeatMode.all));
-      expect(queue.cycleRepeatMode(), equals(RepeatMode.one));
-      expect(queue.cycleRepeatMode(), equals(RepeatMode.off));
+      final all = queue.cycleRepeatMode();
+      expect(all.repeatMode, equals(RepeatMode.all));
+
+      final one = all.cycleRepeatMode();
+      expect(one.repeatMode, equals(RepeatMode.one));
+
+      final off = one.cycleRepeatMode();
+      expect(off.repeatMode, equals(RepeatMode.off));
     });
 
     test('add appends track to end of queue', () {
-      queue.setQueue(tracks, startIndex: 0);
+      final initial = queue.setQueue(tracks, startIndex: 0);
       final newTrack = createTestTrack('4', 'Song 4');
 
-      queue.add(newTrack);
+      final updated = initial.add(newTrack);
 
-      expect(queue.length, equals(4));
-      expect(queue.tracks.last.name, equals('Song 4'));
-      expect(queue.originalTracks.last.name, equals('Song 4'));
+      expect(updated.length, equals(4));
+      expect(updated.tracks.last.name, equals('Song 4'));
+      expect(updated.originalTracks.last.name, equals('Song 4'));
     });
 
     test('insertNext places track immediately after current pointer', () {
-      queue.setQueue(tracks, startIndex: 0);
+      final initial = queue.setQueue(tracks, startIndex: 0);
       final newTrack = createTestTrack('4', 'Inserted Song');
 
-      queue.insertNext(newTrack);
+      final updated = initial.insertNext(newTrack);
 
-      expect(queue.length, equals(4));
-      expect(queue.tracks[1].name, equals('Inserted Song'));
-      expect(queue.currentIndex, equals(0));
+      expect(updated.length, equals(4));
+      expect(updated.tracks[1].name, equals('Inserted Song'));
+      expect(updated.currentIndex, equals(0));
     });
 
     test('reorder correctly repositions track and updates current pointer', () {
-      queue.setQueue(tracks, startIndex: 0); // Current: Song 1 at 0
+      final initial = queue.setQueue(
+        tracks,
+        startIndex: 0,
+      ); // Current: Song 1 at 0
 
       // Move Song 1 from index 0 to index 2
-      queue.reorder(0, 2);
+      final reordered = initial.reorder(0, 2);
 
-      expect(queue.tracks[2].name, equals('Song 1'));
-      expect(queue.currentIndex, equals(2));
+      expect(reordered.tracks[2].name, equals('Song 1'));
+      expect(reordered.currentIndex, equals(2));
     });
 
     test('removeAt removes track and adjusts current pointer safely', () {
-      queue.setQueue(tracks, startIndex: 2); // Current: Song 3 at 2
+      final initial = queue.setQueue(
+        tracks,
+        startIndex: 2,
+      ); // Current: Song 3 at 2
 
-      queue.removeAt(0); // Remove Song 1
+      final updated = initial.removeAt(0); // Remove Song 1
 
-      expect(queue.length, equals(2));
-      expect(queue.currentIndex, equals(1));
-      expect(queue.currentTrack?.name, equals('Song 3'));
+      expect(updated.length, equals(2));
+      expect(updated.currentIndex, equals(1));
+      expect(updated.currentTrack?.name, equals('Song 3'));
     });
 
     test(
@@ -190,28 +206,35 @@ void main() {
           duplicateSong1, // Song 1 duplicate (id: 1)
         ];
 
-        queue.setQueue(duplicateQueueTracks, startIndex: 1);
+        final initial = queue.setQueue(duplicateQueueTracks, startIndex: 1);
 
         // Remove the first instance of Song 1 at index 0
-        queue.removeAt(0);
+        final updated = initial.removeAt(0);
 
-        expect(queue.length, equals(2));
-        expect(queue.tracks[0].name, equals('Song 2'));
-        expect(queue.tracks[1].name, equals('Song 1'));
-        expect(queue.originalTracks.length, equals(2));
-        expect(queue.originalTracks.last.name, equals('Song 1'));
+        expect(updated.length, equals(2));
+        expect(updated.tracks[0].name, equals('Song 2'));
+        expect(updated.tracks[1].name, equals('Song 1'));
+        expect(updated.originalTracks.length, equals(2));
+        expect(updated.originalTracks.last.name, equals('Song 1'));
       },
     );
 
     test('clear empties all tracks and resets queue', () {
-      queue.setQueue(tracks, startIndex: 1);
+      final initial = queue.setQueue(tracks, startIndex: 1);
+      final cleared = initial.clear();
 
-      queue.clear();
+      expect(cleared.isEmpty, isTrue);
+      expect(cleared.currentTrack, isNull);
+      expect(cleared.currentIndex, equals(0));
+      expect(cleared.isShuffled, isFalse);
+    });
 
-      expect(queue.isEmpty, isTrue);
-      expect(queue.currentTrack, isNull);
-      expect(queue.currentIndex, equals(0));
-      expect(queue.isShuffled, isFalse);
+    test('operator == and hashCode support value equality', () {
+      final q1 = queue.setQueue(tracks, startIndex: 1);
+      final q2 = queue.setQueue(tracks, startIndex: 1);
+
+      expect(q1, equals(q2));
+      expect(q1.hashCode, equals(q2.hashCode));
     });
   });
 }

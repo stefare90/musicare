@@ -1,233 +1,288 @@
+import 'package:flutter/foundation.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
+import 'package:music_are/features/player/data/models/repeat_mode.dart';
 
-enum RepeatMode {
-  off,
-  all,
-  one;
-
-  RepeatMode next() {
-    switch (this) {
-      case RepeatMode.off:
-        return RepeatMode.all;
-      case RepeatMode.all:
-        return RepeatMode.one;
-      case RepeatMode.one:
-        return RepeatMode.off;
-    }
-  }
-}
-
-/// Pure Dart queue state and manipulation engine.
+@immutable
 class PlaybackQueue {
-  final List<Track> _originalTracks = [];
-  final List<Track> _effectiveTracks = [];
-  int _currentIndex = 0;
-  bool _isShuffled = false;
-  RepeatMode _repeatMode = RepeatMode.off;
+  final List<Track> tracks;
+  final List<Track> originalTracks;
+  final int currentIndex;
+  final bool isShuffled;
+  final RepeatMode repeatMode;
 
-  PlaybackQueue();
+  const PlaybackQueue({
+    this.tracks = const [],
+    this.originalTracks = const [],
+    this.currentIndex = 0,
+    this.isShuffled = false,
+    this.repeatMode = RepeatMode.off,
+  });
 
-  List<Track> get tracks => List.unmodifiable(_effectiveTracks);
-  List<Track> get originalTracks => List.unmodifiable(_originalTracks);
-
-  int get currentIndex => _currentIndex;
-  int get length => _effectiveTracks.length;
-  bool get isEmpty => _effectiveTracks.isEmpty;
-  bool get isNotEmpty => _effectiveTracks.isNotEmpty;
-  bool get isShuffled => _isShuffled;
-  RepeatMode get repeatMode => _repeatMode;
+  int get length => tracks.length;
+  bool get isEmpty => tracks.isEmpty;
+  bool get isNotEmpty => tracks.isNotEmpty;
 
   Track? get currentTrack {
-    if (isEmpty ||
-        _currentIndex < 0 ||
-        _currentIndex >= _effectiveTracks.length) {
+    if (isEmpty || currentIndex < 0 || currentIndex >= tracks.length) {
       return null;
     }
-    return _effectiveTracks[_currentIndex];
+    return tracks[currentIndex];
   }
 
   bool get hasNext {
     if (isEmpty) return false;
-    if (_repeatMode != RepeatMode.off) {
+    if (repeatMode == RepeatMode.all || repeatMode == RepeatMode.one) {
       return true;
     }
-    return _currentIndex + 1 < _effectiveTracks.length;
+    return currentIndex + 1 < tracks.length;
   }
 
   bool get hasPrevious {
     if (isEmpty) return false;
-    if (_repeatMode == RepeatMode.all) return true;
-    return _currentIndex > 0;
+    if (repeatMode == RepeatMode.all) return true;
+    return currentIndex > 0;
   }
 
-  void setQueue(List<Track> tracks, {int startIndex = 0}) {
-    _originalTracks
-      ..clear()
-      ..addAll(tracks);
-
-    _isShuffled = false;
-    _effectiveTracks
-      ..clear()
-      ..addAll(tracks);
-
-    _currentIndex = (startIndex >= 0 && startIndex < _effectiveTracks.length)
+  PlaybackQueue setQueue(List<Track> newTracks, {int startIndex = 0}) {
+    final validIndex = (startIndex >= 0 && startIndex < newTracks.length)
         ? startIndex
         : 0;
+    return PlaybackQueue(
+      tracks: List.unmodifiable(newTracks),
+      originalTracks: List.unmodifiable(newTracks),
+      currentIndex: validIndex,
+      isShuffled: false,
+      repeatMode: repeatMode,
+    );
   }
 
-  Track? next() {
+  PlaybackQueue? next() {
     if (isEmpty) return null;
 
-    if (_repeatMode == RepeatMode.one) {
-      return currentTrack;
+    if (repeatMode == RepeatMode.one) {
+      return this;
     }
 
-    if (_currentIndex + 1 < _effectiveTracks.length) {
-      _currentIndex++;
-      return currentTrack;
+    if (currentIndex + 1 < tracks.length) {
+      return copyWith(currentIndex: currentIndex + 1);
     }
 
-    if (_repeatMode == RepeatMode.all) {
-      _currentIndex = 0;
-      return currentTrack;
+    if (repeatMode == RepeatMode.all) {
+      return copyWith(currentIndex: 0);
     }
 
     return null;
   }
 
-  Track? previous() {
+  PlaybackQueue? previous() {
     if (isEmpty) return null;
 
-    if (_currentIndex > 0) {
-      _currentIndex--;
-      return currentTrack;
+    if (currentIndex > 0) {
+      return copyWith(currentIndex: currentIndex - 1);
     }
 
-    if (_repeatMode == RepeatMode.all && _effectiveTracks.isNotEmpty) {
-      _currentIndex = _effectiveTracks.length - 1;
-      return currentTrack;
+    if (repeatMode == RepeatMode.all && tracks.isNotEmpty) {
+      return copyWith(currentIndex: tracks.length - 1);
     }
 
     return null;
   }
 
-  Track? jumpToIndex(int index) {
-    if (index >= 0 && index < _effectiveTracks.length) {
-      _currentIndex = index;
-      return currentTrack;
+  PlaybackQueue? jumpToIndex(int index) {
+    if (index >= 0 && index < tracks.length) {
+      return copyWith(currentIndex: index);
     }
     return null;
   }
 
-  void toggleShuffle() {
-    if (isEmpty) return;
+  PlaybackQueue toggleShuffle() {
+    if (isEmpty) return this;
 
     final current = currentTrack;
-    _isShuffled = !_isShuffled;
+    final newShuffled = !isShuffled;
 
-    if (_isShuffled) {
-      _currentIndex = 0;
-      _effectiveTracks.clear();
-      final remaining = List<Track>.from(_originalTracks);
+    if (newShuffled) {
+      final remaining = List<Track>.from(originalTracks);
       if (current != null) {
-        _effectiveTracks.add(current);
         final idx = remaining.indexWhere((t) => t.id == current.id);
         if (idx >= 0) {
           remaining.removeAt(idx);
         }
       }
       remaining.shuffle();
-      _effectiveTracks.addAll(remaining);
-    } else {
-      _effectiveTracks
-        ..clear()
-        ..addAll(_originalTracks);
+
+      final newTracks = <Track>[];
       if (current != null) {
-        final originalIdx = _effectiveTracks.indexWhere(
+        newTracks.add(current);
+      }
+      newTracks.addAll(remaining);
+
+      return PlaybackQueue(
+        tracks: List.unmodifiable(newTracks),
+        originalTracks: originalTracks,
+        currentIndex: 0,
+        isShuffled: true,
+        repeatMode: repeatMode,
+      );
+    } else {
+      final restoredTracks = List<Track>.from(originalTracks);
+      int restoredIndex = 0;
+      if (current != null) {
+        final originalIdx = restoredTracks.indexWhere(
           (t) => t.id == current.id,
         );
-        _currentIndex = originalIdx >= 0 ? originalIdx : 0;
+        restoredIndex = originalIdx >= 0 ? originalIdx : 0;
       }
-    }
-  }
 
-  void setRepeatMode(RepeatMode mode) {
-    _repeatMode = mode;
-  }
-
-  RepeatMode cycleRepeatMode() {
-    _repeatMode = _repeatMode.next();
-    return _repeatMode;
-  }
-
-  void add(Track track) {
-    _originalTracks.add(track);
-    _effectiveTracks.add(track);
-  }
-
-  void insertNext(Track track) {
-    _originalTracks.add(track);
-    if (isEmpty) {
-      _effectiveTracks.add(track);
-      _currentIndex = 0;
-    } else {
-      _effectiveTracks.insert(_currentIndex + 1, track);
-    }
-  }
-
-  void removeAt(int index) {
-    if (index < 0 || index >= _effectiveTracks.length) return;
-
-    final removedTrack = _effectiveTracks.removeAt(index);
-
-    if (!_isShuffled) {
-      _originalTracks.removeAt(index);
-    } else {
-      final origIndex = _originalTracks.indexWhere(
-        (t) => t.id == removedTrack.id,
+      return PlaybackQueue(
+        tracks: List.unmodifiable(restoredTracks),
+        originalTracks: originalTracks,
+        currentIndex: restoredIndex,
+        isShuffled: false,
+        repeatMode: repeatMode,
       );
+    }
+  }
+
+  PlaybackQueue cycleRepeatMode() {
+    return copyWith(repeatMode: repeatMode.next());
+  }
+
+  PlaybackQueue setRepeatMode(RepeatMode mode) {
+    return copyWith(repeatMode: mode);
+  }
+
+  PlaybackQueue add(Track track) {
+    final newOriginal = List<Track>.from(originalTracks)..add(track);
+    final newTracks = List<Track>.from(tracks)..add(track);
+    return PlaybackQueue(
+      tracks: List.unmodifiable(newTracks),
+      originalTracks: List.unmodifiable(newOriginal),
+      currentIndex: currentIndex,
+      isShuffled: isShuffled,
+      repeatMode: repeatMode,
+    );
+  }
+
+  PlaybackQueue insertNext(Track track) {
+    final newOriginal = List<Track>.from(originalTracks)..add(track);
+    final newTracks = List<Track>.from(tracks);
+    if (isEmpty) {
+      newTracks.add(track);
+    } else {
+      newTracks.insert(currentIndex + 1, track);
+    }
+    return PlaybackQueue(
+      tracks: List.unmodifiable(newTracks),
+      originalTracks: List.unmodifiable(newOriginal),
+      currentIndex: currentIndex,
+      isShuffled: isShuffled,
+      repeatMode: repeatMode,
+    );
+  }
+
+  PlaybackQueue removeAt(int index) {
+    if (index < 0 || index >= tracks.length) return this;
+
+    final newTracks = List<Track>.from(tracks);
+    final removedTrack = newTracks.removeAt(index);
+
+    final newOriginal = List<Track>.from(originalTracks);
+    if (!isShuffled) {
+      newOriginal.removeAt(index);
+    } else {
+      final origIndex = newOriginal.indexWhere((t) => t.id == removedTrack.id);
       if (origIndex >= 0) {
-        _originalTracks.removeAt(origIndex);
+        newOriginal.removeAt(origIndex);
       }
     }
 
-    if (_effectiveTracks.isEmpty) {
-      _currentIndex = 0;
-      return;
+    int newCurrentIndex = currentIndex;
+    if (newTracks.isEmpty) {
+      newCurrentIndex = 0;
+    } else if (index < currentIndex) {
+      newCurrentIndex--;
+    } else if (newCurrentIndex >= newTracks.length) {
+      newCurrentIndex = newTracks.length - 1;
     }
 
-    if (index < _currentIndex) {
-      _currentIndex--;
-    } else if (_currentIndex >= _effectiveTracks.length) {
-      _currentIndex = _effectiveTracks.length - 1;
-    }
+    return PlaybackQueue(
+      tracks: List.unmodifiable(newTracks),
+      originalTracks: List.unmodifiable(newOriginal),
+      currentIndex: newCurrentIndex,
+      isShuffled: isShuffled,
+      repeatMode: repeatMode,
+    );
   }
 
-  void reorder(int oldIndex, int newIndex) {
+  PlaybackQueue reorder(int oldIndex, int newIndex) {
     if (oldIndex < 0 ||
-        oldIndex >= _effectiveTracks.length ||
+        oldIndex >= tracks.length ||
         newIndex < 0 ||
-        newIndex >= _effectiveTracks.length ||
+        newIndex >= tracks.length ||
         oldIndex == newIndex) {
-      return;
+      return this;
     }
 
-    final item = _effectiveTracks.removeAt(oldIndex);
-    _effectiveTracks.insert(newIndex, item);
+    final newTracks = List<Track>.from(tracks);
+    final item = newTracks.removeAt(oldIndex);
+    newTracks.insert(newIndex, item);
 
-    if (oldIndex == _currentIndex) {
-      _currentIndex = newIndex;
-    } else if (oldIndex < _currentIndex && newIndex >= _currentIndex) {
-      _currentIndex--;
-    } else if (oldIndex > _currentIndex && newIndex <= _currentIndex) {
-      _currentIndex++;
+    int newCurrentIndex = currentIndex;
+    if (oldIndex == currentIndex) {
+      newCurrentIndex = newIndex;
+    } else if (oldIndex < currentIndex && newIndex >= currentIndex) {
+      newCurrentIndex--;
+    } else if (oldIndex > currentIndex && newIndex <= currentIndex) {
+      newCurrentIndex++;
     }
+
+    return PlaybackQueue(
+      tracks: List.unmodifiable(newTracks),
+      originalTracks: originalTracks,
+      currentIndex: newCurrentIndex,
+      isShuffled: isShuffled,
+      repeatMode: repeatMode,
+    );
   }
 
-  void clear() {
-    _originalTracks.clear();
-    _effectiveTracks.clear();
-    _currentIndex = 0;
-    _isShuffled = false;
+  PlaybackQueue clear() {
+    return const PlaybackQueue();
   }
+
+  PlaybackQueue copyWith({
+    List<Track>? tracks,
+    List<Track>? originalTracks,
+    int? currentIndex,
+    bool? isShuffled,
+    RepeatMode? repeatMode,
+  }) {
+    return PlaybackQueue(
+      tracks: tracks ?? this.tracks,
+      originalTracks: originalTracks ?? this.originalTracks,
+      currentIndex: currentIndex ?? this.currentIndex,
+      isShuffled: isShuffled ?? this.isShuffled,
+      repeatMode: repeatMode ?? this.repeatMode,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PlaybackQueue &&
+          runtimeType == other.runtimeType &&
+          currentIndex == other.currentIndex &&
+          isShuffled == other.isShuffled &&
+          repeatMode == other.repeatMode &&
+          listEquals(tracks, other.tracks) &&
+          listEquals(originalTracks, other.originalTracks);
+
+  @override
+  int get hashCode => Object.hash(
+    currentIndex,
+    isShuffled,
+    repeatMode,
+    Object.hashAll(tracks),
+    Object.hashAll(originalTracks),
+  );
 }

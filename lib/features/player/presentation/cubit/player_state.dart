@@ -1,72 +1,62 @@
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
-import 'package:music_are/features/player/data/models/playback_queue.dart';
-
-enum PlayerStatus {
-  idle,
-  resolving,
-  buffering,
-  playing,
-  paused,
-  completed,
-  error,
-}
+import 'package:music_are/features/player/data/models/playback_data.dart';
+import 'package:music_are/features/player/data/models/playback_processing_state.dart';
+import 'package:music_are/features/player/presentation/cubit/queue_state.dart';
 
 class PlayerState {
-  final PlayerStatus status;
-  final Track? currentTrack;
-  final List<Track> queue;
-  final int currentIndex;
-  final bool isShuffled;
-  final RepeatMode repeatMode;
+  final QueueState queue;
+  final bool isPlaying;
+  final PlaybackProcessingState processingState;
   final Duration position;
   final Duration duration;
   final Object? error;
 
   const PlayerState({
-    this.status = PlayerStatus.idle,
-    this.currentTrack,
-    this.queue = const [],
-    this.currentIndex = 0,
-    this.isShuffled = false,
-    this.repeatMode = RepeatMode.off,
+    this.queue = const QueueState(),
+    this.isPlaying = false,
+    this.processingState = PlaybackProcessingState.idle,
     this.position = Duration.zero,
     this.duration = Duration.zero,
     this.error,
   });
 
-  bool get isPlaying => status == PlayerStatus.playing;
-  bool get isLoading =>
-      status == PlayerStatus.resolving || status == PlayerStatus.buffering;
-  bool get hasTrack => currentTrack != null;
-  bool get hasNext =>
-      queue.isNotEmpty &&
-      (repeatMode == RepeatMode.all ||
-          repeatMode == RepeatMode.one ||
-          currentIndex + 1 < queue.length);
-  bool get hasPrevious =>
-      queue.isNotEmpty &&
-      (repeatMode == RepeatMode.all ||
-          currentIndex > 0 ||
-          position.inSeconds > 3);
+  factory PlayerState.fromPlaybackData(PlaybackData data) {
+    return PlayerState(
+      queue: QueueState.fromPlaybackQueue(data.queue),
+      isPlaying: data.isPlaying,
+      processingState: data.processingState,
+      position: data.position,
+      duration: data.duration,
+      error: data.error,
+    );
+  }
+
+  bool get isLoading => processingState == PlaybackProcessingState.loading;
+
+  bool get hasTrack => queue.currentTrack != null;
+  Track? get currentTrack => queue.currentTrack;
+
+  String get formattedPosition => _formatDuration(position);
+  String get formattedDuration => _formatDuration(duration);
+
+  static String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
 
   PlayerState copyWith({
-    PlayerStatus? status,
-    Track? currentTrack,
-    List<Track>? queue,
-    int? currentIndex,
-    bool? isShuffled,
-    RepeatMode? repeatMode,
+    QueueState? queue,
+    bool? isPlaying,
+    PlaybackProcessingState? processingState,
     Duration? position,
     Duration? duration,
     Object? error,
   }) {
     return PlayerState(
-      status: status ?? this.status,
-      currentTrack: currentTrack ?? this.currentTrack,
       queue: queue ?? this.queue,
-      currentIndex: currentIndex ?? this.currentIndex,
-      isShuffled: isShuffled ?? this.isShuffled,
-      repeatMode: repeatMode ?? this.repeatMode,
+      isPlaying: isPlaying ?? this.isPlaying,
+      processingState: processingState ?? this.processingState,
       position: position ?? this.position,
       duration: duration ?? this.duration,
       error: error ?? this.error,

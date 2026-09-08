@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:music_are/core/di/injection.dart';
-import 'package:music_are/features/player/data/services/audio_player_service.dart';
+import 'package:music_are/features/player/data/services/audio_player_driver.dart';
 import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
 import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_state.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
 
 abstract class AppInitializer {
-  /// Orchestrates full application startup and returns the initial route location.
   static Future<String> initialize() async {
     WidgetsFlutterBinding.ensureInitialized();
 
-    // 1. Platform services
-    await AudioPlayerService.initBackground();
+    // Initialize native platform audio background services
+    await AudioPlayerDriver.initBackground();
 
-    // 2. Dependency injection
+    // Initialize Dependency Injection container
     await initDependencies();
 
-    // 3. Initialize plugin state machines
+    // Initialize plugins
     final metadataCubit = sl<MetadataPluginCubit>();
     final audioSourceCubit = sl<AudioSourcePluginCubit>();
 

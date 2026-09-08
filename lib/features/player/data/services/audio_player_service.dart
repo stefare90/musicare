@@ -1,62 +1,205 @@
+import 'dart:async';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
-import 'package:just_audio/just_audio.dart' as ja;
-import 'package:just_audio_background/just_audio_background.dart';
-import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
+import 'package:music_are/features/player/data/models/playback_data.dart';
+import 'package:music_are/features/player/data/models/playback_processing_state.dart';
+import 'package:music_are/features/player/data/services/audio_player_driver.dart';
+import 'package:music_are/features/player/data/services/audio_stream_resolver.dart';
 
 class AudioPlayerService {
-  final ja.AudioPlayer _player;
+  final AudioPlayerDriver _driver;
+  final AudioStreamResolver _resolver;
 
-  AudioPlayerService({ja.AudioPlayer? player})
-    : _player = player ?? ja.AudioPlayer();
+  final StreamController<PlaybackData> _playbackDataController =
+      StreamController<PlaybackData>.broadcast();
 
-  static Future<void> initBackground() async {
-    await JustAudioBackground.init(
-      androidNotificationChannelId: 'com.musicare.audio',
-      androidNotificationChannelName: 'MusicAre Playback',
-      androidNotificationIcon: 'mipmap/ic_launcher',
-      androidNotificationOngoing: true,
-      androidStopForegroundOnPause: true,
-    );
+  PlaybackData _playbackData = const PlaybackData();
+  StreamSubscription<bool>? _driverPlayingSub;
+  StreamSubscription<PlaybackProcessingState>? _driverProcessingSub;
+  StreamSubscription<Duration>? _driverPositionSub;
+  StreamSubscription<Duration?>? _driverDurationSub;
+
+  int _sessionCounter = 0;
+  DateTime _lastPositionUpdate = DateTime.fromMillisecondsSinceEpoch(0);
+
+  AudioPlayerService({required this._driver, required this._resolver}) {
+    _initDriverListeners();
   }
 
-  ja.AudioPlayer get rawPlayer => _player;
-  ja.PlayerState get playerState => _player.playerState;
+  Stream<PlaybackData> get playbackDataStream => _playbackDataController.stream;
+  PlaybackData get playbackData => _playbackData;
 
-  Stream<Duration> get positionStream => _player.positionStream;
-  Stream<Duration?> get durationStream => _player.durationStream;
-  Stream<ja.PlayerState> get playerStateStream => _player.playerStateStream;
-
-  ja.AudioSource createAudioSource({
-    required Track track,
-    required AudioStreamResponse stream,
-  }) {
-    final mediaItem = MediaItem(
-      id: track.id,
-      album: track.album.name,
-      title: track.name,
-      artist: track.artists.map((a) => a.name).join(', '),
-      duration: track.durationMs > 0
-          ? Duration(milliseconds: track.durationMs)
-          : null,
-      artUri: track.album.images.isNotEmpty
-          ? Uri.tryParse(track.album.images.first.url)
-          : null,
-    );
-
-    return ja.AudioSource.uri(
-      Uri.parse(stream.url),
-      headers: stream.headers.isNotEmpty ? stream.headers : null,
-      tag: mediaItem,
-    );
+  void _updateData(PlaybackData newData) {
+    _playbackData = newData;
+    if (!_playbackDataController.isClosed) {
+      _playbackDataController.add(_playbackData);
+    }
   }
 
-  Future<void> setAudioSource(ja.AudioSource source) =>
-      _player.setAudioSource(source);
+  void _initDriverListeners() {
+    _driverPlayingSub = _driver.isPlayingStream.listen((isPlaying) {
+      _updateData(_playbackData.copyWith(isPlaying: isPlaying));
+    });
 
-  Future<void> play() => _player.play();
-  Future<void> pause() => _player.pause();
-  Future<void> stop() => _player.stop();
-  Future<void> seek(Duration position) => _player.seek(position);
+    _driverProcessingSub = _driver.processingStateStream.listen((procState) {
+      _updateData(_playbackData.copyWith(processingState: procState));
+      if (procState == PlaybackProcessingState.completed &&
+          _driver.isPlaying &&
+          _playbackData.queue.hasNext) {
+        next();
+      }
+    });
 
-  Future<void> dispose() => _player.dispose();
+    _driverPositionSub = _driver.positionStream.listen((pos) {
+      final now = DateTime.now();
+      if (now.difference(_lastPositionUpdate).inMilliseconds >= 250 ||
+          pos == Duration.zero) {
+        _lastPositionUpdate = now;
+        _updateData(_playbackData.copyWith(position: pos));
+      }
+    });
+
+    _driverDurationSub = _driver.durationStream.listen((dur) {
+      if (dur != null) {
+        _updateData(_playbackData.copyWith(duration: dur));
+      }
+    });
+  }
+
+  Future<void> playTrack(Track track) => playQueue([track], index: 0);
+
+  Future<void> playQueue(List<Track> queue, {int index = 0}) async {
+    if (queue.isEmpty) return;
+
+    final validIndex = (index >= 0 && index < queue.length) ? index : 0;
+    _updateData(
+      _playbackData.copyWith(
+        queue: _playbackData.queue.setQueue(queue, startIndex: validIndex),
+      ),
+    );
+
+    await _playCurrentQueueTrack();
+  }
+
+  Future<void> next() async {
+    final nextQueue = _playbackData.queue.next();
+    if (nextQueue != null) {
+      _updateData(_playbackData.copyWith(queue: nextQueue));
+      await _playCurrentQueueTrack();
+    } else {
+      await stop();
+    }
+  }
+
+  Future<void> previous() async {
+    if (_driver.position.inSeconds > 3) {
+      await seek(Duration.zero);
+      return;
+    }
+
+    final prevQueue = _playbackData.queue.previous();
+    if (prevQueue != null) {
+      _updateData(_playbackData.copyWith(queue: prevQueue));
+      await _playCurrentQueueTrack();
+    } else {
+      await seek(Duration.zero);
+    }
+  }
+
+  Future<void> skipToIndex(int index) async {
+    final jumped = _playbackData.queue.jumpToIndex(index);
+    if (jumped != null) {
+      _updateData(_playbackData.copyWith(queue: jumped));
+      await _playCurrentQueueTrack();
+    }
+  }
+
+  Future<void> _playCurrentQueueTrack() async {
+    final track = _playbackData.currentTrack;
+    if (track == null) return;
+
+    final sessionId = ++_sessionCounter;
+
+    await _driver.stop();
+    _updateData(
+      _playbackData.copyWith(
+        processingState: PlaybackProcessingState.loading,
+        position: Duration.zero,
+        duration: Duration.zero,
+        error: null,
+      ),
+    );
+
+    try {
+      final resolved = await _resolver.resolveTrack(track);
+      if (sessionId != _sessionCounter) return;
+
+      bool isLoaded = false;
+      while (!isLoaded) {
+        try {
+          await _driver.loadStream(
+            track: resolved.track,
+            stream: resolved.currentStream,
+          );
+          isLoaded = true;
+        } catch (e) {
+          if (sessionId != _sessionCounter) return;
+          if (resolved.hasMoreCandidates) {
+            resolved.nextCandidate();
+          } else {
+            rethrow;
+          }
+        }
+      }
+
+      if (sessionId != _sessionCounter) return;
+
+      await _driver.play();
+    } catch (e) {
+      if (sessionId != _sessionCounter) return;
+      _updateData(_playbackData.copyWith(error: e));
+    }
+  }
+
+  Future<void> togglePlayPause() async {
+    if (_driver.isPlaying) {
+      await pause();
+    } else {
+      await play();
+    }
+  }
+
+  Future<void> play() => _driver.play();
+  Future<void> pause() => _driver.pause();
+  Future<void> stop() => _driver.stop();
+  Future<void> seek(Duration position) => _driver.seek(position);
+
+  void toggleShuffle() => _updateData(
+    _playbackData.copyWith(queue: _playbackData.queue.toggleShuffle()),
+  );
+  void cycleRepeatMode() => _updateData(
+    _playbackData.copyWith(queue: _playbackData.queue.cycleRepeatMode()),
+  );
+  void addToQueue(Track track) => _updateData(
+    _playbackData.copyWith(queue: _playbackData.queue.add(track)),
+  );
+  void insertNext(Track track) => _updateData(
+    _playbackData.copyWith(queue: _playbackData.queue.insertNext(track)),
+  );
+  void removeFromQueue(int index) => _updateData(
+    _playbackData.copyWith(queue: _playbackData.queue.removeAt(index)),
+  );
+  void reorderQueue(int oldIndex, int newIndex) => _updateData(
+    _playbackData.copyWith(
+      queue: _playbackData.queue.reorder(oldIndex, newIndex),
+    ),
+  );
+
+  Future<void> dispose() async {
+    await _driverPlayingSub?.cancel();
+    await _driverProcessingSub?.cancel();
+    await _driverPositionSub?.cancel();
+    await _driverDurationSub?.cancel();
+    await _playbackDataController.close();
+    await _driver.dispose();
+  }
 }

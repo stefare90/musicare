@@ -16,8 +16,9 @@ class MiniPlayer extends StatelessWidget {
     return BlocBuilder<PlayerCubit, PlayerState>(
       buildWhen: (prev, curr) =>
           prev.currentTrack?.id != curr.currentTrack?.id ||
-          prev.status != curr.status ||
-          prev.hasNext != curr.hasNext,
+          prev.isPlaying != curr.isPlaying ||
+          prev.isLoading != curr.isLoading ||
+          prev.queue.hasNext != curr.queue.hasNext,
       builder: (context, state) {
         final track = state.currentTrack;
         if (track == null) {
@@ -101,7 +102,7 @@ class MiniPlayer extends StatelessWidget {
                           ),
                         IconButton(
                           icon: const Icon(Icons.skip_next_rounded, size: 28),
-                          onPressed: state.hasNext
+                          onPressed: state.queue.hasNext
                               ? () => context.read<PlayerCubit>().next()
                               : null,
                         ),

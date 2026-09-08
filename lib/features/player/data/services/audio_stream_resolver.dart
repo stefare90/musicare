@@ -8,16 +8,13 @@ class AudioStreamResolver {
 
   AudioStreamResolver(this._engine);
 
-  /// Resolves the track into playable audio stream candidates.
   Future<ResolvedPlaybackTrack> resolveTrack(
     Track track, {
     AudioQuality quality = AudioQuality.high,
   }) async {
     final streams = await _engine.resolveStream(track, quality: quality);
     if (streams.isEmpty) {
-      throw StreamResolutionException(
-        'No playable stream candidates found for track: "${track.name}"',
-      );
+      throw StreamResolutionException('No playable stream');
     }
 
     return ResolvedPlaybackTrack(track: track, candidates: streams);

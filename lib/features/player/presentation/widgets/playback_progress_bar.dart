@@ -31,6 +31,7 @@ class PlaybackProgressBar extends StatelessWidget {
             height: height,
             child: LinearProgressIndicator(
               value: progress,
+              minHeight: height,
               backgroundColor: backgroundColor,
               valueColor: AlwaysStoppedAnimation<Color>(
                 color ?? context.colorScheme.primary,

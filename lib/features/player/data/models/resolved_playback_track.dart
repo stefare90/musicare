@@ -13,11 +13,8 @@ class ResolvedPlaybackTrack {
   }) : assert(candidates.isNotEmpty, 'Candidates list cannot be empty');
 
   AudioStreamResponse get currentStream => candidates[currentCandidateIndex];
-
   int get candidateCount => candidates.length;
-
   bool get hasMoreCandidates => currentCandidateIndex + 1 < candidates.length;
-
   bool get isUsingFallback => currentCandidateIndex > 0;
 
   bool get isCurrentStreamExpired {

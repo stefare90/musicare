@@ -5,8 +5,10 @@ import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:music_are/features/player/data/models/playback_processing_state.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
+import 'package:music_are/features/player/presentation/cubit/queue_state.dart';
 import 'package:music_are/features/player/presentation/pages/full_player_page.dart';
 import 'package:music_are/features/player/presentation/widgets/mini_player.dart';
 
@@ -73,10 +75,13 @@ void main() {
     ) async {
       when(() => mockPlayerCubit.state).thenReturn(
         PlayerState(
-          status: PlayerStatus.playing,
-          currentTrack: testTrack,
-          queue: [testTrack],
-          currentIndex: 0,
+          isPlaying: true,
+          processingState: PlaybackProcessingState.ready,
+          queue: QueueState(
+            tracks: [testTrack],
+            currentIndex: 0,
+            hasNext: true,
+          ),
         ),
       );
 
@@ -89,15 +94,32 @@ void main() {
       expect(find.byIcon(Icons.skip_next_rounded), findsOneWidget);
     });
 
+    testWidgets('shows loading spinner when processingState is loading', (
+      tester,
+    ) async {
+      when(() => mockPlayerCubit.state).thenReturn(
+        PlayerState(
+          processingState: PlaybackProcessingState.loading,
+          queue: QueueState(tracks: [testTrack]),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pump();
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byIcon(Icons.pause_rounded), findsNothing);
+      expect(find.byIcon(Icons.play_arrow_rounded), findsNothing);
+    });
+
     testWidgets('tapping play/pause button triggers cubit togglePlayPause', (
       tester,
     ) async {
       when(() => mockPlayerCubit.state).thenReturn(
         PlayerState(
-          status: PlayerStatus.playing,
-          currentTrack: testTrack,
-          queue: [testTrack],
-          currentIndex: 0,
+          isPlaying: true,
+          processingState: PlaybackProcessingState.ready,
+          queue: QueueState(tracks: [testTrack]),
         ),
       );
 
@@ -116,10 +138,13 @@ void main() {
       final track2 = createTestTrack('t2', 'Something');
       when(() => mockPlayerCubit.state).thenReturn(
         PlayerState(
-          status: PlayerStatus.playing,
-          currentTrack: testTrack,
-          queue: [testTrack, track2],
-          currentIndex: 0,
+          isPlaying: true,
+          processingState: PlaybackProcessingState.ready,
+          queue: QueueState(
+            tracks: [testTrack, track2],
+            currentIndex: 0,
+            hasNext: true,
+          ),
         ),
       );
 
@@ -135,10 +160,9 @@ void main() {
     testWidgets('tapping body opens FullPlayerPage', (tester) async {
       when(() => mockPlayerCubit.state).thenReturn(
         PlayerState(
-          status: PlayerStatus.playing,
-          currentTrack: testTrack,
-          queue: [testTrack],
-          currentIndex: 0,
+          isPlaying: true,
+          processingState: PlaybackProcessingState.ready,
+          queue: QueueState(tracks: [testTrack]),
         ),
       );
 
