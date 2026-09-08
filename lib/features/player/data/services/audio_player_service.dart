@@ -1,10 +1,21 @@
 import 'package:just_audio/just_audio.dart' as ja;
+import 'package:just_audio_background/just_audio_background.dart';
 
 class AudioPlayerService {
   final ja.AudioPlayer _player;
 
   AudioPlayerService({ja.AudioPlayer? player})
     : _player = player ?? ja.AudioPlayer();
+
+  static Future<void> initBackground() async {
+    await JustAudioBackground.init(
+      androidNotificationChannelId: 'com.musicare.audio',
+      androidNotificationChannelName: 'MusicAre Playback',
+      androidNotificationIcon: 'mipmap/ic_launcher',
+      androidNotificationOngoing: true,
+      androidStopForegroundOnPause: true,
+    );
+  }
 
   ja.AudioPlayer get rawPlayer => _player;
 
