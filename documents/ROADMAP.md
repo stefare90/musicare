@@ -103,8 +103,6 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 
 ## 🎧 Phase 11: Audio Player & Playback Engine (`lib/features/player/`)
 
-## 🎧 Phase 11: Audio Player & Playback Engine (`lib/features/player/`)
-
 ### 11.1. Native Audio Infrastructure & Service Layer
 *   [x] **Dependencies Setup**:
     *   [x] Add `just_audio` and `just_audio_background` to `pubspec.yaml`
@@ -145,7 +143,7 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
     *   [x] Add tap gesture to open full-screen player modal
     *   [x] Widget tests for `MiniPlayer`
     *   [ ] Add swipe to open mini player
-    *   [ ] Add back button in mini player
+    *   [x] Add back button in mini player
 
 ### 11.5. Presentation: Full-Player Modal Sheet (`lib/features/player/presentation/pages/`)
 *   [ ] **FullPlayerPage UI**:

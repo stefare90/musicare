@@ -45,6 +45,7 @@ void main() {
       ).thenAnswer((_) => const Stream.empty());
       when(() => mockPlayerCubit.togglePlayPause()).thenAnswer((_) async {});
       when(() => mockPlayerCubit.next()).thenAnswer((_) async {});
+      when(() => mockPlayerCubit.previous()).thenAnswer((_) async {});
     });
 
     Widget buildTestableWidget() {
@@ -70,7 +71,37 @@ void main() {
       expect(find.byType(IconButton), findsNothing);
     });
 
-    testWidgets('renders track title, artist, and pause icon when playing', (
+    testWidgets('renders track title, artist, and playback icons', (
+      tester,
+    ) async {
+      when(() => mockPlayerCubit.state).thenReturn(
+        PlayerState(
+          isPlaying: true,
+          processingState: PlaybackProcessingState.ready,
+          queue: QueueState(
+            tracks: [testTrack, createTestTrack('t2', 'Track 2')],
+            currentIndex: 1,
+            hasNext: true,
+            hasPrevious: true,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Track 2'), findsOneWidget);
+      expect(find.text('The Beatles'), findsOneWidget);
+      expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.skip_next_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.skip_previous_rounded), findsOneWidget);
+      
+      final previousButton = tester.widget<IconButton>(
+          find.ancestor(of: find.byIcon(Icons.skip_previous_rounded), matching: find.byType(IconButton)));
+      expect(previousButton.onPressed, isNotNull);
+    });
+    
+    testWidgets('disables previous button when hasPrevious is false', (
       tester,
     ) async {
       when(() => mockPlayerCubit.state).thenReturn(
@@ -80,18 +111,18 @@ void main() {
           queue: QueueState(
             tracks: [testTrack],
             currentIndex: 0,
-            hasNext: true,
+            hasNext: false,
+            hasPrevious: false,
           ),
         ),
       );
 
       await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
-
-      expect(find.text('Come Together'), findsOneWidget);
-      expect(find.text('The Beatles'), findsOneWidget);
-      expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.skip_next_rounded), findsOneWidget);
+      
+      final previousButton = tester.widget<IconButton>(
+          find.ancestor(of: find.byIcon(Icons.skip_previous_rounded), matching: find.byType(IconButton)));
+      expect(previousButton.onPressed, isNull);
     });
 
     testWidgets('shows loading spinner when processingState is loading', (
@@ -155,6 +186,32 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => mockPlayerCubit.next()).called(1);
+    });
+    
+    testWidgets('tapping skip previous triggers cubit previous when hasPrevious is true', (
+      tester,
+    ) async {
+      final track2 = createTestTrack('t2', 'Something');
+      when(() => mockPlayerCubit.state).thenReturn(
+        PlayerState(
+          isPlaying: true,
+          processingState: PlaybackProcessingState.ready,
+          queue: QueueState(
+            tracks: [testTrack, track2],
+            currentIndex: 1,
+            hasNext: false,
+            hasPrevious: true,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.skip_previous_rounded));
+      await tester.pumpAndSettle();
+
+      verify(() => mockPlayerCubit.previous()).called(1);
     });
 
     testWidgets('tapping body opens FullPlayerPage', (tester) async {

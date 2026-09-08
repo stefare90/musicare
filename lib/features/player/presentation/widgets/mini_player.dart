@@ -18,7 +18,8 @@ class MiniPlayer extends StatelessWidget {
           prev.currentTrack?.id != curr.currentTrack?.id ||
           prev.isPlaying != curr.isPlaying ||
           prev.isLoading != curr.isLoading ||
-          prev.queue.hasNext != curr.queue.hasNext,
+          prev.queue.hasNext != curr.queue.hasNext ||
+          prev.queue.hasPrevious != curr.queue.hasPrevious,
       builder: (context, state) {
         final track = state.currentTrack;
         if (track == null) {
@@ -77,6 +78,12 @@ class MiniPlayer extends StatelessWidget {
                                 ),
                             ],
                           ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.skip_previous_rounded, size: 28),
+                          onPressed: state.queue.hasPrevious
+                              ? () => context.read<PlayerCubit>().previous()
+                              : null,
                         ),
                         if (state.isLoading)
                           const SizedBox(
