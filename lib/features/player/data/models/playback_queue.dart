@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 
 enum RepeatMode {
@@ -28,10 +27,7 @@ class PlaybackQueue {
 
   PlaybackQueue();
 
-  /// Unmodifiable view of currently active tracks (shuffled or sequential).
   List<Track> get tracks => List.unmodifiable(_effectiveTracks);
-
-  /// Unmodifiable view of original tracks order.
   List<Track> get originalTracks => List.unmodifiable(_originalTracks);
 
   int get currentIndex => _currentIndex;
@@ -52,7 +48,7 @@ class PlaybackQueue {
 
   bool get hasNext {
     if (isEmpty) return false;
-    if (_repeatMode == RepeatMode.all || _repeatMode == RepeatMode.one) {
+    if (_repeatMode != RepeatMode.off) {
       return true;
     }
     return _currentIndex + 1 < _effectiveTracks.length;
@@ -64,7 +60,6 @@ class PlaybackQueue {
     return _currentIndex > 0;
   }
 
-  /// Sets a new queue and updates the pointer to [startIndex].
   void setQueue(List<Track> tracks, {int startIndex = 0}) {
     _originalTracks
       ..clear()
@@ -80,8 +75,6 @@ class PlaybackQueue {
         : 0;
   }
 
-  /// Advances to next track according to RepeatMode rules.
-  /// Returns next track or null if queue has finished.
   Track? next() {
     if (isEmpty) return null;
 
@@ -102,7 +95,6 @@ class PlaybackQueue {
     return null;
   }
 
-  /// Moves to previous track according to RepeatMode rules.
   Track? previous() {
     if (isEmpty) return null;
 
@@ -119,7 +111,6 @@ class PlaybackQueue {
     return null;
   }
 
-  /// Jumps directly to track at specified index.
   Track? jumpToIndex(int index) {
     if (index >= 0 && index < _effectiveTracks.length) {
       _currentIndex = index;
@@ -128,27 +119,25 @@ class PlaybackQueue {
     return null;
   }
 
-  /// Toggles shuffle mode.
-  /// When enabling, current track remains at index 0 and rest are shuffled.
-  /// When disabling, original order is restored while maintaining current track.
-  void toggleShuffle({Random? random}) {
+  void toggleShuffle() {
     if (isEmpty) return;
 
     final current = currentTrack;
     _isShuffled = !_isShuffled;
 
     if (_isShuffled) {
+      _currentIndex = 0;
+      _effectiveTracks.clear();
       final remaining = List<Track>.from(_originalTracks);
       if (current != null) {
-        remaining.removeWhere((t) => t.id == current.id);
+        _effectiveTracks.add(current);
+        final idx = remaining.indexWhere((t) => t.id == current.id);
+        if (idx >= 0) {
+          remaining.removeAt(idx);
+        }
       }
-      remaining.shuffle(random);
-
-      _effectiveTracks
-        ..clear()
-        ..add(current!)
-        ..addAll(remaining);
-      _currentIndex = 0;
+      remaining.shuffle();
+      _effectiveTracks.addAll(remaining);
     } else {
       _effectiveTracks
         ..clear()
@@ -162,24 +151,20 @@ class PlaybackQueue {
     }
   }
 
-  /// Sets repeat mode.
   void setRepeatMode(RepeatMode mode) {
     _repeatMode = mode;
   }
 
-  /// Cycles through repeat modes: off -> all -> one -> off.
   RepeatMode cycleRepeatMode() {
     _repeatMode = _repeatMode.next();
     return _repeatMode;
   }
 
-  /// Appends a track to the end of the queue.
   void add(Track track) {
     _originalTracks.add(track);
     _effectiveTracks.add(track);
   }
 
-  /// Inserts a track immediately after current track.
   void insertNext(Track track) {
     _originalTracks.add(track);
     if (isEmpty) {
@@ -190,12 +175,21 @@ class PlaybackQueue {
     }
   }
 
-  /// Removes a track at [index].
   void removeAt(int index) {
     if (index < 0 || index >= _effectiveTracks.length) return;
 
     final removedTrack = _effectiveTracks.removeAt(index);
-    _originalTracks.removeWhere((t) => t.id == removedTrack.id);
+
+    if (!_isShuffled) {
+      _originalTracks.removeAt(index);
+    } else {
+      final origIndex = _originalTracks.indexWhere(
+        (t) => t.id == removedTrack.id,
+      );
+      if (origIndex >= 0) {
+        _originalTracks.removeAt(origIndex);
+      }
+    }
 
     if (_effectiveTracks.isEmpty) {
       _currentIndex = 0;
@@ -209,7 +203,6 @@ class PlaybackQueue {
     }
   }
 
-  /// Reorders track position in the active queue.
   void reorder(int oldIndex, int newIndex) {
     if (oldIndex < 0 ||
         oldIndex >= _effectiveTracks.length ||
@@ -231,7 +224,6 @@ class PlaybackQueue {
     }
   }
 
-  /// Clears the queue.
   void clear() {
     _originalTracks.clear();
     _effectiveTracks.clear();

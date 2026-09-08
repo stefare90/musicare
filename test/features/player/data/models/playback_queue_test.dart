@@ -99,6 +99,18 @@ void main() {
       expect(queue.currentIndex, equals(2));
     });
 
+    test('jumpToIndex sets current index when in range', () {
+      queue.setQueue(tracks, startIndex: 0);
+
+      final track = queue.jumpToIndex(2);
+      expect(track?.name, equals('Song 3'));
+      expect(queue.currentIndex, equals(2));
+
+      final invalid = queue.jumpToIndex(10);
+      expect(invalid, isNull);
+      expect(queue.currentIndex, equals(2));
+    });
+
     test(
       'toggleShuffle maintains current track at index 0 and unshuffle restores original order',
       () {
@@ -124,6 +136,17 @@ void main() {
       expect(queue.cycleRepeatMode(), equals(RepeatMode.all));
       expect(queue.cycleRepeatMode(), equals(RepeatMode.one));
       expect(queue.cycleRepeatMode(), equals(RepeatMode.off));
+    });
+
+    test('add appends track to end of queue', () {
+      queue.setQueue(tracks, startIndex: 0);
+      final newTrack = createTestTrack('4', 'Song 4');
+
+      queue.add(newTrack);
+
+      expect(queue.length, equals(4));
+      expect(queue.tracks.last.name, equals('Song 4'));
+      expect(queue.originalTracks.last.name, equals('Song 4'));
     });
 
     test('insertNext places track immediately after current pointer', () {
@@ -155,6 +178,40 @@ void main() {
       expect(queue.length, equals(2));
       expect(queue.currentIndex, equals(1));
       expect(queue.currentTrack?.name, equals('Song 3'));
+    });
+
+    test(
+      'removeAt handles duplicate tracks without removing other instances',
+      () {
+        final duplicateSong1 = createTestTrack('1', 'Song 1');
+        final duplicateQueueTracks = [
+          tracks[0], // Song 1 (id: 1)
+          tracks[1], // Song 2 (id: 2)
+          duplicateSong1, // Song 1 duplicate (id: 1)
+        ];
+
+        queue.setQueue(duplicateQueueTracks, startIndex: 1);
+
+        // Remove the first instance of Song 1 at index 0
+        queue.removeAt(0);
+
+        expect(queue.length, equals(2));
+        expect(queue.tracks[0].name, equals('Song 2'));
+        expect(queue.tracks[1].name, equals('Song 1'));
+        expect(queue.originalTracks.length, equals(2));
+        expect(queue.originalTracks.last.name, equals('Song 1'));
+      },
+    );
+
+    test('clear empties all tracks and resets queue', () {
+      queue.setQueue(tracks, startIndex: 1);
+
+      queue.clear();
+
+      expect(queue.isEmpty, isTrue);
+      expect(queue.currentTrack, isNull);
+      expect(queue.currentIndex, equals(0));
+      expect(queue.isShuffled, isFalse);
     });
   });
 }
