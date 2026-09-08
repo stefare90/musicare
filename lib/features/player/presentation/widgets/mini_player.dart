@@ -6,11 +6,10 @@ import 'package:music_are/core/widgets/media/media_cover_image.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/player/presentation/pages/full_player_page.dart';
+import 'package:music_are/features/player/presentation/widgets/playback_progress_bar.dart';
 
 class MiniPlayer extends StatelessWidget {
-  final VoidCallback? onExpand;
-
-  const MiniPlayer({super.key, this.onExpand});
+  const MiniPlayer({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -32,11 +31,11 @@ class MiniPlayer extends StatelessWidget {
           child: Material(
             color: context.colorScheme.surfaceContainerHigh,
             child: InkWell(
-              onTap: onExpand ?? () => FullPlayerPage.show(context),
+              onTap: () => FullPlayerPage.show(context),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const _MiniPlayerProgressBar(),
+                  const PlaybackProgressBar(),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12.0,
@@ -110,36 +109,6 @@ class MiniPlayer extends StatelessWidget {
                     ),
                   ),
                 ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _MiniPlayerProgressBar extends StatelessWidget {
-  const _MiniPlayerProgressBar();
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocSelector<PlayerCubit, PlayerState, double>(
-      selector: (state) {
-        if (state.duration.inMilliseconds <= 0) return 0.0;
-        return (state.position.inMilliseconds / state.duration.inMilliseconds)
-            .clamp(0.0, 1.0);
-      },
-      builder: (context, progress) {
-        return RepaintBoundary(
-          child: SizedBox(
-            width: double.infinity,
-            height: 2.0,
-            child: LinearProgressIndicator(
-              value: progress,
-              backgroundColor: Colors.transparent,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                context.colorScheme.primary,
               ),
             ),
           ),

@@ -7,6 +7,7 @@ import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
+import 'package:music_are/features/player/presentation/pages/full_player_page.dart';
 import 'package:music_are/features/player/presentation/widgets/mini_player.dart';
 
 class MockPlayerCubit extends Mock implements PlayerCubit {}
@@ -44,12 +45,12 @@ void main() {
       when(() => mockPlayerCubit.next()).thenAnswer((_) async {});
     });
 
-    Widget buildTestableWidget({VoidCallback? onExpand}) {
+    Widget buildTestableWidget() {
       return MaterialApp(
         home: Scaffold(
           body: BlocProvider<PlayerCubit>.value(
             value: mockPlayerCubit,
-            child: MiniPlayer(onExpand: onExpand),
+            child: const MiniPlayer(),
           ),
         ),
       );
@@ -131,8 +132,7 @@ void main() {
       verify(() => mockPlayerCubit.next()).called(1);
     });
 
-    testWidgets('tapping body triggers onExpand callback', (tester) async {
-      var didExpand = false;
+    testWidgets('tapping body opens FullPlayerPage', (tester) async {
       when(() => mockPlayerCubit.state).thenReturn(
         PlayerState(
           status: PlayerStatus.playing,
@@ -142,15 +142,13 @@ void main() {
         ),
       );
 
-      await tester.pumpWidget(
-        buildTestableWidget(onExpand: () => didExpand = true),
-      );
+      await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Come Together'));
       await tester.pumpAndSettle();
 
-      expect(didExpand, isTrue);
+      expect(find.byType(FullPlayerPage), findsOneWidget);
     });
   });
 }
