@@ -9,7 +9,6 @@ import 'package:music_are/features/player/data/models/playback_processing_state.
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/player/presentation/cubit/queue_state.dart';
-import 'package:music_are/features/player/presentation/pages/full_player_page.dart';
 import 'package:music_are/features/player/presentation/widgets/mini_player.dart';
 
 class MockPlayerCubit extends Mock implements PlayerCubit {}
@@ -48,12 +47,12 @@ void main() {
       when(() => mockPlayerCubit.previous()).thenAnswer((_) async {});
     });
 
-    Widget buildTestableWidget() {
+    Widget buildTestableWidget({VoidCallback? onTap}) {
       return MaterialApp(
         home: Scaffold(
           body: BlocProvider<PlayerCubit>.value(
             value: mockPlayerCubit,
-            child: const MiniPlayer(),
+            child: MiniPlayer(onTap: onTap),
           ),
         ),
       );
@@ -95,12 +94,16 @@ void main() {
       expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
       expect(find.byIcon(Icons.skip_next_rounded), findsOneWidget);
       expect(find.byIcon(Icons.skip_previous_rounded), findsOneWidget);
-      
+
       final previousButton = tester.widget<IconButton>(
-          find.ancestor(of: find.byIcon(Icons.skip_previous_rounded), matching: find.byType(IconButton)));
+        find.ancestor(
+          of: find.byIcon(Icons.skip_previous_rounded),
+          matching: find.byType(IconButton),
+        ),
+      );
       expect(previousButton.onPressed, isNotNull);
     });
-    
+
     testWidgets('disables previous button when hasPrevious is false', (
       tester,
     ) async {
@@ -119,9 +122,13 @@ void main() {
 
       await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
-      
+
       final previousButton = tester.widget<IconButton>(
-          find.ancestor(of: find.byIcon(Icons.skip_previous_rounded), matching: find.byType(IconButton)));
+        find.ancestor(
+          of: find.byIcon(Icons.skip_previous_rounded),
+          matching: find.byType(IconButton),
+        ),
+      );
       expect(previousButton.onPressed, isNull);
     });
 
@@ -187,34 +194,36 @@ void main() {
 
       verify(() => mockPlayerCubit.next()).called(1);
     });
-    
-    testWidgets('tapping skip previous triggers cubit previous when hasPrevious is true', (
-      tester,
-    ) async {
-      final track2 = createTestTrack('t2', 'Something');
-      when(() => mockPlayerCubit.state).thenReturn(
-        PlayerState(
-          isPlaying: true,
-          processingState: PlaybackProcessingState.ready,
-          queue: QueueState(
-            tracks: [testTrack, track2],
-            currentIndex: 1,
-            hasNext: false,
-            hasPrevious: true,
+
+    testWidgets(
+      'tapping skip previous triggers cubit previous when hasPrevious is true',
+      (tester) async {
+        final track2 = createTestTrack('t2', 'Something');
+        when(() => mockPlayerCubit.state).thenReturn(
+          PlayerState(
+            isPlaying: true,
+            processingState: PlaybackProcessingState.ready,
+            queue: QueueState(
+              tracks: [testTrack, track2],
+              currentIndex: 1,
+              hasNext: false,
+              hasPrevious: true,
+            ),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpWidget(buildTestableWidget());
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(buildTestableWidget());
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.skip_previous_rounded));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byIcon(Icons.skip_previous_rounded));
+        await tester.pumpAndSettle();
 
-      verify(() => mockPlayerCubit.previous()).called(1);
-    });
+        verify(() => mockPlayerCubit.previous()).called(1);
+      },
+    );
 
-    testWidgets('tapping body opens FullPlayerPage', (tester) async {
+    testWidgets('tapping body triggers onTap callback', (tester) async {
+      bool wasTapped = false;
       when(() => mockPlayerCubit.state).thenReturn(
         PlayerState(
           isPlaying: true,
@@ -223,13 +232,15 @@ void main() {
         ),
       );
 
-      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpWidget(
+        buildTestableWidget(onTap: () => wasTapped = true),
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Come Together'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(FullPlayerPage), findsOneWidget);
+      expect(wasTapped, isTrue);
     });
   });
 }

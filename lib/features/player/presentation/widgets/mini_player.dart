@@ -5,11 +5,12 @@ import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/core/widgets/media/media_cover_image.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
-import 'package:music_are/features/player/presentation/pages/full_player_page.dart';
 import 'package:music_are/features/player/presentation/widgets/playback_progress_bar.dart';
 
 class MiniPlayer extends StatelessWidget {
-  const MiniPlayer({super.key});
+  final VoidCallback? onTap;
+
+  const MiniPlayer({super.key, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +34,7 @@ class MiniPlayer extends StatelessWidget {
           child: Material(
             color: context.colorScheme.surfaceContainerHigh,
             child: InkWell(
-              onTap: () => FullPlayerPage.show(context),
+              onTap: onTap,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

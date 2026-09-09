@@ -142,7 +142,7 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
     *   [x] Add skip next button
     *   [x] Add tap gesture to open full-screen player modal
     *   [x] Widget tests for `MiniPlayer`
-    *   [ ] Add swipe to open mini player
+    *   [x] Add swipe to open mini player
     *   [x] Add back button in mini player
 
 ### 11.5. Presentation: Full-Player Modal Sheet (`lib/features/player/presentation/pages/`)
