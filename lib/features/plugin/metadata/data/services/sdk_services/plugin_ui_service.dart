@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gyawun_metadata_sdk/metadata/interfaces/iui_service.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/form_input_field.dart';
+import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 
 class PluginUiService implements IUIService {
@@ -91,7 +92,7 @@ class _DynamicPluginFormDialogState extends State<DynamicPluginFormDialog> {
               if (widget.message != null && widget.message!.isNotEmpty) ...[
                 Text(
                   widget.message!,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: context.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 16),
               ],

@@ -58,9 +58,8 @@ class InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final effectiveIconColor =
-        iconColor ?? theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7);
+        iconColor ?? context.colorScheme.onSurfaceVariant.withValues(alpha: 0.7);
 
     final primaryBtn = _buildButton(
       onPressed: onAction,
@@ -87,12 +86,12 @@ class InfoCard extends StatelessWidget {
 
     return Card(
       elevation: 0,
-      color: theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.4),
+      color: context.colorScheme.surfaceContainerHigh.withValues(alpha: 0.4),
       margin: margin,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.0),
         side: BorderSide(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.25),
+          color: context.colorScheme.outlineVariant.withValues(alpha: 0.25),
           width: 0.8,
         ),
       ),
@@ -111,7 +110,7 @@ class InfoCard extends StatelessWidget {
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: context.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.85),
+                color: context.colorScheme.onSurface.withValues(alpha: 0.85),
                 fontWeight: FontWeight.w600,
                 fontSize: 15.0,
               ),
@@ -124,7 +123,7 @@ class InfoCard extends StatelessWidget {
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: context.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                  color: context.colorScheme.onSurfaceVariant.withValues(
                     alpha: 0.65,
                   ),
                   fontSize: 13.0,

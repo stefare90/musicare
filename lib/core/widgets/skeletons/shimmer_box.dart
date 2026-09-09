@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:music_are/core/theme/theme_extension.dart';
 
 class ShimmerBox extends StatefulWidget {
   final double width;
@@ -42,9 +43,8 @@ class _ShimmerBoxState extends State<ShimmerBox>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final baseColor = theme.colorScheme.surfaceContainerHigh;
-    final highlightColor = theme.colorScheme.surfaceContainerHighest;
+    final baseColor = context.colorScheme.surfaceContainerHigh;
+    final highlightColor = context.colorScheme.surfaceContainerHighest;
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
+import 'package:music_are/core/theme/theme_extension.dart';
 
 abstract class Dialogs {
   static const String _loadingDialogRouteName = 'loading_dialog';
@@ -56,7 +57,7 @@ abstract class Dialogs {
         return AlertDialog(
           title: Text(title),
           content: Text(message),
-          actions: [
+          actions: [ 
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
               child: Text(cancelLabel ?? context.l10n.cancel),
@@ -85,8 +86,7 @@ abstract class Dialogs {
     IconData? secondaryIcon,
     VoidCallback? onSecondaryAction,
   }) async {
-    final theme = Theme.of(context);
-    final effectiveIconColor = iconColor ?? theme.colorScheme.primary;
+    final effectiveIconColor = iconColor ?? context.colorScheme.primary;
 
     return showDialog<void>(
       context: context,
@@ -102,7 +102,7 @@ abstract class Dialogs {
               Expanded(
                 child: Text(
                   title,
-                  style: theme.textTheme.titleMedium?.copyWith(
+                  style: context.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -110,7 +110,7 @@ abstract class Dialogs {
             ],
           ),
           content: SingleChildScrollView(
-            child: SelectableText(message, style: theme.textTheme.bodyMedium),
+            child: SelectableText(message, style: context.textTheme.bodyMedium),
           ),
           actions: [
             if (secondaryLabel != null)
@@ -162,7 +162,7 @@ abstract class Dialogs {
     return showInfo(
       context,
       icon: Icons.bug_report_outlined,
-      iconColor: Theme.of(context).colorScheme.error,
+      iconColor: context.colorScheme.error,
       title: l10n.logErrorTitle(title),
       message: fullErrorDetails,
       primaryLabel: l10n.ok,
@@ -179,7 +179,6 @@ abstract class Dialogs {
     BuildContext context, {
     required String message,
   }) {
-    final theme = Theme.of(context);
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -188,15 +187,15 @@ abstract class Dialogs {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.0),
         ),
-        backgroundColor: theme.colorScheme.surfaceContainerHigh,
+        backgroundColor: context.colorScheme.surfaceContainerHigh,
         content: Row(
           children: [
-            Icon(Icons.error_outline_rounded, color: theme.colorScheme.error),
+            Icon(Icons.error_outline_rounded, color: context.colorScheme.error),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 message,
-                style: TextStyle(color: theme.colorScheme.onSurface),
+                style: TextStyle(color: context.colorScheme.onSurface),
               ),
             ),
           ],

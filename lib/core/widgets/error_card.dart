@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
+import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/core/widgets/dialogs.dart';
 import 'package:music_are/core/widgets/info_card.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/exception_localizer.dart';
@@ -21,11 +22,10 @@ class ErrorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final theme = Theme.of(context);
 
     return InfoCard(
       icon: icon,
-      iconColor: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+      iconColor: context.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
       title: error.toLocalizedString(context),
       onAction: onRetry,
       actionLabel: l10n.retry,

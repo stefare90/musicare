@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/image.dart' as sdk;
 import 'package:music_are/core/models/media_type.dart';
+import 'package:music_are/core/theme/theme_extension.dart';
 
 class MediaCoverImage extends StatelessWidget {
   final List<sdk.Image>? images;
@@ -61,8 +62,7 @@ class MediaCoverImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final validUrls =
-        images
+    final validUrls = images
             ?.map((i) => i.url)
             .where((url) => url.trim().isNotEmpty)
             .toList() ??
@@ -128,7 +128,7 @@ class MediaCoverImage extends StatelessWidget {
       fadeInDuration: const Duration(milliseconds: 180),
       placeholder: (_, _) => _buildLoadingPlaceholder(context),
       errorWidget: (_, _, _) =>
-          Container(color: Theme.of(context).colorScheme.surfaceContainerHigh),
+          Container(color: context.colorScheme.surfaceContainerHigh),
     );
   }
 
@@ -136,9 +136,7 @@ class MediaCoverImage extends StatelessWidget {
     return Container(
       width: width,
       height: height,
-      color: Theme.of(
-        context,
-      ).colorScheme.surfaceContainerHigh.withValues(alpha: 0.7),
+      color: context.colorScheme.surfaceContainerHigh.withValues(alpha: 0.7),
     );
   }
 
@@ -146,12 +144,12 @@ class MediaCoverImage extends StatelessWidget {
     return Container(
       width: width,
       height: height,
-      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+      color: context.colorScheme.surfaceContainerHigh,
       child: Center(
         child: Icon(
           _effectiveFallbackIcon,
           size: (width != null && width! < 60) ? 24 : 40,
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+          color: context.colorScheme.primary.withValues(alpha: 0.5),
         ),
       ),
     );
