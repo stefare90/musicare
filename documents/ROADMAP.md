@@ -137,39 +137,50 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
     *   [x] Comprehensive unit tests for `PlayerCubit` with queue operations
 
 ### 11.4. Presentation: Persistent Mini-Player (`lib/features/player/presentation/widgets/`)
-*   [x] **MiniPlayer Widget**:
-    *   [x] Basic `MiniPlayer` layout in `ShellPage` (thumbnail, title, artist, progress bar, play/pause toggle)
-    *   [x] Add skip next button
-    *   [x] Add tap gesture to open full-screen player modal
-    *   [x] Widget tests for `MiniPlayer`
-    *   [x] Add swipe to open mini player
-    *   [x] Add back button in mini player
+*   [x] **MiniPlayer Widget & Interactive Sliding Shell**:
+    *   [x] `MiniPlayer` compact layout in `ShellPage` (cover art, title, artist, progress bar, play/pause, skip next/prev)
+    *   [x] Tap on miniplayer to expand to full player
+    *   [x] Interactive frame-by-frame drag tracking with velocity snapping (150 px/s threshold)
+    *   [x] `BackButtonListener` integration in `ShellPage` to collapse player on system back gesture without popping sub-routes
+    *   [x] Instant miniplayer fade-out on drag start
+    *   [x] Widget tests for `MiniPlayer` and `ShellPage`
 
-### 11.5. Presentation: Full-Player Modal Sheet (`lib/features/player/presentation/pages/`)
-*   [ ] **FullPlayerPage UI**:
-    *   [ ] Full-screen draggable modal bottom sheet with smooth transition
-    *   [ ] Large cover art, title, artists with navigation
-    *   [ ] Interactive scrubber / slider with current position and duration labels
-    *   [ ] Playback control row: Shuffle, Previous, Play/Pause, Next, Repeat
-    *   [ ] Stream quality badge and queue button
-*   [ ] **QueueBottomSheet**:
-    *   [ ] Reorderable queue view (`ReorderableListView`) with swipe-to-remove
+### 11.5. Presentation: Full-Player Page & Queue Sheet (`lib/features/player/presentation/`)
+*   [ ] **FullPlayerPage UI (`pages/full_player_page.dart`)**:
+    *   [ ] Large cover art with smooth corner radius and shadow
+    *   [ ] Track title, album name, and interactive artist chips for direct navigation
+    *   [ ] Interactive progress slider/scrubber with seek preview and elapsed/remaining duration labels
+    *   [ ] Primary playback control bar: Shuffle toggle, Previous track, Play/Pause with loading spinner, Next track, Repeat mode cycle
+    *   [ ] Bottom action bar: Stream quality/codec badge (e.g. "M4A • 160 kbps") and Queue button
+*   [ ] **QueueBottomSheet (`widgets/queue_bottom_sheet.dart`)**:
+    *   [ ] Modal bottom sheet displaying active playback queue
+    *   [ ] Reorderable track list (`ReorderableListView.builder`)
+    *   [ ] Swipe-to-remove track gesture with undo capability
+    *   [ ] Active playing track highlight and tap-to-skip
 *   [ ] **Widget Tests**:
-    *   [ ] Widget tests for `FullPlayerPage` and `QueueBottomSheet`
+    *   [ ] Comprehensive widget tests for `FullPlayerPage` and `QueueBottomSheet`
 
 ### 11.6. Global App Integration & Media Tap Wiring
-*   [ ] **App-wide Playback Integration**:
-    *   [ ] Connect tap-to-play with context queue on `AlbumPage`, `PlaylistPage`, `ArtistPage`
-    *   [ ] Active track visual indicator on all lists (`isPlaying`)
+*   [x] **Contextual Tap-to-Play**:
+    *   [x] Connect tap-to-play with context queue on `AlbumPage`
+    *   [x] Connect tap-to-play with context queue on `PlaylistPage`
+    *   [x] Connect tap-to-play with context queue on `ArtistPage` (Popular Tracks matrix)
+*   [x] **Visual State Feedback**:
+    *   [x] Active track highlight (`isPlaying`) across all track list tiles
+*   [ ] **Options Menu Integration**:
     *   [ ] Wire "Add to Queue" option in `TrackOptionsBottomSheet`
 
-### 11.7. Test Suite (`test/features/player/`)
-*   [ ] **Unit Tests**:
-    *   [ ] `AudioStreamResolverTest`: test di fallback sui candidati alternativi in caso di errore 403 o eccezione del primo stream.
-    *   [ ] `PlayerCubitTest`: test del ciclo di vita completo (play, pause, next, prev, repeat modes, shuffle, gestione coda, seek).
-*   [ ] **Widget Tests**:
-    *   [ ] `MiniPlayerTest`: verifica rendering, cambi di stato play/pause, tap per apertura full player, barra di avanzamento.
-    *   [ ] `FullPlayerPageTest`: verifica controlli, slider seek, visualizzazione metadati e apertura coda.
+### 11.7. Test Suite Status (`test/features/player/`)
+*   [x] **Unit Tests (`test/features/player/data/` & `cubit/`)**:
+    *   [x] `AudioStreamResolverTest`: Validates stream resolution and multi-candidate fallback on 403 CDN errors
+    *   [x] `ResolvedPlaybackTrackTest`: Validates candidate iteration, expiration checks, and fallback states
+    *   [x] `PlaybackQueueTest`: Validates immutable queue manipulations, shuffle, and repeat modes
+    *   [x] `AudioPlayerServiceTest`: Validates full playback lifecycle, auto-advance, and service event orchestration
+    *   [x] `PlayerCubitTest`: Validates state mapping from audio service and cubit command delegation
+*   [x] **Widget Tests (`test/features/player/presentation/`)**:
+    *   [x] `MiniPlayerTest`: Validates rendering, play/pause toggles, skip buttons, and tap callbacks
+    *   [x] `ShellPageTest`: Validates frame-by-frame sliding expansion, collapse via down arrow, and back gesture priority
+    *   [ ] `FullPlayerPageTest`: Pending UI implementation (Step 11.5)
 
 ## 🔍 Phase 12: Search Feature (`lib/features/search/`)
 *   [ ] **State Management**:
@@ -195,14 +206,12 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 *   [ ] Add local disk caching for metadata responses and cover art
 *   [ ] Implement Settings page (active metadata and audio source plugin management, cache clearing, theme selection)
 
-## To Fix Now
-
 ## To Fix Later
-*   [ ] Fast up media cover image show
-*   [ ] Fix media cover image sometimes don't appear
-*   [ ] manage http request to be compliant with used api (to manage in sdk)
-*   [ ] Improve Fans Like Also to avoid exceptions 
-*   [ ] Add artist list e album name in bottom modal options
-*   [ ] Manage orizontal layout |===|
-*   [ ] Add Favorites function to Artists, Albums and Songs
-*   [ ] Improve Top Tracks to retrieve true top tracks basing on listenbrainz instead musicbrainz
+*   [ ] Speed up media cover image rendering and cache warm-up
+*   [ ] Fix media cover image occasionally not appearing on cold loads
+*   [ ] Manage HTTP client request rate-limits to strictly comply with third-party API policies (SDK-level)
+*   [ ] Improve 'Fans Also Like' error handling and fallback on sparse artist data
+*   [ ] Add artist list and album name in bottom modal options
+*   [ ] Implement responsive horizontal landscape layout support
+*   [ ] Implement Favorites / Saved library functionality for Artists, Albums, and Tracks
+*   [ ] Improve Artist Top Tracks to fetch true popular tracks via ListenBrainz instead of MusicBrainz work metadata
