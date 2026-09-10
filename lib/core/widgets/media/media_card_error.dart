@@ -55,9 +55,7 @@ class MediaCardError extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: context.textTheme.titleMedium?.copyWith(
-              fontSize: 12.0,
-              fontWeight: FontWeight.w500,
+            style: context.textTheme.titleSmall?.copyWith(
               color: titleColor,
             ),
           ),
@@ -68,7 +66,6 @@ class MediaCardError extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
             style: context.textTheme.labelSmall?.copyWith(
-              fontSize: 10.0,
               color: subTextColor,
             ),
           ),

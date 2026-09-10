@@ -23,6 +23,8 @@ class PlayerCubit extends SafeCubit<PlayerState> {
   Future<void> next() => _service.next();
   Future<void> previous() => _service.previous();
   Future<void> skipToIndex(int index) => _service.skipToIndex(index);
+  Future<void> selectStreamCandidate(int candidateIndex) =>
+      _service.selectStreamCandidate(candidateIndex);
   Future<void> togglePlayPause() => _service.togglePlayPause();
   Future<void> play() => _service.play();
   Future<void> pause() => _service.pause();

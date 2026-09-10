@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
-import 'package:music_are/features/player/data/models/repeat_mode.dart';
+import 'package:music_are/features/player/data/models/playback_repeat_mode.dart';
 
 @immutable
 class PlaybackQueue {
@@ -8,14 +8,14 @@ class PlaybackQueue {
   final List<Track> originalTracks;
   final int currentIndex;
   final bool isShuffled;
-  final RepeatMode repeatMode;
+  final PlaybackRepeatMode repeatMode;
 
   const PlaybackQueue({
     this.tracks = const [],
     this.originalTracks = const [],
     this.currentIndex = 0,
     this.isShuffled = false,
-    this.repeatMode = RepeatMode.off,
+    this.repeatMode = PlaybackRepeatMode.off,
   });
 
   int get length => tracks.length;
@@ -31,7 +31,8 @@ class PlaybackQueue {
 
   bool get hasNext {
     if (isEmpty) return false;
-    if (repeatMode == RepeatMode.all || repeatMode == RepeatMode.one) {
+    if (repeatMode == PlaybackRepeatMode.all ||
+        repeatMode == PlaybackRepeatMode.one) {
       return true;
     }
     return currentIndex + 1 < tracks.length;
@@ -39,7 +40,7 @@ class PlaybackQueue {
 
   bool get hasPrevious {
     if (isEmpty) return false;
-    if (repeatMode == RepeatMode.all) return true;
+    if (repeatMode == PlaybackRepeatMode.all) return true;
     return currentIndex > 0;
   }
 
@@ -59,7 +60,7 @@ class PlaybackQueue {
   PlaybackQueue? next() {
     if (isEmpty) return null;
 
-    if (repeatMode == RepeatMode.one) {
+    if (repeatMode == PlaybackRepeatMode.one) {
       return this;
     }
 
@@ -67,7 +68,7 @@ class PlaybackQueue {
       return copyWith(currentIndex: currentIndex + 1);
     }
 
-    if (repeatMode == RepeatMode.all) {
+    if (repeatMode == PlaybackRepeatMode.all) {
       return copyWith(currentIndex: 0);
     }
 
@@ -81,7 +82,7 @@ class PlaybackQueue {
       return copyWith(currentIndex: currentIndex - 1);
     }
 
-    if (repeatMode == RepeatMode.all && tracks.isNotEmpty) {
+    if (repeatMode == PlaybackRepeatMode.all && tracks.isNotEmpty) {
       return copyWith(currentIndex: tracks.length - 1);
     }
 
@@ -148,7 +149,7 @@ class PlaybackQueue {
     return copyWith(repeatMode: repeatMode.next());
   }
 
-  PlaybackQueue setRepeatMode(RepeatMode mode) {
+  PlaybackQueue setRepeatMode(PlaybackRepeatMode mode) {
     return copyWith(repeatMode: mode);
   }
 
@@ -255,7 +256,7 @@ class PlaybackQueue {
     List<Track>? originalTracks,
     int? currentIndex,
     bool? isShuffled,
-    RepeatMode? repeatMode,
+    PlaybackRepeatMode? repeatMode,
   }) {
     return PlaybackQueue(
       tracks: tracks ?? this.tracks,

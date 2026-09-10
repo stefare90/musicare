@@ -196,55 +196,65 @@ class _ShellPageState extends State<ShellPage>
                             ],
                           ),
                         ),
+
                         // Sliding Player Panel
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          bottom: playerBottom,
-                          height: playerHeight,
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onVerticalDragStart: _handleDragStart,
-                            onVerticalDragUpdate: (details) =>
-                                _handleDragUpdate(details, dragDistance),
-                            onVerticalDragEnd: _handleDragEnd,
-                            onVerticalDragCancel: _handleDragCancel,
-                            child: Material(
-                              color: context.colorScheme.surfaceContainerHigh,
-                              elevation: progress > 0 ? 8 : 2,
-                              clipBehavior: Clip.antiAlias,
-                              child: Stack(
-                                children: [
-                                  // Full Player
-                                  if (progress > 0.0)
-                                    Positioned.fill(
-                                      child: Opacity(
-                                        opacity: progress.clamp(0.0, 1.0),
-                                        child: FullPlayerPage(
-                                          onCollapse: _collapse,
+                        if (hasTrack)
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: playerBottom,
+                            height: playerHeight,
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onVerticalDragStart: _handleDragStart,
+                              onVerticalDragUpdate: (details) =>
+                                  _handleDragUpdate(details, dragDistance),
+                              onVerticalDragEnd: _handleDragEnd,
+                              onVerticalDragCancel: _handleDragCancel,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(16.0 * progress),
+                                ),
+                                child: Material(
+                                  color: context.colorScheme.surface,
+                                  elevation: progress > 0 ? 8 : 2,
+                                  clipBehavior: Clip.antiAlias,
+                                  child: Stack(
+                                    children: [
+                                      // Full Player: Static definitive layout anchored to top of expanding panel
+                                      if (progress > 0.0)
+                                        Positioned(
+                                          top: 0,
+                                          left: 0,
+                                          right: 0,
+                                          height: screenHeight,
+                                          child: Opacity(
+                                            opacity: progress.clamp(0.0, 1.0),
+                                            child: FullPlayerPage(
+                                              onCollapse: _collapse,
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                  // Mini Player
-                                  if (progress < 0.08)
-                                    Positioned(
-                                      top: 0,
-                                      left: 0,
-                                      right: 0,
-                                      height: _miniPlayerHeight,
-                                      child: Opacity(
-                                        opacity: (1.0 - progress * 12.0).clamp(
-                                          0.0,
-                                          1.0,
+
+                                      // Mini Player: rapidly fades out when dragging starts
+                                      if (progress < 0.08)
+                                        Positioned(
+                                          top: 0,
+                                          left: 0,
+                                          right: 0,
+                                          height: _miniPlayerHeight,
+                                          child: Opacity(
+                                            opacity: (1.0 - progress * 12.0)
+                                                .clamp(0.0, 1.0),
+                                            child: MiniPlayer(onTap: _expand),
+                                          ),
                                         ),
-                                        child: MiniPlayer(onTap: _expand),
-                                      ),
-                                    ),
-                                ],
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
                       ],
                     );
                   },

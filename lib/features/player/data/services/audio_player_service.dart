@@ -4,6 +4,7 @@ import 'package:music_are/features/player/data/models/playback_data.dart';
 import 'package:music_are/features/player/data/models/playback_processing_state.dart';
 import 'package:music_are/features/player/data/services/audio_player_driver.dart';
 import 'package:music_are/features/player/data/services/audio_stream_resolver.dart';
+import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
 
 class AudioPlayerService {
   final AudioPlayerDriver _driver;
@@ -113,6 +114,43 @@ class AudioPlayerService {
     }
   }
 
+  Future<void> selectStreamCandidate(int candidateIndex) async {
+    final track = _playbackData.currentTrack;
+    final candidates = _playbackData.candidates;
+    if (track == null ||
+        candidateIndex < 0 ||
+        candidateIndex >= candidates.streams.length ||
+        candidateIndex == candidates.activeIndex) {
+      return;
+    }
+
+    final currentPos = _driver.position;
+    final wasPlaying = _driver.isPlaying;
+
+    final updatedCandidates = candidates.select(candidateIndex);
+    _updateData(
+      _playbackData.copyWith(
+        candidates: updatedCandidates,
+        processingState: PlaybackProcessingState.loading,
+      ),
+    );
+
+    try {
+      final stream = updatedCandidates.activeStream;
+      if (stream != null) {
+        await _driver.loadStream(track: track, stream: stream);
+      }
+      if (currentPos > Duration.zero) {
+        await _driver.seek(currentPos);
+      }
+      if (wasPlaying) {
+        await _driver.play();
+      }
+    } catch (e) {
+      _updateData(_playbackData.copyWith(error: e));
+    }
+  }
+
   Future<void> _playCurrentQueueTrack() async {
     final track = _playbackData.currentTrack;
     if (track == null) return;
@@ -130,21 +168,25 @@ class AudioPlayerService {
     );
 
     try {
-      final resolved = await _resolver.resolveTrack(track);
+      var resolvedCandidates = await _resolver.resolveTrack(track);
       if (sessionId != _sessionCounter) return;
+
+      _updateData(_playbackData.copyWith(candidates: resolvedCandidates));
 
       bool isLoaded = false;
       while (!isLoaded) {
         try {
-          await _driver.loadStream(
-            track: resolved.track,
-            stream: resolved.currentStream,
-          );
+          final stream = resolvedCandidates.activeStream;
+          if (stream == null) {
+            throw const StreamResolutionException('No stream available');
+          }
+          await _driver.loadStream(track: track, stream: stream);
           isLoaded = true;
         } catch (e) {
           if (sessionId != _sessionCounter) return;
-          if (resolved.hasMoreCandidates) {
-            resolved.nextCandidate();
+          if (resolvedCandidates.hasNext) {
+            resolvedCandidates = resolvedCandidates.next();
+            _updateData(_playbackData.copyWith(candidates: resolvedCandidates));
           } else {
             rethrow;
           }

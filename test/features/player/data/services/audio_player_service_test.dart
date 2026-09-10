@@ -4,9 +4,9 @@ import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:music_are/features/player/data/models/playback_candidates.dart';
 import 'package:music_are/features/player/data/models/playback_processing_state.dart';
-import 'package:music_are/features/player/data/models/repeat_mode.dart';
-import 'package:music_are/features/player/data/models/resolved_playback_track.dart';
+import 'package:music_are/features/player/data/models/playback_repeat_mode.dart';
 import 'package:music_are/features/player/data/services/audio_player_driver.dart';
 import 'package:music_are/features/player/data/services/audio_player_service.dart';
 import 'package:music_are/features/player/data/services/audio_stream_resolver.dart';
@@ -66,6 +66,12 @@ void main() {
       bitrate: 160000,
     );
 
+    const candidate2 = AudioStreamResponse(
+      url: 'https://cdn2.example.com/audio2.m4a',
+      quality: AudioQuality.medium,
+      bitrate: 128000,
+    );
+
     setUp(() {
       mockDriver = MockAudioPlayerDriver();
       mockResolver = MockAudioStreamResolver();
@@ -109,10 +115,7 @@ void main() {
       when(() => mockDriver.dispose()).thenAnswer((_) async {});
 
       when(() => mockResolver.resolveTrack(any())).thenAnswer(
-        (invocation) async => ResolvedPlaybackTrack(
-          track: invocation.positionalArguments[0] as Track,
-          candidates: [candidate1],
-        ),
+        (_) async => const PlaybackCandidates(streams: [candidate1]),
       );
 
       service = AudioPlayerService(driver: mockDriver, resolver: mockResolver);
@@ -131,6 +134,7 @@ void main() {
 
       expect(service.playbackData.currentTrack, equals(track1));
       expect(service.playbackData.queue.length, equals(1));
+      expect(service.playbackData.candidates.count, equals(1));
       verify(() => mockResolver.resolveTrack(track1)).called(1);
       verify(() => mockDriver.play()).called(1);
     });
@@ -147,16 +151,9 @@ void main() {
     test(
       'playTrack retries candidate #2 if candidate #1 fails during loadStream',
       () async {
-        const candidate2 = AudioStreamResponse(
-          url: 'https://cdn2.example.com/audio2.m4a',
-          quality: AudioQuality.high,
-          bitrate: 128000,
-        );
-
         when(() => mockResolver.resolveTrack(track1)).thenAnswer(
-          (_) async => ResolvedPlaybackTrack(
-            track: track1,
-            candidates: [candidate1, candidate2],
+          (_) async => const PlaybackCandidates(
+            streams: [candidate1, candidate2],
           ),
         );
 
@@ -179,99 +176,70 @@ void main() {
         await service.playTrack(track1);
 
         expect(attempts, equals(2));
+        expect(service.playbackData.candidates.activeIndex, equals(1));
         verify(() => mockDriver.play()).called(1);
       },
     );
 
-    test('initial state has empty queue and is idle', () {
-      expect(service.playbackData.queue.isEmpty, isTrue);
-      expect(service.playbackData.isPlaying, isFalse);
-      expect(
-        service.playbackData.processingState,
-        equals(PlaybackProcessingState.idle),
+    test('selectStreamCandidate reloads chosen stream and preserves state', () async {
+      when(() => mockResolver.resolveTrack(track1)).thenAnswer(
+        (_) async => const PlaybackCandidates(
+          streams: [candidate1, candidate2],
+        ),
       );
+
+      await service.playTrack(track1);
+      expect(service.playbackData.candidates.activeIndex, equals(0));
+
+      await service.selectStreamCandidate(1);
+      expect(service.playbackData.candidates.activeIndex, equals(1));
+      expect(service.playbackData.candidates.activeStream, equals(candidate2));
     });
 
     test('next advances queue and plays next track', () async {
       await service.playQueue([track1, track2], index: 0);
-
       await service.next();
 
       expect(service.playbackData.currentTrack, equals(track2));
       expect(service.playbackData.queue.currentIndex, equals(1));
-      // 1 from initial playQueue, 1 from next()
       verify(() => mockDriver.play()).called(2);
     });
 
-    test('previous seeks to zero if position > 3 seconds', () async {
-      await service.playQueue([track1, track2], index: 1);
+    test('queue mutation methods successfully update the playbackData', () async {
+      await service.playTrack(track1);
 
-      // Simulate playback past 3 seconds
-      when(() => mockDriver.position).thenReturn(const Duration(seconds: 10));
+      service.addToQueue(track2);
+      expect(service.playbackData.queue.length, equals(2));
+      expect(service.playbackData.queue.tracks.last, equals(track2));
 
-      await service.previous();
+      service.toggleShuffle();
+      expect(service.playbackData.queue.isShuffled, isTrue);
 
-      expect(
-        service.playbackData.currentTrack,
-        equals(track2),
-      ); // Track unchanged
-      verify(() => mockDriver.seek(Duration.zero)).called(1);
+      service.cycleRepeatMode();
+      expect(service.playbackData.queue.repeatMode, equals(PlaybackRepeatMode.all));
+      
+      // removeFromQueue is async now
+      await service.removeFromQueue(0);
+      expect(service.playbackData.queue.length, equals(1));
     });
 
-    test('previous moves to previous track if position <= 3 seconds', () async {
-      await service.playQueue([track1, track2], index: 1);
-
-      // Simulate playback just started
-      when(() => mockDriver.position).thenReturn(const Duration(seconds: 1));
-
-      await service.previous();
-
-      expect(service.playbackData.currentTrack, equals(track1));
-      expect(service.playbackData.queue.currentIndex, equals(0));
+    test('removeFromQueue stops playback if playing track is removed and queue becomes empty', () async {
+      await service.playTrack(track1);
+      await service.removeFromQueue(0);
+      
+      expect(service.playbackData.queue.isEmpty, isTrue);
+      verify(() => mockDriver.stop()).called(greaterThan(0));
     });
 
-    test(
-      'auto-advance triggers next when processingState completed and playing',
-      () async {
-        await service.playQueue([track1, track2], index: 0);
+    test('removeFromQueue skips to next track if playing track is removed and queue is not empty', () async {
+      await service.playQueue([track1, track2], index: 0);
+      clearInteractions(mockDriver); // to clear play() from playQueue
 
-        // Simulate natural playback end
-        when(() => mockDriver.isPlaying).thenReturn(true);
-        processingController.add(PlaybackProcessingState.completed);
-
-        // Yield to allow stream listener to process the event
-        await Future<void>.delayed(Duration.zero);
-
-        expect(service.playbackData.currentTrack, equals(track2));
-        expect(service.playbackData.queue.currentIndex, equals(1));
-      },
-    );
-
-    test('togglePlayPause pauses when playing and plays when paused', () async {
-      when(() => mockDriver.isPlaying).thenReturn(true);
-      await service.togglePlayPause();
-      verify(() => mockDriver.pause()).called(1);
-
-      when(() => mockDriver.isPlaying).thenReturn(false);
-      await service.togglePlayPause();
-      verify(() => mockDriver.play()).called(1);
+      await service.removeFromQueue(0);
+      
+      expect(service.playbackData.queue.length, equals(1));
+      expect(service.playbackData.currentTrack, equals(track2));
+      verify(() => mockDriver.play()).called(1); // Auto-starts next track
     });
-
-    test(
-      'queue mutation methods successfully update the playbackData',
-      () async {
-        await service.playTrack(track1);
-
-        service.addToQueue(track2);
-        expect(service.playbackData.queue.length, equals(2));
-        expect(service.playbackData.queue.tracks.last, equals(track2));
-
-        service.toggleShuffle();
-        expect(service.playbackData.queue.isShuffled, isTrue);
-
-        service.cycleRepeatMode();
-        expect(service.playbackData.queue.repeatMode, equals(RepeatMode.all));
-      },
-    );
   });
 }

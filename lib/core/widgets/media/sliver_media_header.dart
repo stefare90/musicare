@@ -44,8 +44,7 @@ class SliverMediaHeader extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: context.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+              style: context.textTheme.headlineSmall?.copyWith(
                 color: context.colorScheme.primary,
               ),
             ),
@@ -56,9 +55,8 @@ class SliverMediaHeader extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: context.textTheme.bodyMedium?.copyWith(
+                style: context.textTheme.titleSmall?.copyWith(
                   color: context.colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -69,11 +67,10 @@ class SliverMediaHeader extends StatelessWidget {
                 maxLines: 4,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: context.textTheme.bodyMedium?.copyWith(
+                style: context.textTheme.bodySmall?.copyWith(
                   color: context.colorScheme.onSurfaceVariant.withValues(
                     alpha: 0.5,
                   ),
-                  fontSize: 13,
                 ),
               ),
             ],

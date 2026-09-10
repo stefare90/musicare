@@ -29,10 +29,19 @@ class MiniPlayer extends StatelessWidget {
 
         final artistNames = track.artists.map((a) => a.name).join(', ');
 
-        return SizedBox(
+        return Container(
           width: double.infinity,
-          child: Material(
+          decoration: BoxDecoration(
             color: context.colorScheme.surfaceContainerHigh,
+            border: Border(
+              bottom: BorderSide(
+                color: context.colorScheme.primary.withValues(alpha: 0.1),
+                width: 0.8,
+              ),
+            ),
+          ),
+          child: Material(
+            color: Colors.transparent,
             child: InkWell(
               onTap: onTap,
               child: Column(
@@ -63,19 +72,14 @@ class MiniPlayer extends StatelessWidget {
                                 track.name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: context.textTheme.titleMedium?.copyWith(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: context.textTheme.titleSmall,
                               ),
                               if (artistNames.isNotEmpty)
                                 Text(
                                   artistNames,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: context.textTheme.labelSmall?.copyWith(
-                                    color: context.colorScheme.onSurfaceVariant,
-                                  ),
+                                  style: context.textTheme.labelSmall,
                                 ),
                             ],
                           ),

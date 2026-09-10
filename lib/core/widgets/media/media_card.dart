@@ -55,9 +55,7 @@ class MediaCard extends StatelessWidget {
                       meta.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: context.textTheme.titleMedium?.copyWith(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.bold,
+                      style: context.textTheme.titleSmall?.copyWith(
                         color: context.colorScheme.primary,
                         height: 1.15,
                       ),
@@ -68,10 +66,7 @@ class MediaCard extends StatelessWidget {
                         subtitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: context.textTheme.labelSmall?.copyWith(
-                          fontSize: 10.5,
-                          color: context.colorScheme.onSurfaceVariant,
-                        ),
+                        style: context.textTheme.labelSmall,
                       ),
                   ],
                 ),

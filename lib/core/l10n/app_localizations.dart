@@ -266,7 +266,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Failed to fetch online plugins: {error}'**
-  String failedToFetchPlugins(String error);
+  String failedToFetchPlugins(Object error);
 
   /// No description provided for @pluginErrorIncompatibleSdkVersion.
   ///
@@ -326,9 +326,9 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'An unexpected error occurred: {details}'**
-  String pluginErrorUnknown(String details);
+  String pluginErrorUnknown(Object details);
 
-  /// Error message when no audio stream candidates can be resolved for a track
+  /// No description provided for @pluginErrorStreamResolution.
   ///
   /// In en, this message translates to:
   /// **'No playable audio stream could be found for this track.'**
@@ -428,7 +428,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Installed version: v{version}'**
-  String installedVersion(String version);
+  String installedVersion(Object version);
 
   /// No description provided for @providerIncompatibleMessage.
   ///
@@ -440,13 +440,13 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Active Provider: {name}'**
-  String activeProviderName(String name);
+  String activeProviderName(Object name);
 
   /// No description provided for @providerVersion.
   ///
   /// In en, this message translates to:
   /// **'Version {version}'**
-  String providerVersion(String version);
+  String providerVersion(Object version);
 
   /// No description provided for @disconnect.
   ///
@@ -470,7 +470,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'By {author}'**
-  String byAuthor(String author);
+  String byAuthor(Object author);
 
   /// No description provided for @updateRequiredMessage.
   ///
@@ -524,7 +524,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{title} - Log'**
-  String logErrorTitle(String title);
+  String logErrorTitle(Object title);
 
   /// No description provided for @selectMetadataProvider.
   ///
@@ -574,11 +574,65 @@ abstract class AppLocalizations {
   /// **'Select an audio stream provider to enable music playback'**
   String get selectAudioSourceSubtitle;
 
-  /// Badge label indicating an active/configured plugin
+  /// No description provided for @activeLabel.
   ///
   /// In en, this message translates to:
   /// **'Active'**
   String get activeLabel;
+
+  /// No description provided for @playbackQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback Queue'**
+  String get playbackQueue;
+
+  /// No description provided for @queueEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue is empty'**
+  String get queueEmpty;
+
+  /// No description provided for @audioStreamCandidates.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio Stream Candidates'**
+  String get audioStreamCandidates;
+
+  /// No description provided for @availableStreamsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} available stream(s)'**
+  String availableStreamsCount(Object count);
+
+  /// No description provided for @candidateStreamTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Candidate #{index} ({codec} • {bitrate})'**
+  String candidateStreamTitle(Object bitrate, Object codec, Object index);
+
+  /// No description provided for @lyricsComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics coming soon'**
+  String get lyricsComingSoon;
+
+  /// No description provided for @downloadComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Download coming soon'**
+  String get downloadComingSoon;
+
+  /// No description provided for @favoritesComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites coming soon'**
+  String get favoritesComingSoon;
+
+  /// No description provided for @selectArtistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Artist'**
+  String get selectArtistTitle;
 }
 
 class _AppLocalizationsDelegate

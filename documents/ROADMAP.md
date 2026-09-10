@@ -126,14 +126,15 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 
 ### 11.3. Player State Management & Queue Model (`lib/features/player/presentation/cubit/`)
 *   [x] **Queue Domain Model**:
-    *   [x] Implement `PlaybackQueue` model and `RepeatMode` enum (`off`, `all`, `one`) with shuffle and queue manipulation logic
+    *   [x] Implement `PlaybackQueue` model and `PlaybackRepeatMode` enum (`off`, `all`, `one`) with shuffle and queue manipulation logic
     *   [x] Unit tests for `PlaybackQueue` (`test/features/player/data/models/playback_queue_test.dart`)
-*   [x] **State & Cubit Integration**:
+    *   [x] **State & Cubit Integration**:
     *   [x] Integrate `PlaybackQueue` into `PlayerState` and `PlayerCubit`
     *   [x] Implement queue navigation commands (`next()`, `previous()`, `skipToIndex()`)
     *   [x] Implement auto-advance on track playback completion
     *   [x] Implement candidate retry/fallback on network or CDN failure during `setAudioSource`
     *   [x] Expose repeat mode cycling and shuffle toggling
+    *   [x] Expose multi-candidate streams and candidate selection (`selectStreamCandidate`)
     *   [x] Comprehensive unit tests for `PlayerCubit` with queue operations
 
 ### 11.4. Presentation: Persistent Mini-Player (`lib/features/player/presentation/widgets/`)
@@ -146,19 +147,25 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
     *   [x] Widget tests for `MiniPlayer` and `ShellPage`
 
 ### 11.5. Presentation: Full-Player Page & Queue Sheet (`lib/features/player/presentation/`)
-*   [ ] **FullPlayerPage UI (`pages/full_player_page.dart`)**:
-    *   [ ] Large cover art with smooth corner radius and shadow
-    *   [ ] Track title, album name, and interactive artist chips for direct navigation
-    *   [ ] Interactive progress slider/scrubber with seek preview and elapsed/remaining duration labels
-    *   [ ] Primary playback control bar: Shuffle toggle, Previous track, Play/Pause with loading spinner, Next track, Repeat mode cycle
-    *   [ ] Bottom action bar: Stream quality/codec badge (e.g. "M4A • 160 kbps") and Queue button
-*   [ ] **QueueBottomSheet (`widgets/queue_bottom_sheet.dart`)**:
-    *   [ ] Modal bottom sheet displaying active playback queue
-    *   [ ] Reorderable track list (`ReorderableListView.builder`)
-    *   [ ] Swipe-to-remove track gesture with undo capability
-    *   [ ] Active playing track highlight and tap-to-skip
-*   [ ] **Widget Tests**:
-    *   [ ] Comprehensive widget tests for `FullPlayerPage` and `QueueBottomSheet`
+*   [x] **FullPlayerPage UI (`pages/full_player_page.dart`)**:
+    *   [x] Large cover art with smooth corner radius and elevation shadow
+    *   [x] Centered track title with horizontal scrolling and clickable artist navigation
+    *   [x] Dedicated action row with Download and Favorite buttons
+    *   [x] Interactive progress slider/scrubber with seek preview and elapsed/remaining duration labels
+    *   [x] Primary playback control bar: Shuffle toggle, Previous track, Play/Pause with loading spinner, Next track, Repeat mode cycle
+    *   [x] Secondary utility bar: Audio Stream Candidates (`Icons.graphic_eq_rounded`), Lyrics button, and Queue button
+    *   [x] Responsive side-by-side horizontal landscape layout support
+*   [x] **QueueBottomSheet (`widgets/queue_bottom_sheet.dart`)**:
+    *   [x] Modal bottom sheet displaying active playback queue
+    *   [x] Reorderable track list (`ReorderableListView.builder`)
+    *   [x] Swipe-to-remove track gesture with delete feedback
+    *   [x] Active playing track highlight and tap-to-skip
+*   [x] **AudioSourceBottomSheet (`widgets/audio_source_bottom_sheet.dart`)**:
+    *   [x] Modal bottom sheet displaying all resolved stream candidates
+    *   [x] Displays codec, bitrate in kbps, and host domain
+    *   [x] Allows live switching of active audio stream stream candidate
+*   [x] **Widget Tests**:
+    *   [x] Widget tests for `FullPlayerPage`, `QueueBottomSheet`, and `AudioSourceBottomSheet`
 
 ### 11.6. Global App Integration & Media Tap Wiring
 *   [x] **Contextual Tap-to-Play**:
@@ -175,12 +182,14 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
     *   [x] `AudioStreamResolverTest`: Validates stream resolution and multi-candidate fallback on 403 CDN errors
     *   [x] `ResolvedPlaybackTrackTest`: Validates candidate iteration, expiration checks, and fallback states
     *   [x] `PlaybackQueueTest`: Validates immutable queue manipulations, shuffle, and repeat modes
-    *   [x] `AudioPlayerServiceTest`: Validates full playback lifecycle, auto-advance, and service event orchestration
-    *   [x] `PlayerCubitTest`: Validates state mapping from audio service and cubit command delegation
+    *   [x] `AudioPlayerServiceTest`: Validates full playback lifecycle, candidate switching, auto-advance, and service event orchestration
+    *   [x] `PlayerCubitTest`: Validates state mapping from audio service, candidate selection, and cubit command delegation
 *   [x] **Widget Tests (`test/features/player/presentation/`)**:
     *   [x] `MiniPlayerTest`: Validates rendering, play/pause toggles, skip buttons, and tap callbacks
     *   [x] `ShellPageTest`: Validates frame-by-frame sliding expansion, collapse via down arrow, and back gesture priority
-    *   [ ] `FullPlayerPageTest`: Pending UI implementation (Step 11.5)
+    *   [x] `FullPlayerPageTest`: Validates portrait/landscape rendering, scrubber seeking, controls, audio source sheet, and queue sheet
+    *   [x] `QueueBottomSheetTest`: Validates queue rendering, track skipping, and track dismissal
+    *   [x] `AudioSourceBottomSheetTest`: Validates candidates rendering and live candidate selection
 
 ## 🔍 Phase 12: Search Feature (`lib/features/search/`)
 *   [ ] **State Management**:
@@ -212,6 +221,5 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 *   [ ] Manage HTTP client request rate-limits to strictly comply with third-party API policies (SDK-level)
 *   [ ] Improve 'Fans Also Like' error handling and fallback on sparse artist data
 *   [ ] Add artist list and album name in bottom modal options
-*   [ ] Implement responsive horizontal landscape layout support
 *   [ ] Implement Favorites / Saved library functionality for Artists, Albums, and Tracks
 *   [ ] Improve Artist Top Tracks to fetch true popular tracks via ListenBrainz instead of MusicBrainz work metadata

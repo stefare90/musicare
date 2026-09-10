@@ -109,10 +109,8 @@ class InfoCard extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
-              style: context.textTheme.titleMedium?.copyWith(
+              style: context.textTheme.titleSmall?.copyWith(
                 color: context.colorScheme.onSurface.withValues(alpha: 0.85),
-                fontWeight: FontWeight.w600,
-                fontSize: 15.0,
               ),
             ),
             if (message != null && message!.isNotEmpty) ...[
@@ -122,11 +120,10 @@ class InfoCard extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
-                style: context.textTheme.bodyMedium?.copyWith(
+                style: context.textTheme.bodySmall?.copyWith(
                   color: context.colorScheme.onSurfaceVariant.withValues(
                     alpha: 0.65,
                   ),
-                  fontSize: 13.0,
                 ),
               ),
             ],

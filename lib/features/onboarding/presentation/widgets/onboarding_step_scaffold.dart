@@ -70,33 +70,21 @@ class _OnboardingStepScaffoldState extends State<OnboardingStepScaffold>
                   ),
                 ),
                 const SizedBox(height: 22),
-
                 Text(
                   widget.title,
                   textAlign: TextAlign.center,
-                  style: context.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 26,
-                    letterSpacing: -0.4,
-                  ),
+                  style: context.textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 8),
-
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Text(
                     widget.subtitle,
                     textAlign: TextAlign.center,
-                    style: context.textTheme.bodyMedium?.copyWith(
-                      color: context.colorScheme.onSurfaceVariant,
-                      fontSize: 14.5,
-                      height: 1.4,
-                    ),
+                    style: context.textTheme.bodyMedium,
                   ),
                 ),
-
                 const SizedBox(height: 24),
-
                 widget.child,
               ],
             ),

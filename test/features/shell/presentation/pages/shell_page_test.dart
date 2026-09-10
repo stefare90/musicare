@@ -37,6 +37,7 @@ Track createTestTrack(String id, String name) {
 
 void main() {
   late MockPlayerCubit mockPlayerCubit;
+  final testTrack = createTestTrack('t1', 'Come Together');
 
   setUp(() {
     mockPlayerCubit = MockPlayerCubit();
@@ -101,18 +102,31 @@ void main() {
   }
 
   group('ShellPage Widget Tests', () {
-    testWidgets('renders MiniPlayer and NavigationBar with initial branch', (
+    testWidgets('renders NavigationBar and initial branch when no track is active', (
       tester,
     ) async {
       await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
 
-      expect(find.byType(MiniPlayer), findsOneWidget);
+      expect(find.byType(MiniPlayer), findsNothing);
       expect(find.text('Home Screen Content'), findsOneWidget);
-
       expect(find.text('Home'), findsOneWidget);
       expect(find.text('Search'), findsOneWidget);
       expect(find.text('Library'), findsOneWidget);
+    });
+
+    testWidgets('renders MiniPlayer when track is active in queue', (
+      tester,
+    ) async {
+      when(() => mockPlayerCubit.state).thenReturn(
+        PlayerState(queue: QueueState(tracks: [testTrack])),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MiniPlayer), findsOneWidget);
+      expect(find.text('Come Together'), findsOneWidget);
     });
 
     testWidgets(
@@ -137,9 +151,28 @@ void main() {
     );
 
     testWidgets(
-      'drags up miniplayer frame-by-frame into full player and collapses back',
+      'tapping MiniPlayer expands sliding panel to FullPlayerPage', 
       (tester) async {
-        final testTrack = createTestTrack('t1', 'Come Together');
+        when(() => mockPlayerCubit.state).thenReturn(
+          PlayerState(queue: QueueState(tracks: [testTrack])),
+        );
+
+        await tester.pumpWidget(buildTestableWidget());
+        await tester.pumpAndSettle();
+
+        expect(find.byType(FullPlayerPage), findsNothing);
+
+        // Tap on MiniPlayer
+        await tester.tap(find.byType(MiniPlayer));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(FullPlayerPage), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'swiping up on MiniPlayer expands sliding panel to FullPlayerPage and collapse button closes it',
+      (tester) async {
         when(() => mockPlayerCubit.state).thenReturn(
           PlayerState(queue: QueueState(tracks: [testTrack])),
         );
@@ -149,7 +182,7 @@ void main() {
 
         expect(find.text('Come Together'), findsOneWidget);
 
-        // Swipe verso l'alto per aprire il full player
+        // Swipe up gesture
         await tester.fling(
           find.byType(MiniPlayer),
           const Offset(0, -600),
@@ -157,21 +190,20 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // FullPlayerPage è ora visibile ed espanso
         expect(find.byType(FullPlayerPage), findsOneWidget);
 
-        // Tap sul pulsante di chiusura (freccia in basso)
+        // Tap collapse button (down arrow)
         await tester.tap(find.byIcon(Icons.keyboard_arrow_down_rounded));
         await tester.pumpAndSettle();
 
-        expect(find.text('Come Together'), findsOneWidget);
+        expect(find.byType(FullPlayerPage), findsNothing);
+        expect(find.byType(MiniPlayer), findsOneWidget);
       },
     );
 
     testWidgets(
-      'snaps to full player when dragged up past 25% threshold',
+      'dragging down on FullPlayerPage collapses panel back to MiniPlayer',
       (tester) async {
-        final testTrack = createTestTrack('t1', 'Come Together');
         when(() => mockPlayerCubit.state).thenReturn(
           PlayerState(queue: QueueState(tracks: [testTrack])),
         );
@@ -179,11 +211,47 @@ void main() {
         await tester.pumpWidget(buildTestableWidget());
         await tester.pumpAndSettle();
 
-        // Trascina verso l'alto lentamente superando la soglia del 25%
-        await tester.drag(find.byType(MiniPlayer), const Offset(0, -250));
+        // Expand first
+        await tester.tap(find.byType(MiniPlayer));
+        await tester.pumpAndSettle();
+        expect(find.byType(FullPlayerPage), findsOneWidget);
+
+        // Drag down on FullPlayerPage
+        await tester.fling(
+          find.byType(FullPlayerPage),
+          const Offset(0, 600),
+          1000,
+        );
         await tester.pumpAndSettle();
 
+        expect(find.byType(FullPlayerPage), findsNothing);
+        expect(find.byType(MiniPlayer), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'system back button via BackButtonListener collapses FullPlayerPage without popping route',
+      (tester) async {
+        when(() => mockPlayerCubit.state).thenReturn(
+          PlayerState(queue: QueueState(tracks: [testTrack])),
+        );
+
+        await tester.pumpWidget(buildTestableWidget());
+        await tester.pumpAndSettle();
+
+        // Expand to FullPlayerPage
+        await tester.tap(find.byType(MiniPlayer));
+        await tester.pumpAndSettle();
         expect(find.byType(FullPlayerPage), findsOneWidget);
+
+        // Trigger system back button (e.g. Android back gesture)
+        final backHandled = await tester.binding.handlePopRoute();
+        expect(backHandled, isTrue);
+        await tester.pumpAndSettle();
+
+        // FullPlayerPage is collapsed and Home screen remains intact
+        expect(find.byType(FullPlayerPage), findsNothing);
+        expect(find.text('Home Screen Content'), findsOneWidget);
       },
     );
   });

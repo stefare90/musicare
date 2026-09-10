@@ -75,7 +75,7 @@ void main() {
     );
 
     test(
-      'resolveTrack returns ResolvedPlaybackTrack with ordered candidates',
+      'resolveTrack returns PlaybackCandidates with resolved streams',
       () async {
         when(
           () => mockEngine.resolveStream(testTrack, quality: AudioQuality.high),
@@ -83,9 +83,8 @@ void main() {
 
         final resolved = await resolver.resolveTrack(testTrack);
 
-        expect(resolved.track.name, equals('Come Together'));
-        expect(resolved.candidates.length, equals(1));
-        expect(resolved.currentStream.url, equals(candidate1.url));
+        expect(resolved.streams.length, equals(1));
+        expect(resolved.activeStream?.url, equals(candidate1.url));
       },
     );
   });

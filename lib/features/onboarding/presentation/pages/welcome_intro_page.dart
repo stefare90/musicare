@@ -32,40 +32,26 @@ class WelcomeIntroPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
-
                   Text(
                     context.l10n.welcomeTitle,
                     textAlign: TextAlign.center,
-                    style: context.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 30,
-                      letterSpacing: -0.5,
-                    ),
+                    style: context.textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 8),
-
                   Text(
                     context.l10n.appSlogan,
                     textAlign: TextAlign.center,
                     style: context.textTheme.titleMedium?.copyWith(
                       color: context.colorScheme.primary,
-                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 14),
-
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12.0),
                     child: Text(
                       context.l10n.welcomeSetupHint,
                       textAlign: TextAlign.center,
-                      style: context.textTheme.bodyMedium?.copyWith(
-                        color: context.colorScheme.onSurfaceVariant.withValues(
-                          alpha: 0.8,
-                        ),
-                        height: 1.45,
-                        fontSize: 14.5,
-                      ),
+                      style: context.textTheme.bodyMedium,
                     ),
                   ),
                 ],
@@ -73,7 +59,6 @@ class WelcomeIntroPage extends StatelessWidget {
             ),
           ),
         ),
-
         OnboardingBottomActionButton(
           label: context.l10n.selectMetadataProvider,
           icon: Icons.arrow_forward_rounded,

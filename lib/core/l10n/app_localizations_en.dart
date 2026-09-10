@@ -94,7 +94,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unknownTitle => 'Unknown';
 
   @override
-  String failedToFetchPlugins(String error) {
+  String failedToFetchPlugins(Object error) {
     return 'Failed to fetch online plugins: $error';
   }
 
@@ -130,7 +130,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginErrorNoContext => 'Navigation context is unavailable.';
 
   @override
-  String pluginErrorUnknown(String details) {
+  String pluginErrorUnknown(Object details) {
     return 'An unexpected error occurred: $details';
   }
 
@@ -185,7 +185,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get obsoleteProviderLabel => 'Obsolete Provider';
 
   @override
-  String installedVersion(String version) {
+  String installedVersion(Object version) {
     return 'Installed version: v$version';
   }
 
@@ -194,12 +194,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'This provider is no longer compatible with the current version of MusicAre and must be updated to continue.';
 
   @override
-  String activeProviderName(String name) {
+  String activeProviderName(Object name) {
     return 'Active Provider: $name';
   }
 
   @override
-  String providerVersion(String version) {
+  String providerVersion(Object version) {
     return 'Version $version';
   }
 
@@ -213,7 +213,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activeProvider => 'Active Provider';
 
   @override
-  String byAuthor(String author) {
+  String byAuthor(Object author) {
     return 'By $author';
   }
 
@@ -243,7 +243,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get refresh => 'Refresh';
 
   @override
-  String logErrorTitle(String title) {
+  String logErrorTitle(Object title) {
     return '$title - Log';
   }
 
@@ -276,4 +276,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get activeLabel => 'Active';
+
+  @override
+  String get playbackQueue => 'Playback Queue';
+
+  @override
+  String get queueEmpty => 'Queue is empty';
+
+  @override
+  String get audioStreamCandidates => 'Audio Stream Candidates';
+
+  @override
+  String availableStreamsCount(Object count) {
+    return '$count available stream(s)';
+  }
+
+  @override
+  String candidateStreamTitle(Object bitrate, Object codec, Object index) {
+    return 'Candidate #$index ($codec • $bitrate)';
+  }
+
+  @override
+  String get lyricsComingSoon => 'Lyrics coming soon';
+
+  @override
+  String get downloadComingSoon => 'Download coming soon';
+
+  @override
+  String get favoritesComingSoon => 'Favorites coming soon';
+
+  @override
+  String get selectArtistTitle => 'Select Artist';
 }

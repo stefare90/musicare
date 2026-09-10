@@ -1,144 +1,93 @@
 {
-    "@@locale": "en",
-    "appTitle": "MusicAre",
-    "appSlogan": "Music are the plugins. We are the player.",
-    "setupTitle": "MusicAre Setup",
-    "welcomeTitle": "Welcome to MusicAre",
-    "communityPluginsHeader": "Community Plugins (GitHub)",
-    "installAndActivate": "Install & Activate",
-    "installingPlugin": "Installing and initializing plugin...",
-    "noPluginsFound": "No plugins found on GitHub tagged with \"musicare-plugin\".",
-    "retry": "Retry",
-    "confirm": "Confirm",
-    "cancel": "Cancel",
-    "homeTab": "Home",
-    "searchTab": "Search",
-    "libraryTab": "Library",
-    "persistentPlayerArea": "Persistent Mini Player Area",
-    "tooltipFavorite": "Favorite",
-    "tooltipMoreOptions": "More options",
-    "tooltipOptions": "Options",
-    "savePlaylist": "Save Playlist",
-    "sharePlaylist": "Share Playlist",
-    "deletePlaylist": "Delete Playlist",
-    "saveAlbum": "Save Album",
-    "shareAlbum": "Share Album",
-    "addToQueue": "Add to Queue",
-    "saveToFavorites": "Save to Favorites",
-    "goToAlbum": "Go to Album",
-    "goToArtist": "Go to Artist",
-    "unknownTitle": "Unknown",
-    "failedToFetchPlugins": "Failed to fetch online plugins: {error}",
-    "@failedToFetchPlugins": {
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        }
-    },
-    "pluginErrorIncompatibleSdkVersion": "The plugin is incompatible with this version of MusicAre.",
-    "pluginErrorInvalidType": "Plugin type is invalid.",
-    "pluginErrorInvalidArchive": "The plugin archive is corrupt or missing required files.",
-    "pluginErrorNotFound": "Plugin files were not found on local disk.",
-    "pluginErrorNotLoaded": "No active metadata plugin is loaded.",
-    "pluginErrorDownloadFailed": "Failed to download the plugin file.",
-    "pluginErrorNetwork": "Network error occurred. Please check your connection.",
-    "pluginErrorTimeout": "Connection timed out. Please try again.",
-    "pluginErrorNoContext": "Navigation context is unavailable.",
-    "pluginErrorUnknown": "An unexpected error occurred: {details}",
-    "pluginErrorStreamResolution": "No playable audio stream could be found for this track.",
-    "@pluginErrorStreamResolution": {
-        "description": "Error message when no audio stream candidates can be resolved for a track"
-    },
-    "@pluginErrorUnknown": {
-        "placeholders": {
-            "details": {
-                "type": "String"
-            }
-        }
-    },
-    "noSectionsFound": "No browse sections found.",
-    "noContentTitle": "No Content Available",
-    "noContentSubtitle": "Your active music provider did not return any browse sections. Try refreshing.",
-    "mediaTypePlaylist": "Playlist",
-    "mediaTypeAlbum": "Album",
-    "mediaTypeSingle": "Single",
-    "mediaTypeCompilation": "Compilation",
-    "mediaTypeTrack": "Track",
-    "mediaTypeArtist": "Artist",
-    "copyError": "Copy full Error",
-    "moreTracks": "More tracks",
-    "errorCopiedToClipboard": "Error copied to clipboard!",
-    "mediaTypeUnknown": "",
-    "actionRequiredTitle": "Action Required",
-    "obsoleteProviderLabel": "Obsolete Provider",
-    "installedVersion": "Installed version: v{version}",
-    "@installedVersion": {
-        "placeholders": {
-            "version": {
-                "type": "String",
-                "example": "1.0.0"
-            }
-        }
-    },
-    "providerIncompatibleMessage": "This provider is no longer compatible with the current version of MusicAre and must be updated to continue.",
-    "activeProviderName": "Active Provider: {name}",
-    "@activeProviderName": {
-        "placeholders": {
-            "name": {
-                "type": "String",
-                "example": "MusicBrainz"
-            }
-        }
-    },
-    "providerVersion": "Version {version}",
-    "@providerVersion": {
-        "placeholders": {
-            "version": {
-                "type": "String",
-                "example": "2.0.0"
-            }
-        }
-    },
-    "disconnect": "Disconnect",
-    "updateAndActivate": "Update & Activate",
-    "activeProvider": "Active Provider",
-    "byAuthor": "By {author}",
-    "@byAuthor": {
-        "placeholders": {
-            "author": {
-                "type": "String",
-                "example": "MusicAre Team"
-            }
-        }
-    },
-    "updateRequiredMessage": "Update required for this version of MusicAre",
-    "ok": "OK",
-    "error": "Error",
-    "popularTracks": "Popular Tracks",
-    "discography": "Discography",
-    "fansAlsoLike": "Fans Also Like",
-    "viewLog": "View Log",
-    "refresh": "Refresh",
-    "logErrorTitle": "{title} - Log",
-    "@logErrorTitle": {
-        "placeholders": {
-            "title": {
-                "type": "String",
-                "example": "Fans Also Like"
-            }
-        }
-    },
-    "selectMetadataProvider": "Select Metadata Provider",
-    "continueToAudioSource": "Continue to Audio Source",
-    "finishSetup": "Finish Setup",
-    "welcomeSetupHint": "Configure your music catalog and audio stream providers in two quick steps to get started.",
-    "onboardingStepMetadata": "Metadata Provider",
-    "onboardingStepAudioSource": "Audio Stream Provider",
-    "selectProviderSubtitle": "Select a music catalog provider to discover albums, artists, and playlists",
-    "selectAudioSourceSubtitle": "Select an audio stream provider to enable music playback",
-    "activeLabel": "Active",
-    "@activeLabel": {
-        "description": "Badge label indicating an active/configured plugin"
-    }
+  "@@locale": "en",
+  "appTitle": "MusicAre",
+  "appSlogan": "Music are the plugins. We are the player.",
+  "setupTitle": "MusicAre Setup",
+  "welcomeTitle": "Welcome to MusicAre",
+  "communityPluginsHeader": "Community Plugins (GitHub)",
+  "installAndActivate": "Install & Activate",
+  "installingPlugin": "Installing and initializing plugin...",
+  "noPluginsFound": "No plugins found on GitHub tagged with \"musicare-plugin\".",
+  "retry": "Retry",
+  "confirm": "Confirm",
+  "cancel": "Cancel",
+  "homeTab": "Home",
+  "searchTab": "Search",
+  "libraryTab": "Library",
+  "persistentPlayerArea": "Persistent Mini Player Area",
+  "tooltipFavorite": "Favorite",
+  "tooltipMoreOptions": "More options",
+  "tooltipOptions": "Options",
+  "savePlaylist": "Save Playlist",
+  "sharePlaylist": "Share Playlist",
+  "deletePlaylist": "Delete Playlist",
+  "saveAlbum": "Save Album",
+  "shareAlbum": "Share Album",
+  "addToQueue": "Add to Queue",
+  "saveToFavorites": "Save to Favorites",
+  "goToAlbum": "Go to Album",
+  "goToArtist": "Go to Artist",
+  "unknownTitle": "Unknown",
+  "failedToFetchPlugins": "Failed to fetch online plugins: {error}",
+  "pluginErrorIncompatibleSdkVersion": "The plugin is incompatible with this version of MusicAre.",
+  "pluginErrorInvalidType": "Plugin type is invalid.",
+  "pluginErrorInvalidArchive": "The plugin archive is corrupt or missing required files.",
+  "pluginErrorNotFound": "Plugin files were not found on local disk.",
+  "pluginErrorNotLoaded": "No active metadata plugin is loaded.",
+  "pluginErrorDownloadFailed": "Failed to download the plugin file.",
+  "pluginErrorNetwork": "Network error occurred. Please check your connection.",
+  "pluginErrorTimeout": "Connection timed out. Please try again.",
+  "pluginErrorNoContext": "Navigation context is unavailable.",
+  "pluginErrorUnknown": "An unexpected error occurred: {details}",
+  "pluginErrorStreamResolution": "No playable audio stream could be found for this track.",
+  "noSectionsFound": "No browse sections found.",
+  "noContentTitle": "No Content Available",
+  "noContentSubtitle": "Your active music provider did not return any browse sections. Try refreshing.",
+  "mediaTypePlaylist": "Playlist",
+  "mediaTypeAlbum": "Album",
+  "mediaTypeSingle": "Single",
+  "mediaTypeCompilation": "Compilation",
+  "mediaTypeTrack": "Track",
+  "mediaTypeArtist": "Artist",
+  "copyError": "Copy full Error",
+  "moreTracks": "More tracks",
+  "errorCopiedToClipboard": "Error copied to clipboard!",
+  "mediaTypeUnknown": "",
+  "actionRequiredTitle": "Action Required",
+  "obsoleteProviderLabel": "Obsolete Provider",
+  "installedVersion": "Installed version: v{version}",
+  "providerIncompatibleMessage": "This provider is no longer compatible with the current version of MusicAre and must be updated to continue.",
+  "activeProviderName": "Active Provider: {name}",
+  "providerVersion": "Version {version}",
+  "disconnect": "Disconnect",
+  "updateAndActivate": "Update & Activate",
+  "activeProvider": "Active Provider",
+  "byAuthor": "By {author}",
+  "updateRequiredMessage": "Update required for this version of MusicAre",
+  "ok": "OK",
+  "error": "Error",
+  "popularTracks": "Popular Tracks",
+  "discography": "Discography",
+  "fansAlsoLike": "Fans Also Like",
+  "viewLog": "View Log",
+  "refresh": "Refresh",
+  "logErrorTitle": "{title} - Log",
+  "selectMetadataProvider": "Select Metadata Provider",
+  "continueToAudioSource": "Continue to Audio Source",
+  "finishSetup": "Finish Setup",
+  "welcomeSetupHint": "Configure your music catalog and audio stream providers in two quick steps to get started.",
+  "onboardingStepMetadata": "Metadata Provider",
+  "onboardingStepAudioSource": "Audio Stream Provider",
+  "selectProviderSubtitle": "Select a music catalog provider to discover albums, artists, and playlists",
+  "selectAudioSourceSubtitle": "Select an audio stream provider to enable music playback",
+  "activeLabel": "Active",
+  "playbackQueue": "Playback Queue",
+  "queueEmpty": "Queue is empty",
+  "audioStreamCandidates": "Audio Stream Candidates",
+  "availableStreamsCount": "{count} available stream(s)",
+  "candidateStreamTitle": "Candidate #{index} ({codec} • {bitrate})",
+  "lyricsComingSoon": "Lyrics coming soon",
+  "downloadComingSoon": "Download coming soon",
+  "favoritesComingSoon": "Favorites coming soon",
+  "selectArtistTitle": "Select Artist"
 }

@@ -1,14 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:music_are/features/player/data/models/playback_queue.dart';
-import 'package:music_are/features/player/data/models/repeat_mode.dart';
+import 'package:music_are/features/player/data/models/playback_repeat_mode.dart';
 
 @immutable
 class QueueState {
   final List<Track> tracks;
   final int currentIndex;
   final bool isShuffled;
-  final RepeatMode repeatMode;
+  final PlaybackRepeatMode repeatMode;
   final bool hasNext;
   final bool hasPrevious;
 
@@ -16,7 +16,7 @@ class QueueState {
     this.tracks = const [],
     this.currentIndex = 0,
     this.isShuffled = false,
-    this.repeatMode = RepeatMode.off,
+    this.repeatMode = PlaybackRepeatMode.off,
     this.hasNext = false,
     this.hasPrevious = false,
   });

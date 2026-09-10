@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:music_are/core/models/media_item_metadata.dart';
-import 'package:music_are/core/theme/theme_extension.dart';
+import 'package:music_are/core/widgets/bottom_sheets/base_modal_bottom_sheet.dart';
 import 'package:music_are/core/widgets/media/media_cover_image.dart';
 
 class MediaOptionsBottomSheet extends StatelessWidget {
@@ -18,13 +18,9 @@ class MediaOptionsBottomSheet extends StatelessWidget {
     required Object item,
     required List<Widget> options,
   }) {
-    return showModalBottomSheet<T>(
+    return BaseModalBottomSheet.show<T>(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
-      ),
-      builder: (bottomSheetContext) =>
-          MediaOptionsBottomSheet(item: item, options: options),
+      child: MediaOptionsBottomSheet(item: item, options: options),
     );
   }
 
@@ -32,51 +28,25 @@ class MediaOptionsBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final meta = MediaItemMetadata.from(item);
 
-    return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 8),
-          Container(
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: context.colorScheme.onSurfaceVariant.withValues(
-                alpha: 0.4,
-              ),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ListTile(
-            leading: MediaCoverImage(
-              images: meta.images,
-              mediaType: meta.mediaType,
-              width: 44,
-              height: 44,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            title: Text(
-              meta.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: context.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            subtitle: Text(
-              meta.getFormattedDetails(context),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: context.textTheme.bodyMedium?.copyWith(
-                color: context.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-          const Divider(),
-          ...options,
-        ],
+    return BaseModalBottomSheet(
+      title: meta.title,
+      subtitle: meta.getFormattedSubtitle(context),
+      leading: MediaCoverImage(
+        images: meta.images,
+        mediaType: meta.mediaType,
+        width: 48,
+        height: 48,
+        borderRadius: BorderRadius.circular(8),
       ),
+      initialChildSize: 0.5,
+      minChildSize: 0.35,
+      maxChildSize: 0.8,
+      builder: (context, scrollController) {
+        return ListView(
+          controller: scrollController,
+          children: options,
+        );
+      },
     );
   }
 }

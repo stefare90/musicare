@@ -3,7 +3,7 @@ import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:music_are/features/player/data/models/playback_queue.dart';
-import 'package:music_are/features/player/data/models/repeat_mode.dart';
+import 'package:music_are/features/player/data/models/playback_repeat_mode.dart';
 
 Track createTestTrack(String id, String name) {
   return Track(
@@ -41,7 +41,7 @@ void main() {
     test('initial queue is empty with default settings', () {
       expect(queue.isEmpty, isTrue);
       expect(queue.currentTrack, isNull);
-      expect(queue.repeatMode, equals(RepeatMode.off));
+      expect(queue.repeatMode, equals(PlaybackRepeatMode.off));
       expect(queue.isShuffled, isFalse);
     });
 
@@ -56,7 +56,7 @@ void main() {
     });
 
     test(
-      'next advances sequentially and returns null at end when RepeatMode is off',
+      'next advances sequentially and returns null at end when PlaybackRepeatMode is off',
       () {
         final initial = queue.setQueue(tracks, startIndex: 1);
 
@@ -70,10 +70,10 @@ void main() {
       },
     );
 
-    test('next loops back to start when RepeatMode is all', () {
+    test('next loops back to start when PlaybackRepeatMode is all', () {
       final initial = queue
           .setQueue(tracks, startIndex: 2)
-          .setRepeatMode(RepeatMode.all);
+          .setRepeatMode(PlaybackRepeatMode.all);
 
       expect(initial.hasNext, isTrue);
       final looped = initial.next();
@@ -82,20 +82,20 @@ void main() {
       expect(looped?.currentIndex, equals(0));
     });
 
-    test('next repeats current track when RepeatMode is one', () {
+    test('next repeats current track when PlaybackRepeatMode is one', () {
       final initial = queue
           .setQueue(tracks, startIndex: 1)
-          .setRepeatMode(RepeatMode.one);
+          .setRepeatMode(PlaybackRepeatMode.one);
 
       final repeated = initial.next();
       expect(repeated?.currentTrack?.name, equals('Song 2'));
       expect(repeated?.currentIndex, equals(1));
     });
 
-    test('previous moves backward and loops to end when RepeatMode is all', () {
+    test('previous moves backward and loops to end when PlaybackRepeatMode is all', () {
       final initial = queue
           .setQueue(tracks, startIndex: 0)
-          .setRepeatMode(RepeatMode.all);
+          .setRepeatMode(PlaybackRepeatMode.all);
 
       final looped = initial.previous();
       expect(looped?.currentTrack?.name, equals('Song 3'));
@@ -139,13 +139,13 @@ void main() {
 
     test('cycleRepeatMode transitions off -> all -> one -> off', () {
       final all = queue.cycleRepeatMode();
-      expect(all.repeatMode, equals(RepeatMode.all));
+      expect(all.repeatMode, equals(PlaybackRepeatMode.all));
 
       final one = all.cycleRepeatMode();
-      expect(one.repeatMode, equals(RepeatMode.one));
+      expect(one.repeatMode, equals(PlaybackRepeatMode.one));
 
       final off = one.cycleRepeatMode();
-      expect(off.repeatMode, equals(RepeatMode.off));
+      expect(off.repeatMode, equals(PlaybackRepeatMode.off));
     });
 
     test('add appends track to end of queue', () {

@@ -3,7 +3,7 @@ import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:music_are/features/player/data/models/playback_queue.dart';
-import 'package:music_are/features/player/data/models/repeat_mode.dart';
+import 'package:music_are/features/player/data/models/playback_repeat_mode.dart';
 import 'package:music_are/features/player/presentation/cubit/queue_state.dart';
 
 Track createTestTrack(String id, String name) {
@@ -41,7 +41,7 @@ void main() {
       expect(queueState.tracks.length, equals(2));
       expect(queueState.currentIndex, equals(0));
       expect(queueState.isShuffled, isFalse);
-      expect(queueState.repeatMode, equals(RepeatMode.off));
+      expect(queueState.repeatMode, equals(PlaybackRepeatMode.off));
       expect(queueState.hasNext, isTrue);
       expect(queueState.hasPrevious, isFalse);
       expect(queueState.currentTrack, equals(track1));

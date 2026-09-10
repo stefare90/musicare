@@ -51,9 +51,7 @@ class ErrorTile extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: context.textTheme.titleMedium?.copyWith(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w500,
+                  style: context.textTheme.titleSmall?.copyWith(
                     color: titleColor,
                   ),
                 ),
@@ -63,7 +61,6 @@ class ErrorTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: context.textTheme.labelSmall?.copyWith(
-                    fontSize: 10.5,
                     color: subTextColor,
                   ),
                 ),
