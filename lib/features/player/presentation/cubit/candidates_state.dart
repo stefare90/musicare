@@ -4,36 +4,42 @@ import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
 
 @immutable
 class CandidatesState {
-  final List<AudioStreamResponse> streams;
-  final int activeIndex;
+  final List<CandidateTrack> candidates;
+  final AudioStreamResponse? activeStream;
+  final String? activeCandidateId;
   final bool hasAlternatives;
   final bool isFallback;
 
   const CandidatesState({
-    this.streams = const [],
-    this.activeIndex = 0,
+    this.candidates = const [],
+    this.activeStream,
+    this.activeCandidateId,
     this.hasAlternatives = false,
     this.isFallback = false,
   });
 
   factory CandidatesState.fromPlaybackCandidates(PlaybackCandidates candidates) {
     return CandidatesState(
-      streams: candidates.streams,
-      activeIndex: candidates.activeIndex,
+      candidates: candidates.candidates,
+      activeStream: candidates.activeStream,
+      activeCandidateId: candidates.activeCandidateId,
       hasAlternatives: candidates.hasAlternatives,
       isFallback: candidates.isFallback,
     );
   }
 
-  bool get isEmpty => streams.isEmpty;
-  bool get isNotEmpty => streams.isNotEmpty;
-  int get count => streams.length;
+  bool get isEmpty => candidates.isEmpty;
+  bool get isNotEmpty => candidates.isNotEmpty;
+  int get count => candidates.length;
 
-  AudioStreamResponse? get activeStream {
-    if (isEmpty || activeIndex < 0 || activeIndex >= streams.length) {
-      return null;
-    }
-    return streams[activeIndex];
+  CandidateTrack? get activeCandidate {
+    if (activeCandidateId == null) return null;
+    return candidates.where((c) => c.id == activeCandidateId).firstOrNull;
+  }
+
+  int get activeIndex {
+    if (activeCandidateId == null) return -1;
+    return candidates.indexWhere((c) => c.id == activeCandidateId);
   }
 
   @override
@@ -41,16 +47,18 @@ class CandidatesState {
       identical(this, other) ||
       other is CandidatesState &&
           runtimeType == other.runtimeType &&
-          activeIndex == other.activeIndex &&
+          activeCandidateId == other.activeCandidateId &&
+          activeStream == other.activeStream &&
           hasAlternatives == other.hasAlternatives &&
           isFallback == other.isFallback &&
-          listEquals(streams, other.streams);
+          listEquals(candidates, other.candidates);
 
   @override
   int get hashCode => Object.hash(
-        activeIndex,
+        activeCandidateId,
+        activeStream,
         hasAlternatives,
         isFallback,
-        Object.hashAll(streams),
+        Object.hashAll(candidates),
       );
 }

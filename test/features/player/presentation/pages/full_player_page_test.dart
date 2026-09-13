@@ -38,6 +38,10 @@ Track createTestTrack(String id, String name) {
 }
 
 void main() {
+  setUpAll(() {
+    registerFallbackValue(Duration.zero);
+  });
+
   group('FullPlayerPage Widget Tests', () {
     late MockPlayerCubit mockPlayerCubit;
     final testTrack = createTestTrack('t1', 'Come Together');
@@ -46,6 +50,11 @@ void main() {
       quality: AudioQuality.high,
       codec: 'm4a',
       bitrate: 160000,
+    );
+    const candidateTrack = CandidateTrack(
+      id: 'c1',
+      title: 'Come Together',
+      artist: 'The Beatles',
     );
 
     setUp(() {
@@ -89,7 +98,7 @@ void main() {
       await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
 
-      expect(find.byType(IconButton), findsOneWidget); // Down arrow
+      expect(find.byType(IconButton), findsOneWidget);
       expect(find.text('Come Together'), findsNothing);
     });
 
@@ -102,8 +111,9 @@ void main() {
             position: const Duration(seconds: 45),
             duration: const Duration(seconds: 200),
             candidates: const CandidatesState(
-              streams: [testCandidate],
-              activeIndex: 0,
+              candidates: [candidateTrack],
+              activeStream: testCandidate,
+              activeCandidateId: 'c1',
             ),
             queue: QueueState(
               tracks: [testTrack, createTestTrack('t2', 'Track 2')],
@@ -146,8 +156,9 @@ void main() {
           position: const Duration(seconds: 45),
           duration: const Duration(seconds: 200),
           candidates: const CandidatesState(
-            streams: [testCandidate],
-            activeIndex: 0,
+            candidates: [candidateTrack],
+            activeStream: testCandidate,
+            activeCandidateId: 'c1',
           ),
           queue: QueueState(
             tracks: [testTrack],
@@ -190,8 +201,9 @@ void main() {
         PlayerState(
           queue: QueueState(tracks: [testTrack]),
           candidates: const CandidatesState(
-            streams: [testCandidate],
-            activeIndex: 0,
+            candidates: [candidateTrack],
+            activeStream: testCandidate,
+            activeCandidateId: 'c1',
           ),
         ),
       );

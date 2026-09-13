@@ -119,15 +119,16 @@ class AudioPlayerService {
     final candidates = _playbackData.candidates;
     if (track == null ||
         candidateIndex < 0 ||
-        candidateIndex >= candidates.streams.length ||
-        candidateIndex == candidates.activeIndex) {
+        candidateIndex >= candidates.candidates.length ||
+        candidates.candidates[candidateIndex].id ==
+            candidates.activeCandidateId) {
       return;
     }
 
     final currentPos = _driver.position;
     final wasPlaying = _driver.isPlaying;
 
-    final updatedCandidates = candidates.select(candidateIndex);
+    var updatedCandidates = candidates.select(candidateIndex);
     _updateData(
       _playbackData.copyWith(
         candidates: updatedCandidates,
@@ -136,10 +137,15 @@ class AudioPlayerService {
     );
 
     try {
-      final stream = updatedCandidates.activeStream;
-      if (stream != null) {
-        await _driver.loadStream(track: track, stream: stream);
-      }
+      final stream = await _resolver.resolveCandidateStream(
+        updatedCandidates.activeCandidateId!,
+      );
+      updatedCandidates = updatedCandidates.attachStream(stream);
+
+      _updateData(_playbackData.copyWith(candidates: updatedCandidates));
+
+      await _driver.loadStream(track: track, stream: stream);
+
       if (currentPos > Duration.zero) {
         await _driver.seek(currentPos);
       }
@@ -176,6 +182,14 @@ class AudioPlayerService {
       bool isLoaded = false;
       while (!isLoaded) {
         try {
+          if (resolvedCandidates.needsStreamResolution) {
+            final stream = await _resolver.resolveCandidateStream(
+              resolvedCandidates.activeCandidateId!,
+            );
+            resolvedCandidates = resolvedCandidates.attachStream(stream);
+            _updateData(_playbackData.copyWith(candidates: resolvedCandidates));
+          }
+
           final stream = resolvedCandidates.activeStream;
           if (stream == null) {
             throw const StreamResolutionException('No stream available');

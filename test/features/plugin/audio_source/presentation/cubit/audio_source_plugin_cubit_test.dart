@@ -43,7 +43,6 @@ void main() {
       mockPreferences = MockPreferencesService();
       mockDiscovery = MockPluginDiscoveryService();
 
-      // Stub default per la terminazione del demone
       when(() => mockEngine.terminate()).thenAnswer((_) async {});
 
       cubit = AudioSourcePluginCubit(
@@ -189,7 +188,7 @@ void main() {
       },
     );
 
-    test('resolveStream forwards call to engine', () async {
+    test('resolveTrack forwards call to engine', () async {
       final track = Track(
         id: 't1',
         name: 'Track',
@@ -207,17 +206,43 @@ void main() {
         durationMs: 100,
       );
 
-      when(
-        () => mockEngine.resolveStream(track, quality: AudioQuality.high),
-      ).thenAnswer((_) async => []);
+      const playback = ResolvedTrackPlayback(
+        stream: AudioStreamResponse(
+          url: 'https://cdn.example.com/audio.m4a',
+          quality: AudioQuality.high,
+        ),
+        candidates: [CandidateTrack(id: 'c1', title: 'Track')],
+        activeCandidateId: 'c1',
+      );
 
-      final result = await cubit.resolveStream(
+      when(
+        () => mockEngine.resolveTrack(track, quality: AudioQuality.high),
+      ).thenAnswer((_) async => playback);
+
+      final result = await cubit.resolveTrack(
         track,
         quality: AudioQuality.high,
       );
-      expect(result, isEmpty);
+      expect(result.activeCandidateId, equals('c1'));
       verify(
-        () => mockEngine.resolveStream(track, quality: AudioQuality.high),
+        () => mockEngine.resolveTrack(track, quality: AudioQuality.high),
+      ).called(1);
+    });
+
+    test('resolveStream forwards call to engine', () async {
+      const stream = AudioStreamResponse(
+        url: 'https://cdn.example.com/audio.m4a',
+        quality: AudioQuality.high,
+      );
+
+      when(
+        () => mockEngine.resolveStream('c1', quality: AudioQuality.high),
+      ).thenAnswer((_) async => stream);
+
+      final result = await cubit.resolveStream('c1', quality: AudioQuality.high);
+      expect(result.url, equals(stream.url));
+      verify(
+        () => mockEngine.resolveStream('c1', quality: AudioQuality.high),
       ).called(1);
     });
   });

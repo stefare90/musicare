@@ -106,11 +106,18 @@ class AudioSourcePluginCubit extends SafeCubit<AudioSourcePluginState> {
     }
   }
 
-  Future<List<AudioStreamResponse>> resolveStream(
+  Future<ResolvedTrackPlayback> resolveTrack(
     Track track, {
     AudioQuality quality = AudioQuality.high,
   }) {
-    return _engine.resolveStream(track, quality: quality);
+    return _engine.resolveTrack(track, quality: quality);
+  }
+
+  Future<AudioStreamResponse> resolveStream(
+    String candidateId, {
+    AudioQuality quality = AudioQuality.high,
+  }) {
+    return _engine.resolveStream(candidateId, quality: quality);
   }
 
   Future<void> unload() async {

@@ -223,3 +223,5 @@ This roadmap tracks the step-by-step implementation of the MusicAre application 
 *   [ ] Add artist list and album name in bottom modal options
 *   [ ] Implement Favorites / Saved library functionality for Artists, Albums, and Tracks
 *   [ ] Improve Artist Top Tracks to fetch true popular tracks via ListenBrainz instead of MusicBrainz work metadata
+*   [ ] Fix play next song when app in background
+*   [ ] Fix play all song when partial playlist is loaded
