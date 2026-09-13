@@ -2,6 +2,7 @@
 set -e
 
 PLATFORM=${1:-Android}
+ACTION=${2:-}
 
 echo "=================================================="
 echo "1. Resolving SDK Location"
@@ -48,3 +49,21 @@ dart run serious_python:main package build/host_staging \
 echo "=================================================="
 echo "✅ SeriousPython Host Runtime staged successfully for $PLATFORM!"
 echo "=================================================="
+
+# If requested, compile the Flutter build directly while environment variables are preserved
+if [ "$ACTION" == "apk" ] || [ "$ACTION" == "--build" ]; then
+  echo "=================================================="
+  echo "3. Building Flutter Release APK with SeriousPython"
+  echo "=================================================="
+  flutter build apk
+  echo "=================================================="
+  echo "🎉 Release APK built successfully with Flask included!"
+  echo "=================================================="
+else
+  echo ""
+  echo "💡 To build the APK manually with the Python dependencies included, run:"
+  echo '   SERIOUS_PYTHON_SITE_PACKAGES=$(pwd)/build/site-packages flutter build apk'
+  echo ""
+  echo "👉 Or simply run this script with 'apk':"
+  echo "   ./tool/build_python.sh Android apk"
+fi
