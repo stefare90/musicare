@@ -163,7 +163,9 @@ class AudioPlayerService {
 
     final sessionId = ++_sessionCounter;
 
-    await _driver.stop();
+    if (_playbackData.processingState != PlaybackProcessingState.completed) {
+      await _driver.pause();
+    }
     _updateData(
       _playbackData.copyWith(
         processingState: PlaybackProcessingState.loading,

@@ -14,9 +14,8 @@ class AudioPlayerDriver {
     await JustAudioBackground.init(
       androidNotificationChannelId: 'com.musicare.audio',
       androidNotificationChannelName: 'MusicAre Playback',
-      androidNotificationIcon: 'mipmap/ic_launcher',
-      androidNotificationOngoing: true,
-      androidStopForegroundOnPause: true,
+      androidNotificationOngoing: false,
+      androidStopForegroundOnPause: false,
     );
   }
 
