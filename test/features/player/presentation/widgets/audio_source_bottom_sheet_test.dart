@@ -38,18 +38,18 @@ void main() {
     late MockPlayerCubit mockPlayerCubit;
     final track = createTestTrack('t1', 'Come Together');
 
-    const stream1 = AudioStreamResponse(
-      url: 'https://rr1.googlevideo.com/audio1.m4a',
-      quality: AudioQuality.high,
-      codec: 'm4a',
-      bitrate: 160000,
+    const candidate1 = CandidateTrack(
+      id: 'c1',
+      title: 'Come Together (Official Video)',
+      artist: 'The Beatles Official',
+      durationMs: 259000,
     );
 
-    const stream2 = AudioStreamResponse(
-      url: 'https://rr2.googlevideo.com/audio2.opus',
-      quality: AudioQuality.medium,
-      codec: 'opus',
-      bitrate: 128000,
+    const candidate2 = CandidateTrack(
+      id: 'c2',
+      title: 'Come Together (Live at Wembley)',
+      artist: 'Live Music Archive',
+      durationMs: 270000,
     );
 
     setUp(() {
@@ -71,12 +71,12 @@ void main() {
       );
     }
 
-    testWidgets('renders candidates list and active badge', (tester) async {
+    testWidgets('renders candidates list with real titles, artists, and active badge', (tester) async {
       when(() => mockPlayerCubit.state).thenReturn(
         const PlayerState(
           candidates: CandidatesState(
-            streams: [stream1, stream2],
-            activeIndex: 0,
+            candidates: [candidate1, candidate2],
+            activeCandidateId: 'c1',
           ),
         ),
       );
@@ -86,8 +86,10 @@ void main() {
 
       expect(find.text('Audio Stream Candidates'), findsOneWidget);
       expect(find.text('2 available stream(s)'), findsOneWidget);
-      expect(find.text('Candidate #1 (M4A • 160 kbps)'), findsOneWidget);
-      expect(find.text('Candidate #2 (OPUS • 128 kbps)'), findsOneWidget);
+      expect(find.text('Come Together (Official Video)'), findsOneWidget);
+      expect(find.text('The Beatles Official • 04:19'), findsOneWidget);
+      expect(find.text('Come Together (Live at Wembley)'), findsOneWidget);
+      expect(find.text('Live Music Archive • 04:30'), findsOneWidget);
       expect(find.text('Active'), findsOneWidget);
     });
 
@@ -95,8 +97,8 @@ void main() {
       when(() => mockPlayerCubit.state).thenReturn(
         const PlayerState(
           candidates: CandidatesState(
-            streams: [stream1, stream2],
-            activeIndex: 0,
+            candidates: [candidate1, candidate2],
+            activeCandidateId: 'c1',
           ),
         ),
       );
@@ -104,7 +106,7 @@ void main() {
       await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Candidate #2 (OPUS • 128 kbps)'));
+      await tester.tap(find.text('Come Together (Live at Wembley)'));
       await tester.pumpAndSettle();
 
       verify(() => mockPlayerCubit.selectStreamCandidate(1)).called(1);

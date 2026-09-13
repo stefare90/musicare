@@ -22,10 +22,9 @@ class AudioSourceBottomSheet extends StatelessWidget {
     );
   }
 
-  String _formatBitrate(int? bitrate) {
-    if (bitrate == null || bitrate <= 0) return 'Auto';
-    final kbps = (bitrate / 1000).round();
-    return '$kbps kbps';
+  String _formatDuration(int? durationMs) {
+    if (durationMs == null || durationMs <= 0) return '';
+    return PlayerState.formatDuration(Duration(milliseconds: durationMs));
   }
 
   @override
@@ -35,18 +34,18 @@ class AudioSourceBottomSheet extends StatelessWidget {
     return BlocBuilder<PlayerCubit, PlayerState>(
       builder: (context, state) {
         final candidates = state.candidates;
-        final streams = candidates.streams;
-        final activeIndex = candidates.activeIndex;
+        final candidateList = candidates.candidates;
+        final activeCandidateId = candidates.activeCandidateId;
 
         return BaseModalBottomSheet(
           title: context.l10n.audioStreamCandidates,
-          subtitle: context.l10n.availableStreamsCount(streams.length),
+          subtitle: context.l10n.availableStreamsCount(candidateList.length),
           icon: Icons.graphic_eq_rounded,
-          initialChildSize: 0.5,
+          initialChildSize: 0.55,
           minChildSize: 0.35,
           maxChildSize: 0.85,
           builder: (context, scrollController) {
-            if (streams.isEmpty) {
+            if (candidateList.isEmpty) {
               return Center(
                 child: Text(
                   context.l10n.pluginErrorStreamResolution,
@@ -58,13 +57,20 @@ class AudioSourceBottomSheet extends StatelessWidget {
             return ListView.builder(
               controller: scrollController,
               padding: const EdgeInsets.symmetric(vertical: 8.0),
-              itemCount: streams.length,
+              itemCount: candidateList.length,
               itemBuilder: (context, index) {
-                final stream = streams[index];
-                final isSelected = index == activeIndex;
-                final codecLabel = stream.codec?.toUpperCase() ?? 'AUDIO';
-                final bitrateLabel = _formatBitrate(stream.bitrate);
-                final uriHost = Uri.tryParse(stream.url)?.host ?? '';
+                final candidate = candidateList[index];
+                final isSelected = candidate.id == activeCandidateId;
+
+                final subtitleParts = <String>[];
+                if (candidate.artist != null && candidate.artist!.isNotEmpty) {
+                  subtitleParts.add(candidate.artist!);
+                }
+                final durFormatted = _formatDuration(candidate.durationMs);
+                if (durFormatted.isNotEmpty) {
+                  subtitleParts.add(durFormatted);
+                }
+                final subtitle = subtitleParts.join(' • ');
 
                 return Material(
                   color: isSelected
@@ -87,25 +93,26 @@ class AudioSourceBottomSheet extends StatelessWidget {
                       child: Icon(
                         isSelected
                             ? Icons.check_circle_rounded
-                            : Icons.audiotrack_rounded,
+                            : Icons.play_circle_outline_rounded,
                         color: isSelected
                             ? context.colorScheme.primary
                             : context.colorScheme.onSurfaceVariant,
                       ),
                     ),
                     title: Text(
-                      context.l10n.candidateStreamTitle(
-                        index + 1,
-                        codecLabel,
-                        bitrateLabel,
-                      ),
+                      candidate.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: context.textTheme.titleSmall?.copyWith(
                         color: isSelected ? context.colorScheme.primary : null,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.w500,
                       ),
                     ),
-                    subtitle: uriHost.isNotEmpty
+                    subtitle: subtitle.isNotEmpty
                         ? Text(
-                            uriHost,
+                            subtitle,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: context.textTheme.labelSmall,

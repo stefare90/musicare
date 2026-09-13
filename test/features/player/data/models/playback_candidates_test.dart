@@ -4,6 +4,18 @@ import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
 
 void main() {
   group('PlaybackCandidates Model Unit Tests', () {
+    const candidate1 = CandidateTrack(
+      id: 'c1',
+      title: 'Song 1 (Official)',
+      artist: 'Artist',
+      durationMs: 200000,
+    );
+    const candidate2 = CandidateTrack(
+      id: 'c2',
+      title: 'Song 1 (Live)',
+      artist: 'Artist Live',
+      durationMs: 210000,
+    );
     const stream1 = AudioStreamResponse(
       url: 'https://cdn1.example.com/1.m4a',
       quality: AudioQuality.high,
@@ -24,48 +36,73 @@ void main() {
       expect(candidates.hasAlternatives, isFalse);
       expect(candidates.isFallback, isFalse);
       expect(candidates.activeStream, isNull);
+      expect(candidates.activeCandidateId, isNull);
+      expect(candidates.currentCandidate, isNull);
       expect(candidates.isCurrentStreamExpired, isFalse);
+      expect(candidates.needsStreamResolution, isFalse);
     });
 
-    test('provides activeStream and calculates flags correctly', () {
-      const candidates = PlaybackCandidates(
-        streams: [stream1, stream2],
-        activeIndex: 0,
+    test('fromResolvedPlayback constructs populated model accurately', () {
+      const playback = ResolvedTrackPlayback(
+        stream: stream1,
+        candidates: [candidate1, candidate2],
+        activeCandidateId: 'c1',
       );
 
-      expect(candidates.count, equals(2));
-      expect(candidates.hasAlternatives, isTrue);
-      expect(candidates.isFallback, isFalse);
-      expect(candidates.activeStream, equals(stream1));
+      final model = PlaybackCandidates.fromResolvedPlayback(playback);
+
+      expect(model.count, equals(2));
+      expect(model.activeCandidateId, equals('c1'));
+      expect(model.activeStream, equals(stream1));
+      expect(model.currentCandidate, equals(candidate1));
+      expect(model.hasAlternatives, isTrue);
+      expect(model.isFallback, isFalse);
+      expect(model.needsStreamResolution, isFalse);
     });
 
-    test('select updates activeIndex with bounds validation', () {
+    test('select updates activeCandidateId and clears stream for JIT resolution', () {
       const candidates = PlaybackCandidates(
-        streams: [stream1, stream2],
-        activeIndex: 0,
+        candidates: [candidate1, candidate2],
+        activeStream: stream1,
+        activeCandidateId: 'c1',
       );
 
-      final updated = candidates.select(1);
-      expect(updated.activeIndex, equals(1));
-      expect(updated.activeStream, equals(stream2));
-      expect(updated.isFallback, isTrue);
-
-      final invalid = candidates.select(5);
-      expect(invalid.activeIndex, equals(0));
+      final selected = candidates.select(1);
+      expect(selected.activeCandidateId, equals('c2'));
+      expect(selected.activeStream, isNull);
+      expect(selected.needsStreamResolution, isTrue);
+      expect(selected.isFallback, isTrue);
     });
 
-    test('next advances to subsequent candidate when available', () {
+    test('next advances to subsequent candidate and clears stream for JIT resolution', () {
       const candidates = PlaybackCandidates(
-        streams: [stream1, stream2],
-        activeIndex: 0,
+        candidates: [candidate1, candidate2],
+        activeStream: stream1,
+        activeCandidateId: 'c1',
       );
 
-      final nextCandidates = candidates.next();
-      expect(nextCandidates.activeIndex, equals(1));
-      expect(nextCandidates.activeStream, equals(stream2));
+      expect(candidates.hasNext, isTrue);
+      expect(candidates.nextCandidate, equals(candidate2));
 
-      final endCandidates = nextCandidates.next();
-      expect(endCandidates.activeIndex, equals(1));
+      final nextState = candidates.next();
+      expect(nextState.activeCandidateId, equals('c2'));
+      expect(nextState.activeStream, isNull);
+      expect(nextState.needsStreamResolution, isTrue);
+      expect(nextState.hasNext, isFalse);
+    });
+
+    test('attachStream attaches newly resolved stream to active candidate', () {
+      final pending = const PlaybackCandidates(
+        candidates: [candidate1, candidate2],
+        activeCandidateId: 'c2',
+      );
+
+      expect(pending.needsStreamResolution, isTrue);
+
+      final attached = pending.attachStream(stream2);
+      expect(attached.activeStream, equals(stream2));
+      expect(attached.activeCandidateId, equals('c2'));
+      expect(attached.needsStreamResolution, isFalse);
     });
 
     test('isCurrentStreamExpired evaluates timestamp comparison correctly', () {
@@ -80,17 +117,37 @@ void main() {
         expiresAt: DateTime.now().millisecondsSinceEpoch + 1000000,
       );
 
-      final expiredCandidates = PlaybackCandidates(streams: [pastStream]);
+      final expiredCandidates = PlaybackCandidates(
+        candidates: [candidate1],
+        activeStream: pastStream,
+        activeCandidateId: 'c1',
+      );
       expect(expiredCandidates.isCurrentStreamExpired, isTrue);
 
-      final validCandidates = PlaybackCandidates(streams: [validStream]);
+      final validCandidates = PlaybackCandidates(
+        candidates: [candidate1],
+        activeStream: validStream,
+        activeCandidateId: 'c1',
+      );
       expect(validCandidates.isCurrentStreamExpired, isFalse);
     });
 
     test('value equality is supported', () {
-      const c1 = PlaybackCandidates(streams: [stream1], activeIndex: 0);
-      const c2 = PlaybackCandidates(streams: [stream1], activeIndex: 0);
-      const c3 = PlaybackCandidates(streams: [stream2], activeIndex: 0);
+      const c1 = PlaybackCandidates(
+        candidates: [candidate1],
+        activeStream: stream1,
+        activeCandidateId: 'c1',
+      );
+      const c2 = PlaybackCandidates(
+        candidates: [candidate1],
+        activeStream: stream1,
+        activeCandidateId: 'c1',
+      );
+      const c3 = PlaybackCandidates(
+        candidates: [candidate2],
+        activeStream: stream2,
+        activeCandidateId: 'c2',
+      );
 
       expect(c1, equals(c2));
       expect(c1.hashCode, equals(c2.hashCode));

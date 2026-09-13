@@ -5,34 +5,56 @@ import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
 
 void main() {
   group('CandidatesState Model Unit Tests', () {
+    const candidate1 = CandidateTrack(
+      id: 'c1',
+      title: 'Song 1 (Official)',
+      artist: 'Artist',
+      durationMs: 200000,
+    );
+    const candidate2 = CandidateTrack(
+      id: 'c2',
+      title: 'Song 1 (Live)',
+      artist: 'Artist Live',
+      durationMs: 210000,
+    );
     const stream1 = AudioStreamResponse(
       url: 'https://cdn1.example.com/1.m4a',
       quality: AudioQuality.high,
     );
-    const stream2 = AudioStreamResponse(
-      url: 'https://cdn2.example.com/2.opus',
-      quality: AudioQuality.medium,
-    );
 
     test('fromPlaybackCandidates maps domain model accurately', () {
       const domain = PlaybackCandidates(
-        streams: [stream1, stream2],
-        activeIndex: 1,
+        candidates: [candidate1, candidate2],
+        activeStream: stream1,
+        activeCandidateId: 'c2',
       );
 
       final state = CandidatesState.fromPlaybackCandidates(domain);
 
       expect(state.count, equals(2));
-      expect(state.activeIndex, equals(1));
+      expect(state.activeCandidateId, equals('c2'));
+      expect(state.activeStream, equals(stream1));
+      expect(state.activeCandidate, equals(candidate2));
       expect(state.hasAlternatives, isTrue);
       expect(state.isFallback, isTrue);
-      expect(state.activeStream, equals(stream2));
     });
 
     test('value equality is supported', () {
-      const s1 = CandidatesState(streams: [stream1], activeIndex: 0);
-      const s2 = CandidatesState(streams: [stream1], activeIndex: 0);
-      const s3 = CandidatesState(streams: [stream2], activeIndex: 1);
+      const s1 = CandidatesState(
+        candidates: [candidate1],
+        activeStream: stream1,
+        activeCandidateId: 'c1',
+      );
+      const s2 = CandidatesState(
+        candidates: [candidate1],
+        activeStream: stream1,
+        activeCandidateId: 'c1',
+      );
+      const s3 = CandidatesState(
+        candidates: [candidate2],
+        activeStream: stream1,
+        activeCandidateId: 'c2',
+      );
 
       expect(s1, equals(s2));
       expect(s1.hashCode, equals(s2.hashCode));

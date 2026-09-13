@@ -68,7 +68,6 @@ void main() {
       isClientStarted = false;
       mockClient = MockAudioSourceClient();
 
-      // Stato dinamico: isStarted si aggiorna quando start() e stop() vengono chiamati
       when(() => mockClient.isStarted).thenAnswer((_) => isClientStarted);
       when(() => mockClient.port).thenReturn(8765);
       when(() => mockClient.start()).thenAnswer((_) async {
@@ -155,7 +154,7 @@ void main() {
     );
 
     test(
-      'resolveStream throws PluginNotLoadedException when engine is not running',
+      'resolveTrack throws PluginNotLoadedException when engine is not running',
       () async {
         final track = Track(
           id: 't1',
@@ -175,30 +174,36 @@ void main() {
         );
 
         expect(
-          () async => await engine.resolveStream(track),
+          () async => await engine.resolveTrack(track),
           throwsA(isA<PluginNotLoadedException>()),
         );
       },
     );
 
-    test('resolveStream delegates to client when running', () async {
+    test('resolveTrack delegates to client when running', () async {
       final zipBytes = createTestAudioSourceZip();
       await engine.loadFromZipBytes(zipBytes);
 
-      const streamResponse = AudioStreamResponse(
-        url: 'https://cdn.example.com/audio.m4a',
-        quality: AudioQuality.high,
-        bitrate: 160000,
+      const playback = ResolvedTrackPlayback(
+        stream: AudioStreamResponse(
+          url: 'https://cdn.example.com/audio.m4a',
+          quality: AudioQuality.high,
+          bitrate: 160000,
+        ),
+        candidates: [
+          CandidateTrack(id: 'c1', title: 'Test Song', artist: 'Artist'),
+        ],
+        activeCandidateId: 'c1',
       );
 
       when(
-        () => mockClient.getStream(
+        () => mockClient.resolveTrack(
           title: 'Test Song',
           artists: ['Artist'],
           durationMs: 120000,
           quality: AudioQuality.high,
         ),
-      ).thenAnswer((_) async => [streamResponse]);
+      ).thenAnswer((_) async => playback);
 
       final track = Track(
         id: 't1',
@@ -217,10 +222,30 @@ void main() {
         durationMs: 120000,
       );
 
-      final result = await engine.resolveStream(track);
+      final result = await engine.resolveTrack(track);
 
-      expect(result.length, equals(1));
-      expect(result.first.url, equals('https://cdn.example.com/audio.m4a'));
+      expect(result.activeCandidateId, equals('c1'));
+      expect(result.stream.url, equals('https://cdn.example.com/audio.m4a'));
+    });
+
+    test('resolveStream delegates to client when running', () async {
+      final zipBytes = createTestAudioSourceZip();
+      await engine.loadFromZipBytes(zipBytes);
+
+      const stream = AudioStreamResponse(
+        url: 'https://cdn.example.com/alt.m4a',
+        quality: AudioQuality.high,
+      );
+
+      when(
+        () => mockClient.resolveStream(
+          candidateId: 'c2',
+          quality: AudioQuality.high,
+        ),
+      ).thenAnswer((_) async => stream);
+
+      final result = await engine.resolveStream('c2');
+      expect(result.url, equals('https://cdn.example.com/alt.m4a'));
     });
 
     test('terminate stops client and clears active state', () async {

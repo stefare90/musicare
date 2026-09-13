@@ -3,23 +3,52 @@ import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
 
 @immutable
 class PlaybackCandidates {
-  final List<AudioStreamResponse> streams;
-  final int activeIndex;
+  final List<CandidateTrack> candidates;
+  final AudioStreamResponse? activeStream;
+  final String? activeCandidateId;
 
-  const PlaybackCandidates({this.streams = const [], this.activeIndex = 0});
+  const PlaybackCandidates({
+    this.candidates = const [],
+    this.activeStream,
+    this.activeCandidateId,
+  });
 
-  bool get isEmpty => streams.isEmpty;
-  bool get isNotEmpty => streams.isNotEmpty;
-  int get count => streams.length;
-  bool get hasAlternatives => streams.length > 1;
-  bool get isFallback => activeIndex > 0;
-  bool get hasNext => activeIndex + 1 < streams.length;
+  factory PlaybackCandidates.fromResolvedPlayback(
+    ResolvedTrackPlayback playback,
+  ) {
+    return PlaybackCandidates(
+      candidates: playback.candidates,
+      activeStream: playback.stream,
+      activeCandidateId: playback.activeCandidateId,
+    );
+  }
 
-  AudioStreamResponse? get activeStream {
-    if (isEmpty || activeIndex < 0 || activeIndex >= streams.length) {
-      return null;
+  bool get isEmpty => candidates.isEmpty;
+  bool get isNotEmpty => candidates.isNotEmpty;
+  int get count => candidates.length;
+  bool get hasAlternatives => candidates.length > 1;
+
+  int get activeIndex {
+    if (activeCandidateId == null) return -1;
+    return candidates.indexWhere((c) => c.id == activeCandidateId);
+  }
+
+  CandidateTrack? get currentCandidate {
+    final idx = activeIndex;
+    if (idx >= 0 && idx < candidates.length) {
+      return candidates[idx];
     }
-    return streams[activeIndex];
+    return null;
+  }
+
+  bool get isFallback => activeIndex > 0;
+  bool get hasNext => activeIndex >= 0 && activeIndex + 1 < candidates.length;
+
+  CandidateTrack? get nextCandidate {
+    if (hasNext) {
+      return candidates[activeIndex + 1];
+    }
+    return null;
   }
 
   bool get isCurrentStreamExpired {
@@ -30,18 +59,37 @@ class PlaybackCandidates {
     return nowMs >= expiryMs;
   }
 
+  bool get needsStreamResolution =>
+      activeStream == null && activeCandidateId != null;
+
   PlaybackCandidates select(int index) {
-    if (index >= 0 && index < streams.length) {
-      return PlaybackCandidates(streams: streams, activeIndex: index);
+    if (index >= 0 && index < candidates.length) {
+      return PlaybackCandidates(
+        candidates: candidates,
+        activeStream: null,
+        activeCandidateId: candidates[index].id,
+      );
     }
     return this;
   }
 
   PlaybackCandidates next() {
     if (hasNext) {
-      return PlaybackCandidates(streams: streams, activeIndex: activeIndex + 1);
+      return PlaybackCandidates(
+        candidates: candidates,
+        activeStream: null,
+        activeCandidateId: candidates[activeIndex + 1].id,
+      );
     }
     return this;
+  }
+
+  PlaybackCandidates attachStream(AudioStreamResponse stream) {
+    return PlaybackCandidates(
+      candidates: candidates,
+      activeStream: stream,
+      activeCandidateId: activeCandidateId,
+    );
   }
 
   @override
@@ -49,9 +97,11 @@ class PlaybackCandidates {
       identical(this, other) ||
       other is PlaybackCandidates &&
           runtimeType == other.runtimeType &&
-          activeIndex == other.activeIndex &&
-          listEquals(streams, other.streams);
+          activeCandidateId == other.activeCandidateId &&
+          activeStream == other.activeStream &&
+          listEquals(candidates, other.candidates);
 
   @override
-  int get hashCode => Object.hash(activeIndex, Object.hashAll(streams));
+  int get hashCode =>
+      Object.hash(activeCandidateId, activeStream, Object.hashAll(candidates));
 }

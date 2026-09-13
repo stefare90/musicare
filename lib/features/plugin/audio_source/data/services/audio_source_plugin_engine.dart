@@ -126,7 +126,7 @@ class AudioSourcePluginEngine {
     await loadFromDisk(manifest.id);
   }
 
-  Future<List<AudioStreamResponse>> resolveStream(
+  Future<ResolvedTrackPlayback> resolveTrack(
     Track track, {
     AudioQuality quality = AudioQuality.high,
   }) async {
@@ -134,10 +134,24 @@ class AudioSourcePluginEngine {
       throw PluginNotLoadedException();
     }
 
-    return _client.getStream(
+    return _client.resolveTrack(
       title: track.name,
       artists: track.artists.map((a) => a.name).toList(),
       durationMs: track.durationMs,
+      quality: quality,
+    );
+  }
+
+  Future<AudioStreamResponse> resolveStream(
+    String candidateId, {
+    AudioQuality quality = AudioQuality.high,
+  }) async {
+    if (!isRunning) {
+      throw PluginNotLoadedException();
+    }
+
+    return _client.resolveStream(
+      candidateId: candidateId,
       quality: quality,
     );
   }

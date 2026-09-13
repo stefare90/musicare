@@ -35,7 +35,12 @@ void main() {
       durationMs: 259000,
     );
 
-    const candidate1 = AudioStreamResponse(
+    const candidate1 = CandidateTrack(
+      id: 'c1',
+      title: 'Come Together (Official)',
+    );
+
+    const stream1 = AudioStreamResponse(
       url: 'https://cdn1.example.com/stream1.m4a',
       quality: AudioQuality.high,
       bitrate: 160000,
@@ -50,7 +55,7 @@ void main() {
       'resolveTrack delegates to engine and propagates PluginNotLoadedException',
       () async {
         when(
-          () => mockEngine.resolveStream(testTrack, quality: AudioQuality.high),
+          () => mockEngine.resolveTrack(testTrack, quality: AudioQuality.high),
         ).thenThrow(PluginNotLoadedException());
 
         expect(
@@ -64,8 +69,14 @@ void main() {
       'resolveTrack throws StreamResolutionException if candidates list is empty',
       () async {
         when(
-          () => mockEngine.resolveStream(testTrack, quality: AudioQuality.high),
-        ).thenAnswer((_) async => []);
+          () => mockEngine.resolveTrack(testTrack, quality: AudioQuality.high),
+        ).thenAnswer(
+          (_) async => const ResolvedTrackPlayback(
+            stream: stream1,
+            candidates: [],
+            activeCandidateId: '',
+          ),
+        );
 
         expect(
           () async => await resolver.resolveTrack(testTrack),
@@ -75,17 +86,35 @@ void main() {
     );
 
     test(
-      'resolveTrack returns PlaybackCandidates with resolved streams',
+      'resolveTrack returns PlaybackCandidates with resolved candidates and stream',
       () async {
         when(
-          () => mockEngine.resolveStream(testTrack, quality: AudioQuality.high),
-        ).thenAnswer((_) async => [candidate1]);
+          () => mockEngine.resolveTrack(testTrack, quality: AudioQuality.high),
+        ).thenAnswer(
+          (_) async => const ResolvedTrackPlayback(
+            stream: stream1,
+            candidates: [candidate1],
+            activeCandidateId: 'c1',
+          ),
+        );
 
         final resolved = await resolver.resolveTrack(testTrack);
 
-        expect(resolved.streams.length, equals(1));
-        expect(resolved.activeStream?.url, equals(candidate1.url));
+        expect(resolved.candidates.length, equals(1));
+        expect(resolved.activeCandidateId, equals('c1'));
+        expect(resolved.activeStream?.url, equals(stream1.url));
       },
     );
+
+    test('resolveCandidateStream delegates directly to engine', () async {
+      when(
+        () => mockEngine.resolveStream('c1', quality: AudioQuality.high),
+      ).thenAnswer((_) async => stream1);
+
+      final stream = await resolver.resolveCandidateStream('c1');
+
+      expect(stream.url, equals(stream1.url));
+      verify(() => mockEngine.resolveStream('c1', quality: AudioQuality.high)).called(1);
+    });
   });
 }
