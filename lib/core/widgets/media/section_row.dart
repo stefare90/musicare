@@ -3,6 +3,7 @@ import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/core/widgets/error_tile.dart';
 import 'package:music_are/core/widgets/media/media_card.dart';
 import 'package:music_are/core/widgets/media/media_card_error.dart';
+import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/core/widgets/skeletons/shimmer_box.dart';
 import 'package:music_are/core/widgets/skeletons/skeleton_section_row.dart';
 
@@ -45,12 +46,17 @@ class SectionRow extends StatelessWidget {
     if (items.isEmpty) return const SizedBox.shrink();
 
     final showTrailingCard = hasMore || isLoadingMore || loadMoreError != null;
+    final rowHeight = MediaCardMetrics.rowHeight(context);
+    final itemCount = items.length + (showTrailingCard ? 1 : 0);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          padding: const EdgeInsets.symmetric(
+            horizontal: MediaCardMetrics.edgeInset,
+            vertical: MediaCardMetrics.sectionTitleVerticalPadding,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -63,7 +69,7 @@ class SectionRow extends StatelessWidget {
           ),
         ),
         SizedBox(
-          height: 212,
+          height: rowHeight,
           child: NotificationListener<ScrollNotification>(
             onNotification: (ScrollNotification scrollInfo) {
               if (hasMore &&
@@ -76,35 +82,55 @@ class SectionRow extends StatelessWidget {
             },
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 10.0),
-              itemCount: items.length + (showTrailingCard ? 1 : 0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: MediaCardMetrics.edgeInset,
+              ),
+              itemCount: itemCount,
               itemBuilder: (context, index) {
+                final isLast = index == itemCount - 1;
+                Widget child;
+
                 if (index < items.length) {
                   final item = items[index];
-                  return MediaCard(
-                    item: item,
-                    onTap: onItemTap != null ? () => onItemTap!(item) : null,
+                  child = SizedBox(
+                    width: MediaCardMetrics.rowCardWidth,
+                    child: MediaCard(
+                      item: item,
+                      onTap: onItemTap != null ? () => onItemTap!(item) : null,
+                    ),
+                  );
+                } else if (loadMoreError != null) {
+                  child = SizedBox(
+                    width: MediaCardMetrics.rowCardWidth,
+                    child: MediaCardError(
+                      title: title,
+                      error: loadMoreError!,
+                      onRetry: onLoadMore,
+                    ),
+                  );
+                } else {
+                  if (hasMore && !isLoadingMore) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      onLoadMore?.call();
+                    });
+                  }
+                  child = SizedBox(
+                    width: MediaCardMetrics.rowCardWidth,
+                    child: ShimmerBox(
+                      width: MediaCardMetrics.rowCardWidth,
+                      height: rowHeight,
+                      borderRadius: BorderRadius.circular(
+                        MediaCardMetrics.radius,
+                      ),
+                    ),
                   );
                 }
-                if (loadMoreError != null) {
-                  return MediaCardError(
-                    title: title,
-                    error: loadMoreError!,
-                    onRetry: onLoadMore,
-                  );
-                }
-                if (hasMore && !isLoadingMore) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    onLoadMore?.call();
-                  });
-                }
-                return const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
-                  child: ShimmerBox(
-                    width: 135.0,
-                    height: 204.0,
-                    borderRadius: BorderRadius.all(Radius.circular(14.0)),
+
+                return Padding(
+                  padding: EdgeInsets.only(
+                    right: isLast ? 0 : MediaCardMetrics.gap,
                   ),
+                  child: child,
                 );
               },
             ),

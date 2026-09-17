@@ -1,80 +1,88 @@
 import 'package:flutter/material.dart';
 import 'package:music_are/core/models/media_item_metadata.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
+import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/core/widgets/media/media_cover_image.dart';
 
 class MediaCard extends StatelessWidget {
   final Object item;
   final VoidCallback? onTap;
-  final double width;
 
-  const MediaCard({
-    super.key,
-    required this.item,
-    this.onTap,
-    this.width = 150.0,
-  });
+  const MediaCard({super.key, required this.item, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final meta = MediaItemMetadata.from(item);
     final subtitle = meta.getFormattedSubtitle(context);
 
-    return Container(
-      width: width,
-      margin: const EdgeInsets.symmetric(horizontal: 4.0),
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        elevation: 1,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14.0),
-        ),
-        child: InkWell(
-          onTap: onTap,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AspectRatio(
-                aspectRatio: 1.0,
-                child: MediaCoverImage(
-                  images: meta.images,
-                  mediaType: meta.mediaType,
-                  width: width,
-                  height: width,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8.0,
-                  vertical: 6.0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      meta.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.textTheme.titleSmall?.copyWith(
-                        color: context.colorScheme.primary,
-                        height: 1.15,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    if (subtitle.isNotEmpty)
-                      Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.textTheme.labelSmall,
-                      ),
-                  ],
-                ),
-              ),
-            ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : null;
+        final textBlockHeight = MediaCardMetrics.textBlockHeight(context);
+
+        return Card(
+          margin: EdgeInsets.zero,
+          clipBehavior: Clip.antiAlias,
+          elevation: 1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(MediaCardMetrics.radius),
           ),
-        ),
-      ),
+          child: InkWell(
+            onTap: onTap,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AspectRatio(
+                  aspectRatio: 1.0,
+                  child: MediaCoverImage(
+                    images: meta.images,
+                    mediaType: meta.mediaType,
+                    width: cardWidth,
+                    height: cardWidth,
+                  ),
+                ),
+                SizedBox(
+                  height: textBlockHeight,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: MediaCardMetrics.textHorizontalPadding,
+                      vertical: MediaCardMetrics.textVerticalPadding,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          meta.title,
+                          maxLines: MediaCardMetrics.titleMaxLines,
+                          overflow: TextOverflow.ellipsis,
+                          style: MediaCardMetrics.titleStyle(
+                            context.textTheme,
+                          ).copyWith(color: context.colorScheme.primary),
+                        ),
+                        const SizedBox(
+                          height: MediaCardMetrics.titleSubtitleGap,
+                        ),
+                        Text(
+                          subtitle,
+                          maxLines: MediaCardMetrics.subtitleMaxLines,
+                          overflow: TextOverflow.ellipsis,
+                          style: MediaCardMetrics.subtitleStyle(
+                            context.textTheme,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
+
