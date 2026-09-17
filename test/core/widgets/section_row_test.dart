@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/widgets/media/media_card.dart';
+import 'package:music_are/core/widgets/media/media_card_error.dart';
+import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/core/widgets/media/section_row.dart';
 
 void main() {
@@ -65,6 +67,34 @@ void main() {
       expect(find.text('Empty Section'), findsNothing);
       expect(find.byType(SizedBox), findsOneWidget);
     });
+
+    for (final scale in [1.0, 2.0]) {
+      testWidgets(
+        'error card in the row is as wide as the real cards at $scale',
+        (tester) async {
+          await tester.pumpWidget(
+            buildTestableWidget(
+              textScale: scale,
+              child: SectionRow(
+                title: 'Rock Classics',
+                items: [testAlbum],
+                loadMoreError: Exception('Network timeout'),
+              ),
+            ),
+          );
+
+          expect(
+            tester.getSize(find.byType(MediaCard)).width,
+            MediaCardMetrics.rowCardWidth,
+          );
+          expect(
+            tester.getSize(find.byType(MediaCardError)).width,
+            MediaCardMetrics.rowCardWidth,
+          );
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
 
     for (final scale in [1.0, 1.3, 1.5, 2.0]) {
       for (final viewport in const [

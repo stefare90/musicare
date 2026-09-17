@@ -139,6 +139,7 @@ class TrackMatrix extends StatelessWidget {
 
                 if (loadMoreError != null) {
                   return MediaCardError(
+                    width: columnWidth,
                     title: title,
                     error: loadMoreError!,
                     onRetry: onLoadMore,

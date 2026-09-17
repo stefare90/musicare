@@ -8,6 +8,7 @@ import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/theme/app_theme.dart';
 import 'package:music_are/core/widgets/media/media_card.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
+import 'package:music_are/core/widgets/media/media_cover_image.dart';
 
 void main() {
   Widget buildTestableWidget({required Widget child, double textScale = 1.0}) {
@@ -59,6 +60,37 @@ void main() {
         find.textContaining('Album • A Very Long Artist Name'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('explicit width pins the card and its square cover', (
+      tester,
+    ) async {
+      const cardWidth = 120.0;
+
+      await tester.pumpWidget(
+        buildTestableWidget(
+          child: Builder(
+            builder: (context) => SizedBox(
+              height: MediaCardMetrics.cardHeight(context, cardWidth),
+              child: MediaCard(item: buildAlbum(), width: cardWidth),
+            ),
+          ),
+        ),
+      );
+
+      final context = tester.element(find.byType(MediaCard));
+      final size = tester.getSize(find.byType(MediaCard));
+
+      expect(size.width, cardWidth);
+      expect(
+        size.height,
+        closeTo(cardWidth + MediaCardMetrics.textBlockHeight(context), 0.01),
+      );
+      expect(
+        tester.getSize(find.byType(MediaCoverImage)),
+        const Size(cardWidth, cardWidth),
+      );
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('renders Playlist with title and Playlist • owner subtitle', (

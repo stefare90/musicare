@@ -92,21 +92,17 @@ class SectionRow extends StatelessWidget {
 
                 if (index < items.length) {
                   final item = items[index];
-                  child = SizedBox(
+                  child = MediaCard(
                     width: MediaCardMetrics.rowCardWidth,
-                    child: MediaCard(
-                      item: item,
-                      onTap: onItemTap != null ? () => onItemTap!(item) : null,
-                    ),
+                    item: item,
+                    onTap: onItemTap != null ? () => onItemTap!(item) : null,
                   );
                 } else if (loadMoreError != null) {
-                  child = SizedBox(
+                  child = MediaCardError(
                     width: MediaCardMetrics.rowCardWidth,
-                    child: MediaCardError(
-                      title: title,
-                      error: loadMoreError!,
-                      onRetry: onLoadMore,
-                    ),
+                    title: title,
+                    error: loadMoreError!,
+                    onRetry: onLoadMore,
                   );
                 } else {
                   if (hasMore && !isLoadingMore) {
@@ -114,14 +110,11 @@ class SectionRow extends StatelessWidget {
                       onLoadMore?.call();
                     });
                   }
-                  child = SizedBox(
+                  child = ShimmerBox(
                     width: MediaCardMetrics.rowCardWidth,
-                    child: ShimmerBox(
-                      width: MediaCardMetrics.rowCardWidth,
-                      height: rowHeight,
-                      borderRadius: BorderRadius.circular(
-                        MediaCardMetrics.radius,
-                      ),
+                    height: rowHeight,
+                    borderRadius: BorderRadius.circular(
+                      MediaCardMetrics.radius,
                     ),
                   );
                 }

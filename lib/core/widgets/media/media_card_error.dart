@@ -15,7 +15,7 @@ class MediaCardError extends StatelessWidget {
     required this.title,
     required this.error,
     this.onRetry,
-    this.width = 135.0,
+    required this.width,
   });
 
   @override
@@ -33,7 +33,6 @@ class MediaCardError extends StatelessWidget {
 
     return Container(
       width: width,
-      margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
       padding: const EdgeInsets.all(10.0),
       decoration: BoxDecoration(
         color: context.colorScheme.surfaceContainerHighest.withValues(
