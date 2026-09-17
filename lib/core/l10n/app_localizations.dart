@@ -633,6 +633,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select Artist'**
   String get selectArtistTitle;
+
+  /// No description provided for @searchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search songs, albums, artists...'**
+  String get searchHint;
+
+  /// No description provided for @searchEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Music'**
+  String get searchEmptyTitle;
+
+  /// No description provided for @searchEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Type above to search songs, albums, artists, and playlists.'**
+  String get searchEmptySubtitle;
+
+  /// No description provided for @searchNoResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No Results Found'**
+  String get searchNoResultsTitle;
+
+  /// No description provided for @searchNoResultsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Try searching for a different keyword or check your spelling.'**
+  String get searchNoResultsSubtitle;
+
+  /// No description provided for @searchAllChip.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get searchAllChip;
+
+  /// No description provided for @searchTracksHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs'**
+  String get searchTracksHeader;
+
+  /// No description provided for @searchAlbumsHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Albums'**
+  String get searchAlbumsHeader;
+
+  /// No description provided for @searchArtistsHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Artists'**
+  String get searchArtistsHeader;
+
+  /// No description provided for @searchPlaylistsHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists'**
+  String get searchPlaylistsHeader;
 }
 
 class _AppLocalizationsDelegate

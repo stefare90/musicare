@@ -89,5 +89,15 @@
   "lyricsComingSoon": "Lyrics coming soon",
   "downloadComingSoon": "Download coming soon",
   "favoritesComingSoon": "Favorites coming soon",
-  "selectArtistTitle": "Select Artist"
+  "selectArtistTitle": "Select Artist",
+  "searchHint": "Search songs, albums, artists...",
+  "searchEmptyTitle": "Search Music",
+  "searchEmptySubtitle": "Type above to search songs, albums, artists, and playlists.",
+  "searchNoResultsTitle": "No Results Found",
+  "searchNoResultsSubtitle": "Try searching for a different keyword or check your spelling.",
+  "searchAllChip": "All",
+  "searchTracksHeader": "Songs",
+  "searchAlbumsHeader": "Albums",
+  "searchArtistsHeader": "Artists",
+  "searchPlaylistsHeader": "Playlists"
 }

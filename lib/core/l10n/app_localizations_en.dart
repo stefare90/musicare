@@ -307,4 +307,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectArtistTitle => 'Select Artist';
+
+  @override
+  String get searchHint => 'Search songs, albums, artists...';
+
+  @override
+  String get searchEmptyTitle => 'Search Music';
+
+  @override
+  String get searchEmptySubtitle =>
+      'Type above to search songs, albums, artists, and playlists.';
+
+  @override
+  String get searchNoResultsTitle => 'No Results Found';
+
+  @override
+  String get searchNoResultsSubtitle =>
+      'Try searching for a different keyword or check your spelling.';
+
+  @override
+  String get searchAllChip => 'All';
+
+  @override
+  String get searchTracksHeader => 'Songs';
+
+  @override
+  String get searchAlbumsHeader => 'Albums';
+
+  @override
+  String get searchArtistsHeader => 'Artists';
+
+  @override
+  String get searchPlaylistsHeader => 'Playlists';
 }
