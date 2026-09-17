@@ -92,22 +92,6 @@ MusicAre follows a decoupled, Feature-First Clean Architecture organized into we
 3. **Services Layer (IoC / Dependency Injection)**: Houses central application services registered in `GetIt`, including host storage, native network clients, `AudioPlayerDriver`, and Plugin Engines.
 4. **Plugin Subsystems**: Interpreters acting as data providers decoupled from the Flutter UI thread.
 
-### Responsive Media Cards & Skeletons
-
-The geometry of `MediaCard` and of every skeleton that mimics it is centralized in **`MediaCardMetrics`** (`lib/core/widgets/media/media_card_metrics.dart`), the single source of truth for:
-
-* Horizontal rhythm: `edgeInset` (16) and the gap between cards (12), shared by grids, horizontal `SectionRow`s and section titles.
-* Card sizing: `minCardWidth` / `maxCardWidth` for grid column computation and the fixed `rowCardWidth` (150) of horizontal rows. The card no longer imposes a fixed width nor carries its own margin: the calling layout owns the spacing.
-* **`TextScaler`-aware text block height**: computed via `TextPainter` + `MediaQuery.textScalerOf`, so the card text area grows with the user font size.
-
-The `_PaginatedMediaGrid` (search Albums/Artists/Playlists) builds its `SliverGridDelegateWithFixedCrossAxisCount` with `mainAxisExtent = cellWidth + textBlockHeight`, guaranteeing a square cover and a text block that always fits, regardless of `textScaler` (verified at 1.0/1.3/1.5/2.0). `SkeletonMediaGrid`, `SkeletonSectionRow` and `SkeletonSearchAll` reuse the exact same metrics, so placeholders are pixel-coherent with the loaded results (no visual jump).
-
-#### Column-aligned pagination & scrollable non-list states
-
-`SearchCubit` always requests a `limit` that is a whole number of grid rows. The view computes the actual column count from the available width (`MediaCardMetrics.gridColumns`) and notifies the cubit through `updateGridColumns(int)`, a pure setter that never emits state (stale-value guarded) so it can be called from a post-frame callback without triggering a rebuild loop. `MediaCardMetrics.pageSizeForColumns(pageSize, columns)` rounds the page size up to the nearest multiple of the columns, so the grid categories (Albums/Artists/Playlists) never end with a partially filled row; the track list keeps the raw `pageSize`. `SkeletonMediaGrid` applies the same rounding to its placeholder count, and the progressive loading of a grid category (`loadMore`) appends a **full row of skeleton cells** (`columns` × `ShimmerBox`) instead of a lone `CircularProgressIndicator`, keeping the grid rhythm coherent with the initial skeleton.
-
-The non-list states (empty query, error, no results) are rendered through a `LayoutBuilder` + `SingleChildScrollView` + `ConstrainedBox(minHeight)` wrapper: they stay vertically centered when there is room and become scrollable on short viewports (landscape, keyboard open), eliminating any `RenderFlex` overflow.
-
 ---
 
 ## 📁 Project Directory Structure
