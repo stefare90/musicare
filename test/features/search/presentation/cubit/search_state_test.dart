@@ -6,6 +6,33 @@ import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:music_are/features/search/presentation/cubit/search_state.dart';
 
 void main() {
+  final dummyTrack = Track(
+    id: 't1',
+    name: 'Song 1',
+    externalUri: '',
+    artists: [],
+    album: Album(
+      id: 'a1',
+      name: 'Alb',
+      artists: [],
+      releaseDate: '',
+      externalUri: '',
+      totalTracks: 1,
+      albumType: AlbumType.album,
+    ),
+    durationMs: 1000,
+  );
+
+  final dummyAlbum = Album(
+    id: 'al1',
+    name: 'Album 1',
+    artists: const [],
+    releaseDate: '2023',
+    externalUri: '',
+    totalTracks: 10,
+    albumType: AlbumType.album,
+  );
+
   group('SearchState Unit Tests', () {
     test('initial state has default values', () {
       const state = SearchState();
@@ -20,88 +47,73 @@ void main() {
       expect(state.isAllCategory, isTrue);
       expect(state.isEmptyQuery, isTrue);
       expect(state.hasResults, isFalse);
-      expect(state.resolvedCategory, equals(SearchCategory.all));
       expect(state.hasMore, isFalse);
     });
 
-    test('resolvedCategory maps chips correctly', () {
+    test('a null selection is the aggregate view and is never paged', () {
+      final state = SearchState(
+        allResults: SearchResponse(
+          tracks: [dummyTrack],
+          albums: [],
+          artists: [],
+          playlists: [],
+        ),
+      );
+
+      expect(state.isAllCategory, isTrue);
+      expect(state.hasResults, isTrue);
+      expect(state.hasMore, isFalse);
+    });
+
+    test('hasResults/hasMore read only the selected category results', () {
+      final paginated = SearchState(
+        selectedChip: SearchCategory.albums,
+        albumResults: PaginatedResult<Album>(
+          items: [dummyAlbum],
+          total: 2,
+          offset: 0,
+          limit: 1,
+        ),
+      );
+
+      expect(paginated.isAllCategory, isFalse);
+      expect(paginated.hasResults, isTrue);
+      expect(paginated.hasMore, isTrue);
+
       expect(
-        const SearchState(selectedChip: 'Songs').resolvedCategory,
-        equals(SearchCategory.tracks),
+        paginated.copyWith(selectedChip: SearchCategory.artists).hasResults,
+        isFalse,
       );
       expect(
-        const SearchState(selectedChip: 'tracks').resolvedCategory,
-        equals(SearchCategory.tracks),
-      );
-      expect(
-        const SearchState(selectedChip: 'Albums').resolvedCategory,
-        equals(SearchCategory.albums),
-      );
-      expect(
-        const SearchState(selectedChip: 'Artists').resolvedCategory,
-        equals(SearchCategory.artists),
-      );
-      expect(
-        const SearchState(selectedChip: 'Playlists').resolvedCategory,
-        equals(SearchCategory.playlists),
-      );
-      expect(
-        const SearchState(selectedChip: 'All').resolvedCategory,
-        equals(SearchCategory.all),
-      );
-      expect(
-        const SearchState(selectedChip: 'UnknownCategory').resolvedCategory,
-        equals(SearchCategory.all),
+        paginated.copyWith(selectedChip: SearchCategory.artists).hasMore,
+        isFalse,
       );
     });
 
-    test('hasResults and hasMore check all and category-specific results', () {
-      final searchResponse = SearchResponse(
-        tracks: [
-          Track(
-            id: 't1',
-            name: 'Song 1',
-            externalUri: '',
-            artists: [],
-            album: Album(
-              id: 'a1',
-              name: 'Alb',
-              artists: [],
-              releaseDate: '',
-              externalUri: '',
-              totalTracks: 1,
-              albumType: AlbumType.album,
-            ),
-            durationMs: 1000,
-          ),
-        ],
-        albums: [],
-        artists: [],
-        playlists: [],
+    test('a fully loaded category has no more pages', () {
+      final state = SearchState(
+        selectedChip: SearchCategory.albums,
+        albumResults: PaginatedResult<Album>(
+          items: [dummyAlbum, dummyAlbum],
+          total: 2,
+          offset: 0,
+          limit: 2,
+        ),
       );
 
-      final stateWithAll = SearchState(
-        query: 'test',
-        allResults: searchResponse,
-      );
-      expect(stateWithAll.hasResults, isTrue);
-      expect(stateWithAll.hasMore, isFalse);
+      expect(state.hasResults, isTrue);
+      expect(state.hasMore, isFalse);
+    });
 
-      final trackPagination = PaginatedResult<Track>(
-        items: searchResponse.tracks,
-        total: 10,
-        offset: 0,
-        limit: 1,
+    test('a category without loaded results has nothing to show', () {
+      expect(
+        const SearchState(selectedChip: SearchCategory.tracks).hasResults,
+        isFalse,
       );
-
-      final stateWithCategory = SearchState(
-        query: 'test',
-        selectedChip: 'Tracks',
-        trackResults: trackPagination,
+      expect(
+        const SearchState(selectedChip: SearchCategory.playlists).hasMore,
+        isFalse,
       );
-      expect(stateWithCategory.isAllCategory, isFalse);
-      expect(stateWithCategory.hasResults, isTrue);
-      expect(stateWithCategory.hasMore, isTrue);
     });
 
     test('copyWith updates state or clears specific fields', () {
@@ -109,15 +121,21 @@ void main() {
       final updated = state.copyWith(
         query: 'updated',
         isLoading: false,
-        selectedChip: 'Songs',
+        selectedChip: SearchCategory.tracks,
+        chips: const [SearchCategory.tracks, SearchCategory.albums],
       );
 
       expect(updated.query, equals('updated'));
       expect(updated.isLoading, isFalse);
-      expect(updated.selectedChip, equals('Songs'));
+      expect(updated.selectedChip, equals(SearchCategory.tracks));
+      expect(
+        updated.chips,
+        equals(const [SearchCategory.tracks, SearchCategory.albums]),
+      );
 
       final cleared = updated.copyWith(clearSelectedChip: true);
       expect(cleared.selectedChip, isNull);
+      expect(cleared.isAllCategory, isTrue);
     });
   });
 }

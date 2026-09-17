@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/playlist.dart';
+import 'package:gyawun_metadata_sdk/metadata/models/search.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
@@ -135,25 +136,21 @@ class _SearchChipsBar extends StatelessWidget {
           prev.chips != curr.chips ||
           prev.selectedChip != curr.selectedChip,
       builder: (context, state) {
-        final availableChips = ['All', ...state.chips];
-        final selectedChip = state.selectedChip ?? 'All';
+        final categories = <SearchCategory?>[null, ...state.chips];
 
         return SizedBox(
           height: 48.0,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
-            itemCount: availableChips.length,
+            itemCount: categories.length,
             separatorBuilder: (context, index) => const SizedBox(width: 8.0),
             itemBuilder: (context, index) {
-              final chip = availableChips[index];
-              final isSelected =
-                  chip.toLowerCase() == selectedChip.toLowerCase();
+              final category = categories[index];
+              final isSelected = category == state.selectedChip;
 
               return FilterChip(
-                label: Text(
-                  chip == 'All' ? context.l10n.searchAllChip : chip,
-                ),
+                label: Text(_categoryLabel(context, category)),
                 selected: isSelected,
                 showCheckmark: false,
                 selectedColor: context.colorScheme.primary,
@@ -162,17 +159,29 @@ class _SearchChipsBar extends StatelessWidget {
                       ? context.colorScheme.onPrimary
                       : context.colorScheme.onSurface,
                 ),
-                onSelected: (_) {
-                  context.read<SearchCubit>().selectChip(
-                        chip == 'All' ? null : chip,
-                      );
-                },
+                onSelected: (_) =>
+                    context.read<SearchCubit>().selectChip(category),
               );
             },
           ),
         );
       },
     );
+  }
+}
+
+String _categoryLabel(BuildContext context, SearchCategory? category) {
+  switch (category) {
+    case null:
+      return context.l10n.searchAllChip;
+    case SearchCategory.tracks:
+      return context.l10n.searchTracksHeader;
+    case SearchCategory.albums:
+      return context.l10n.searchAlbumsHeader;
+    case SearchCategory.artists:
+      return context.l10n.searchArtistsHeader;
+    case SearchCategory.playlists:
+      return context.l10n.searchPlaylistsHeader;
   }
 }
 
@@ -224,11 +233,12 @@ class _SearchResultsBody extends StatelessWidget {
               );
             }
 
-            if (state.isAllCategory) {
+            final category = state.selectedChip;
+            if (category == null) {
               return _AllResultsView(response: state.allResults!);
             }
 
-            return _CategoryResultsView(state: state);
+            return _CategoryResultsView(state: state, category: category);
           },
         );
       },
@@ -263,12 +273,12 @@ class _SearchLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final category = context.select<SearchCubit, SearchCategory>(
-      (c) => c.state.resolvedCategory,
+    final category = context.select<SearchCubit, SearchCategory?>(
+      (c) => c.state.selectedChip,
     );
 
     switch (category) {
-      case SearchCategory.all:
+      case null:
         return const SkeletonSearchAll();
       case SearchCategory.tracks:
         return ListView(
@@ -354,8 +364,9 @@ class _AllResultsView extends StatelessWidget {
 
 class _CategoryResultsView extends StatelessWidget {
   final SearchState state;
+  final SearchCategory category;
 
-  const _CategoryResultsView({required this.state});
+  const _CategoryResultsView({required this.state, required this.category});
 
   @override
   Widget build(BuildContext context) {
@@ -363,7 +374,7 @@ class _CategoryResultsView extends StatelessWidget {
       (c) => c.state.currentTrack?.id,
     );
 
-    switch (state.resolvedCategory) {
+    switch (category) {
       case SearchCategory.tracks:
         final items = state.trackResults?.items ?? [];
         return NotificationListener<ScrollNotification>(
@@ -426,9 +437,6 @@ class _CategoryResultsView extends StatelessWidget {
           hasMore: state.hasMore,
           isLoadingMore: state.isLoadingMore,
         );
-
-      case SearchCategory.all:
-        return const SizedBox.shrink();
     }
   }
 }

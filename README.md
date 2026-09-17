@@ -19,7 +19,7 @@ The application supports two distinct plugin subsystems:
 * **Universal Media Player**: Native background playback support (`just_audio_background`) with lock-screen controls, gapless transitions, and hardware media key bindings.
 * **Smart Queue Management**: Advanced immutable queue system supporting shuffle (preserving history), repeat modes (One, All, Off), and dynamic inserts.
 * **Fault-Tolerant Streaming**: Automatic candidate resolution—if a stream URL expires or returns a 403 Forbidden, the player automatically falls back to the next available stream.
-* **Global Search & Filter Chips**: Integrated with the active Metadata plugin (`ISearch`), supporting debounced queries, dynamic filter chips, aggregated search views, category pagination, and instant track playback.
+* **Global Search & Filter Chips**: Integrated with the active Metadata plugin (`ISearch`), supporting debounced queries, aggregated search views, category pagination, and instant track playback.
 * **Dynamic UI Generation**: The Home screen is generated entirely based on the sections (e.g., "Top Charts", "New Releases") returned by the active Metadata plugin.
 * **Modular Details Views**: Rich Slivers-based UI for Artists, Albums, and Playlists.
 

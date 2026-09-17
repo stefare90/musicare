@@ -3,6 +3,7 @@ import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/pagination.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/playlist.dart';
+import 'package:gyawun_metadata_sdk/metadata/models/search.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
@@ -46,10 +47,10 @@ class SearchCubit extends SafeCubit<SearchState> {
   void loadChips() {
     if (!_pluginEngine.hasMetadata) return;
     try {
-      final chips = _pluginEngine.metadata.search.chips();
-      emit(state.copyWith(chips: chips));
+      emit(state.copyWith(chips: _pluginEngine.metadata.search.chips()));
     } catch (_) {
-      // Ignora se non implementato dal plugin
+      // chips() is optional: fall back to every known category.
+      emit(state.copyWith(chips: SearchCategory.values));
     }
   }
 
@@ -81,17 +82,13 @@ class SearchCubit extends SafeCubit<SearchState> {
     });
   }
 
-  Future<void> selectChip(String? chip) async {
-    final normalizedChip = (chip == null || chip.trim().toLowerCase() == 'all')
-        ? null
-        : chip.trim();
-
-    if (state.selectedChip == normalizedChip) return;
+  Future<void> selectChip(SearchCategory? category) async {
+    if (state.selectedChip == category) return;
 
     emit(
       state.copyWith(
-        selectedChip: normalizedChip,
-        clearSelectedChip: normalizedChip == null,
+        selectedChip: category,
+        clearSelectedChip: category == null,
         clearTrackResults: true,
         clearAlbumResults: true,
         clearArtistResults: true,
@@ -117,12 +114,7 @@ class SearchCubit extends SafeCubit<SearchState> {
     if (cleanQuery.isEmpty) return;
 
     if (!_pluginEngine.hasMetadata) {
-      emit(
-        state.copyWith(
-          isLoading: false,
-          error: PluginNotLoadedException(),
-        ),
-      );
+      emit(state.copyWith(isLoading: false, error: PluginNotLoadedException()));
       return;
     }
 
@@ -137,98 +129,83 @@ class SearchCubit extends SafeCubit<SearchState> {
 
     try {
       final searchApi = _pluginEngine.metadata.search;
+      final category = state.selectedChip;
 
-      if (state.isAllCategory) {
-        final results = await searchApi.all(cleanQuery);
-        emit(
-          state.copyWith(
-            isLoading: false,
-            allResults: results,
-            clearError: true,
-          ),
-        );
-      } else {
-        switch (state.resolvedCategory) {
-          case SearchCategory.tracks:
-            final res = await searchApi.tracks(
-              cleanQuery,
-              offset: 0,
-              limit: pageSize,
-            );
-            emit(
-              state.copyWith(
-                isLoading: false,
-                trackResults: res,
-                clearError: true,
-              ),
-            );
-            break;
-          case SearchCategory.albums:
-            final res = await searchApi.albums(
-              cleanQuery,
-              offset: 0,
-              limit: _gridPageSize,
-            );
-            emit(
-              state.copyWith(
-                isLoading: false,
-                albumResults: res,
-                clearError: true,
-              ),
-            );
-            break;
-          case SearchCategory.artists:
-            final res = await searchApi.artists(
-              cleanQuery,
-              offset: 0,
-              limit: _gridPageSize,
-            );
-            emit(
-              state.copyWith(
-                isLoading: false,
-                artistResults: res,
-                clearError: true,
-              ),
-            );
-            break;
-          case SearchCategory.playlists:
-            final res = await searchApi.playlists(
-              cleanQuery,
-              offset: 0,
-              limit: _gridPageSize,
-            );
-            emit(
-              state.copyWith(
-                isLoading: false,
-                playlistResults: res,
-                clearError: true,
-              ),
-            );
-            break;
-          case SearchCategory.all:
-            final results = await searchApi.all(cleanQuery);
-            emit(
-              state.copyWith(
-                isLoading: false,
-                allResults: results,
-                clearError: true,
-              ),
-            );
-            break;
-        }
+      switch (category) {
+        case SearchCategory.tracks:
+          final res = await searchApi.tracks(
+            cleanQuery,
+            offset: 0,
+            limit: pageSize,
+          );
+          emit(
+            state.copyWith(
+              isLoading: false,
+              trackResults: res,
+              clearError: true,
+            ),
+          );
+          break;
+        case SearchCategory.albums:
+          final res = await searchApi.albums(
+            cleanQuery,
+            offset: 0,
+            limit: _gridPageSize,
+          );
+          emit(
+            state.copyWith(
+              isLoading: false,
+              albumResults: res,
+              clearError: true,
+            ),
+          );
+          break;
+        case SearchCategory.artists:
+          final res = await searchApi.artists(
+            cleanQuery,
+            offset: 0,
+            limit: _gridPageSize,
+          );
+          emit(
+            state.copyWith(
+              isLoading: false,
+              artistResults: res,
+              clearError: true,
+            ),
+          );
+          break;
+        case SearchCategory.playlists:
+          final res = await searchApi.playlists(
+            cleanQuery,
+            offset: 0,
+            limit: _gridPageSize,
+          );
+          emit(
+            state.copyWith(
+              isLoading: false,
+              playlistResults: res,
+              clearError: true,
+            ),
+          );
+          break;
+        case null:
+          final results = await searchApi.all(cleanQuery);
+          emit(
+            state.copyWith(
+              isLoading: false,
+              allResults: results,
+              clearError: true,
+            ),
+          );
       }
     } catch (e) {
-      emit(
-        state.copyWith(
-          isLoading: false,
-          error: e,
-        ),
-      );
+      emit(state.copyWith(isLoading: false, error: e));
     }
   }
 
   Future<void> loadMore() async {
-    if (state.isAllCategory ||
+    final category = state.selectedChip;
+    if (category == null ||
         state.isLoading ||
         state.isLoadingMore ||
         !state.hasMore) {
@@ -237,18 +214,13 @@ class SearchCubit extends SafeCubit<SearchState> {
 
     if (!_pluginEngine.hasMetadata) return;
 
-    emit(
-      state.copyWith(
-        isLoadingMore: true,
-        clearLoadMoreError: true,
-      ),
-    );
+    emit(state.copyWith(isLoadingMore: true, clearLoadMoreError: true));
 
     try {
       final searchApi = _pluginEngine.metadata.search;
       final cleanQuery = state.query.trim();
 
-      switch (state.resolvedCategory) {
+      switch (category) {
         case SearchCategory.tracks:
           final current = state.trackResults!;
           final res = await searchApi.tracks(
@@ -262,14 +234,8 @@ class SearchCubit extends SafeCubit<SearchState> {
             offset: res.offset,
             limit: res.limit,
           );
-          emit(
-            state.copyWith(
-              isLoadingMore: false,
-              trackResults: updated,
-            ),
-          );
+          emit(state.copyWith(isLoadingMore: false, trackResults: updated));
           break;
-
         case SearchCategory.albums:
           final current = state.albumResults!;
           final res = await searchApi.albums(
@@ -283,14 +249,8 @@ class SearchCubit extends SafeCubit<SearchState> {
             offset: res.offset,
             limit: res.limit,
           );
-          emit(
-            state.copyWith(
-              isLoadingMore: false,
-              albumResults: updated,
-            ),
-          );
+          emit(state.copyWith(isLoadingMore: false, albumResults: updated));
           break;
-
         case SearchCategory.artists:
           final current = state.artistResults!;
           final res = await searchApi.artists(
@@ -304,14 +264,8 @@ class SearchCubit extends SafeCubit<SearchState> {
             offset: res.offset,
             limit: res.limit,
           );
-          emit(
-            state.copyWith(
-              isLoadingMore: false,
-              artistResults: updated,
-            ),
-          );
+          emit(state.copyWith(isLoadingMore: false, artistResults: updated));
           break;
-
         case SearchCategory.playlists:
           final current = state.playlistResults!;
           final res = await searchApi.playlists(
@@ -325,25 +279,11 @@ class SearchCubit extends SafeCubit<SearchState> {
             offset: res.offset,
             limit: res.limit,
           );
-          emit(
-            state.copyWith(
-              isLoadingMore: false,
-              playlistResults: updated,
-            ),
-          );
-          break;
-
-        case SearchCategory.all:
-          emit(state.copyWith(isLoadingMore: false));
+          emit(state.copyWith(isLoadingMore: false, playlistResults: updated));
           break;
       }
     } catch (e) {
-      emit(
-        state.copyWith(
-          isLoadingMore: false,
-          loadMoreError: e,
-        ),
-      );
+      emit(state.copyWith(isLoadingMore: false, loadMoreError: e));
     }
   }
 

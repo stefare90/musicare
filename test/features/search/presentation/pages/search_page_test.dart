@@ -7,8 +7,10 @@ import 'package:gyawun_metadata_sdk/metadata/interfaces/isearch.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/pagination.dart';
+import 'package:gyawun_metadata_sdk/metadata/models/playlist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/search.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
+import 'package:gyawun_metadata_sdk/metadata/models/user.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
@@ -72,6 +74,16 @@ void main() {
     playlists: [],
   );
 
+  final dummyArtist = Artist(id: 'ar1', name: 'Coldplay', externalUri: '');
+
+  final dummyPlaylist = Playlist(
+    id: 'pl1',
+    name: 'Parachutes Era',
+    description: '',
+    externalUri: '',
+    owner: User(id: 'u1', name: 'Someone', externalUri: ''),
+  );
+
   setUp(() {
     mockEngine = MockMetadataPluginEngine();
     mockMetadata = MockMetadataPlugin();
@@ -81,7 +93,12 @@ void main() {
     when(() => mockEngine.hasMetadata).thenReturn(true);
     when(() => mockEngine.metadata).thenReturn(mockMetadata);
     when(() => mockMetadata.search).thenReturn(mockSearch);
-    when(() => mockSearch.chips()).thenReturn(['Songs', 'Albums', 'Artists']);
+    when(() => mockSearch.chips())
+        .thenReturn(const [
+          SearchCategory.tracks,
+          SearchCategory.albums,
+          SearchCategory.artists,
+        ]);
     when(() => mockSearch.all(any())).thenAnswer((_) async => dummyResponse);
 
     when(() => mockPlayerCubit.state).thenReturn(const PlayerState());
@@ -135,6 +152,160 @@ void main() {
     expect(find.text('All'), findsOneWidget);
     expect(find.text('Songs'), findsOneWidget);
     expect(find.text('Albums'), findsOneWidget);
+  });
+
+  group('typed chip subsets', () {
+    Future<void> pumpWithChips(
+      WidgetTester tester,
+      List<SearchCategory> chips,
+    ) async {
+      when(() => mockSearch.chips()).thenReturn(chips);
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('an empty subset leaves only the aggregate chip',
+        (tester) async {
+      await pumpWithChips(tester, const []);
+
+      expect(find.byType(FilterChip), findsOneWidget);
+      expect(find.text('All'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a one-category subset renders host-side localized labels',
+        (tester) async {
+      await pumpWithChips(tester, const [SearchCategory.albums]);
+
+      expect(find.byType(FilterChip), findsNWidgets(2));
+      expect(find.text('All'), findsOneWidget);
+      expect(find.text('Albums'), findsOneWidget);
+      expect(find.text('Songs'), findsNothing);
+    });
+
+    testWidgets('all four categories render their localized labels',
+        (tester) async {
+      await pumpWithChips(tester, SearchCategory.values);
+
+      for (final label in ['All', 'Songs', 'Albums', 'Artists', 'Playlists']) {
+        expect(find.text(label), findsOneWidget);
+      }
+    });
+
+    testWidgets('every declared category loads by value and never renders '
+        'an empty body', (tester) async {
+      when(() => mockSearch.chips()).thenReturn(SearchCategory.values);
+      when(
+        () =>
+            mockSearch.tracks('Coldplay', offset: 0, limit: any(named: 'limit')),
+      ).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: [dummyTrack],
+          total: 1,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+      when(
+        () =>
+            mockSearch.albums('Coldplay', offset: 0, limit: any(named: 'limit')),
+      ).thenAnswer(
+        (_) async => PaginatedResult<Album>(
+          items: buildAlbums(3),
+          total: 3,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+      when(
+        () => mockSearch.artists(
+          'Coldplay',
+          offset: 0,
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer(
+        (_) async => PaginatedResult<Artist>(
+          items: [dummyArtist],
+          total: 1,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+      when(
+        () => mockSearch.playlists(
+          'Coldplay',
+          offset: 0,
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer(
+        (_) async => PaginatedResult<Playlist>(
+          items: [dummyPlaylist],
+          total: 1,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Coldplay');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+
+      final cubit = BlocProvider.of<SearchCubit>(
+        tester.element(find.byType(FilterChip).first),
+      );
+
+      for (final category in SearchCategory.values) {
+        await cubit.selectChip(category);
+        await tester.pumpAndSettle();
+
+        expect(cubit.state.selectedChip, category);
+        if (category == SearchCategory.tracks) {
+          expect(
+            find.byType(TrackListTile),
+            findsWidgets,
+            reason: 'tracks must render its list, not an empty body',
+          );
+        } else {
+          expect(
+            find.byType(MediaCard),
+            findsWidgets,
+            reason: '$category must render its grid, not an empty body',
+          );
+        }
+        expect(tester.takeException(), isNull);
+      }
+
+      verify(
+        () =>
+            mockSearch.tracks('Coldplay', offset: 0, limit: any(named: 'limit')),
+      ).called(1);
+      verify(
+        () =>
+            mockSearch.albums('Coldplay', offset: 0, limit: any(named: 'limit')),
+      ).called(1);
+      verify(
+        () => mockSearch.artists(
+          'Coldplay',
+          offset: 0,
+          limit: any(named: 'limit'),
+        ),
+      ).called(1);
+      verify(
+        () => mockSearch.playlists(
+          'Coldplay',
+          offset: 0,
+          limit: any(named: 'limit'),
+        ),
+      ).called(1);
+
+      await cubit.selectChip(null);
+      await tester.pumpAndSettle();
+
+      expect(cubit.state.isAllCategory, isTrue);
+      expect(find.byType(MediaCard), findsWidgets);
+    });
   });
 
   testWidgets('SearchPage triggers search on typing and displays results', (tester) async {
@@ -308,7 +479,7 @@ void main() {
             final cubit = BlocProvider.of<SearchCubit>(
               tester.element(find.byType(FilterChip).first),
             );
-            cubit.selectChip('Albums');
+            cubit.selectChip(SearchCategory.albums);
             await tester.pumpAndSettle();
 
             verify(
@@ -364,7 +535,7 @@ void main() {
 
       BlocProvider.of<SearchCubit>(
         tester.element(find.byType(FilterChip).first),
-      ).selectChip('Albums');
+      ).selectChip(SearchCategory.albums);
       await tester.pumpAndSettle();
 
       final realSize = tester.getSize(find.byType(MediaCard).first);
@@ -430,7 +601,7 @@ void main() {
     final cubit = BlocProvider.of<SearchCubit>(
       tester.element(find.byType(FilterChip).first),
     );
-    await cubit.selectChip('Albums');
+    await cubit.selectChip(SearchCategory.albums);
     await tester.pumpAndSettle();
     expect(cubit.state.hasMore, isTrue);
 

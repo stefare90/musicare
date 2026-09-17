@@ -5,12 +5,10 @@ import 'package:gyawun_metadata_sdk/metadata/models/playlist.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/search.dart';
 import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
 
-enum SearchCategory { all, tracks, albums, artists, playlists }
-
 class SearchState {
   final String query;
-  final List<String> chips;
-  final String? selectedChip; // null or 'all' represents SearchCategory.all
+  final List<SearchCategory> chips;
+  final SearchCategory? selectedChip;
   final bool isLoading;
   final bool isLoadingMore;
   final Object? error;
@@ -38,86 +36,46 @@ class SearchState {
     this.playlistResults,
   });
 
-  bool get isAllCategory =>
-      selectedChip == null ||
-      selectedChip!.isEmpty ||
-      selectedChip!.toLowerCase() == 'all';
+  bool get isAllCategory => selectedChip == null;
 
   bool get isEmptyQuery => query.trim().isEmpty;
 
   bool get hasResults {
-    if (isAllCategory) {
-      if (allResults == null) return false;
-      return allResults!.tracks.isNotEmpty ||
-          allResults!.albums.isNotEmpty ||
-          allResults!.artists.isNotEmpty ||
-          allResults!.playlists.isNotEmpty;
-    }
-
-    final category = resolvedCategory;
-    switch (category) {
-      case SearchCategory.tracks:
-        return (trackResults?.items.isNotEmpty ?? false);
-      case SearchCategory.albums:
-        return (albumResults?.items.isNotEmpty ?? false);
-      case SearchCategory.artists:
-        return (artistResults?.items.isNotEmpty ?? false);
-      case SearchCategory.playlists:
-        return (playlistResults?.items.isNotEmpty ?? false);
-      case SearchCategory.all:
-        return allResults != null &&
-            (allResults!.tracks.isNotEmpty ||
-                allResults!.albums.isNotEmpty ||
-                allResults!.artists.isNotEmpty ||
-                allResults!.playlists.isNotEmpty);
-    }
-  }
-
-  SearchCategory get resolvedCategory {
-    if (selectedChip == null || selectedChip!.isEmpty) {
-      return SearchCategory.all;
-    }
-    final normalized = selectedChip!.trim().toLowerCase();
-    if (normalized == 'tracks' || normalized == 'songs' || normalized == 'song' || normalized == 'track') {
-      return SearchCategory.tracks;
-    }
-    if (normalized == 'albums' || normalized == 'album') {
-      return SearchCategory.albums;
-    }
-    if (normalized == 'artists' || normalized == 'artist') {
-      return SearchCategory.artists;
-    }
-    if (normalized == 'playlists' || normalized == 'playlist') {
-      return SearchCategory.playlists;
-    }
-    return SearchCategory.all;
+    if (isAllCategory) return _aggregateHasContent;
+    return _activeResults?.items.isNotEmpty ?? false;
   }
 
   bool get hasMore {
-    if (isAllCategory) return false;
-    final category = resolvedCategory;
-    switch (category) {
+    final results = _activeResults;
+    return results != null && results.items.length < results.total;
+  }
+
+  bool get _aggregateHasContent =>
+      allResults != null &&
+      (allResults!.tracks.isNotEmpty ||
+          allResults!.albums.isNotEmpty ||
+          allResults!.artists.isNotEmpty ||
+          allResults!.playlists.isNotEmpty);
+
+  PaginatedResult<Object>? get _activeResults {
+    switch (selectedChip) {
       case SearchCategory.tracks:
-        if (trackResults == null) return false;
-        return trackResults!.items.length < trackResults!.total;
+        return trackResults;
       case SearchCategory.albums:
-        if (albumResults == null) return false;
-        return albumResults!.items.length < albumResults!.total;
+        return albumResults;
       case SearchCategory.artists:
-        if (artistResults == null) return false;
-        return artistResults!.items.length < artistResults!.total;
+        return artistResults;
       case SearchCategory.playlists:
-        if (playlistResults == null) return false;
-        return playlistResults!.items.length < playlistResults!.total;
-      case SearchCategory.all:
-        return false;
+        return playlistResults;
+      case null:
+        return null;
     }
   }
 
   SearchState copyWith({
     String? query,
-    List<String>? chips,
-    String? selectedChip,
+    List<SearchCategory>? chips,
+    SearchCategory? selectedChip,
     bool clearSelectedChip = false,
     bool? isLoading,
     bool? isLoadingMore,
@@ -139,23 +97,28 @@ class SearchState {
     return SearchState(
       query: query ?? this.query,
       chips: chips ?? this.chips,
-      selectedChip:
-          clearSelectedChip ? null : (selectedChip ?? this.selectedChip),
+      selectedChip: clearSelectedChip
+          ? null
+          : (selectedChip ?? this.selectedChip),
       isLoading: isLoading ?? this.isLoading,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       error: clearError ? null : (error ?? this.error),
-      loadMoreError:
-          clearLoadMoreError ? null : (loadMoreError ?? this.loadMoreError),
-      allResults:
-          clearAllResults ? null : (allResults ?? this.allResults),
-      trackResults:
-          clearTrackResults ? null : (trackResults ?? this.trackResults),
-      albumResults:
-          clearAlbumResults ? null : (albumResults ?? this.albumResults),
-      artistResults:
-          clearArtistResults ? null : (artistResults ?? this.artistResults),
-      playlistResults:
-          clearPlaylistResults ? null : (playlistResults ?? this.playlistResults),
+      loadMoreError: clearLoadMoreError
+          ? null
+          : (loadMoreError ?? this.loadMoreError),
+      allResults: clearAllResults ? null : (allResults ?? this.allResults),
+      trackResults: clearTrackResults
+          ? null
+          : (trackResults ?? this.trackResults),
+      albumResults: clearAlbumResults
+          ? null
+          : (albumResults ?? this.albumResults),
+      artistResults: clearArtistResults
+          ? null
+          : (artistResults ?? this.artistResults),
+      playlistResults: clearPlaylistResults
+          ? null
+          : (playlistResults ?? this.playlistResults),
     );
   }
 }

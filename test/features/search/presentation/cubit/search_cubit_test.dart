@@ -70,13 +70,34 @@ void main() {
       cubit.close();
     });
 
-    test('loadChips fetches chips from ISearch', () {
-      when(() => mockSearch.chips()).thenReturn(['Songs', 'Albums', 'Artists']);
+    test('loadChips stores the typed subset declared by ISearch', () {
+      when(() => mockSearch.chips())
+          .thenReturn(const [SearchCategory.tracks, SearchCategory.playlists]);
 
       cubit.loadChips();
 
-      expect(cubit.state.chips, equals(['Songs', 'Albums', 'Artists']));
+      expect(
+        cubit.state.chips,
+        equals(const [SearchCategory.tracks, SearchCategory.playlists]),
+      );
       verify(() => mockSearch.chips()).called(1);
+    });
+
+    test('loadChips keeps an empty subset (aggregate-only plugin)', () {
+      when(() => mockSearch.chips()).thenReturn(const []);
+
+      cubit.loadChips();
+
+      expect(cubit.state.chips, isEmpty);
+      expect(cubit.state.isAllCategory, isTrue);
+    });
+
+    test('loadChips falls back to every category when chips() throws', () {
+      when(() => mockSearch.chips()).thenThrow(Exception('not implemented'));
+
+      cubit.loadChips();
+
+      expect(cubit.state.chips, equals(SearchCategory.values));
     });
 
     test('onQueryChanged clears state if query is empty', () {
@@ -124,11 +145,33 @@ void main() {
       ).thenAnswer((_) async => paginatedTracks);
 
       cubit.onQueryChanged('rock');
-      await cubit.selectChip('Songs');
+      await cubit.selectChip(SearchCategory.tracks);
 
-      expect(cubit.state.selectedChip, equals('Songs'));
-      expect(cubit.state.resolvedCategory, equals(SearchCategory.tracks));
+      expect(cubit.state.selectedChip, equals(SearchCategory.tracks));
       expect(cubit.state.trackResults, equals(paginatedTracks));
+    });
+
+    test('selectChip(null) returns to the aggregate view', () async {
+      when(
+        () => mockSearch.tracks('rock', offset: 0, limit: any(named: 'limit')),
+      ).thenAnswer(
+        (_) async => const PaginatedResult<Track>(
+          items: [],
+          total: 0,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+      when(() => mockSearch.all('rock')).thenAnswer((_) async => dummyResponse);
+
+      cubit.onQueryChanged('rock');
+      await cubit.selectChip(SearchCategory.tracks);
+      await cubit.selectChip(null);
+
+      expect(cubit.state.selectedChip, isNull);
+      expect(cubit.state.isAllCategory, isTrue);
+      expect(cubit.state.allResults, equals(dummyResponse));
+      verify(() => mockSearch.all('rock')).called(1);
     });
 
     test('loadMore fetches next page for active category', () async {
@@ -165,7 +208,7 @@ void main() {
         pageSize: 1,
       );
 
-      await pagedCubit.selectChip('tracks');
+      await pagedCubit.selectChip(SearchCategory.tracks);
       await pagedCubit.search('rock');
 
       expect(pagedCubit.state.trackResults?.items.length, equals(1));
@@ -247,17 +290,17 @@ void main() {
           );
 
           gridCubit.onQueryChanged('rock');
-          await gridCubit.selectChip('Albums');
+          await gridCubit.selectChip(SearchCategory.albums);
           verify(
             () => mockSearch.albums('rock', offset: 0, limit: expected),
           ).called(1);
 
-          await gridCubit.selectChip('Artists');
+          await gridCubit.selectChip(SearchCategory.artists);
           verify(
             () => mockSearch.artists('rock', offset: 0, limit: expected),
           ).called(1);
 
-          await gridCubit.selectChip('Playlists');
+          await gridCubit.selectChip(SearchCategory.playlists);
           verify(
             () => mockSearch.playlists('rock', offset: 0, limit: expected),
           ).called(1);
@@ -281,7 +324,7 @@ void main() {
         );
 
         cubit.onQueryChanged('rock');
-        await cubit.selectChip('Songs');
+        await cubit.selectChip(SearchCategory.tracks);
 
         verify(
           () => mockSearch.tracks('rock', offset: 0, limit: 20),
@@ -322,7 +365,7 @@ void main() {
         );
 
         gridCubit.onQueryChanged('rock');
-        await gridCubit.selectChip('Albums');
+        await gridCubit.selectChip(SearchCategory.albums);
         expect(gridCubit.state.hasMore, isTrue);
 
         await gridCubit.loadMore();
