@@ -176,4 +176,4 @@ Both `assets/app.zip` and `assets/sitepackages.zip` must be listed with a non-ze
 
 ## 🗺️ Project Roadmap
 
-To track progressive implementation milestones and upcoming tasks, please refer to the [Implementation Roadmap](documents/ROADMAP.md).
+For what is implemented and what is still missing, per feature area, see the [Feature Status Ledger](documents/ROADMAP.md).
