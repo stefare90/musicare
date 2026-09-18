@@ -145,13 +145,32 @@ Then run the staging script for your target platform:
 ```bash
 ./tool/build_python.sh Linux
 ```
-*This script automatically bundles Flask, the host runtime, and installs PIP dependencies into `build/site-packages`.*
+*This script bundles Flask, the host runtime and the PIP dependencies into `build/python-app` and `build/site-packages`, exporting both variables for you. It then verifies the produced artifacts and exits with a non-zero code if any of them is missing or empty.*
+
+#### Environment Variables
+Gradle consumes the staging through **two** environment variables when `flutter build apk` runs:
+
+- `SERIOUS_PYTHON_APP` — staging dir of the unpacked app, source of `assets/app.zip`. It has **no default**: when unset, the packaging is **silently skipped**, the build still succeeds and the APK contains no Python runtime at all (`serious_python` prints `Error: …` but exits `0`, and its Gradle task returns early).
+- `SERIOUS_PYTHON_SITE_PACKAGES` — PIP dependencies, source of `assets/sitepackages.zip`. Defaults to `<cwd>/build/site-packages` when unset.
+
+**VS Code** sets both of them for debug/run sessions via `.vscode/launch.json`, so no action is needed there. From a **terminal** both must be exported in the same shell that runs the build, which is what this single command does:
+```bash
+./tool/build_python.sh Android apk
+```
+
+Note that `flutter clean` deletes `build/` and therefore the whole staging: re-run the script before the next build.
 
 ### 3. Run the App
 Once the Python backend is staged, you can run the app normally:
 ```bash
 flutter run
 ```
+
+After building an APK, verify that it actually embeds the runtime:
+```bash
+unzip -l build/app/outputs/flutter-apk/app-*.apk | grep -E 'app\.zip|sitepackages\.zip'
+```
+Both `assets/app.zip` and `assets/sitepackages.zip` must be listed with a non-zero size: this is the only straightforward check for an APK that was built without Python.
 
 ---
 

@@ -46,6 +46,48 @@ dart run serious_python:main package build/host_staging \
   --compile-packages \
   --cleanup-packages
 
+# serious_python packaging is silent on failure: `dart run serious_python:main
+# package` swallows the missing SERIOUS_PYTHON_APP exception and exits 0
+# (<pub-cache>/serious_python-4.7.0/bin/package_command.dart), and the Gradle
+# packageApp task returns early when the variable is null or blank
+# (serious_python_android-4.7.0/android/build.gradle.kts). Verify the artifacts,
+# not the exit code, otherwise an APK without the Python runtime looks valid.
+STAGING_ERRORS=()
+
+if [ ! -s build/python-app/main.py ]; then
+  STAGING_ERRORS+=("build/python-app/main.py is missing or empty")
+fi
+
+if [ ! -d build/python-app/musicare_plugin_sdk ] \
+  || [ -z "$(ls -A build/python-app/musicare_plugin_sdk 2>/dev/null)" ]; then
+  STAGING_ERRORS+=("build/python-app/musicare_plugin_sdk/ is missing or empty")
+fi
+
+for ABI in arm64-v8a armeabi-v7a x86_64; do
+  if [ ! -d "build/site-packages/$ABI/flask" ] \
+    || [ -z "$(ls -A "build/site-packages/$ABI/flask" 2>/dev/null)" ]; then
+    STAGING_ERRORS+=("build/site-packages/$ABI/flask/ is missing or empty")
+  fi
+done
+
+if [ ${#STAGING_ERRORS[@]} -gt 0 ]; then
+  echo "=================================================="
+  echo "❌ Error: SeriousPython staging is incomplete for $PLATFORM"
+  echo "=================================================="
+  for STAGING_ERROR in "${STAGING_ERRORS[@]}"; do
+    echo "   - $STAGING_ERROR"
+  done
+  echo ""
+  echo "The packaging command reported success, but it produces nothing when"
+  echo "SERIOUS_PYTHON_APP is unset: it is swallowed by the serious_python CLI"
+  echo "(exit 0) and skipped by its Gradle task. Without those artifacts the"
+  echo "APK contains no app.zip and no sitepackages.zip, i.e. no Python runtime."
+  echo ""
+  echo "Re-run the staging from the project root (it exports both variables):"
+  echo "   ./tool/build_python.sh $PLATFORM"
+  exit 1
+fi
+
 echo "=================================================="
 echo "✅ SeriousPython Host Runtime staged successfully for $PLATFORM!"
 echo "=================================================="
@@ -61,9 +103,6 @@ if [ "$ACTION" == "apk" ] || [ "$ACTION" == "--build" ]; then
   echo "=================================================="
 else
   echo ""
-  echo "💡 To build the APK manually with the Python dependencies included, run:"
-  echo '   SERIOUS_PYTHON_SITE_PACKAGES=$(pwd)/build/site-packages flutter build apk'
-  echo ""
-  echo "👉 Or simply run this script with 'apk':"
-  echo "   ./tool/build_python.sh Android apk"
+  echo "💡 To build the APK with the Python runtime included, run:"
+  echo "   ./tool/build_python.sh $PLATFORM apk"
 fi
