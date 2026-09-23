@@ -7,7 +7,6 @@ import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/exception_localizer.dart';
-import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
 
 void main() {
   group('ExceptionLocalizer Unit Tests', () {

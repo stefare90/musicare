@@ -23,6 +23,18 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(PluginType.metadata);
+    registerFallbackValue(
+      PluginManifest(
+        id: 'org.fallback',
+        packageId: 'fallback_pkg',
+        type: 'metadata',
+        name: 'Fallback',
+        version: '1.0.0',
+        pluginSdkVersion: '4.0.0',
+        author: 'Tester',
+        description: 'Fallback',
+      ),
+    );
   });
 
   setUp(() async {
@@ -79,5 +91,53 @@ void main() {
     expect(find.text('Obsolete Provider'), findsOneWidget);
     expect(find.text('Test Plugin'), findsOneWidget);
     expect(find.byType(PluginDiscoveryWidget), findsOneWidget);
+  });
+
+  testWidgets('install button forwards the manifest to the metadata cubit', (
+    tester,
+  ) async {
+    when(() => mockPluginCubit.stream).thenAnswer((_) => const Stream.empty());
+
+    final obsoleteManifest = PluginManifest(
+      id: 'org.test',
+      packageId: 'test_pkg',
+      type: 'metadata',
+      name: 'Test Plugin',
+      version: '1.0.0',
+      pluginSdkVersion: '1.0.0',
+      author: 'Tester',
+      description: 'Desc',
+    );
+    final replacement = PluginManifest(
+      id: 'org.musicare.metadata.musicbrainz',
+      packageId: 'musicare_metadata_musicbrainz_plugin',
+      type: 'metadata',
+      name: 'MusicBrainz',
+      version: '1.0.0',
+      pluginSdkVersion: '4.0.0',
+      author: 'MusicAre Team',
+      description: 'Replacement',
+    );
+
+    when(
+      () => mockPluginCubit.state,
+    ).thenReturn(MetadataPluginIncompatibleState(obsoleteManifest));
+    when(
+      () =>
+          mockDiscoveryService.fetchCommunityPlugins(type: any(named: 'type')),
+    ).thenAnswer((_) async => [replacement]);
+    when(
+      () => mockPluginCubit.installDiscoveredPlugin(any()),
+    ).thenAnswer((_) async {});
+
+    await tester.pumpWidget(buildTestableWidget());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Install & Activate'));
+    await tester.pump();
+
+    verify(
+      () => mockPluginCubit.installDiscoveredPlugin(replacement),
+    ).called(1);
   });
 }

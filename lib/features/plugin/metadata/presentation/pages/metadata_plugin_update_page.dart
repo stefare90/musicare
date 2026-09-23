@@ -102,7 +102,14 @@ class MetadataPluginUpdatePage extends StatelessWidget {
                     return const SizedBox.shrink();
                   },
                 ),
-                const PluginDiscoveryWidget(pluginType: PluginType.metadata),
+                PluginDiscoveryWidget(
+                  pluginType: PluginType.metadata,
+                  onInstallTap: (manifest) {
+                    context
+                        .read<MetadataPluginCubit>()
+                        .installDiscoveredPlugin(manifest);
+                  },
+                ),
               ],
             ),
           ),

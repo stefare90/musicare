@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_are/features/player/data/models/playback_candidates.dart';
 import 'package:music_are/features/player/presentation/cubit/candidates_state.dart';
-import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
+import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
 
 void main() {
   group('CandidatesState Model Unit Tests', () {

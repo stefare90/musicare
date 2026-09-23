@@ -42,12 +42,12 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 
 ## 🔌 Plugin system (`lib/features/plugin/{shared,discovery,metadata}` + host adapters)
 ✅ Community plugin discovery from GitHub releases and in-app install/update.
-✅ Metadata plugin engine (`dart_eval`) with SemVer compatibility checks and per-plugin persistence.
-✅ Host adapters for network, storage and dynamic plugin forms (the channel used by plugin login).
-⬜ Non-throwing safe network for optional calls: a transport error, once retries are exhausted, breaks artist search, artist details and the saved-artists library.
+✅ Metadata plugin engine over the Python wire protocol (`musicare_metadata_host_sdk`), with SemVer compatibility checks and per-plugin persistence.
+✅ Host-side login form for metadata plugins (`MetadataAuthPresenter`); the OAuth browser flow is not supported (no `url_launcher`).
 
 ## 🐍 Audio source subsystem (`lib/features/plugin/audio_source/`, `tool/build_python.sh`)
-✅ Embedded CPython/Flask daemon (`serious_python` + Dart host SDK) with ephemeral port, hot plugin loading and stream resolution.
+✅ Embedded CPython daemon (`serious_python`) hosting both subsystems as two Flask apps on separate ephemeral ports, with hot plugin loading.
+✅ Audio source plugin engine over the wire protocol (`musicare_audio_host_sdk`), with candidate search and just-in-time stream resolution.
 ✅ Reproducible staging script with explicit artifact verification.
 ✅ Verified on Android 15 hardware (Moto G84).
 

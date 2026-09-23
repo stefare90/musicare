@@ -1,9 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gyawun_metadata_sdk/metadata/interfaces/ibrowse.dart';
-import 'package:gyawun_metadata_sdk/metadata/interfaces/imetadata_plugin.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/pagination.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/section.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/features/home/presentation/cubit/home_cubit.dart';
@@ -98,7 +94,7 @@ void main() {
         when(
           () => mockBrowse.sectionItems('s1', offset: 0, limit: 10),
         ).thenAnswer(
-          (_) async => PaginatedResult<Object>(
+          (_) async => PaginatedResult<MediaItem>(
             items: [testAlbum],
             total: 1,
             offset: 0,
@@ -141,7 +137,7 @@ void main() {
         when(
           () => mockBrowse.sectionItems('s1', offset: 0, limit: 10),
         ).thenAnswer(
-          (_) async => PaginatedResult<Object>(
+          (_) async => PaginatedResult<MediaItem>(
             items: [testAlbum],
             total: 1,
             offset: 0,

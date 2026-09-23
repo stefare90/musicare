@@ -1,4 +1,4 @@
-import 'package:gyawun_metadata_sdk/metadata/models/section.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/features/home/presentation/cubit/home_state.dart';
@@ -68,7 +68,6 @@ class HomeCubit extends SafeCubit<HomeState> {
         .sectionItems(sectionId, offset: 0, limit: 10)
         .then((itemsResult) {
           final List<Object> safeItems = itemsResult.items
-              .where((item) => item != null)
               .cast<Object>()
               .toList();
 

@@ -1,48 +1,69 @@
 #!/bin/bash
+# Stages the flat Python app (both engines + both plugin SDKs + the unified main.py) from
+# the musicare_plugin_sdk repository and packages it into the Flutter asset that
+# serious_python runs on the device.
+#
+# Usage: ./tool/build_python.sh [Android | Linux] [apk]
 set -e
 
 PLATFORM=${1:-Android}
 ACTION=${2:-}
 
 echo "=================================================="
-echo "1. Resolving SDK Location"
+echo "1. Resolving the plugin platform repository"
 echo "=================================================="
 
-# 1. Check local sibling directory first
-if [ -d "../musicare_audiosource_sdk" ]; then
-  SDK_DIR=$(realpath "../musicare_audiosource_sdk")
-elif [ -d "../../musicare_audiosource_sdk" ]; then
-  SDK_DIR=$(realpath "../../musicare_audiosource_sdk")
-else
-  # 2. Fallback to pub-cache git clone
-  SDK_DIR=$(find "$HOME/.pub-cache/git" -maxdepth 2 -type d -name "musicare_audiosource_sdk*" 2>/dev/null | head -n 1)
+# The staging sources live in the musicare_plugin_sdk repository (the pubspec git
+# dependency). Prefer the workspace checkout, then fall back to the pub-cache clone.
+PLATFORM_DIR=""
+for CANDIDATE in "../musicare_plugin_sdk" "../../musicare_plugin_sdk"; do
+  if [ -f "$CANDIDATE/python/main.py" ]; then
+    PLATFORM_DIR=$(realpath "$CANDIDATE")
+    break
+  fi
+done
+
+if [ -z "$PLATFORM_DIR" ]; then
+  PUB_CACHE_DIR=$(find "$HOME/.pub-cache/git" -maxdepth 1 -type d \
+    -name "musicare_plugin_sdk-*" 2>/dev/null | head -n 1)
+  if [ -n "$PUB_CACHE_DIR" ] && [ -f "$PUB_CACHE_DIR/python/main.py" ]; then
+    PLATFORM_DIR="$PUB_CACHE_DIR"
+  fi
 fi
 
-if [ -z "$SDK_DIR" ] || [ ! -d "$SDK_DIR" ]; then
-  echo "❌ Error: Could not locate 'musicare_audiosource_sdk' repository."
-  echo "Expected it at ../musicare_audiosource_sdk or in ~/.pub-cache/git/"
+if [ -z "$PLATFORM_DIR" ]; then
+  echo "❌ Error: could not locate the 'musicare_plugin_sdk' repository."
+  echo "Expected it at ../musicare_plugin_sdk (workspace) or in ~/.pub-cache/git/"
   exit 1
 fi
 
-echo "Found SDK at: $SDK_DIR"
+echo "Found plugin platform at: $PLATFORM_DIR"
 
 echo "=================================================="
-echo "2. Staging SeriousPython Host Runtime ($PLATFORM)"
+echo "2. Staging the SeriousPython host runtime ($PLATFORM)"
 echo "=================================================="
 rm -rf build/python-app build/site-packages build/host_staging
 mkdir -p build/python-app build/site-packages build/host_staging
 
-# Copy host_runtime and plugin_sdk into host_staging
-cp -r "$SDK_DIR/python/host_runtime/"* build/host_staging/
-cp -r "$SDK_DIR/python/plugin_sdk/musicare_plugin_sdk" build/host_staging/
+cp "$PLATFORM_DIR/python/main.py" build/host_staging/main.py
+cp "$PLATFORM_DIR/python/audio/host_runtime/audio_engine.py" \
+  build/host_staging/audio_engine.py
+cp "$PLATFORM_DIR/python/metadata/host_runtime/metadata_engine.py" \
+  build/host_staging/metadata_engine.py
+cp -r "$PLATFORM_DIR/python/audio/plugin_sdk/musicare_audio_plugin_sdk" \
+  build/host_staging/
+cp -r "$PLATFORM_DIR/python/metadata/plugin_sdk/musicare_metadata_plugin_sdk" \
+  build/host_staging/
 
 export SERIOUS_PYTHON_SITE_PACKAGES=$(pwd)/build/site-packages
 export SERIOUS_PYTHON_APP=$(pwd)/build/python-app
 
-# SeriousPython packages host daemon and downloads Flask automatically
+# `--requirements` values go straight to `pip install`, so `-r <file>` is how a
+# requirements file is passed (the `=` form keeps the leading dash unambiguous).
 dart run serious_python:main package build/host_staging \
   -p "$PLATFORM" \
-  -r flask \
+  --requirements=-r \
+  --requirements="$PLATFORM_DIR/python/metadata/host_runtime/requirements.txt" \
   --compile-packages \
   --cleanup-packages
 
@@ -54,14 +75,20 @@ dart run serious_python:main package build/host_staging \
 # not the exit code, otherwise an APK without the Python runtime looks valid.
 STAGING_ERRORS=()
 
-if [ ! -s build/python-app/main.py ]; then
-  STAGING_ERRORS+=("build/python-app/main.py is missing or empty")
-fi
+MAIN_FILES=(main.py audio_engine.py metadata_engine.py)
+for FILE in "${MAIN_FILES[@]}"; do
+  if [ ! -s "build/python-app/$FILE" ]; then
+    STAGING_ERRORS+=("build/python-app/$FILE is missing or empty")
+  fi
+done
 
-if [ ! -d build/python-app/musicare_plugin_sdk ] \
-  || [ -z "$(ls -A build/python-app/musicare_plugin_sdk 2>/dev/null)" ]; then
-  STAGING_ERRORS+=("build/python-app/musicare_plugin_sdk/ is missing or empty")
-fi
+SDK_DIRS=(musicare_audio_plugin_sdk musicare_metadata_plugin_sdk)
+for SDK in "${SDK_DIRS[@]}"; do
+  if [ ! -d "build/python-app/$SDK" ] \
+    || [ -z "$(ls -A "build/python-app/$SDK" 2>/dev/null)" ]; then
+    STAGING_ERRORS+=("build/python-app/$SDK/ is missing or empty")
+  fi
+done
 
 for ABI in arm64-v8a armeabi-v7a x86_64; do
   if [ ! -d "build/site-packages/$ABI/flask" ] \

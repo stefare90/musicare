@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/playlist.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/widgets/bottom_sheets/media_options_bottom_sheet.dart';
 

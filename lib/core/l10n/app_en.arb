@@ -11,6 +11,8 @@
   "retry": "Retry",
   "confirm": "Confirm",
   "cancel": "Cancel",
+  "authFormTitle": "Sign in",
+  "authFormSubmit": "Sign in",
   "homeTab": "Home",
   "searchTab": "Search",
   "libraryTab": "Library",

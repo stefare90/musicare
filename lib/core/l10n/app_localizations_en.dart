@@ -43,6 +43,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel => 'Cancel';
 
   @override
+  String get authFormTitle => 'Sign in';
+
+  @override
+  String get authFormSubmit => 'Sign in';
+
+  @override
   String get homeTab => 'Home';
 
   @override

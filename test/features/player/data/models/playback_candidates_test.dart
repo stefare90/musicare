@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_are/features/player/data/models/playback_candidates.dart';
-import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
+import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
 
 void main() {
   group('PlaybackCandidates Model Unit Tests', () {
@@ -40,24 +40,6 @@ void main() {
       expect(candidates.currentCandidate, isNull);
       expect(candidates.isCurrentStreamExpired, isFalse);
       expect(candidates.needsStreamResolution, isFalse);
-    });
-
-    test('fromResolvedPlayback constructs populated model accurately', () {
-      const playback = ResolvedTrackPlayback(
-        stream: stream1,
-        candidates: [candidate1, candidate2],
-        activeCandidateId: 'c1',
-      );
-
-      final model = PlaybackCandidates.fromResolvedPlayback(playback);
-
-      expect(model.count, equals(2));
-      expect(model.activeCandidateId, equals('c1'));
-      expect(model.activeStream, equals(stream1));
-      expect(model.currentCandidate, equals(candidate1));
-      expect(model.hasAlternatives, isTrue);
-      expect(model.isFallback, isFalse);
-      expect(model.needsStreamResolution, isFalse);
     });
 
     test('select updates activeCandidateId and clears stream for JIT resolution', () {
