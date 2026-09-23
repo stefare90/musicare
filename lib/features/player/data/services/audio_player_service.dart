@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/player/data/models/playback_data.dart';
 import 'package:music_are/features/player/data/models/playback_processing_state.dart';
 import 'package:music_are/features/player/data/services/audio_player_driver.dart';
 import 'package:music_are/features/player/data/services/audio_stream_resolver.dart';
-import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
 
 class AudioPlayerService {
   final AudioPlayerDriver _driver;

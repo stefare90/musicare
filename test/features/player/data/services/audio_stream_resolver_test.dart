@@ -1,13 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/image.dart' as sdk;
-import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:musicare_metadata_host_sdk/metadata/models/image.dart' as sdk;
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/features/player/data/services/audio_stream_resolver.dart';
+import 'package:music_are/features/player/data/models/resolved_track_playback.dart';
 import 'package:music_are/features/plugin/audio_source/data/services/audio_source_plugin_engine.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
-import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
+import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
 
 class MockAudioSourcePluginEngine extends Mock
     implements AudioSourcePluginEngine {}

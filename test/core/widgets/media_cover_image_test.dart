@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/image.dart' as sdk;
+import 'package:musicare_metadata_host_sdk/metadata/models/image.dart' as sdk;
 import 'package:music_are/core/models/media_type.dart';
 import 'package:music_are/core/widgets/media/media_cover_image.dart';
 

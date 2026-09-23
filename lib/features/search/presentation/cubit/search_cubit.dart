@@ -1,10 +1,5 @@
 import 'dart:async';
-import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/pagination.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/playlist.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/search.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
@@ -44,13 +39,14 @@ class SearchCubit extends SafeCubit<SearchState> {
     _gridColumns = columns;
   }
 
-  void loadChips() {
+  Future<void> loadChips() async {
     if (!_pluginEngine.hasMetadata) return;
     try {
-      emit(state.copyWith(chips: _pluginEngine.metadata.search.chips()));
+      final chips = await _pluginEngine.metadata.search.chips();
+      if (!isClosed) emit(state.copyWith(chips: chips));
     } catch (_) {
       // chips() is optional: fall back to every known category.
-      emit(state.copyWith(chips: SearchCategory.values));
+      if (!isClosed) emit(state.copyWith(chips: SearchCategory.values));
     }
   }
 

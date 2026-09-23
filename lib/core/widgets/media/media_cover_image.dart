@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/image.dart' as sdk;
+import 'package:musicare_metadata_host_sdk/metadata/models/image.dart' as sdk;
 import 'package:music_are/core/models/media_type.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 

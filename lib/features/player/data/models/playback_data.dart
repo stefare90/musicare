@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/features/player/data/models/playback_candidates.dart';
 import 'package:music_are/features/player/data/models/playback_processing_state.dart';
 import 'package:music_are/features/player/data/models/playback_queue.dart';
-import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
+import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
 
 @immutable
 class PlaybackData {

@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/image.dart' as sdk;
-import 'package:gyawun_metadata_sdk/metadata/models/playlist.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/user.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:musicare_metadata_host_sdk/metadata/models/image.dart' as sdk;
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/models/media_item_metadata.dart';
 import 'package:music_are/core/models/media_type.dart';

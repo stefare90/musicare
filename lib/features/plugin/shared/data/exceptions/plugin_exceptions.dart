@@ -1,6 +1,8 @@
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 
-abstract class PluginException implements Exception {}
+abstract class PluginException implements Exception {
+  const PluginException();
+}
 
 class PluginNotLoadedException extends PluginException {}
 
@@ -42,3 +44,9 @@ class PluginSearchException extends PluginException {
 }
 
 class PluginErrorNoContext extends PluginException {}
+
+class StreamResolutionException extends PluginException {
+  final String message;
+
+  const StreamResolutionException(this.message);
+}

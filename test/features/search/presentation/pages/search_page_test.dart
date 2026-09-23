@@ -2,15 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gyawun_metadata_sdk/metadata/interfaces/imetadata_plugin.dart';
-import 'package:gyawun_metadata_sdk/metadata/interfaces/isearch.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/pagination.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/playlist.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/search.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/user.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
@@ -93,12 +85,13 @@ void main() {
     when(() => mockEngine.hasMetadata).thenReturn(true);
     when(() => mockEngine.metadata).thenReturn(mockMetadata);
     when(() => mockMetadata.search).thenReturn(mockSearch);
-    when(() => mockSearch.chips())
-        .thenReturn(const [
-          SearchCategory.tracks,
-          SearchCategory.albums,
-          SearchCategory.artists,
-        ]);
+    when(() => mockSearch.chips()).thenAnswer(
+      (_) async => const [
+        SearchCategory.tracks,
+        SearchCategory.albums,
+        SearchCategory.artists,
+      ],
+    );
     when(() => mockSearch.all(any())).thenAnswer((_) async => dummyResponse);
 
     when(() => mockPlayerCubit.state).thenReturn(const PlayerState());
@@ -159,7 +152,7 @@ void main() {
       WidgetTester tester,
       List<SearchCategory> chips,
     ) async {
-      when(() => mockSearch.chips()).thenReturn(chips);
+      when(() => mockSearch.chips()).thenAnswer((_) async => chips);
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
     }
@@ -194,7 +187,9 @@ void main() {
 
     testWidgets('every declared category loads by value and never renders '
         'an empty body', (tester) async {
-      when(() => mockSearch.chips()).thenReturn(SearchCategory.values);
+      when(
+        () => mockSearch.chips(),
+      ).thenAnswer((_) async => SearchCategory.values);
       when(
         () =>
             mockSearch.tracks('Coldplay', offset: 0, limit: any(named: 'limit')),

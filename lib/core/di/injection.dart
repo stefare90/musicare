@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
-import 'package:gyawun_metadata_sdk/metadata/interfaces/inetwork_service.dart';
-import 'package:gyawun_metadata_sdk/metadata/interfaces/istorage_service.dart';
-import 'package:gyawun_metadata_sdk/metadata/interfaces/iui_service.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/router/app_router.dart';
 import 'package:music_are/core/services/network_service.dart';
 import 'package:music_are/core/services/preferences_service.dart';
@@ -14,11 +12,9 @@ import 'package:music_are/features/plugin/audio_source/data/services/audio_sourc
 import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
 import 'package:music_are/features/plugin/discovery/data/services/plugin_discovery_service.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
-import 'package:music_are/features/plugin/metadata/data/services/sdk_services/plugin_network_service.dart';
-import 'package:music_are/features/plugin/metadata/data/services/sdk_services/plugin_storage_service.dart';
-import 'package:music_are/features/plugin/metadata/data/services/sdk_services/plugin_ui_service.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
-import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
+import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
+import 'package:musicare_runtime_host/musicare_runtime_host.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final sl = GetIt.instance;
@@ -32,14 +28,29 @@ Future<void> initDependencies() async {
     () => PreferencesService(sl<SharedPreferences>()),
   );
   sl.registerLazySingleton<GlobalKey<NavigatorState>>(() => rootNavigatorKey);
-  sl.registerLazySingleton<INetworkService>(() => PluginNetworkService());
-  sl.registerLazySingleton<IStorageService>(
-    () => StorageService(sl<SharedPreferences>()),
+
+  final runtimeHost = RuntimeHost();
+  sl.registerSingleton<RuntimeHost>(runtimeHost);
+  await runtimeHost.start();
+
+  sl.registerLazySingleton<MetadataClient>(
+    () => MetadataClient(
+      baseUri: Uri.parse(
+        'http://127.0.0.1:${runtimeHost.portOf(Subsystem.metadata)}',
+      ),
+    ),
   );
-  sl.registerLazySingleton<IUIService>(
-    () => PluginUiService(navigatorKey: sl<GlobalKey<NavigatorState>>()),
+  sl.registerLazySingleton<AudioSourceClient>(
+    () => AudioSourceClient(
+      baseUri: Uri.parse(
+        'http://127.0.0.1:${runtimeHost.portOf(Subsystem.audio)}',
+      ),
+    ),
   );
-  sl.registerLazySingleton<MetadataPluginEngine>(() => MetadataPluginEngine());
+
+  sl.registerLazySingleton<MetadataPluginEngine>(
+    () => MetadataPluginEngine(client: sl<MetadataClient>()),
+  );
   sl.registerLazySingleton<MetadataPluginCubit>(
     () => MetadataPluginCubit(
       sl<MetadataPluginEngine>(),
@@ -50,7 +61,6 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<PluginDiscoveryService>(
     () => PluginDiscoveryService(networkService: sl<NetworkService>()),
   );
-  sl.registerLazySingleton<AudioSourceClient>(() => AudioSourceClient());
   sl.registerLazySingleton<AudioSourcePluginEngine>(
     () => AudioSourcePluginEngine(client: sl<AudioSourceClient>()),
   );

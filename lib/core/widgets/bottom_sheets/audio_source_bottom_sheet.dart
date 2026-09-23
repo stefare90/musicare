@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/core/widgets/bottom_sheets/base_modal_bottom_sheet.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
+import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
 
 void main() {
   group('AudioStreamResponse Model Tests', () {

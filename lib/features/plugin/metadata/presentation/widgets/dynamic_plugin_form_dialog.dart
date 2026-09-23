@@ -1,47 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:gyawun_metadata_sdk/metadata/interfaces/iui_service.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/form_input_field.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
-import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
-
-class PluginUiService implements IUIService {
-  final GlobalKey<NavigatorState> _navigatorKey;
-
-  PluginUiService({required GlobalKey<NavigatorState> navigatorKey})
-    : _navigatorKey = navigatorKey;
-
-  BuildContext? get _currentContext => _navigatorKey.currentContext;
-
-  @override
-  Future<Map<String, String>> showForm({
-    required String title,
-    String? message,
-    required List<FormInputField> fields,
-    String submitLabel = "Confirm",
-    String cancelLabel = "Cancel",
-  }) async {
-    final context = _currentContext;
-    if (context == null || !context.mounted) {
-      throw PluginErrorNoContext();
-    }
-
-    final result = await showDialog<Map<String, String>>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return DynamicPluginFormDialog(
-          title: title,
-          message: message,
-          fields: fields,
-          submitLabel: submitLabel,
-          cancelLabel: cancelLabel,
-        );
-      },
-    );
-
-    return result ?? <String, String>{};
-  }
-}
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 
 class DynamicPluginFormDialog extends StatefulWidget {
   final String title;
@@ -90,10 +49,7 @@ class _DynamicPluginFormDialogState extends State<DynamicPluginFormDialog> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (widget.message != null && widget.message!.isNotEmpty) ...[
-                Text(
-                  widget.message!,
-                  style: context.textTheme.bodyMedium,
-                ),
+                Text(widget.message!, style: context.textTheme.bodyMedium),
                 const SizedBox(height: 16),
               ],
               ...widget.fields.map((field) {

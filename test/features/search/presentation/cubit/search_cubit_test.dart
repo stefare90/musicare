@@ -1,12 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gyawun_metadata_sdk/metadata/interfaces/imetadata_plugin.dart';
-import 'package:gyawun_metadata_sdk/metadata/interfaces/isearch.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/pagination.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/playlist.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/search.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
@@ -70,11 +63,12 @@ void main() {
       cubit.close();
     });
 
-    test('loadChips stores the typed subset declared by ISearch', () {
-      when(() => mockSearch.chips())
-          .thenReturn(const [SearchCategory.tracks, SearchCategory.playlists]);
+    test('loadChips stores the typed subset declared by ISearch', () async {
+      when(() => mockSearch.chips()).thenAnswer(
+        (_) async => const [SearchCategory.tracks, SearchCategory.playlists],
+      );
 
-      cubit.loadChips();
+      await cubit.loadChips();
 
       expect(
         cubit.state.chips,
@@ -83,19 +77,21 @@ void main() {
       verify(() => mockSearch.chips()).called(1);
     });
 
-    test('loadChips keeps an empty subset (aggregate-only plugin)', () {
-      when(() => mockSearch.chips()).thenReturn(const []);
+    test('loadChips keeps an empty subset (aggregate-only plugin)', () async {
+      when(() => mockSearch.chips()).thenAnswer((_) async => const []);
 
-      cubit.loadChips();
+      await cubit.loadChips();
 
       expect(cubit.state.chips, isEmpty);
       expect(cubit.state.isAllCategory, isTrue);
     });
 
-    test('loadChips falls back to every category when chips() throws', () {
-      when(() => mockSearch.chips()).thenThrow(Exception('not implemented'));
+    test('loadChips falls back to every category when chips() throws', () async {
+      when(
+        () => mockSearch.chips(),
+      ).thenAnswer((_) async => throw Exception('not implemented'));
 
-      cubit.loadChips();
+      await cubit.loadChips();
 
       expect(cubit.state.chips, equals(SearchCategory.values));
     });

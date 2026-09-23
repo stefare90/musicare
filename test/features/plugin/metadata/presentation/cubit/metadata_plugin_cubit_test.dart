@@ -1,8 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gyawun_metadata_sdk/metadata/interfaces/iauth.dart';
-import 'package:gyawun_metadata_sdk/metadata/interfaces/imetadata_plugin.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/services/preferences_service.dart';
 import 'package:music_are/features/plugin/discovery/data/services/plugin_discovery_service.dart';

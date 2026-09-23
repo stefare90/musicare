@@ -1,4 +1,4 @@
-import 'package:gyawun_metadata_sdk/metadata/models/section.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/models/section_state.dart';
 
 class SectionWithItems {

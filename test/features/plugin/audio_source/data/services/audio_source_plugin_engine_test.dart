@@ -4,17 +4,43 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/album.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/artist.dart';
-import 'package:gyawun_metadata_sdk/metadata/models/track.dart';
-import 'package:mocktail/mocktail.dart';
+import 'package:music_are/features/player/data/models/resolved_track_playback.dart';
 import 'package:music_are/features/plugin/audio_source/data/services/audio_source_plugin_engine.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
-import 'package:musicare_dart_host_sdk/musicare_dart_host_sdk.dart';
+import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart' show Track, Artist, Album, AlbumType;
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-class MockAudioSourceClient extends Mock implements AudioSourceClient {}
+class FakeAudioSourceClient extends Fake implements AudioSourceClient {
+  @override
+  final Uri baseUri = Uri.parse('http://127.0.0.1:8765');
+
+  String? loadedPluginDir;
+
+  @override
+  Future<Map<String, dynamic>> loadPlugin({
+    required String pluginDir,
+    String moduleName = 'main',
+  }) async {
+    loadedPluginDir = pluginDir;
+    return {'loaded': 'YouTube Audio Source', 'id': 'test', 'version': '1.0.0'};
+  }
+
+  @override
+  Future<dynamic> call(String method, [Map<String, dynamic>? args]) async {
+    switch (method) {
+      case 'candidates.search':
+        return [
+          {'id': 'c1', 'title': 'Test Song', 'artist': 'Artist'},
+        ];
+      case 'stream.resolve':
+        return {'url': 'https://cdn.example.com/audio.m4a', 'quality': 'high'};
+      default:
+        throw UnimplementedError(method);
+    }
+  }
+}
 
 class FakePathProviderPlatform extends Fake
     with MockPlatformInterfaceMixin
@@ -29,6 +55,7 @@ class FakePathProviderPlatform extends Fake
 Uint8List createTestAudioSourceZip({
   String id = 'org.musicare.audiosource.youtube',
   String type = 'audioSource',
+  String sdkVersion = packageVersion,
   bool includeJson = true,
 }) {
   final archive = Archive();
@@ -39,7 +66,7 @@ Uint8List createTestAudioSourceZip({
       'type': type,
       'name': 'YouTube Audio Source',
       'version': '1.0.0',
-      'pluginSdkVersion': '1.0.0',
+      'pluginSdkVersion': sdkVersion,
       'author': 'MusicAre Team',
       'description': 'Test source',
     });
@@ -48,39 +75,39 @@ Uint8List createTestAudioSourceZip({
     final pyBytes = utf8.encode('def get_plugin(): pass');
     archive.addFile(ArchiveFile('main.py', pyBytes.length, pyBytes));
   }
-  final zipData = ZipEncoder().encode(archive);
-  return Uint8List.fromList(zipData!);
+  return Uint8List.fromList(ZipEncoder().encode(archive));
 }
+
+Track createTestTrack() => Track(
+  id: 't1',
+  name: 'Test Song',
+  externalUri: '',
+  artists: [Artist(id: 'a1', name: 'Artist', externalUri: '')],
+  album: Album(
+    id: 'al1',
+    name: 'Album',
+    artists: [],
+    releaseDate: '',
+    externalUri: '',
+    totalTracks: 1,
+    albumType: AlbumType.single,
+  ),
+  durationMs: 120000,
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('AudioSourcePluginEngine Unit Tests', () {
-    late MockAudioSourceClient mockClient;
+    late FakeAudioSourceClient client;
     late AudioSourcePluginEngine engine;
     late Directory tempDir;
-    late bool isClientStarted;
 
     setUp(() {
       tempDir = Directory.systemTemp.createTempSync('audio_source_test_');
       PathProviderPlatform.instance = FakePathProviderPlatform(tempDir);
-
-      isClientStarted = false;
-      mockClient = MockAudioSourceClient();
-
-      when(() => mockClient.isStarted).thenAnswer((_) => isClientStarted);
-      when(() => mockClient.port).thenReturn(8765);
-      when(() => mockClient.start()).thenAnswer((_) async {
-        isClientStarted = true;
-      });
-      when(() => mockClient.stop()).thenAnswer((_) {
-        isClientStarted = false;
-      });
-      when(
-        () => mockClient.loadPlugin(any()),
-      ).thenAnswer((_) async => {'loaded': 'YouTube Audio Source'});
-
-      engine = AudioSourcePluginEngine(client: mockClient);
+      client = FakeAudioSourceClient();
+      engine = AudioSourcePluginEngine(client: client);
     });
 
     tearDown(() {
@@ -89,176 +116,97 @@ void main() {
       }
     });
 
-    test(
-      'isPluginInstalledOnDisk returns false when files do not exist',
-      () async {
-        final exists = await engine.isPluginInstalledOnDisk(
-          'non_existent_plugin',
-        );
-        expect(exists, isFalse);
-      },
-    );
-
-    test(
-      'loadFromDisk throws PluginFileNotFoundException when directory is missing',
-      () async {
-        expect(
-          () async => await engine.loadFromDisk('missing_plugin'),
-          throwsA(isA<PluginFileNotFoundException>()),
-        );
-      },
-    );
-
-    test(
-      'loadFromZipBytes unpacks zip, starts client, and loads plugin successfully',
-      () async {
-        final zipBytes = createTestAudioSourceZip();
-
-        await engine.loadFromZipBytes(zipBytes);
-
-        expect(engine.isRunning, isTrue);
-        expect(
-          engine.activePluginId,
-          equals('org.musicare.audiosource.youtube'),
-        );
-        expect(engine.activePort, equals(8765));
-        expect(engine.activeManifest?.name, equals('YouTube Audio Source'));
-
-        verify(() => mockClient.start()).called(1);
-        verify(() => mockClient.loadPlugin(any())).called(1);
-      },
-    );
-
-    test(
-      'loadFromZipBytes throws InvalidPluginArchiveException when plugin.json is absent',
-      () async {
-        final corruptZip = createTestAudioSourceZip(includeJson: false);
-
-        expect(
-          () async => await engine.loadFromZipBytes(corruptZip),
-          throwsA(isA<InvalidPluginArchiveException>()),
-        );
-      },
-    );
-
-    test(
-      'loadFromZipBytes throws InvalidPluginTypeException if manifest type is not audioSource',
-      () async {
-        final metadataZip = createTestAudioSourceZip(type: 'metadata');
-
-        expect(
-          () async => await engine.loadFromZipBytes(metadataZip),
-          throwsA(isA<InvalidPluginTypeException>()),
-        );
-      },
-    );
-
-    test(
-      'resolveTrack throws PluginNotLoadedException when engine is not running',
-      () async {
-        final track = Track(
-          id: 't1',
-          name: 'Test Song',
-          externalUri: '',
-          artists: [Artist(id: 'a1', name: 'Artist', externalUri: '')],
-          album: Album(
-            id: 'al1',
-            name: 'Album',
-            artists: [],
-            releaseDate: '',
-            externalUri: '',
-            totalTracks: 1,
-            albumType: AlbumType.single,
-          ),
-          durationMs: 120000,
-        );
-
-        expect(
-          () async => await engine.resolveTrack(track),
-          throwsA(isA<PluginNotLoadedException>()),
-        );
-      },
-    );
-
-    test('resolveTrack delegates to client when running', () async {
-      final zipBytes = createTestAudioSourceZip();
-      await engine.loadFromZipBytes(zipBytes);
-
-      const playback = ResolvedTrackPlayback(
-        stream: AudioStreamResponse(
-          url: 'https://cdn.example.com/audio.m4a',
-          quality: AudioQuality.high,
-          bitrate: 160000,
-        ),
-        candidates: [
-          CandidateTrack(id: 'c1', title: 'Test Song', artist: 'Artist'),
-        ],
-        activeCandidateId: 'c1',
-      );
-
-      when(
-        () => mockClient.resolveTrack(
-          title: 'Test Song',
-          artists: ['Artist'],
-          durationMs: 120000,
-          quality: AudioQuality.high,
-        ),
-      ).thenAnswer((_) async => playback);
-
-      final track = Track(
-        id: 't1',
-        name: 'Test Song',
-        externalUri: '',
-        artists: [Artist(id: 'a1', name: 'Artist', externalUri: '')],
-        album: Album(
-          id: 'al1',
-          name: 'Album',
-          artists: [],
-          releaseDate: '',
-          externalUri: '',
-          totalTracks: 1,
-          albumType: AlbumType.single,
-        ),
-        durationMs: 120000,
-      );
-
-      final result = await engine.resolveTrack(track);
-
-      expect(result.activeCandidateId, equals('c1'));
-      expect(result.stream.url, equals('https://cdn.example.com/audio.m4a'));
+    test('isPluginInstalledOnDisk returns false when files do not exist', () async {
+      expect(await engine.isPluginInstalledOnDisk('missing'), isFalse);
     });
 
-    test('resolveStream delegates to client when running', () async {
-      final zipBytes = createTestAudioSourceZip();
-      await engine.loadFromZipBytes(zipBytes);
-
-      const stream = AudioStreamResponse(
-        url: 'https://cdn.example.com/alt.m4a',
-        quality: AudioQuality.high,
+    test('loadFromDisk throws PluginFileNotFoundException when missing', () {
+      expect(
+        () async => await engine.loadFromDisk('missing'),
+        throwsA(isA<PluginFileNotFoundException>()),
       );
-
-      when(
-        () => mockClient.resolveStream(
-          candidateId: 'c2',
-          quality: AudioQuality.high,
-        ),
-      ).thenAnswer((_) async => stream);
-
-      final result = await engine.resolveStream('c2');
-      expect(result.url, equals('https://cdn.example.com/alt.m4a'));
     });
 
-    test('terminate stops client and clears active state', () async {
-      final zipBytes = createTestAudioSourceZip();
-      await engine.loadFromZipBytes(zipBytes);
+    test('loadFromZipBytes unpacks the zip and loads the plugin', () async {
+      await engine.loadFromZipBytes(createTestAudioSourceZip());
 
+      expect(engine.isRunning, isTrue);
+      expect(engine.activePluginId, 'org.musicare.audiosource.youtube');
+      expect(engine.activePort, 8765);
+      expect(engine.activeManifest?.name, 'YouTube Audio Source');
+      expect(client.loadedPluginDir, contains('org.musicare.audiosource.youtube'));
+    });
+
+    test('loadFromZipBytes rejects an archive without plugin.json', () {
+      expect(
+        () async =>
+            await engine.loadFromZipBytes(createTestAudioSourceZip(includeJson: false)),
+        throwsA(isA<InvalidPluginArchiveException>()),
+      );
+    });
+
+    test('loadFromZipBytes rejects a non-audioSource manifest', () {
+      expect(
+        () async =>
+            await engine.loadFromZipBytes(createTestAudioSourceZip(type: 'metadata')),
+        throwsA(isA<InvalidPluginTypeException>()),
+      );
+    });
+
+    test('loadFromZipBytes throws IncompatibleSdkVersionException on a mismatch', () {
+      expect(
+        () async =>
+            await engine.loadFromZipBytes(createTestAudioSourceZip(sdkVersion: '9.0.0')),
+        throwsA(isA<IncompatibleSdkVersionException>()),
+      );
+    });
+
+    test('resolveTrack throws PluginNotLoadedException when no plugin is loaded', () {
+      expect(
+        () async => await engine.resolveTrack(createTestTrack()),
+        throwsA(isA<PluginNotLoadedException>()),
+      );
+    });
+
+    test('audioSource throws PluginNotLoadedException when no plugin is loaded', () {
+      expect(() => engine.audioSource, throwsA(isA<PluginNotLoadedException>()));
+    });
+
+    test('audioSource exposes the loaded adapter', () async {
+      await engine.loadFromZipBytes(createTestAudioSourceZip());
+
+      expect(engine.audioSource, isA<AudioSourcePluginAdapter>());
+    });
+
+    test('resolveTrack composes candidates.search and stream.resolve', () async {
+      await engine.loadFromZipBytes(createTestAudioSourceZip());
+
+      final ResolvedTrackPlayback playback = await engine.resolveTrack(
+        createTestTrack(),
+      );
+
+      expect(playback.activeCandidateId, 'c1');
+      expect(playback.stream?.url, 'https://cdn.example.com/audio.m4a');
+      expect(playback.candidates.single.id, 'c1');
+    });
+
+    test('resolveStream returns the resolved stream', () async {
+      await engine.loadFromZipBytes(createTestAudioSourceZip());
+
+      final stream = await engine.resolveStream('c2');
+
+      expect(stream.url, 'https://cdn.example.com/audio.m4a');
+    });
+
+    test('terminate clears the active plugin state', () async {
+      await engine.loadFromZipBytes(createTestAudioSourceZip());
       expect(engine.isRunning, isTrue);
 
       await engine.terminate();
 
       expect(engine.isRunning, isFalse);
       expect(engine.activeManifest, isNull);
-      verify(() => mockClient.stop()).called(1);
+      expect(engine.activePluginDir, isNull);
     });
   });
 }

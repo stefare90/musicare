@@ -127,7 +127,7 @@ lib/
 * **Android Target**: Android SDK / NDK configured (for mobile deployments)
 
 ### 2. SeriousPython Staging Setup
-MusicAre embeds a fixed Python host runtime daemon from the `musicare_audiosource_sdk` monorepo. Before running the app for the first time, you **must** stage the Python runtime.
+MusicAre embeds a single Python host runtime (two Flask daemons — metadata and audio source — on separate ephemeral ports) from the `musicare_plugin_sdk` platform repository. Before running the app for the first time, you **must** stage the Python runtime.
 
 Fetch the Dart dependencies:
 ```bash
