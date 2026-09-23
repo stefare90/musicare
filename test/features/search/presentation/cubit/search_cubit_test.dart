@@ -96,6 +96,15 @@ void main() {
       expect(cubit.state.chips, equals(SearchCategory.values));
     });
 
+    test('loadChips is a no-op when no metadata plugin is loaded', () async {
+      when(() => mockEngine.hasMetadata).thenReturn(false);
+
+      await cubit.loadChips();
+
+      expect(cubit.state.chips, isEmpty);
+      verifyNever(() => mockSearch.chips());
+    });
+
     test('onQueryChanged clears state if query is empty', () {
       cubit.onQueryChanged('   ');
       expect(cubit.state.query, equals('   '));

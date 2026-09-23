@@ -43,6 +43,7 @@ void main() {
       ),
     );
     registerFallbackValue(Duration.zero);
+    registerFallbackValue(AudioQuality.high);
   });
 
   group('AudioPlayerService Orchestrator Unit Tests', () {

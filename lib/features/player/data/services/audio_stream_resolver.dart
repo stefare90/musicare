@@ -9,17 +9,21 @@ class AudioStreamResolver {
 
   AudioStreamResolver(this._engine);
 
-  Future<PlaybackCandidates> resolveTrack(
-    Track track, {
-    AudioQuality quality = AudioQuality.high,
-  }) async {
-    final playback = await _engine.resolveTrack(track, quality: quality);
+  Future<PlaybackCandidates> resolveTrack(Track track) async {
+    final candidates = await _engine.searchCandidates(
+      title: track.name,
+      artists: track.artists.map((a) => a.name).toList(),
+      durationMs: track.durationMs,
+    );
 
-    if (playback.candidates.isEmpty) {
+    if (candidates.isEmpty) {
       throw const StreamResolutionException('No playable stream candidates');
     }
 
-    return PlaybackCandidates.fromResolvedPlayback(playback);
+    return PlaybackCandidates(
+      candidates: candidates,
+      activeCandidateId: candidates.first.id,
+    );
   }
 
   Future<AudioStreamResponse> resolveCandidateStream(

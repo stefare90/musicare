@@ -76,7 +76,7 @@ class _DynamicPluginFormDialogState extends State<DynamicPluginFormDialog> {
       actions: [
         TextButton(
           onPressed: () {
-            Navigator.of(context).pop(<String, String>{});
+            Navigator.of(context).pop();
           },
           child: Text(widget.cancelLabel),
         ),

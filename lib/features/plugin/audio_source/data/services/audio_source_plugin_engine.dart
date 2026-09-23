@@ -3,12 +3,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
-import 'package:music_are/features/player/data/models/resolved_track_playback.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
-import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart' show Track;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:pub_semver/pub_semver.dart';
@@ -118,38 +116,6 @@ class AudioSourcePluginEngine {
     String candidateId, {
     AudioQuality quality = AudioQuality.high,
   }) => audioSource.resolveStream(candidateId: candidateId, quality: quality);
-
-  /// Temporary composition kept while the player still consumes a single call. The app
-  /// orchestrates `candidates.search` and `stream.resolve` itself from 4b on.
-  Future<ResolvedTrackPlayback> resolveTrack(
-    Track track, {
-    AudioQuality quality = AudioQuality.high,
-  }) async {
-    final plugin = audioSource;
-
-    final candidates = await plugin.searchCandidates(
-      title: track.name,
-      artists: track.artists.map((a) => a.name).toList(),
-      durationMs: track.durationMs,
-    );
-    if (candidates.isEmpty) {
-      return const ResolvedTrackPlayback(
-        stream: null,
-        candidates: [],
-        activeCandidateId: '',
-      );
-    }
-
-    final stream = await plugin.resolveStream(
-      candidateId: candidates.first.id,
-      quality: quality,
-    );
-    return ResolvedTrackPlayback(
-      stream: stream,
-      candidates: candidates,
-      activeCandidateId: candidates.first.id,
-    );
-  }
 
   Future<void> terminate() async {
     _audioSourcePlugin = null;

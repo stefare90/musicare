@@ -1,10 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/services/preferences_service.dart';
-import 'package:music_are/features/player/data/models/resolved_track_playback.dart';
 import 'package:music_are/features/plugin/audio_source/data/services/audio_source_plugin_engine.dart';
 import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
 import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_state.dart';
@@ -187,47 +185,6 @@ void main() {
         await cubit.installDiscoveredPlugin(testManifest);
       },
     );
-
-    test('resolveTrack forwards call to engine', () async {
-      final track = Track(
-        id: 't1',
-        name: 'Track',
-        externalUri: '',
-        artists: [],
-        album: Album(
-          id: 'al1',
-          name: 'Alb',
-          artists: [],
-          releaseDate: '',
-          externalUri: '',
-          totalTracks: 1,
-          albumType: AlbumType.single,
-        ),
-        durationMs: 100,
-      );
-
-      const playback = ResolvedTrackPlayback(
-        stream: AudioStreamResponse(
-          url: 'https://cdn.example.com/audio.m4a',
-          quality: AudioQuality.high,
-        ),
-        candidates: [CandidateTrack(id: 'c1', title: 'Track')],
-        activeCandidateId: 'c1',
-      );
-
-      when(
-        () => mockEngine.resolveTrack(track, quality: AudioQuality.high),
-      ).thenAnswer((_) async => playback);
-
-      final result = await cubit.resolveTrack(
-        track,
-        quality: AudioQuality.high,
-      );
-      expect(result.activeCandidateId, equals('c1'));
-      verify(
-        () => mockEngine.resolveTrack(track, quality: AudioQuality.high),
-      ).called(1);
-    });
 
     test('resolveStream forwards call to engine', () async {
       const stream = AudioStreamResponse(

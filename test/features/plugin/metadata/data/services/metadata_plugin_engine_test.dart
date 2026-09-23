@@ -23,8 +23,34 @@ class FakeMetadataClient extends Fake implements MetadataClient {
   }
 
   @override
-  Future<dynamic> call(String method, [Map<String, dynamic>? args]) async =>
-      null;
+  Future<dynamic> call(String method, [Map<String, dynamic>? args]) async {
+    switch (method) {
+      case 'auth.start':
+        return {
+          'state': 'needs_form',
+          'fields': [
+            {'id': 'token', 'label': 'Token', 'is_password': true},
+          ],
+        };
+      case 'core.support':
+        return 'MusicBrainz metadata provider';
+      default:
+        return null;
+    }
+  }
+}
+
+class FakeAuthPresenter implements MetadataAuthPresenter {
+  int promptFormCalls = 0;
+
+  @override
+  Future<Map<String, String>?> promptForm(List<FormInputField> fields) async {
+    promptFormCalls++;
+    return null;
+  }
+
+  @override
+  Future<void> openBrowser(String url) async {}
 }
 
 class FakePathProviderPlatform extends Fake
@@ -122,6 +148,31 @@ void main() {
         throwsA(isA<InvalidPluginArchiveException>()),
       );
     });
+
+    test('core.support is exposed through the adapter as an async call', () async {
+      await engine.loadFromZipBytes(createTestPluginZip());
+
+      final support = engine.metadata.core.support();
+
+      expect(support, isA<Future<String>>());
+      expect(await support, 'MusicBrainz metadata provider');
+    });
+
+    test(
+      'loadFromZipBytes wires the auth presenter into the adapter',
+      () async {
+        final presenter = FakeAuthPresenter();
+        final engineWithAuth = MetadataPluginEngine(
+          client: client,
+          authPresenter: presenter,
+        );
+        await engineWithAuth.loadFromZipBytes(createTestPluginZip());
+
+        await engineWithAuth.metadata.auth.authenticate();
+
+        expect(presenter.promptFormCalls, 1);
+      },
+    );
 
     test(
       'loadFromZipBytes throws IncompatibleSdkVersionException on a major mismatch',

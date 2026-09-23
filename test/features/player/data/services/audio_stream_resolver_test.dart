@@ -3,7 +3,6 @@ import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:musicare_metadata_host_sdk/metadata/models/image.dart' as sdk;
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/features/player/data/services/audio_stream_resolver.dart';
-import 'package:music_are/features/player/data/models/resolved_track_playback.dart';
 import 'package:music_are/features/plugin/audio_source/data/services/audio_source_plugin_engine.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
@@ -50,11 +49,25 @@ void main() {
       resolver = AudioStreamResolver(mockEngine);
     });
 
+    void stubCandidates(List<CandidateTrack> candidates) {
+      when(
+        () => mockEngine.searchCandidates(
+          title: any(named: 'title'),
+          artists: any(named: 'artists'),
+          durationMs: any(named: 'durationMs'),
+        ),
+      ).thenAnswer((_) async => candidates);
+    }
+
     test(
-      'resolveTrack delegates to engine and propagates PluginNotLoadedException',
+      'resolveTrack propagates PluginNotLoadedException from the engine',
       () async {
         when(
-          () => mockEngine.resolveTrack(testTrack, quality: AudioQuality.high),
+          () => mockEngine.searchCandidates(
+            title: any(named: 'title'),
+            artists: any(named: 'artists'),
+            durationMs: any(named: 'durationMs'),
+          ),
         ).thenThrow(PluginNotLoadedException());
 
         expect(
@@ -67,15 +80,7 @@ void main() {
     test(
       'resolveTrack throws StreamResolutionException if candidates list is empty',
       () async {
-        when(
-          () => mockEngine.resolveTrack(testTrack, quality: AudioQuality.high),
-        ).thenAnswer(
-          (_) async => const ResolvedTrackPlayback(
-            stream: stream1,
-            candidates: [],
-            activeCandidateId: '',
-          ),
-        );
+        stubCandidates(const []);
 
         expect(
           () async => await resolver.resolveTrack(testTrack),
@@ -85,25 +90,37 @@ void main() {
     );
 
     test(
-      'resolveTrack returns PlaybackCandidates with resolved candidates and stream',
+      'resolveTrack marks the first candidate active and leaves the stream to the player',
       () async {
-        when(
-          () => mockEngine.resolveTrack(testTrack, quality: AudioQuality.high),
-        ).thenAnswer(
-          (_) async => const ResolvedTrackPlayback(
-            stream: stream1,
-            candidates: [candidate1],
-            activeCandidateId: 'c1',
-          ),
-        );
+        stubCandidates(const [candidate1]);
 
         final resolved = await resolver.resolveTrack(testTrack);
 
         expect(resolved.candidates.length, equals(1));
         expect(resolved.activeCandidateId, equals('c1'));
-        expect(resolved.activeStream?.url, equals(stream1.url));
+        expect(resolved.activeStream, isNull);
+        expect(resolved.needsStreamResolution, isTrue);
+        expect(resolved.isFallback, isFalse);
       },
     );
+
+    test('resolveTrack maps the track onto the candidate search parameters', () async {
+      stubCandidates(const [candidate1]);
+
+      await resolver.resolveTrack(testTrack);
+
+      final captured = verify(
+        () => mockEngine.searchCandidates(
+          title: captureAny(named: 'title'),
+          artists: captureAny(named: 'artists'),
+          durationMs: captureAny(named: 'durationMs'),
+        ),
+      ).captured;
+
+      expect(captured[0], equals('Come Together'));
+      expect(captured[1], equals(['The Beatles']));
+      expect(captured[2], equals(259000));
+    });
 
     test('resolveCandidateStream delegates directly to engine', () async {
       when(

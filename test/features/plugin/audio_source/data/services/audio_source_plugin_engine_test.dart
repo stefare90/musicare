@@ -4,11 +4,9 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:music_are/features/player/data/models/resolved_track_playback.dart';
 import 'package:music_are/features/plugin/audio_source/data/services/audio_source_plugin_engine.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
-import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart' show Track, Artist, Album, AlbumType;
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
@@ -78,23 +76,6 @@ Uint8List createTestAudioSourceZip({
   return Uint8List.fromList(ZipEncoder().encode(archive));
 }
 
-Track createTestTrack() => Track(
-  id: 't1',
-  name: 'Test Song',
-  externalUri: '',
-  artists: [Artist(id: 'a1', name: 'Artist', externalUri: '')],
-  album: Album(
-    id: 'al1',
-    name: 'Album',
-    artists: [],
-    releaseDate: '',
-    externalUri: '',
-    totalTracks: 1,
-    albumType: AlbumType.single,
-  ),
-  durationMs: 120000,
-);
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -161,13 +142,6 @@ void main() {
       );
     });
 
-    test('resolveTrack throws PluginNotLoadedException when no plugin is loaded', () {
-      expect(
-        () async => await engine.resolveTrack(createTestTrack()),
-        throwsA(isA<PluginNotLoadedException>()),
-      );
-    });
-
     test('audioSource throws PluginNotLoadedException when no plugin is loaded', () {
       expect(() => engine.audioSource, throwsA(isA<PluginNotLoadedException>()));
     });
@@ -178,16 +152,12 @@ void main() {
       expect(engine.audioSource, isA<AudioSourcePluginAdapter>());
     });
 
-    test('resolveTrack composes candidates.search and stream.resolve', () async {
+    test('searchCandidates delegates to the loaded plugin', () async {
       await engine.loadFromZipBytes(createTestAudioSourceZip());
 
-      final ResolvedTrackPlayback playback = await engine.resolveTrack(
-        createTestTrack(),
-      );
+      final candidates = await engine.searchCandidates(title: 'Test Song');
 
-      expect(playback.activeCandidateId, 'c1');
-      expect(playback.stream?.url, 'https://cdn.example.com/audio.m4a');
-      expect(playback.candidates.single.id, 'c1');
+      expect(candidates.single.id, 'c1');
     });
 
     test('resolveStream returns the resolved stream', () async {

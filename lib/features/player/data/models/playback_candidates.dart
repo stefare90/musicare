@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:music_are/features/player/data/models/resolved_track_playback.dart';
 import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
 
 @immutable
@@ -13,16 +12,6 @@ class PlaybackCandidates {
     this.activeStream,
     this.activeCandidateId,
   });
-
-  factory PlaybackCandidates.fromResolvedPlayback(
-    ResolvedTrackPlayback playback,
-  ) {
-    return PlaybackCandidates(
-      candidates: playback.candidates,
-      activeStream: playback.stream,
-      activeCandidateId: playback.activeCandidateId,
-    );
-  }
 
   bool get isEmpty => candidates.isEmpty;
   bool get isNotEmpty => candidates.isNotEmpty;

@@ -12,6 +12,7 @@ import 'package:music_are/features/plugin/audio_source/data/services/audio_sourc
 import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
 import 'package:music_are/features/plugin/discovery/data/services/plugin_discovery_service.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/presentation/metadata_auth_presenter.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
 import 'package:musicare_runtime_host/musicare_runtime_host.dart';
@@ -48,8 +49,16 @@ Future<void> initDependencies() async {
     ),
   );
 
+  sl.registerLazySingleton<MetadataAuthPresenter>(
+    () => MetadataAuthPresenterImpl(
+      navigatorKey: sl<GlobalKey<NavigatorState>>(),
+    ),
+  );
   sl.registerLazySingleton<MetadataPluginEngine>(
-    () => MetadataPluginEngine(client: sl<MetadataClient>()),
+    () => MetadataPluginEngine(
+      client: sl<MetadataClient>(),
+      authPresenter: sl<MetadataAuthPresenter>(),
+    ),
   );
   sl.registerLazySingleton<MetadataPluginCubit>(
     () => MetadataPluginCubit(

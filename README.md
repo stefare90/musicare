@@ -7,9 +7,9 @@
 
 `MusicAre` is an extensible, flexible, and lightweight music playback application. The core concept is straightforward: **the host application handles the visual user interface, navigation, track queue, and native audio playback, while all music metadata (tracks, albums, artists, search, playlists) and audio streams are provided by dynamic, hot-swappable external plugins.**
 
-The application supports two distinct plugin subsystems:
-* **Metadata Plugins**: Compiled into `.evc` bytecode, packaged as `.zip` archives, and interpreted dynamically at runtime using `dart_eval`.
-* **Audio Source Plugins**: Written in 100% Pure-Python, packaged as `.zip` archives, and dynamically injected at runtime into a persistent embedded CPython daemon via `serious_python` and `musicare_dart_host_sdk`.
+The application supports two distinct plugins:
+* **Metadata Plugins**: Written in 100% Pure-Python, packaged as `.zip` archives, and loaded at runtime into the embedded CPython daemon, which the host drives over a versioned JSON wire protocol (`musicare_metadata_host_sdk`).
+* **Audio Source Plugins**: Written in 100% Pure-Python, packaged as `.zip` archives, and loaded at runtime into the same embedded CPython daemon (`serious_python` + `musicare_audio_host_sdk`) for two-tier candidate search and just-in-time stream resolution.
 
 ---
 
@@ -31,8 +31,8 @@ The application supports two distinct plugin subsystems:
 * **State Management**: `flutter_bloc` (Cubits)
 * **Routing & DI**: `go_router` (Stateful Shell Routes) & `get_it`
 * **Audio Engine**: `just_audio` & `just_audio_background`
-* **Plugin Subsystems**:
-  * `dart_eval` (Sandboxed Dart Bytecode execution)
+* **Plugin Subsystem**:
+  * `musicare_plugin_sdk` (Pure-Python plugin SDKs, shared host runtime and Dart host SDKs)
   * `serious_python` (Embedded CPython 3.10+ host daemon)
 
 ---
@@ -63,23 +63,23 @@ MusicAre follows a decoupled, Feature-First Clean Architecture organized into we
 ┌────────────────────────────────────────────────────────┐
 │                  SERVICES LAYER (IoC)                  │
 │                                                        │
-│  * MetadataPluginEngine (Bytecode VM & SemVer check)   │
-│  * AudioSourcePluginEngine (High-Level Orchestrator)   │
-│  * AudioPlayerService (Playback & Fallback driver)     │
+│  * MetadataPluginEngine (Wire protocol + SemVer check) │
+│  * AudioSourcePluginEngine (Candidate search)          │
+│  * AudioPlayerService (Resolution, fallback & queue)   │
 │  * PluginDiscoveryService (GitHub Release Downloader)  │
-│  * SDK Adapters (PluginNetwork, PluginStorage, UI)     │
+│  * MetadataAuthPresenter (Plugin login form)           │
 └──────────────────────────┬─────────────────────────────┘
                            │ (Contract Injection)
                            ▼
 ┌────────────────────────────────────────────────────────┐
 │                   PLUGIN SUBSYSTEMS                    │
 ├────────────────────────────┬───────────────────────────┤
-│     METADATA SANDBOX       │   AUDIO SOURCE DAEMON     │
-│  (dart_eval Runtime / VM)  │ (SeriousPython + Flask)   │
+│     METADATA DAEMON        │   AUDIO SOURCE DAEMON     │
+│  (CPython + Flask)         │ (CPython + Flask)         │
 │                            │                           │
-│  * In-memory Bytecode .evc │  * Fixed Host Runtime     │
-│  * Host SDK Bridge         │  * Dynamic /load_plugin   │
-│  * Pure Native Dart Types  │  * Ephemeral Port REST    │
+│  * Python plugin (.zip)    │  * Python plugin (.zip)   │
+│  * JSON wire protocol      │  * Two-tier JIT resolve   │
+│  * Ephemeral port          │  * Ephemeral port         │
 └────────────────────────────┴───────────────────────────┘
 ```
 

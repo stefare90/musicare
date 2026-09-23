@@ -160,6 +160,18 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get cancel;
 
+  /// No description provided for @authFormTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get authFormTitle;
+
+  /// No description provided for @authFormSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get authFormSubmit;
+
   /// No description provided for @homeTab.
   ///
   /// In en, this message translates to:

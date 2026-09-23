@@ -1,11 +1,9 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/services/preferences_service.dart';
 import 'package:music_are/features/plugin/audio_source/data/services/audio_source_plugin_engine.dart';
 import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_state.dart';
-import 'package:music_are/features/player/data/models/resolved_track_playback.dart';
 import 'package:music_are/features/plugin/discovery/data/services/plugin_discovery_service.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
@@ -105,13 +103,6 @@ class AudioSourcePluginCubit extends SafeCubit<AudioSourcePluginState> {
     } catch (e) {
       emit(AudioSourcePluginErrorState(e));
     }
-  }
-
-  Future<ResolvedTrackPlayback> resolveTrack(
-    Track track, {
-    AudioQuality quality = AudioQuality.high,
-  }) {
-    return _engine.resolveTrack(track, quality: quality);
   }
 
   Future<AudioStreamResponse> resolveStream(

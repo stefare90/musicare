@@ -17,10 +17,11 @@ import 'package:pub_semver/pub_semver.dart';
 /// owns the plugin directory, the manifest and the SDK adapter built on [MetadataClient].
 class MetadataPluginEngine {
   final MetadataClient _client;
+  final MetadataAuthPresenter? _authPresenter;
   IMetadataPlugin? _metadataPlugin;
   PluginManifest? _metadataManifest;
 
-  MetadataPluginEngine({required this._client});
+  MetadataPluginEngine({required this._client, this._authPresenter});
 
   IMetadataPlugin get metadata {
     final plugin = _metadataPlugin;
@@ -95,7 +96,10 @@ class MetadataPluginEngine {
   Future<void> _loadPluginDir(PluginManifest manifest) async {
     final pluginDir = await _pluginDirPath(manifest.id);
     await _client.loadPlugin(pluginDir: pluginDir);
-    _metadataPlugin = MetadataPluginAdapter(caller: _client);
+    _metadataPlugin = MetadataPluginAdapter(
+      caller: _client,
+      authPresenter: _authPresenter,
+    );
     _metadataManifest = manifest;
   }
 
