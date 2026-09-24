@@ -29,9 +29,11 @@ void main() {
       },
     );
 
-    testWidgets('SkeletonSearchAll renders matrix and two section rows', (
-      tester,
-    ) async {
+    testWidgets('SkeletonSearchAll renders the track matrix plus one section '
+        'row per non-track All section', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 2000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -41,7 +43,7 @@ void main() {
       );
 
       expect(find.byType(SkeletonTrackMatrix), findsOneWidget);
-      expect(find.byType(SkeletonSectionRow), findsNWidgets(2));
+      expect(find.byType(SkeletonSectionRow), findsNWidgets(3));
       expect(find.byType(ListView), findsWidgets);
     });
 

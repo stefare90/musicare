@@ -16,6 +16,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 
 ## 🔍 Search (`lib/features/search/`)
 ✅ Debounced global search with typed filter chips, aggregated and per-category views.
+✅ Playlist results: dynamic Playlists chip from the plugin's `chips()`, per-category grid and a Playlists carousel in the aggregated view.
 ✅ Column-aligned pagination, contextual skeletons, scrollable empty/error states, tap on a result → playback or detail.
 
 ## 📚 Details (`lib/features/details/{album,artist,playlist}`)

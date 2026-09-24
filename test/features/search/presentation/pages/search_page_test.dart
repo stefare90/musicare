@@ -10,6 +10,7 @@ import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/info_card.dart';
 import 'package:music_are/core/widgets/media/media_card.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
+import 'package:music_are/core/widgets/media/section_row.dart';
 import 'package:music_are/core/widgets/media/track_list_tile.dart';
 import 'package:music_are/core/widgets/skeletons/shimmer_box.dart';
 import 'package:music_are/core/widgets/skeletons/skeleton_media_grid.dart';
@@ -317,6 +318,34 @@ void main() {
     expect(find.text('Parachutes'), findsOneWidget);
     expect(find.text('Coldplay'), findsWidgets);
   });
+
+  testWidgets(
+    'SearchPage renders the Playlists carousel in the aggregated view',
+    (tester) async {
+      when(() => mockSearch.all(any())).thenAnswer(
+        (_) async => SearchResponse(
+          tracks: [],
+          albums: [],
+          artists: [],
+          playlists: [dummyPlaylist],
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'Coldplay');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+
+      final section = find.widgetWithText(SectionRow, 'Playlists');
+      expect(section, findsOneWidget);
+      expect(
+        find.descendant(of: section, matching: find.byType(MediaCard)),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('SearchPage category filter switches to category view and plays track', (tester) async {
     when(
