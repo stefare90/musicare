@@ -44,7 +44,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ## 🔌 Plugin system (`lib/features/plugin/{shared,discovery,metadata}` + host adapters)
 ✅ Community plugin discovery from GitHub releases and in-app install/update.
 ✅ Metadata plugin engine over the Python wire protocol (`musicare_metadata_host_sdk`), with SemVer compatibility checks and per-plugin persistence.
-✅ Host-side login form for metadata plugins (`MetadataAuthPresenter`); the OAuth browser flow is not supported (no `url_launcher`).
+✅ Host-side login form for metadata plugins (`MetadataAuthPresenter`), rendering the plugin-provided title, message and per-field help link; browser-based auth opens in the system browser (`url_launcher`).
 
 ## 🐍 Audio source subsystem (`lib/features/plugin/audio_source/`, `tool/build_python.sh`)
 ✅ Embedded CPython daemon (`serious_python`) hosting both subsystems as two Flask apps on separate ephemeral ports, with hot plugin loading.

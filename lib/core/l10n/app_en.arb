@@ -13,6 +13,8 @@
   "cancel": "Cancel",
   "authFormTitle": "Sign in",
   "authFormSubmit": "Sign in",
+  "authFormHelpAction": "Where do I find it?",
+  "authFormHelpFailed": "Could not open the link. Please try again.",
   "homeTab": "Home",
   "searchTab": "Search",
   "libraryTab": "Library",

@@ -49,6 +49,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authFormSubmit => 'Sign in';
 
   @override
+  String get authFormHelpAction => 'Where do I find it?';
+
+  @override
+  String get authFormHelpFailed => 'Could not open the link. Please try again.';
+
+  @override
   String get homeTab => 'Home';
 
   @override

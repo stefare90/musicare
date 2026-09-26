@@ -44,7 +44,11 @@ class FakeAuthPresenter implements MetadataAuthPresenter {
   int promptFormCalls = 0;
 
   @override
-  Future<Map<String, String>?> promptForm(List<FormInputField> fields) async {
+  Future<Map<String, String>?> promptForm({
+    String? title,
+    String? message,
+    required List<FormInputField> fields,
+  }) async {
     promptFormCalls++;
     return null;
   }

@@ -172,6 +172,18 @@ abstract class AppLocalizations {
   /// **'Sign in'**
   String get authFormSubmit;
 
+  /// No description provided for @authFormHelpAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Where do I find it?'**
+  String get authFormHelpAction;
+
+  /// No description provided for @authFormHelpFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the link. Please try again.'**
+  String get authFormHelpFailed;
+
   /// No description provided for @homeTab.
   ///
   /// In en, this message translates to:
