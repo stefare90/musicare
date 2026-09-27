@@ -9,6 +9,12 @@ import 'package:music_are/features/details/playlist/presentation/pages/playlist_
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
+
+import 'dart:async';
+
+import '../../../../../helpers/metadata_plugin_test_helpers.dart';
 
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
@@ -52,12 +58,17 @@ void main() {
     when(() => mockMetadata.playlist).thenReturn(mockPlaylist);
   });
 
-  Widget buildTestableWidget() {
+  Widget buildTestableWidget({MetadataPluginCubit? metadataCubit}) {
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: BlocProvider<PlayerCubit>.value(
-        value: mockPlayerCubit,
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider<PlayerCubit>.value(value: mockPlayerCubit),
+          BlocProvider<MetadataPluginCubit>.value(
+            value: metadataCubit ?? buildMockMetadataPluginCubit(),
+          ),
+        ],
         child: PlaylistPage(playlist: testPlaylist),
       ),
     );
@@ -74,6 +85,33 @@ void main() {
 
       expect(find.text('Top 50 Hits'), findsNWidgets(2)); // Header + AppBar
       expect(find.text('Spotify'), findsOneWidget);
+    });
+
+    testWidgets('reloads the playlist when the auth state changes', (
+      tester,
+    ) async {
+      var tracksCalls = 0;
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer((
+        _,
+      ) async {
+        tracksCalls++;
+        return PaginatedResult(items: [], total: 0, offset: 0, limit: 20);
+      });
+
+      final controller = StreamController<MetadataPluginState>.broadcast();
+      addTearDown(controller.close);
+      final cubit = buildMockMetadataPluginCubit(stream: controller.stream);
+
+      await tester.pumpWidget(buildTestableWidget(metadataCubit: cubit));
+      await tester.pumpAndSettle();
+      expect(tracksCalls, 1);
+
+      controller.add(
+        testLoadedState(isAuthenticated: true, userName: 'listener'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tracksCalls, 2);
     });
   });
 }

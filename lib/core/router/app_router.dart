@@ -9,28 +9,31 @@ import 'package:music_are/features/home/presentation/pages/home_page.dart';
 import 'package:music_are/features/library/presentation/pages/library_page.dart';
 import 'package:music_are/features/onboarding/presentation/pages/welcome_page.dart';
 import 'package:music_are/features/plugin/metadata/presentation/pages/metadata_plugin_update_page.dart';
+import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/search/presentation/pages/search_page.dart';
+import 'package:music_are/features/settings/presentation/pages/plugin_detail_page.dart';
+import 'package:music_are/features/settings/presentation/pages/settings_page.dart';
 import 'package:music_are/features/shell/presentation/pages/shell_page.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
 final List<RouteBase> _sharedDetailRoutes = [
   GoRoute(
-    path: 'playlist',
+    path: AppRoutes.playlistSegment,
     builder: (context, state) {
       final playlist = state.extra as Playlist;
       return PlaylistPage(playlist: playlist);
     },
   ),
   GoRoute(
-    path: 'album',
+    path: AppRoutes.albumSegment,
     builder: (context, state) {
       final album = state.extra as Album;
       return AlbumPage(album: album);
     },
   ),
   GoRoute(
-    path: 'artist',
+    path: AppRoutes.artistSegment,
     builder: (context, state) {
       final artist = state.extra as Artist;
       return ArtistPage(artist: artist);
@@ -50,6 +53,23 @@ GoRouter createRouter({required String initialLocation}) {
       GoRoute(
         path: AppRoutes.pluginUpdate,
         builder: (context, state) => const MetadataPluginUpdatePage(),
+      ),
+      GoRoute(
+        path: AppRoutes.settings,
+        builder: (context, state) => const SettingsPage(),
+        routes: [
+          GoRoute(
+            path: AppRoutes.settingsPluginSegment,
+            builder: (context, state) {
+              final type = PluginType.fromString(
+                state.pathParameters[AppRoutes.pluginTypeParam] ?? '',
+              );
+              return type == null
+                  ? const SettingsPage()
+                  : PluginDetailPage(type: type);
+            },
+          ),
+        ],
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

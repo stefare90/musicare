@@ -10,6 +10,9 @@ import 'package:music_are/features/details/playlist/presentation/cubit/playlist_
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
+import 'package:music_are/features/plugin/metadata/presentation/utils/plugin_status_card.dart';
 
 class PlaylistPage extends StatelessWidget {
   final Playlist playlist;
@@ -21,7 +24,13 @@ class PlaylistPage extends StatelessWidget {
     return BlocProvider<PlaylistCubit>(
       create: (context) =>
           PlaylistCubit(sl<MetadataPluginEngine>())..loadPlaylist(playlist),
-      child: const _PlaylistView(),
+      child: BlocListener<MetadataPluginCubit, MetadataPluginState>(
+        listenWhen: (previous, current) =>
+            previous.isAuthenticated != current.isAuthenticated,
+        listener: (context, state) =>
+            context.read<PlaylistCubit>().loadPlaylist(playlist),
+        child: const _PlaylistView(),
+      ),
     );
   }
 }
@@ -36,9 +45,11 @@ class _PlaylistView extends StatelessWidget {
         if (state is PlaylistErrorState) {
           return SliverMediaScaffold(
             metadata: state.metadata,
-            error: state.error,
-            onRetry: () =>
-                context.read<PlaylistCubit>().loadPlaylist(state.playlist),
+            statusCard: state.error.toStatusCard(
+              context,
+              onRetry: () =>
+                  context.read<PlaylistCubit>().loadPlaylist(state.playlist),
+            ),
           );
         }
         if (state is PlaylistLoadedState) {

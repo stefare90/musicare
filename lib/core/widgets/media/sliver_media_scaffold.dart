@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:music_are/core/models/media_item_metadata.dart';
-import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/media/sliver_media_app_bar.dart';
 import 'package:music_are/core/widgets/media/sliver_media_header.dart';
 import 'package:music_are/core/widgets/skeletons/sliver_skeleton_track_list.dart';
@@ -9,8 +8,11 @@ class SliverMediaScaffold extends StatefulWidget {
   final MediaItemMetadata? metadata;
   final bool isSaved;
   final bool isLoading;
-  final Object? error;
-  final VoidCallback? onRetry;
+
+  /// Shown when there is nothing to display (error, sign-in invitation, empty).
+  /// The caller composes it; this scaffold only places it.
+  final Widget? statusCard;
+
   final VoidCallback? onSaveTap;
   final VoidCallback? onOptionsTap;
   final List<Widget> slivers;
@@ -20,8 +22,7 @@ class SliverMediaScaffold extends StatefulWidget {
     required this.metadata,
     this.isSaved = false,
     this.isLoading = false,
-    this.error,
-    this.onRetry,
+    this.statusCard,
     this.onSaveTap,
     this.onOptionsTap,
     this.slivers = const [],
@@ -89,14 +90,10 @@ class _SliverMediaScaffoldState extends State<SliverMediaScaffold> {
               ),
             if (metadata != null)
               SliverMediaHeader(meta: metadata, titleKey: _largeTitleKey),
-            if (widget.error != null)
+            if (widget.statusCard != null)
               SliverFillRemaining(
-                child: Center(
-                  child: ErrorCard(
-                    error: widget.error!,
-                    onRetry: widget.onRetry,
-                  ),
-                ),
+                hasScrollBody: false,
+                child: Center(child: widget.statusCard),
               )
             else if (widget.isLoading)
               const SliverSkeletonTrackList(count: 6)

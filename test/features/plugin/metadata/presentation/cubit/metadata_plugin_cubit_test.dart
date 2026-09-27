@@ -22,6 +22,8 @@ class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
 
 class MockAuth extends Mock implements IAuth {}
 
+class MockUser extends Mock implements IUser {}
+
 class FakePluginManifest extends Fake implements PluginManifest {}
 
 void main() {
@@ -199,6 +201,126 @@ void main() {
         isFalse,
       );
       verify(() => mockAuth.logout()).called(1);
+    });
+
+    test('initialize stores the identity reported by the plugin', () async {
+      final mockUser = MockUser();
+      when(
+        () => mockPreferences.getActivePluginId(),
+      ).thenReturn('org.gyawun.musicbrainz');
+      when(
+        () =>
+            mockPluginEngine.isPluginInstalledOnDisk('org.gyawun.musicbrainz'),
+      ).thenAnswer((_) async => true);
+      when(
+        () => mockPluginEngine.loadFromDisk('org.gyawun.musicbrainz'),
+      ).thenAnswer((_) async {});
+      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+      when(() => mockPluginEngine.metadataManifest).thenReturn(testManifest);
+      when(() => mockMetadataPlugin.auth).thenReturn(mockAuth);
+      when(() => mockAuth.isAuthenticated()).thenAnswer((_) async => true);
+      when(() => mockMetadataPlugin.user).thenReturn(mockUser);
+      when(
+        () => mockUser.me(),
+      ).thenAnswer((_) async => {'user_id': 'listener'});
+
+      await cubit.initialize();
+
+      expect((cubit.state as MetadataPluginLoadedState).userName, 'listener');
+    });
+
+    test('authenticate reports success and stores the user name', () async {
+      final mockUser = MockUser();
+      cubit.emit(
+        MetadataPluginLoadedState(
+          manifest: testManifest,
+          isAuthenticated: false,
+        ),
+      );
+
+      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+      when(() => mockMetadataPlugin.auth).thenReturn(mockAuth);
+      when(() => mockMetadataPlugin.user).thenReturn(mockUser);
+      when(() => mockAuth.authenticate()).thenAnswer((_) async {});
+      when(() => mockAuth.isAuthenticated()).thenAnswer((_) async => true);
+      when(
+        () => mockUser.me(),
+      ).thenAnswer((_) async => {'user_id': 'listener'});
+
+      final result = await cubit.authenticate();
+
+      expect(result, AuthResult.authenticated);
+      final state = cubit.state as MetadataPluginLoadedState;
+      expect(state.isAuthenticated, isTrue);
+      expect(state.userName, 'listener');
+    });
+
+    test(
+      'authenticate reports cancellation when the form is dismissed',
+      () async {
+        cubit.emit(
+          MetadataPluginLoadedState(
+            manifest: testManifest,
+            isAuthenticated: false,
+          ),
+        );
+
+        when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+        when(() => mockMetadataPlugin.auth).thenReturn(mockAuth);
+        when(() => mockAuth.authenticate()).thenAnswer((_) async {});
+        when(() => mockAuth.isAuthenticated()).thenAnswer((_) async => false);
+
+        final result = await cubit.authenticate();
+
+        expect(result, AuthResult.cancelled);
+        expect(
+          (cubit.state as MetadataPluginLoadedState).isAuthenticated,
+          isFalse,
+        );
+      },
+    );
+
+    test('authenticate reports failure and keeps the loaded state', () async {
+      cubit.emit(
+        MetadataPluginLoadedState(
+          manifest: testManifest,
+          isAuthenticated: false,
+        ),
+      );
+
+      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+      when(() => mockMetadataPlugin.auth).thenReturn(mockAuth);
+      when(
+        () => mockAuth.authenticate(),
+      ).thenThrow(const MetadataAuthRequiredException('bad token'));
+
+      final result = await cubit.authenticate();
+
+      expect(result, AuthResult.failed);
+      final state = cubit.state as MetadataPluginLoadedState;
+      expect(state.isAuthenticated, isFalse);
+      expect(state.manifest.id, testManifest.id);
+    });
+
+    test('logout clears the stored user name', () async {
+      cubit.emit(
+        MetadataPluginLoadedState(
+          manifest: testManifest,
+          isAuthenticated: true,
+          userName: 'listener',
+        ),
+      );
+
+      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+      when(() => mockMetadataPlugin.auth).thenReturn(mockAuth);
+      when(() => mockAuth.logout()).thenAnswer((_) async {});
+      when(() => mockAuth.isAuthenticated()).thenAnswer((_) async => false);
+
+      await cubit.logout();
+
+      final state = cubit.state as MetadataPluginLoadedState;
+      expect(state.isAuthenticated, isFalse);
+      expect(state.userName, isNull);
     });
   });
 }

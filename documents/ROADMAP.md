@@ -10,6 +10,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ✅ Three-tab shell (Home, Search, Library) with a dedicated navigator for the player.
 ✅ Persistent, draggable player panel above the shell, with mini-player and back gesture collapse.
 ✅ Detail routes and the incompatible-provider update route.
+✅ Settings entry point (gear) on the three root tabs, opening the settings hub.
 
 ## 🏠 Home (`lib/features/home/`)
 ✅ Dynamic browse sections from the metadata plugin, with pull-to-refresh, per-section retry and empty/error states.
@@ -33,10 +34,13 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ⬜ "Add to queue" and "Save to favorites" actions in the track options bottom sheet.
 
 ## 📚 Library (`lib/features/library/`)
-⬜ Library page with provider authentication, user profile and paginated tabs for saved tracks, albums, artists and playlists.
+✅ Sign-in invitation when signed out, with the account entry point in the page header.
+⬜ Saved-content tabs (tracks, albums, artists, playlists) when signed in.
 
-## ⚙️ Settings
-⬜ Settings page with active plugin management (version, update), cache clearing and theme selection.
+## ⚙️ Settings (`lib/features/settings/`)
+✅ Settings hub with a Plugins section: the active metadata and audio-source plugins with their versions, and a per-plugin detail page (version and, when the plugin exposes authentication, the account).
+⬜ Remaining sections: audio quality, playback, downloads and cache, appearance (theme/language), listening history, diagnostics, about.
+⬜ Per-plugin actions: update, reinstall, uninstall, change plugin.
 
 ## 🧙 Onboarding (`lib/features/onboarding/`)
 ✅ Step wizard: intro, metadata provider install, audio source provider install, landing on Home once both are ready.
@@ -45,6 +49,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ✅ Community plugin discovery from GitHub releases and in-app install/update.
 ✅ Metadata plugin engine over the Python wire protocol (`musicare_metadata_host_sdk`), with SemVer compatibility checks and per-plugin persistence.
 ✅ Host-side login form for metadata plugins (`MetadataAuthPresenter`), rendering the plugin-provided title, message and per-field help link; browser-based auth opens in the system browser (`url_launcher`).
+✅ In-app sign-in/sign-out under Settings → Plugins (per-plugin account), with contextual sign-in prompts when a request needs authentication (rendered as a normal state, not an error) and the affected surfaces refreshing on auth change.
 
 ## 🐍 Audio source subsystem (`lib/features/plugin/audio_source/`, `tool/build_python.sh`)
 ✅ Embedded CPython daemon (`serious_python`) hosting both subsystems as two Flask apps on separate ephemeral ports, with hot plugin loading.

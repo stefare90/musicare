@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
+import 'package:music_are/core/widgets/dialogs.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 
 class DynamicPluginFormDialog extends StatefulWidget {
@@ -46,8 +47,9 @@ class _DynamicPluginFormDialogState extends State<DynamicPluginFormDialog> {
   Future<void> _onHelpTap(String url) async {
     final opened = await widget.onHelpTap?.call(url) ?? false;
     if (opened || !mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.authFormHelpFailed)),
+    Dialogs.showErrorSnackBar(
+      context,
+      message: context.l10n.authFormHelpFailed,
     );
   }
 

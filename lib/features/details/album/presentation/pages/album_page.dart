@@ -10,6 +10,7 @@ import 'package:music_are/features/details/album/presentation/cubit/album_cubit.
 import 'package:music_are/features/details/album/presentation/cubit/album_state.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/presentation/utils/plugin_status_card.dart';
 
 class AlbumPage extends StatelessWidget {
   final Album album;
@@ -36,8 +37,11 @@ class _AlbumView extends StatelessWidget {
         if (state is AlbumErrorState) {
           return SliverMediaScaffold(
             metadata: state.metadata,
-            error: state.error,
-            onRetry: () => context.read<AlbumCubit>().loadAlbum(state.album),
+            statusCard: state.error.toStatusCard(
+              context,
+              onRetry: () =>
+                  context.read<AlbumCubit>().loadAlbum(state.album),
+            ),
           );
         }
         if (state is AlbumLoadedState) {

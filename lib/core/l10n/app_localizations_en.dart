@@ -55,6 +55,72 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authFormHelpFailed => 'Could not open the link. Please try again.';
 
   @override
+  String get authSignInFailed =>
+      'Sign-in failed. Please check your details and try again.';
+
+  @override
+  String get authRequiredTitle => 'Sign in to continue';
+
+  @override
+  String get authRequiredMessage => 'This content belongs to your account.';
+
+  @override
+  String get accountTooltip => 'Account';
+
+  @override
+  String get accountNotSignedIn => 'Not signed in';
+
+  @override
+  String get accountSignIn => 'Sign in';
+
+  @override
+  String get accountSignedIn => 'Signed in';
+
+  @override
+  String get accountSignOut => 'Sign out';
+
+  @override
+  String get settingsTitle => 'Settings';
+
+  @override
+  String get settingsPluginsSection => 'Plugins';
+
+  @override
+  String get settingsNotConfigured => 'Not configured';
+
+  @override
+  String get pluginTypeMetadata => 'Metadata';
+
+  @override
+  String get pluginTypeAudioSource => 'Audio source';
+
+  @override
+  String get pluginVersionSection => 'Version';
+
+  @override
+  String get pluginVersionInstalled => 'Installed version';
+
+  @override
+  String get pluginVersionSdk => 'Plugin SDK';
+
+  @override
+  String get pluginAccountSection => 'Account';
+
+  @override
+  String get librarySignInTitle => 'Your library';
+
+  @override
+  String get librarySignInMessage =>
+      'Sign in to see your saved tracks, albums, artists and playlists.';
+
+  @override
+  String get libraryEmptyTitle => 'Nothing saved yet';
+
+  @override
+  String get libraryEmptyMessage =>
+      'Tracks, albums, artists and playlists you save will appear here.';
+
+  @override
   String get homeTab => 'Home';
 
   @override
@@ -149,6 +215,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pluginErrorStreamResolution =>
       'No playable audio stream could be found for this track.';
+
+  @override
+  String get pluginErrorAuthRequired =>
+      'This content is not available for your account.';
 
   @override
   String get noSectionsFound => 'No browse sections found.';

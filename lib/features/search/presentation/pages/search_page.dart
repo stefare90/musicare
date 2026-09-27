@@ -6,19 +6,22 @@ import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/router/app_navigator.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/core/widgets/bottom_sheets/track_options_bottom_sheet.dart';
-import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/info_card.dart';
 import 'package:music_are/core/widgets/media/media_card.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/core/widgets/media/section_row.dart';
 import 'package:music_are/core/widgets/media/track_list_tile.dart';
 import 'package:music_are/core/widgets/media/track_matrix.dart';
+import 'package:music_are/core/widgets/settings_button.dart';
 import 'package:music_are/core/widgets/skeletons/shimmer_box.dart';
 import 'package:music_are/core/widgets/skeletons/skeleton_media_grid.dart';
 import 'package:music_are/core/widgets/skeletons/skeleton_search_all.dart';
 import 'package:music_are/core/widgets/skeletons/skeleton_track_list.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
+import 'package:music_are/features/plugin/metadata/presentation/utils/plugin_status_card.dart';
 import 'package:music_are/features/search/presentation/cubit/search_cubit.dart';
 import 'package:music_are/features/search/presentation/cubit/search_state.dart';
 
@@ -30,7 +33,16 @@ class SearchPage extends StatelessWidget {
     return BlocProvider<SearchCubit>(
       create: (context) =>
           SearchCubit(sl<MetadataPluginEngine>())..loadChips(),
-      child: const _SearchView(),
+      child: BlocListener<MetadataPluginCubit, MetadataPluginState>(
+        listenWhen: (previous, current) =>
+            previous.isAuthenticated != current.isAuthenticated,
+        listener: (context, state) {
+          if (context.read<SearchCubit>().state.query.trim().isNotEmpty) {
+            context.read<SearchCubit>().retry();
+          }
+        },
+        child: const _SearchView(),
+      ),
     );
   }
 }
@@ -44,16 +56,38 @@ class _SearchView extends StatefulWidget {
 
 class _SearchViewState extends State<_SearchView> {
   late final TextEditingController _controller;
+  late final FocusNode _focusNode;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController();
+    _focusNode = FocusNode();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // The shell keeps every branch mounted in an IndexedStack and toggles
+    // TickerMode for the visible one, so this fires on each tab switch: focus
+    // the field when Search becomes visible, release it when it is left.
+    if (TickerMode.valuesOf(context).enabled) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted &&
+            TickerMode.valuesOf(context).enabled &&
+            !_focusNode.hasFocus) {
+          _focusNode.requestFocus();
+        }
+      });
+    } else if (_focusNode.hasFocus) {
+      _focusNode.unfocus();
+    }
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -62,10 +96,22 @@ class _SearchViewState extends State<_SearchView> {
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 16.0,
-        title: _SearchBar(controller: _controller),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(48.0),
-          child: _SearchChipsBar(),
+        title: Text(context.l10n.searchTab),
+        actions: const [SettingsButton()],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(104.0),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 8.0),
+                child: _SearchBar(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                ),
+              ),
+              const _SearchChipsBar(),
+            ],
+          ),
         ),
       ),
       body: const _SearchResultsBody(),
@@ -75,14 +121,15 @@ class _SearchViewState extends State<_SearchView> {
 
 class _SearchBar extends StatelessWidget {
   final TextEditingController controller;
+  final FocusNode focusNode;
 
-  const _SearchBar({required this.controller});
+  const _SearchBar({required this.controller, required this.focusNode});
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
-      autofocus: false,
+      focusNode: focusNode,
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
         hintText: context.l10n.searchHint,
@@ -208,8 +255,8 @@ class _SearchResultsBody extends StatelessWidget {
 
             if (state.error != null) {
               return _ScrollableCentered(
-                child: ErrorCard(
-                  error: state.error!,
+                child: state.error!.toStatusCard(
+                  context,
                   onRetry: () => context.read<SearchCubit>().retry(),
                 ),
               );

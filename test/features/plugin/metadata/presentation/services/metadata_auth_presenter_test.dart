@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
-import 'package:music_are/features/plugin/metadata/presentation/metadata_auth_presenter.dart';
+import 'package:music_are/features/plugin/metadata/presentation/services/metadata_auth_presenter.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';

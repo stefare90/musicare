@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
@@ -6,6 +7,12 @@ import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/features/home/presentation/pages/home_page.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
+
+import 'dart:async';
+
+import '../../../../helpers/metadata_plugin_test_helpers.dart';
 
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
@@ -34,11 +41,14 @@ void main() {
     when(() => mockMetadata.browse).thenReturn(mockBrowse);
   });
 
-  Widget buildTestableWidget() {
+  Widget buildTestableWidget({MetadataPluginCubit? metadataCubit}) {
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const HomePage(),
+      home: BlocProvider<MetadataPluginCubit>.value(
+        value: metadataCubit ?? buildMockMetadataPluginCubit(),
+        child: const HomePage(),
+      ),
     );
   }
 
@@ -99,6 +109,36 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('No Content Available'), findsOneWidget);
+    });
+
+    testWidgets('reloads sections when the auth state changes', (tester) async {
+      var sectionsCalls = 0;
+      when(() => mockBrowse.sections(offset: 0, limit: 10)).thenAnswer((
+        _,
+      ) async {
+        sectionsCalls++;
+        return PaginatedResult<Section>(
+          items: [],
+          total: 0,
+          offset: 0,
+          limit: 10,
+        );
+      });
+
+      final controller = StreamController<MetadataPluginState>.broadcast();
+      addTearDown(controller.close);
+      final cubit = buildMockMetadataPluginCubit(stream: controller.stream);
+
+      await tester.pumpWidget(buildTestableWidget(metadataCubit: cubit));
+      await tester.pumpAndSettle();
+      expect(sectionsCalls, 1);
+
+      controller.add(
+        testLoadedState(isAuthenticated: true, userName: 'listener'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(sectionsCalls, 2);
     });
   });
 }

@@ -184,6 +184,132 @@ abstract class AppLocalizations {
   /// **'Could not open the link. Please try again.'**
   String get authFormHelpFailed;
 
+  /// No description provided for @authSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in failed. Please check your details and try again.'**
+  String get authSignInFailed;
+
+  /// No description provided for @authRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to continue'**
+  String get authRequiredTitle;
+
+  /// No description provided for @authRequiredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This content belongs to your account.'**
+  String get authRequiredMessage;
+
+  /// No description provided for @accountTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get accountTooltip;
+
+  /// No description provided for @accountNotSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Not signed in'**
+  String get accountNotSignedIn;
+
+  /// No description provided for @accountSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get accountSignIn;
+
+  /// No description provided for @accountSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in'**
+  String get accountSignedIn;
+
+  /// No description provided for @accountSignOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get accountSignOut;
+
+  /// No description provided for @settingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTitle;
+
+  /// No description provided for @settingsPluginsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugins'**
+  String get settingsPluginsSection;
+
+  /// No description provided for @settingsNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Not configured'**
+  String get settingsNotConfigured;
+
+  /// No description provided for @pluginTypeMetadata.
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata'**
+  String get pluginTypeMetadata;
+
+  /// No description provided for @pluginTypeAudioSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio source'**
+  String get pluginTypeAudioSource;
+
+  /// No description provided for @pluginVersionSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get pluginVersionSection;
+
+  /// No description provided for @pluginVersionInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed version'**
+  String get pluginVersionInstalled;
+
+  /// No description provided for @pluginVersionSdk.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin SDK'**
+  String get pluginVersionSdk;
+
+  /// No description provided for @pluginAccountSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get pluginAccountSection;
+
+  /// No description provided for @librarySignInTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your library'**
+  String get librarySignInTitle;
+
+  /// No description provided for @librarySignInMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to see your saved tracks, albums, artists and playlists.'**
+  String get librarySignInMessage;
+
+  /// No description provided for @libraryEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing saved yet'**
+  String get libraryEmptyTitle;
+
+  /// No description provided for @libraryEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracks, albums, artists and playlists you save will appear here.'**
+  String get libraryEmptyMessage;
+
   /// No description provided for @homeTab.
   ///
   /// In en, this message translates to:
@@ -357,6 +483,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No playable audio stream could be found for this track.'**
   String get pluginErrorStreamResolution;
+
+  /// No description provided for @pluginErrorAuthRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This content is not available for your account.'**
+  String get pluginErrorAuthRequired;
 
   /// No description provided for @noSectionsFound.
   ///

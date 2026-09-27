@@ -4,6 +4,7 @@ import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/models/media_item_metadata.dart';
 import 'package:music_are/core/models/media_type.dart';
+import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
 import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 
@@ -74,8 +75,10 @@ void main() {
         buildTestableWidget(
           child: SliverMediaScaffold(
             metadata: MediaItemMetadata.from(testAlbum),
-            error: Exception('Network error'),
-            onRetry: () => retryTapped = true,
+            statusCard: ErrorCard(
+              error: Exception('Network error'),
+              onRetry: () => retryTapped = true,
+            ),
           ),
         ),
       );

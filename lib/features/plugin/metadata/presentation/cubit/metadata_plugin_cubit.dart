@@ -7,6 +7,13 @@ import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_p
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 
+/// Outcome of an interactive sign-in attempt.
+///
+/// [cancelled] and [failed] are deliberately distinct: cancelling the provider
+/// form is a normal user choice that must stay silent, while a failure (wrong
+/// token, offline) deserves feedback.
+enum AuthResult { authenticated, cancelled, failed }
+
 class MetadataPluginCubit extends SafeCubit<MetadataPluginState> {
   final MetadataPluginEngine _pluginEngine;
   final PreferencesService _preferences;
@@ -26,14 +33,7 @@ class MetadataPluginCubit extends SafeCubit<MetadataPluginState> {
       if (savedPluginId != null &&
           await _pluginEngine.isPluginInstalledOnDisk(savedPluginId)) {
         await _pluginEngine.loadFromDisk(savedPluginId);
-        final isAuth = await _pluginEngine.metadata.auth.isAuthenticated();
-
-        emit(
-          MetadataPluginLoadedState(
-            manifest: _pluginEngine.metadataManifest!,
-            isAuthenticated: isAuth,
-          ),
-        );
+        await _emitLoaded(_pluginEngine.metadataManifest!);
       } else {
         emit(MetadataPluginNotConfiguredState());
       }
@@ -64,10 +64,7 @@ class MetadataPluginCubit extends SafeCubit<MetadataPluginState> {
 
       await _preferences.setActivePluginId(manifest.id);
 
-      final isAuth = await _pluginEngine.metadata.auth.isAuthenticated();
-      emit(
-        MetadataPluginLoadedState(manifest: manifest, isAuthenticated: isAuth),
-      );
+      await _emitLoaded(manifest);
     } catch (e) {
       emit(MetadataPluginErrorState(e));
     }
@@ -81,26 +78,32 @@ class MetadataPluginCubit extends SafeCubit<MetadataPluginState> {
 
       await _preferences.setActivePluginId(manifest.id);
 
-      final isAuth = await _pluginEngine.metadata.auth.isAuthenticated();
-      emit(
-        MetadataPluginLoadedState(manifest: manifest, isAuthenticated: isAuth),
-      );
+      await _emitLoaded(manifest);
     } catch (e) {
       emit(MetadataPluginErrorState(e));
     }
   }
 
-  Future<void> authenticate() async {
-    if (state is! MetadataPluginLoadedState) return;
+  Future<AuthResult> authenticate() async {
+    if (state is! MetadataPluginLoadedState) return AuthResult.failed;
 
     try {
       await _pluginEngine.metadata.auth.authenticate();
       final isAuth = await _pluginEngine.metadata.auth.isAuthenticated();
+      final userName = isAuth ? await _fetchUserName() : null;
 
       final currentState = state as MetadataPluginLoadedState;
-      emit(currentState.copyWith(isAuthenticated: isAuth));
-    } catch (e) {
-      // Keep active loaded state on auth error
+      emit(
+        MetadataPluginLoadedState(
+          manifest: currentState.manifest,
+          isAuthenticated: isAuth,
+          userName: userName,
+        ),
+      );
+      return isAuth ? AuthResult.authenticated : AuthResult.cancelled;
+    } catch (_) {
+      // Keep the active loaded state on auth error.
+      return AuthResult.failed;
     }
   }
 
@@ -112,7 +115,12 @@ class MetadataPluginCubit extends SafeCubit<MetadataPluginState> {
       final isAuth = await _pluginEngine.metadata.auth.isAuthenticated();
 
       final currentState = state as MetadataPluginLoadedState;
-      emit(currentState.copyWith(isAuthenticated: isAuth));
+      emit(
+        MetadataPluginLoadedState(
+          manifest: currentState.manifest,
+          isAuthenticated: isAuth,
+        ),
+      );
     } catch (e) {
       // Keep active loaded state
     }
@@ -122,5 +130,27 @@ class MetadataPluginCubit extends SafeCubit<MetadataPluginState> {
     _pluginEngine.unloadMetadata();
     await _preferences.removeActivePluginId();
     emit(MetadataPluginNotConfiguredState());
+  }
+
+  Future<void> _emitLoaded(PluginManifest manifest) async {
+    final isAuth = await _pluginEngine.metadata.auth.isAuthenticated();
+    final userName = isAuth ? await _fetchUserName() : null;
+    emit(
+      MetadataPluginLoadedState(
+        manifest: manifest,
+        isAuthenticated: isAuth,
+        userName: userName,
+      ),
+    );
+  }
+
+  Future<String?> _fetchUserName() async {
+    try {
+      final me = await _pluginEngine.metadata.user.me();
+      final userId = me['user_id'];
+      return userId is String && userId.isNotEmpty ? userId : null;
+    } catch (_) {
+      return null;
+    }
   }
 }

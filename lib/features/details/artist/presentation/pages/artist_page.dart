@@ -12,6 +12,7 @@ import 'package:music_are/features/details/artist/presentation/cubit/artist_cubi
 import 'package:music_are/features/details/artist/presentation/cubit/artist_state.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/presentation/utils/plugin_status_card.dart';
 
 class ArtistPage extends StatelessWidget {
   final Artist artist;
@@ -40,8 +41,10 @@ class _ArtistView extends StatelessWidget {
               state.firstError ?? Exception(context.l10n.noContentTitle);
           return SliverMediaScaffold(
             metadata: state.metadata,
-            error: errorToShow,
-            onRetry: () => context.read<ArtistCubit>().loadArtist(),
+            statusCard: errorToShow.toStatusCard(
+              context,
+              onRetry: () => context.read<ArtistCubit>().loadArtist(),
+            ),
           );
         }
         return SliverMediaScaffold(

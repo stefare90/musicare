@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:musicare_runtime_host/musicare_runtime_host.dart';
 
 extension ExceptionLocalizer on Object {
@@ -24,6 +25,9 @@ extension ExceptionLocalizer on Object {
 
       // UI Service
       PluginErrorNoContext() => context.l10n.pluginErrorNoContext,
+
+      // Metadata SDK
+      MetadataAuthRequiredException() => context.l10n.pluginErrorAuthRequired,
 
       // Generics & System (Network, Timeout, Fallbacks)
       SocketException() => context.l10n.pluginErrorNetwork,

@@ -12,6 +12,7 @@ import 'package:music_are/core/widgets/media/media_card.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/core/widgets/media/section_row.dart';
 import 'package:music_are/core/widgets/media/track_list_tile.dart';
+import 'package:music_are/core/widgets/settings_button.dart';
 import 'package:music_are/core/widgets/skeletons/shimmer_box.dart';
 import 'package:music_are/core/widgets/skeletons/skeleton_media_grid.dart';
 import 'package:music_are/core/widgets/skeletons/skeleton_search_all.dart';
@@ -19,8 +20,12 @@ import 'package:music_are/core/widgets/skeletons/skeleton_track_list.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
 import 'package:music_are/features/search/presentation/cubit/search_cubit.dart';
 import 'package:music_are/features/search/presentation/pages/search_page.dart';
+
+import '../../../../helpers/metadata_plugin_test_helpers.dart';
 
 class MockMetadataPluginEngine extends Mock implements MetadataPluginEngine {}
 class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
@@ -108,19 +113,25 @@ void main() {
     sl.reset();
   });
 
-  Widget buildTestWidget({double textScale = 1.0}) {
-    return BlocProvider<PlayerCubit>.value(
-      value: mockPlayerCubit,
-      child: MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(textScale),
+  Widget buildTestWidget({
+    double textScale = 1.0,
+    MetadataPluginCubit? metadataCubit,
+  }) {
+    return BlocProvider<MetadataPluginCubit>.value(
+      value: metadataCubit ?? buildMockMetadataPluginCubit(),
+      child: BlocProvider<PlayerCubit>.value(
+        value: mockPlayerCubit,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              textScaler: TextScaler.linear(textScale),
+            ),
+            child: child!,
           ),
-          child: child!,
+          home: const SearchPage(),
         ),
-        home: const SearchPage(),
       ),
     );
   }
@@ -718,6 +729,71 @@ void main() {
         expect(tester.takeException(), isNull);
       });
     }
+  });
+
+  group('account entry point and auth refresh', () {
+    testWidgets('keeps the title, the settings button and the pinned field', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(AppBar, 'Search'), findsOneWidget);
+      expect(find.byType(SettingsButton), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
+    });
+
+    testWidgets('focuses the search field when the branch is visible', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(tester.testTextInput.isVisible, isTrue);
+    });
+
+    testWidgets('keeps the keyboard closed while the branch is offstage', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        TickerMode(enabled: false, child: buildTestWidget()),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.testTextInput.isVisible, isFalse);
+    });
+
+    testWidgets('re-runs the last query when the auth state changes', (
+      tester,
+    ) async {
+      var allCalls = 0;
+      when(() => mockSearch.all(any())).thenAnswer((_) async {
+        allCalls++;
+        return dummyResponse;
+      });
+
+      final controller = StreamController<MetadataPluginState>.broadcast();
+      addTearDown(controller.close);
+      final cubit = buildMockMetadataPluginCubit(
+        state: testLoadedState(isAuthenticated: false),
+        stream: controller.stream,
+      );
+
+      await tester.pumpWidget(buildTestWidget(metadataCubit: cubit));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'Coldplay');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+      expect(allCalls, 1);
+
+      controller.add(
+        testLoadedState(isAuthenticated: true, userName: 'listener'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(allCalls, 2);
+    });
   });
 }
 

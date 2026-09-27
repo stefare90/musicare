@@ -20,6 +20,7 @@ The application supports two distinct plugins:
 * **Smart Queue Management**: Advanced immutable queue system supporting shuffle (preserving history), repeat modes (One, All, Off), and dynamic inserts.
 * **Fault-Tolerant Streaming**: Automatic candidate resolution—if a stream URL expires or returns a 403 Forbidden, the player automatically falls back to the next available stream.
 * **Global Search & Filter Chips**: Integrated with the active Metadata plugin (`ISearch`), supporting debounced queries, aggregated search views, category pagination, and instant track playback.
+* **Settings & Plugin Accounts**: A settings hub (gear on the three root screens) with a Plugins section listing the active metadata and audio-source plugins, their versions and, when a plugin exposes authentication, its account (sign in/sign out). Contextual sign-in prompts appear when content or an action requires authentication; browsing and playback stay anonymous.
 * **Dynamic UI Generation**: The Home screen is generated entirely based on the sections (e.g., "Top Charts", "New Releases") returned by the active Metadata plugin.
 * **Modular Details Views**: Rich Slivers-based UI for Artists, Albums, and Playlists.
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/router/app_routes.dart';
+import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 
 abstract class AppNavigator {
   static void toHome(BuildContext context) {
@@ -43,6 +44,14 @@ abstract class AppNavigator {
       default:
         break;
     }
+  }
+
+  static void toSettings(BuildContext context) {
+    context.push(AppRoutes.settings);
+  }
+
+  static void toPluginDetail(BuildContext context, PluginType type) {
+    context.push('${AppRoutes.settingsPlugin}/${type.name}');
   }
 
   static void pop(BuildContext context) {
