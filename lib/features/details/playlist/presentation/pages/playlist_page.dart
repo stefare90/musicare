@@ -3,16 +3,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/models/media_type.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/widgets/bottom_sheets/bottom_sheets.dart';
+import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
 import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
-import 'package:music_are/features/plugin/metadata/presentation/utils/plugin_status_card.dart';
 
 class PlaylistPage extends StatelessWidget {
   final Playlist playlist;
@@ -23,14 +22,9 @@ class PlaylistPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<PlaylistCubit>(
       create: (context) =>
-          PlaylistCubit(sl<MetadataPluginEngine>())..loadPlaylist(playlist),
-      child: BlocListener<MetadataPluginCubit, MetadataPluginState>(
-        listenWhen: (previous, current) =>
-            previous.isAuthenticated != current.isAuthenticated,
-        listener: (context, state) =>
-            context.read<PlaylistCubit>().loadPlaylist(playlist),
-        child: const _PlaylistView(),
-      ),
+          PlaylistCubit(sl<MetadataPluginEngine>(), sl<NoticeBus>())
+            ..loadPlaylist(playlist),
+      child: const _PlaylistView(),
     );
   }
 }
@@ -45,8 +39,8 @@ class _PlaylistView extends StatelessWidget {
         if (state is PlaylistErrorState) {
           return SliverMediaScaffold(
             metadata: state.metadata,
-            statusCard: state.error.toStatusCard(
-              context,
+            statusCard: ErrorCard(
+              error: state.error,
               onRetry: () =>
                   context.read<PlaylistCubit>().loadPlaylist(state.playlist),
             ),

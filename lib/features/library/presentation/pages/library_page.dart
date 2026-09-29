@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
+import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/settings_button.dart';
-import 'package:music_are/core/widgets/sign_in_card.dart';
 import 'package:music_are/core/widgets/skeletons/skeleton_track_list.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/utils/metadata_account_actions.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
 
 class LibraryPage extends StatelessWidget {
@@ -26,11 +26,7 @@ class LibraryPage extends StatelessWidget {
 
           if (!state.isAuthenticated) {
             return Center(
-              child: SignInCard(
-                title: context.l10n.librarySignInTitle,
-                message: context.l10n.librarySignInMessage,
-                onSignIn: () => MetadataAccountActions.signIn(context),
-              ),
+              child: ErrorCard(error: const MetadataAuthRequiredException('')),
             );
           }
 

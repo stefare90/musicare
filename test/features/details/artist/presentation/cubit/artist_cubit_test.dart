@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/details/artist/presentation/cubit/artist_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
@@ -15,6 +16,7 @@ void main() {
     late MockPluginEngine mockPluginEngine;
     late MockMetadataPlugin mockMetadataPlugin;
     late MockArtistService mockArtistService;
+    late NoticeBus noticeBus;
     late ArtistCubit cubit;
 
     final initialArtist = Artist(
@@ -64,7 +66,8 @@ void main() {
       mockMetadataPlugin = MockMetadataPlugin();
       mockArtistService = MockArtistService();
 
-      cubit = ArtistCubit(mockPluginEngine, initialArtist);
+      noticeBus = NoticeBus();
+      cubit = ArtistCubit(mockPluginEngine, noticeBus, initialArtist);
     });
 
     tearDown(() {
@@ -209,5 +212,61 @@ void main() {
         verify(() => mockArtistService.unsave(['a1'])).called(1);
       },
     );
+
+    test('toggleSave emits a notice when the plugin rejects', () async {
+      when(() => mockPluginEngine.hasMetadata).thenReturn(true);
+      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+      when(() => mockMetadataPlugin.artist).thenReturn(mockArtistService);
+      final error = const MetadataAuthRequiredException('sign in');
+      when(() => mockArtistService.save(['a1'])).thenAnswer((_) async {
+        throw error;
+      });
+
+      final notices = <Object>[];
+      final subscription = noticeBus.notices.listen(notices.add);
+      await cubit.toggleSave();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(cubit.state.isSaved, isFalse);
+      expect(notices, hasLength(1));
+      expect(notices.single, same(error));
+      await subscription.cancel();
+    });
+
+    test('a section fetch emits a notice when it needs one', () async {
+      when(() => mockPluginEngine.hasMetadata).thenReturn(true);
+      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+      when(() => mockMetadataPlugin.artist).thenReturn(mockArtistService);
+      final error = const MetadataAuthRequiredException('sign in');
+      when(
+        () => mockArtistService.topTracks('a1', offset: 0, limit: 6),
+      ).thenAnswer((_) async => throw error);
+
+      final notices = <Object>[];
+      final subscription = noticeBus.notices.listen(notices.add);
+      cubit.fetchTopTracks();
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+
+      expect(notices, hasLength(1));
+      expect(notices.single, same(error));
+      await subscription.cancel();
+    });
+
+    test('a section fetch stays silent for non-notifiable errors', () async {
+      when(() => mockPluginEngine.hasMetadata).thenReturn(true);
+      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+      when(() => mockMetadataPlugin.artist).thenReturn(mockArtistService);
+      when(
+        () => mockArtistService.topTracks('a1', offset: 0, limit: 6),
+      ).thenAnswer((_) async => throw Exception('network'));
+
+      final notices = <Object>[];
+      final subscription = noticeBus.notices.listen(notices.add);
+      cubit.fetchTopTracks();
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+
+      expect(notices, isEmpty);
+      await subscription.cancel();
+    });
   });
 }

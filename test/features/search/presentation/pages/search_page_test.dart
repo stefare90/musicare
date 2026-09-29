@@ -6,6 +6,7 @@ import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/info_card.dart';
 import 'package:music_are/core/widgets/media/media_card.dart';
@@ -21,15 +22,18 @@ import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
+import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 import 'package:music_are/features/search/presentation/cubit/search_cubit.dart';
 import 'package:music_are/features/search/presentation/pages/search_page.dart';
 
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
 
 class MockMetadataPluginEngine extends Mock implements MetadataPluginEngine {}
+
 class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
+
 class MockISearch extends Mock implements ISearch {}
+
 class MockPlayerCubit extends Mock implements PlayerCubit {}
 
 void main() {
@@ -107,6 +111,7 @@ void main() {
       sl.unregister<MetadataPluginEngine>();
     }
     sl.registerSingleton<MetadataPluginEngine>(mockEngine);
+    sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
   });
 
   tearDown(() {
@@ -125,31 +130,36 @@ void main() {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              textScaler: TextScaler.linear(textScale),
-            ),
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(textScale)),
             child: child!,
           ),
-          home: const SearchPage(),
+          home: NoticeListener(
+            notices: sl<NoticeBus>().notices,
+            child: const SearchPage(),
+          ),
         ),
       ),
     );
   }
 
   List<Album> buildAlbums(int count) => List.generate(
-        count,
-        (i) => Album(
-          id: 'al$i',
-          name: 'Album Number $i With A Fairly Long Name',
-          artists: const [],
-          releaseDate: '2023',
-          externalUri: '',
-          totalTracks: 10,
-          albumType: AlbumType.album,
-        ),
-      );
+    count,
+    (i) => Album(
+      id: 'al$i',
+      name: 'Album Number $i With A Fairly Long Name',
+      artists: const [],
+      releaseDate: '2023',
+      externalUri: '',
+      totalTracks: 10,
+      albumType: AlbumType.album,
+    ),
+  );
 
-  testWidgets('SearchPage shows empty prompt initially and renders chips', (tester) async {
+  testWidgets('SearchPage shows empty prompt initially and renders chips', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildTestWidget());
     await tester.pumpAndSettle();
 
@@ -169,8 +179,9 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('an empty subset leaves only the aggregate chip',
-        (tester) async {
+    testWidgets('an empty subset leaves only the aggregate chip', (
+      tester,
+    ) async {
       await pumpWithChips(tester, const []);
 
       expect(find.byType(FilterChip), findsOneWidget);
@@ -178,8 +189,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('a one-category subset renders host-side localized labels',
-        (tester) async {
+    testWidgets('a one-category subset renders host-side localized labels', (
+      tester,
+    ) async {
       await pumpWithChips(tester, const [SearchCategory.albums]);
 
       expect(find.byType(FilterChip), findsNWidgets(2));
@@ -188,8 +200,9 @@ void main() {
       expect(find.text('Songs'), findsNothing);
     });
 
-    testWidgets('all four categories render their localized labels',
-        (tester) async {
+    testWidgets('all four categories render their localized labels', (
+      tester,
+    ) async {
       await pumpWithChips(tester, SearchCategory.values);
 
       for (final label in ['All', 'Songs', 'Albums', 'Artists', 'Playlists']) {
@@ -203,8 +216,11 @@ void main() {
         () => mockSearch.chips(),
       ).thenAnswer((_) async => SearchCategory.values);
       when(
-        () =>
-            mockSearch.tracks('Coldplay', offset: 0, limit: any(named: 'limit')),
+        () => mockSearch.tracks(
+          'Coldplay',
+          offset: 0,
+          limit: any(named: 'limit'),
+        ),
       ).thenAnswer(
         (_) async => PaginatedResult<Track>(
           items: [dummyTrack],
@@ -214,8 +230,11 @@ void main() {
         ),
       );
       when(
-        () =>
-            mockSearch.albums('Coldplay', offset: 0, limit: any(named: 'limit')),
+        () => mockSearch.albums(
+          'Coldplay',
+          offset: 0,
+          limit: any(named: 'limit'),
+        ),
       ).thenAnswer(
         (_) async => PaginatedResult<Album>(
           items: buildAlbums(3),
@@ -285,12 +304,18 @@ void main() {
       }
 
       verify(
-        () =>
-            mockSearch.tracks('Coldplay', offset: 0, limit: any(named: 'limit')),
+        () => mockSearch.tracks(
+          'Coldplay',
+          offset: 0,
+          limit: any(named: 'limit'),
+        ),
       ).called(1);
       verify(
-        () =>
-            mockSearch.albums('Coldplay', offset: 0, limit: any(named: 'limit')),
+        () => mockSearch.albums(
+          'Coldplay',
+          offset: 0,
+          limit: any(named: 'limit'),
+        ),
       ).called(1);
       verify(
         () => mockSearch.artists(
@@ -315,7 +340,9 @@ void main() {
     });
   });
 
-  testWidgets('SearchPage triggers search on typing and displays results', (tester) async {
+  testWidgets('SearchPage triggers search on typing and displays results', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildTestWidget());
     await tester.pumpAndSettle();
 
@@ -358,116 +385,135 @@ void main() {
     },
   );
 
-  testWidgets('SearchPage category filter switches to category view and plays track', (tester) async {
-    when(
-      () => mockSearch.tracks('Coldplay', offset: 0, limit: any(named: 'limit')),
-    ).thenAnswer(
-      (_) async => PaginatedResult<Track>(
-        items: [dummyTrack],
-        total: 1,
-        offset: 0,
-        limit: 20,
-      ),
-    );
+  testWidgets(
+    'SearchPage category filter switches to category view and plays track',
+    (tester) async {
+      when(
+        () => mockSearch.tracks(
+          'Coldplay',
+          offset: 0,
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: [dummyTrack],
+          total: 1,
+          offset: 0,
+          limit: 20,
+        ),
+      );
 
-    await tester.pumpWidget(buildTestWidget());
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
 
-    final textField = find.byType(TextField);
-    await tester.enterText(textField, 'Coldplay');
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pumpAndSettle();
+      final textField = find.byType(TextField);
+      await tester.enterText(textField, 'Coldplay');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
 
-    final songsChip = find.widgetWithText(FilterChip, 'Songs');
-    await tester.tap(songsChip);
-    await tester.pumpAndSettle();
+      final songsChip = find.widgetWithText(FilterChip, 'Songs');
+      await tester.tap(songsChip);
+      await tester.pumpAndSettle();
 
-    verify(() => mockSearch.tracks('Coldplay', offset: 0, limit: 20)).called(1);
+      verify(
+        () => mockSearch.tracks('Coldplay', offset: 0, limit: 20),
+      ).called(1);
 
-    // Tap track tile to play
-    final trackTile = find.byType(TrackListTile);
-    expect(trackTile, findsOneWidget);
+      // Tap track tile to play
+      final trackTile = find.byType(TrackListTile);
+      expect(trackTile, findsOneWidget);
 
-    when(() => mockPlayerCubit.playQueue(any(), index: any(named: 'index')))
-        .thenAnswer((_) async {});
+      when(
+        () => mockPlayerCubit.playQueue(any(), index: any(named: 'index')),
+      ).thenAnswer((_) async {});
 
-    await tester.tap(trackTile);
-    await tester.pump();
+      await tester.tap(trackTile);
+      await tester.pump();
 
-    verify(() => mockPlayerCubit.playQueue([dummyTrack], index: 0)).called(1);
-  });
+      verify(() => mockPlayerCubit.playQueue([dummyTrack], index: 0)).called(1);
+    },
+  );
 
-  testWidgets('SearchPage displays SkeletonSearchAll during initial loading for All category', (tester) async {
-    final completer = Completer<SearchResponse>();
-    when(() => mockSearch.all(any())).thenAnswer((_) => completer.future);
+  testWidgets(
+    'SearchPage displays SkeletonSearchAll during initial loading for All category',
+    (tester) async {
+      final completer = Completer<SearchResponse>();
+      when(() => mockSearch.all(any())).thenAnswer((_) => completer.future);
 
-    await tester.pumpWidget(buildTestWidget());
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
 
-    final textField = find.byType(TextField);
-    await tester.enterText(textField, 'Coldplay');
-    // Advance past debounce timer (350ms)
-    await tester.pump(const Duration(milliseconds: 360));
+      final textField = find.byType(TextField);
+      await tester.enterText(textField, 'Coldplay');
+      // Advance past debounce timer (350ms)
+      await tester.pump(const Duration(milliseconds: 360));
 
-    expect(find.byType(SkeletonSearchAll), findsOneWidget);
+      expect(find.byType(SkeletonSearchAll), findsOneWidget);
 
-    // Complete future to clean up pending timers
-    completer.complete(dummyResponse);
-    await tester.pumpAndSettle();
-  });
+      // Complete future to clean up pending timers
+      completer.complete(dummyResponse);
+      await tester.pumpAndSettle();
+    },
+  );
 
-  testWidgets('SearchPage displays SkeletonTrackList and SkeletonMediaGrid during category loading', (tester) async {
-    final tracksCompleter = Completer<PaginatedResult<Track>>();
-    final albumsCompleter = Completer<PaginatedResult<Album>>();
+  testWidgets(
+    'SearchPage displays SkeletonTrackList and SkeletonMediaGrid during category loading',
+    (tester) async {
+      final tracksCompleter = Completer<PaginatedResult<Track>>();
+      final albumsCompleter = Completer<PaginatedResult<Album>>();
 
-    when(
-      () => mockSearch.tracks('Coldplay', offset: 0, limit: any(named: 'limit')),
-    ).thenAnswer((_) => tracksCompleter.future);
+      when(
+        () => mockSearch.tracks(
+          'Coldplay',
+          offset: 0,
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((_) => tracksCompleter.future);
 
-    when(
-      () => mockSearch.albums('Coldplay', offset: 0, limit: any(named: 'limit')),
-    ).thenAnswer((_) => albumsCompleter.future);
+      when(
+        () => mockSearch.albums(
+          'Coldplay',
+          offset: 0,
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((_) => albumsCompleter.future);
 
-    await tester.pumpWidget(buildTestWidget());
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
 
-    final textField = find.byType(TextField);
-    await tester.enterText(textField, 'Coldplay');
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pumpAndSettle();
+      final textField = find.byType(TextField);
+      await tester.enterText(textField, 'Coldplay');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
 
-    final songsChip = find.widgetWithText(FilterChip, 'Songs');
-    await tester.tap(songsChip);
-    await tester.pump(); // Start request
+      final songsChip = find.widgetWithText(FilterChip, 'Songs');
+      await tester.tap(songsChip);
+      await tester.pump(); // Start request
 
-    expect(find.byType(SkeletonTrackList), findsOneWidget);
+      expect(find.byType(SkeletonTrackList), findsOneWidget);
 
-    tracksCompleter.complete(
-      PaginatedResult<Track>(
-        items: [dummyTrack],
-        total: 1,
-        offset: 0,
-        limit: 20,
-      ),
-    );
-    await tester.pumpAndSettle();
+      tracksCompleter.complete(
+        PaginatedResult<Track>(
+          items: [dummyTrack],
+          total: 1,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    final albumsChip = find.widgetWithText(FilterChip, 'Albums');
-    await tester.tap(albumsChip);
-    await tester.pump(); // Start request
+      final albumsChip = find.widgetWithText(FilterChip, 'Albums');
+      await tester.tap(albumsChip);
+      await tester.pump(); // Start request
 
-    expect(find.byType(SkeletonMediaGrid), findsOneWidget);
+      expect(find.byType(SkeletonMediaGrid), findsOneWidget);
 
-    albumsCompleter.complete(
-      PaginatedResult<Album>(
-        items: [],
-        total: 0,
-        offset: 0,
-        limit: 20,
-      ),
-    );
-    await tester.pumpAndSettle();
-  });
+      albumsCompleter.complete(
+        PaginatedResult<Album>(items: [], total: 0, offset: 0, limit: 20),
+      );
+      await tester.pumpAndSettle();
+    },
+  );
 
   group('Albums grid overflow regression', () {
     final viewports = <Size>[
@@ -479,55 +525,54 @@ void main() {
 
     for (final scale in [1.0, 1.3, 1.5, 2.0]) {
       for (final viewport in viewports) {
-        testWidgets(
-          'renders Albums grid without overflow (scale $scale, '
-          '${viewport.width.toInt()}x${viewport.height.toInt()})',
-          (tester) async {
-            tester.view.physicalSize = viewport;
-            tester.view.devicePixelRatio = 1.0;
-            addTearDown(tester.view.reset);
+        testWidgets('renders Albums grid without overflow (scale $scale, '
+            '${viewport.width.toInt()}x${viewport.height.toInt()})', (
+          tester,
+        ) async {
+          tester.view.physicalSize = viewport;
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(tester.view.reset);
 
-            when(
-              () => mockSearch.albums(
-                'Coldplay',
-                offset: 0,
-                limit: any(named: 'limit'),
-              ),
-            ).thenAnswer(
-              (_) async => PaginatedResult<Album>(
-                items: buildAlbums(6),
-                total: 6,
-                offset: 0,
-                limit: 20,
-              ),
-            );
+          when(
+            () => mockSearch.albums(
+              'Coldplay',
+              offset: 0,
+              limit: any(named: 'limit'),
+            ),
+          ).thenAnswer(
+            (_) async => PaginatedResult<Album>(
+              items: buildAlbums(6),
+              total: 6,
+              offset: 0,
+              limit: 20,
+            ),
+          );
 
-            await tester.pumpWidget(buildTestWidget(textScale: scale));
-            await tester.pumpAndSettle();
+          await tester.pumpWidget(buildTestWidget(textScale: scale));
+          await tester.pumpAndSettle();
 
-            await tester.enterText(find.byType(TextField), 'Coldplay');
-            await tester.pump(const Duration(milliseconds: 400));
-            await tester.pumpAndSettle();
+          await tester.enterText(find.byType(TextField), 'Coldplay');
+          await tester.pump(const Duration(milliseconds: 400));
+          await tester.pumpAndSettle();
 
-            // Select via the cubit: the chip can be off-screen at narrow
-            // widths / large text scales, so tapping it is unreliable.
-            final cubit = BlocProvider.of<SearchCubit>(
-              tester.element(find.byType(FilterChip).first),
-            );
-            cubit.selectChip(SearchCategory.albums);
-            await tester.pumpAndSettle();
+          // Select via the cubit: the chip can be off-screen at narrow
+          // widths / large text scales, so tapping it is unreliable.
+          final cubit = BlocProvider.of<SearchCubit>(
+            tester.element(find.byType(FilterChip).first),
+          );
+          cubit.selectChip(SearchCategory.albums);
+          await tester.pumpAndSettle();
 
-            verify(
-              () => mockSearch.albums(
-                'Coldplay',
-                offset: 0,
-                limit: any(named: 'limit'),
-              ),
-            ).called(1);
-            expect(find.byType(MediaCard), findsWidgets);
-            expect(tester.takeException(), isNull);
-          },
-        );
+          verify(
+            () => mockSearch.albums(
+              'Coldplay',
+              offset: 0,
+              limit: any(named: 'limit'),
+            ),
+          ).called(1);
+          expect(find.byType(MediaCard), findsWidgets);
+          expect(tester.takeException(), isNull);
+        });
       }
     }
 
@@ -580,96 +625,98 @@ void main() {
     });
   });
 
-  testWidgets('selected FilterChip uses the primary color with onPrimary label',
-      (tester) async {
-    await tester.pumpWidget(buildTestWidget());
-    await tester.pumpAndSettle();
+  testWidgets(
+    'selected FilterChip uses the primary color with onPrimary label',
+    (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
 
-    final selectedChip = tester.widget<FilterChip>(
-      find.byWidgetPredicate((widget) => widget is FilterChip && widget.selected),
-    );
+      final selectedChip = tester.widget<FilterChip>(
+        find.byWidgetPredicate(
+          (widget) => widget is FilterChip && widget.selected,
+        ),
+      );
 
-    final colorScheme =
-        Theme.of(tester.element(find.byType(SearchPage))).colorScheme;
-    expect(selectedChip.selectedColor, colorScheme.primary);
-    expect(selectedChip.labelStyle?.color, colorScheme.onPrimary);
-  });
+      final colorScheme = Theme.of(
+        tester.element(find.byType(SearchPage)),
+      ).colorScheme;
+      expect(selectedChip.selectedColor, colorScheme.primary);
+      expect(selectedChip.labelStyle?.color, colorScheme.onPrimary);
+    },
+  );
 
   testWidgets(
-      'progressive loading shows a full row of grid skeletons, not a spinner',
-      (tester) async {
-    tester.view.physicalSize = const Size(800, 1200);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
+    'progressive loading shows a full row of grid skeletons, not a spinner',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
 
-    final loadMoreCompleter = Completer<PaginatedResult<Album>>();
+      final loadMoreCompleter = Completer<PaginatedResult<Album>>();
 
-    when(
-      () => mockSearch.albums(
-        'Coldplay',
-        offset: 0,
-        limit: any(named: 'limit'),
-      ),
-    ).thenAnswer(
-      (_) async => PaginatedResult<Album>(
-        items: buildAlbums(4),
-        total: 8,
-        offset: 0,
-        limit: 4,
-      ),
-    );
-    when(
-      () => mockSearch.albums(
-        'Coldplay',
-        offset: 4,
-        limit: any(named: 'limit'),
-      ),
-    ).thenAnswer((_) => loadMoreCompleter.future);
+      when(
+        () => mockSearch.albums(
+          'Coldplay',
+          offset: 0,
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer(
+        (_) async => PaginatedResult<Album>(
+          items: buildAlbums(4),
+          total: 8,
+          offset: 0,
+          limit: 4,
+        ),
+      );
+      when(
+        () => mockSearch.albums(
+          'Coldplay',
+          offset: 4,
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((_) => loadMoreCompleter.future);
 
-    await tester.pumpWidget(buildTestWidget());
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField), 'Coldplay');
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Coldplay');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
 
-    final cubit = BlocProvider.of<SearchCubit>(
-      tester.element(find.byType(FilterChip).first),
-    );
-    await cubit.selectChip(SearchCategory.albums);
-    await tester.pumpAndSettle();
-    expect(cubit.state.hasMore, isTrue);
+      final cubit = BlocProvider.of<SearchCubit>(
+        tester.element(find.byType(FilterChip).first),
+      );
+      await cubit.selectChip(SearchCategory.albums);
+      await tester.pumpAndSettle();
+      expect(cubit.state.hasMore, isTrue);
 
-    // Trigger the next page directly: a scroll gesture is unreliable here.
-    unawaited(cubit.loadMore());
-    await tester.pump();
-    await tester.pump();
+      // Trigger the next page directly: a scroll gesture is unreliable here.
+      unawaited(cubit.loadMore());
+      await tester.pump();
+      await tester.pump();
 
-    expect(cubit.state.isLoadingMore, isTrue);
-    expect(find.byType(MediaCard), findsNWidgets(4));
-    final columns = MediaCardMetrics.gridColumns(800);
-    expect(find.byType(ShimmerBox), findsNWidgets(columns));
-    expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(cubit.state.isLoadingMore, isTrue);
+      expect(find.byType(MediaCard), findsNWidgets(4));
+      final columns = MediaCardMetrics.gridColumns(800);
+      expect(find.byType(ShimmerBox), findsNWidgets(columns));
+      expect(find.byType(CircularProgressIndicator), findsNothing);
 
-    loadMoreCompleter.complete(
-      PaginatedResult<Album>(
-        items: buildAlbums(4),
-        total: 8,
-        offset: 4,
-        limit: 4,
-      ),
-    );
-    await tester.pumpAndSettle();
+      loadMoreCompleter.complete(
+        PaginatedResult<Album>(
+          items: buildAlbums(4),
+          total: 8,
+          offset: 4,
+          limit: 4,
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.byType(ShimmerBox), findsNothing);
-  });
+      expect(find.byType(ShimmerBox), findsNothing);
+    },
+  );
 
   group('non-list states scroll in landscape without overflow', () {
-    const viewports = <Size>[
-      Size(800, 360),
-      Size(800, 320),
-      Size(800, 280),
-    ];
+    const viewports = <Size>[Size(800, 360), Size(800, 320), Size(800, 280)];
 
     void useViewport(WidgetTester tester, Size size) {
       tester.view.physicalSize = size;
@@ -678,8 +725,7 @@ void main() {
     }
 
     for (final viewport in viewports) {
-      final label =
-          '${viewport.width.toInt()}x${viewport.height.toInt()}';
+      final label = '${viewport.width.toInt()}x${viewport.height.toInt()}';
 
       testWidgets('empty state has no overflow at $label', (tester) async {
         useViewport(tester, viewport);
@@ -693,8 +739,7 @@ void main() {
 
       testWidgets('error state has no overflow at $label', (tester) async {
         useViewport(tester, viewport);
-        when(() => mockSearch.all(any()))
-            .thenThrow(Exception('Search failed'));
+        when(() => mockSearch.all(any())).thenThrow(Exception('Search failed'));
 
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
@@ -763,37 +808,25 @@ void main() {
       expect(tester.testTextInput.isVisible, isFalse);
     });
 
-    testWidgets('re-runs the last query when the auth state changes', (
-      tester,
-    ) async {
-      var allCalls = 0;
-      when(() => mockSearch.all(any())).thenAnswer((_) async {
-        allCalls++;
-        return dummyResponse;
-      });
-
-      final controller = StreamController<MetadataPluginState>.broadcast();
-      addTearDown(controller.close);
-      final cubit = buildMockMetadataPluginCubit(
-        state: testLoadedState(isAuthenticated: false),
-        stream: controller.stream,
+    testWidgets('announces an auth-required search failure', (tester) async {
+      when(() => mockSearch.all(any())).thenAnswer(
+        (_) async => throw const MetadataAuthRequiredException('sign in'),
       );
 
-      await tester.pumpWidget(buildTestWidget(metadataCubit: cubit));
+      await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField), 'Coldplay');
       await tester.pump(const Duration(milliseconds: 400));
       await tester.pumpAndSettle();
-      expect(allCalls, 1);
 
-      controller.add(
-        testLoadedState(isAuthenticated: true, userName: 'listener'),
+      expect(
+        find.descendant(
+          of: find.byType(SnackBar),
+          matching: find.text('Metadata sign-in required.'),
+        ),
+        findsOneWidget,
       );
-      await tester.pumpAndSettle();
-
-      expect(allCalls, 2);
     });
   });
 }
-

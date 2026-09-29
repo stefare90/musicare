@@ -5,14 +5,13 @@ import 'package:get_it/get_it.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/details/playlist/presentation/pages/playlist_page.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
-
-import 'dart:async';
+import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 
 import '../../../../../helpers/metadata_plugin_test_helpers.dart';
 
@@ -52,6 +51,7 @@ void main() {
     when(() => mockPlayerCubit.stream).thenAnswer((_) => const Stream.empty());
 
     sl.registerLazySingleton<MetadataPluginEngine>(() => mockEngine);
+    sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
 
     when(() => mockEngine.hasMetadata).thenReturn(true);
     when(() => mockEngine.metadata).thenReturn(mockMetadata);
@@ -62,14 +62,17 @@ void main() {
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: MultiBlocProvider(
-        providers: [
-          BlocProvider<PlayerCubit>.value(value: mockPlayerCubit),
-          BlocProvider<MetadataPluginCubit>.value(
-            value: metadataCubit ?? buildMockMetadataPluginCubit(),
-          ),
-        ],
-        child: PlaylistPage(playlist: testPlaylist),
+      home: NoticeListener(
+        notices: sl<NoticeBus>().notices,
+        child: MultiBlocProvider(
+          providers: [
+            BlocProvider<PlayerCubit>.value(value: mockPlayerCubit),
+            BlocProvider<MetadataPluginCubit>.value(
+              value: metadataCubit ?? buildMockMetadataPluginCubit(),
+            ),
+          ],
+          child: PlaylistPage(playlist: testPlaylist),
+        ),
       ),
     );
   }
@@ -87,31 +90,23 @@ void main() {
       expect(find.text('Spotify'), findsOneWidget);
     });
 
-    testWidgets('reloads the playlist when the auth state changes', (
+    testWidgets('announces the sign-in invitation when access is required', (
       tester,
     ) async {
-      var tracksCalls = 0;
-      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer((
-        _,
-      ) async {
-        tracksCalls++;
-        return PaginatedResult(items: [], total: 0, offset: 0, limit: 20);
-      });
-
-      final controller = StreamController<MetadataPluginState>.broadcast();
-      addTearDown(controller.close);
-      final cubit = buildMockMetadataPluginCubit(stream: controller.stream);
-
-      await tester.pumpWidget(buildTestableWidget(metadataCubit: cubit));
-      await tester.pumpAndSettle();
-      expect(tracksCalls, 1);
-
-      controller.add(
-        testLoadedState(isAuthenticated: true, userName: 'listener'),
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
+        (_) async => throw const MetadataAuthRequiredException('sign in'),
       );
+
+      await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
 
-      expect(tracksCalls, 2);
+      expect(
+        find.descendant(
+          of: find.byType(SnackBar),
+          matching: find.text('Metadata sign-in required.'),
+        ),
+        findsOneWidget,
+      );
     });
   });
 }

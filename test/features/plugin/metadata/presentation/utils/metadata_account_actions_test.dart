@@ -43,7 +43,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text('Sign-in failed. Please check your details and try again.'),
+      find.text(
+        'Metadata sign-in failed. Please check your details and try again.',
+      ),
       findsOneWidget,
     );
     expect(signedIn, isFalse);

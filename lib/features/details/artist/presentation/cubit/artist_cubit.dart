@@ -1,17 +1,20 @@
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/features/details/artist/presentation/cubit/artist_state.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
+import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
 class ArtistCubit extends SafeCubit<ArtistState> {
   final MetadataPluginEngine _pluginEngine;
+  final NoticeBus _notices;
   bool _isFetchingMoreTopTracks = false;
   bool _isFetchingMoreAlbums = false;
   bool _isFetchingMoreRelated = false;
 
-  ArtistCubit(this._pluginEngine, Artist initialArtist)
+  ArtistCubit(this._pluginEngine, this._notices, Artist initialArtist)
     : super(ArtistState(artist: initialArtist));
 
   Future<void> loadArtist() async {
@@ -52,12 +55,13 @@ class ArtistCubit extends SafeCubit<ArtistState> {
         .then((tracks) {
           emit(state.copyWith(topTracks: SectionState.success(tracks)));
         })
-        .catchError((e) {
+        .catchError((Object e) {
           emit(
             state.copyWith(
               topTracks: SectionState.error(e, state.topTracks.data),
             ),
           );
+          if (e.needsNotice) _notices.emit(e);
         });
   }
 
@@ -88,6 +92,7 @@ class ArtistCubit extends SafeCubit<ArtistState> {
       emit(state.copyWith(topTracks: SectionState.success(updatedResult)));
     } catch (e) {
       emit(state.copyWith(topTracks: SectionState.error(e, currentData)));
+      if (e.needsNotice) _notices.emit(e);
     } finally {
       _isFetchingMoreTopTracks = false;
     }
@@ -101,10 +106,11 @@ class ArtistCubit extends SafeCubit<ArtistState> {
         .then((albums) {
           emit(state.copyWith(albums: SectionState.success(albums)));
         })
-        .catchError((e) {
+        .catchError((Object e) {
           emit(
             state.copyWith(albums: SectionState.error(e, state.albums.data)),
           );
+          if (e.needsNotice) _notices.emit(e);
         });
   }
 
@@ -135,6 +141,7 @@ class ArtistCubit extends SafeCubit<ArtistState> {
       emit(state.copyWith(albums: SectionState.success(updatedResult)));
     } catch (e) {
       emit(state.copyWith(albums: SectionState.error(e, currentData)));
+      if (e.needsNotice) _notices.emit(e);
     } finally {
       _isFetchingMoreAlbums = false;
     }
@@ -167,6 +174,7 @@ class ArtistCubit extends SafeCubit<ArtistState> {
       emit(state.copyWith(related: SectionState.success(updatedResult)));
     } catch (e) {
       emit(state.copyWith(related: SectionState.error(e, currentData)));
+      if (e.needsNotice) _notices.emit(e);
     } finally {
       _isFetchingMoreRelated = false;
     }
@@ -180,22 +188,25 @@ class ArtistCubit extends SafeCubit<ArtistState> {
         .then((related) {
           emit(state.copyWith(related: SectionState.success(related)));
         })
-        .catchError((e) {
+        .catchError((Object e) {
           emit(
             state.copyWith(related: SectionState.error(e, state.related.data)),
           );
+          if (e.needsNotice) _notices.emit(e);
         });
   }
 
   Future<void> toggleSave() async {
+    final isSavedNow = !state.isSaved;
     try {
-      final isSavedNow = !state.isSaved;
       if (isSavedNow) {
         await _pluginEngine.metadata.artist.save([state.artist.id]);
       } else {
         await _pluginEngine.metadata.artist.unsave([state.artist.id]);
       }
       emit(state.copyWith(isSaved: isSavedNow));
-    } catch (_) {}
+    } catch (e) {
+      _notices.emit(e);
+    }
   }
 }

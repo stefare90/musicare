@@ -1,14 +1,17 @@
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/features/home/presentation/cubit/home_state.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
+import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
 class HomeCubit extends SafeCubit<HomeState> {
   final MetadataPluginEngine _pluginEngine;
+  final NoticeBus _notices;
 
-  HomeCubit(this._pluginEngine) : super(const HomeState());
+  HomeCubit(this._pluginEngine, this._notices) : super(const HomeState());
 
   Future<void> fetchSections() async {
     if (!_pluginEngine.hasMetadata) {
@@ -60,6 +63,7 @@ class HomeCubit extends SafeCubit<HomeState> {
           ],
         ),
       );
+      if (e.needsNotice) _notices.emit(e);
     }
   }
 
@@ -83,7 +87,7 @@ class HomeCubit extends SafeCubit<HomeState> {
 
           emit(state.copyWith(sections: updatedSections));
         })
-        .catchError((e) {
+        .catchError((Object e) {
           final updatedSections = state.sections.map((s) {
             if (s.section.id == sectionId) {
               return SectionWithItems(
@@ -95,6 +99,7 @@ class HomeCubit extends SafeCubit<HomeState> {
           }).toList();
 
           emit(state.copyWith(sections: updatedSections));
+          if (e.needsNotice) _notices.emit(e);
         });
   }
 

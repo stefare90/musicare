@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
@@ -82,6 +83,13 @@ void main() {
       expect(
         PluginErrorNoContext().toLocalizedString(buildContext),
         equals('Navigation context is unavailable.'),
+      );
+
+      expect(
+        const MetadataAuthRequiredException(
+          'sign in',
+        ).toLocalizedString(buildContext),
+        equals('Metadata sign-in required.'),
       );
 
       expect(

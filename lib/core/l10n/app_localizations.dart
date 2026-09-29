@@ -187,20 +187,8 @@ abstract class AppLocalizations {
   /// No description provided for @authSignInFailed.
   ///
   /// In en, this message translates to:
-  /// **'Sign-in failed. Please check your details and try again.'**
+  /// **'Metadata sign-in failed. Please check your details and try again.'**
   String get authSignInFailed;
-
-  /// No description provided for @authRequiredTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to continue'**
-  String get authRequiredTitle;
-
-  /// No description provided for @authRequiredMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'This content belongs to your account.'**
-  String get authRequiredMessage;
 
   /// No description provided for @accountTooltip.
   ///
@@ -285,18 +273,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Account'**
   String get pluginAccountSection;
-
-  /// No description provided for @librarySignInTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Your library'**
-  String get librarySignInTitle;
-
-  /// No description provided for @librarySignInMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to see your saved tracks, albums, artists and playlists.'**
-  String get librarySignInMessage;
 
   /// No description provided for @libraryEmptyTitle.
   ///
@@ -487,7 +463,7 @@ abstract class AppLocalizations {
   /// No description provided for @pluginErrorAuthRequired.
   ///
   /// In en, this message translates to:
-  /// **'This content is not available for your account.'**
+  /// **'Metadata sign-in required.'**
   String get pluginErrorAuthRequired;
 
   /// No description provided for @noSectionsFound.

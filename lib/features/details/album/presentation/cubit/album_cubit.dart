@@ -1,14 +1,17 @@
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/features/details/album/presentation/cubit/album_state.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
+import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
 class AlbumCubit extends SafeCubit<AlbumState> {
   final MetadataPluginEngine _pluginEngine;
+  final NoticeBus _notices;
   bool _isFetchingMoreTracks = false;
 
-  AlbumCubit(this._pluginEngine) : super(AlbumInitialState());
+  AlbumCubit(this._pluginEngine, this._notices) : super(AlbumInitialState());
 
   Future<void> loadAlbum(Album album) async {
     if (!_pluginEngine.hasMetadata) {
@@ -34,6 +37,7 @@ class AlbumCubit extends SafeCubit<AlbumState> {
       emit(AlbumLoadedState(album: fullAlbum, tracks: result));
     } catch (e) {
       emit(AlbumErrorState(error: e, album: album));
+      if (e.needsNotice) _notices.emit(e);
     }
   }
 
@@ -80,6 +84,7 @@ class AlbumCubit extends SafeCubit<AlbumState> {
           error: e,
         ),
       );
+      if (e.needsNotice) _notices.emit(e);
     } finally {
       _isFetchingMoreTracks = false;
     }
@@ -88,14 +93,16 @@ class AlbumCubit extends SafeCubit<AlbumState> {
   Future<void> toggleSave() async {
     if (state is! AlbumLoadedState) return;
     final currentState = state as AlbumLoadedState;
+    final isSavedNow = !currentState.isSaved;
     try {
-      final isSavedNow = !currentState.isSaved;
       if (isSavedNow) {
         await _pluginEngine.metadata.album.save([currentState.album.id]);
       } else {
         await _pluginEngine.metadata.album.unsave([currentState.album.id]);
       }
       emit(currentState.copyWith(isSaved: isSavedNow));
-    } catch (_) {}
+    } catch (e) {
+      _notices.emit(e);
+    }
   }
 }

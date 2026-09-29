@@ -3,14 +3,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/models/media_type.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/widgets/bottom_sheets/bottom_sheets.dart';
+import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
 import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 import 'package:music_are/features/details/album/presentation/cubit/album_cubit.dart';
 import 'package:music_are/features/details/album/presentation/cubit/album_state.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
-import 'package:music_are/features/plugin/metadata/presentation/utils/plugin_status_card.dart';
 
 class AlbumPage extends StatelessWidget {
   final Album album;
@@ -21,7 +22,8 @@ class AlbumPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<AlbumCubit>(
       create: (context) =>
-          AlbumCubit(sl<MetadataPluginEngine>())..loadAlbum(album),
+          AlbumCubit(sl<MetadataPluginEngine>(), sl<NoticeBus>())
+            ..loadAlbum(album),
       child: const _AlbumView(),
     );
   }
@@ -37,10 +39,9 @@ class _AlbumView extends StatelessWidget {
         if (state is AlbumErrorState) {
           return SliverMediaScaffold(
             metadata: state.metadata,
-            statusCard: state.error.toStatusCard(
-              context,
-              onRetry: () =>
-                  context.read<AlbumCubit>().loadAlbum(state.album),
+            statusCard: ErrorCard(
+              error: state.error,
+              onRetry: () => context.read<AlbumCubit>().loadAlbum(state.album),
             ),
           );
         }

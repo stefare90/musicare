@@ -69,6 +69,6 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ⬜ Better "Fans Also Like" fallback when artist data is sparse.
 ⬜ Show artist and album name in the track options bottom sheet.
 ⬜ Track favorites and a unified saved-content view.
-⬜ Real artist top tracks via ListenBrainz instead of work metadata.
+✅ Real artist top tracks via ListenBrainz instead of work metadata.
 ⬜ Bluetooth next/prev buttons.
 ⬜ "Play all" when the playlist is only partially loaded.

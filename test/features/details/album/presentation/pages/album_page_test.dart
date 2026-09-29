@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/details/album/presentation/pages/album_page.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
@@ -58,6 +59,7 @@ void main() {
     when(() => mockPlayerCubit.stream).thenAnswer((_) => const Stream.empty());
 
     sl.registerLazySingleton<MetadataPluginEngine>(() => mockEngine);
+    sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
 
     when(() => mockEngine.hasMetadata).thenReturn(true);
     when(() => mockEngine.metadata).thenReturn(mockMetadata);

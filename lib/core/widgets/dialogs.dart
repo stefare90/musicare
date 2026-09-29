@@ -57,7 +57,7 @@ abstract class Dialogs {
         return AlertDialog(
           title: Text(title),
           content: Text(message),
-          actions: [ 
+          actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
               child: Text(cancelLabel ?? context.l10n.cancel),
@@ -178,6 +178,8 @@ abstract class Dialogs {
   static void showErrorSnackBar(
     BuildContext context, {
     required String message,
+    String? actionLabel,
+    VoidCallback? onAction,
   }) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -188,6 +190,16 @@ abstract class Dialogs {
           borderRadius: BorderRadius.circular(12.0),
         ),
         backgroundColor: context.colorScheme.surfaceContainerHigh,
+        // Actionable snackbars persist by default (Flutter 3.44+); keep the
+        // app's transient behaviour so the notice never blocks the bottom bar.
+        persist: false,
+        action: actionLabel != null && onAction != null
+            ? SnackBarAction(
+                label: actionLabel,
+                textColor: context.colorScheme.primary,
+                onPressed: onAction,
+              )
+            : null,
         content: Row(
           children: [
             Icon(Icons.error_outline_rounded, color: context.colorScheme.error),

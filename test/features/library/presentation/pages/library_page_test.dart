@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
+import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/skeletons/skeleton_track_list.dart';
 import 'package:music_are/features/library/presentation/pages/library_page.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
@@ -21,31 +22,19 @@ void main() {
     );
   }
 
-  testWidgets('invites the user to sign in when signed out', (tester) async {
-    var authenticateCalls = 0;
-    final cubit = buildMockMetadataPluginCubit(
-      state: testLoadedState(isAuthenticated: false),
-      onAuthenticate: () async {
-        authenticateCalls++;
-        return AuthResult.authenticated;
-      },
-    );
-
-    await tester.pumpWidget(buildTestableWidget(cubit));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Your library'), findsOneWidget);
-    expect(
-      find.text(
-        'Sign in to see your saved tracks, albums, artists and playlists.',
+  testWidgets('shows the auth error card when signed out', (tester) async {
+    await tester.pumpWidget(
+      buildTestableWidget(
+        buildMockMetadataPluginCubit(
+          state: testLoadedState(isAuthenticated: false),
+        ),
       ),
-      findsOneWidget,
     );
-
-    await tester.tap(find.text('Sign in'));
     await tester.pumpAndSettle();
 
-    expect(authenticateCalls, 1);
+    expect(find.byType(ErrorCard), findsOneWidget);
+    expect(find.text('Metadata sign-in required.'), findsOneWidget);
+    expect(find.byType(SkeletonTrackList), findsNothing);
   });
 
   testWidgets('shows the library skeleton when signed in', (tester) async {
@@ -59,7 +48,7 @@ void main() {
     await tester.pump();
 
     expect(find.byType(SkeletonTrackList), findsOneWidget);
-    expect(find.text('Your library'), findsNothing);
+    expect(find.byType(ErrorCard), findsNothing);
   });
 
   testWidgets('renders nothing when no plugin is loaded', (tester) async {
@@ -72,5 +61,6 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.byType(SkeletonTrackList), findsNothing);
+    expect(find.byType(ErrorCard), findsNothing);
   });
 }

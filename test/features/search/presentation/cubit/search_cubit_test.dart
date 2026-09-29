@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
@@ -18,6 +19,7 @@ void main() {
     late MockMetadataPluginEngine mockEngine;
     late MockMetadataPlugin mockMetadata;
     late MockISearch mockSearch;
+    late NoticeBus noticeBus;
     late SearchCubit cubit;
 
     final dummyTrack = Track(
@@ -53,8 +55,10 @@ void main() {
       when(() => mockEngine.metadata).thenReturn(mockMetadata);
       when(() => mockMetadata.search).thenReturn(mockSearch);
 
+      noticeBus = NoticeBus();
       cubit = SearchCubit(
         mockEngine,
+        noticeBus,
         debounceDuration: const Duration(milliseconds: 50),
       );
     });
@@ -210,6 +214,7 @@ void main() {
 
       final pagedCubit = SearchCubit(
         mockEngine,
+        noticeBus,
         pageSize: 1,
       );
 
@@ -257,7 +262,7 @@ void main() {
       test('grid categories request a limit rounded up to the columns',
           () async {
         for (final columns in [2, 3, 4]) {
-          final gridCubit = SearchCubit(mockEngine, pageSize: 20);
+          final gridCubit = SearchCubit(mockEngine, noticeBus, pageSize: 20);
           gridCubit.updateGridColumns(columns);
           final expected =
               MediaCardMetrics.pageSizeForColumns(20, columns);
@@ -341,7 +346,7 @@ void main() {
         const columns = 3;
         const expected = 21; // pageSizeForColumns(20, 3)
 
-        final gridCubit = SearchCubit(mockEngine, pageSize: 20);
+        final gridCubit = SearchCubit(mockEngine, noticeBus, pageSize: 20);
         gridCubit.updateGridColumns(columns);
 
         when(

@@ -1,14 +1,18 @@
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
+import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
 class PlaylistCubit extends SafeCubit<PlaylistState> {
   final MetadataPluginEngine _pluginEngine;
+  final NoticeBus _notices;
   bool _isFetchingMoreTracks = false;
 
-  PlaylistCubit(this._pluginEngine) : super(PlaylistInitialState());
+  PlaylistCubit(this._pluginEngine, this._notices)
+    : super(PlaylistInitialState());
 
   Future<void> loadPlaylist(Playlist playlist) async {
     if (!_pluginEngine.hasMetadata) {
@@ -34,6 +38,7 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
       emit(PlaylistLoadedState(playlist: playlist, tracks: result));
     } catch (e) {
       emit(PlaylistErrorState(error: e, playlist: playlist));
+      if (e.needsNotice) _notices.emit(e);
     }
   }
 
@@ -80,6 +85,7 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
           error: e,
         ),
       );
+      if (e.needsNotice) _notices.emit(e);
     } finally {
       _isFetchingMoreTracks = false;
     }
@@ -88,15 +94,16 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
   Future<void> toggleSave() async {
     if (state is! PlaylistLoadedState) return;
     final currentState = state as PlaylistLoadedState;
-
+    final isSavedNow = !currentState.isSaved;
     try {
-      final isSavedNow = !currentState.isSaved;
       if (isSavedNow) {
         await _pluginEngine.metadata.playlist.save(currentState.playlist.id);
       } else {
         await _pluginEngine.metadata.playlist.unsave(currentState.playlist.id);
       }
       emit(currentState.copyWith(isSaved: isSavedNow));
-    } catch (_) {}
+    } catch (e) {
+      _notices.emit(e);
+    }
   }
 }

@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/router/app_navigator.dart';
+import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/info_card.dart';
 import 'package:music_are/core/widgets/media/section_row.dart';
 import 'package:music_are/core/widgets/settings_button.dart';
 import 'package:music_are/features/home/presentation/cubit/home_cubit.dart';
 import 'package:music_are/features/home/presentation/cubit/home_state.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
-import 'package:music_are/features/plugin/metadata/presentation/utils/plugin_status_card.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -20,13 +19,9 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<HomeCubit>(
       create: (context) =>
-          HomeCubit(sl<MetadataPluginEngine>())..fetchSections(),
-      child: BlocListener<MetadataPluginCubit, MetadataPluginState>(
-        listenWhen: (previous, current) =>
-            previous.isAuthenticated != current.isAuthenticated,
-        listener: (context, state) => context.read<HomeCubit>().fetchSections(),
-        child: const _HomeView(),
-      ),
+          HomeCubit(sl<MetadataPluginEngine>(), sl<NoticeBus>())
+            ..fetchSections(),
+      child: const _HomeView(),
     );
   }
 }
@@ -45,8 +40,8 @@ class _HomeView extends StatelessWidget {
         builder: (context, state) {
           if (state.hasError) {
             return Center(
-              child: state.error!.toStatusCard(
-                context,
+              child: ErrorCard(
+                error: state.error!,
                 onRetry: () => context.read<HomeCubit>().fetchSections(),
               ),
             );

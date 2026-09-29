@@ -3,9 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/router/app_navigator.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/core/widgets/bottom_sheets/track_options_bottom_sheet.dart';
+import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/info_card.dart';
 import 'package:music_are/core/widgets/media/media_card.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
@@ -19,9 +21,6 @@ import 'package:music_are/core/widgets/skeletons/skeleton_search_all.dart';
 import 'package:music_are/core/widgets/skeletons/skeleton_track_list.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
-import 'package:music_are/features/plugin/metadata/presentation/utils/plugin_status_card.dart';
 import 'package:music_are/features/search/presentation/cubit/search_cubit.dart';
 import 'package:music_are/features/search/presentation/cubit/search_state.dart';
 
@@ -32,17 +31,8 @@ class SearchPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<SearchCubit>(
       create: (context) =>
-          SearchCubit(sl<MetadataPluginEngine>())..loadChips(),
-      child: BlocListener<MetadataPluginCubit, MetadataPluginState>(
-        listenWhen: (previous, current) =>
-            previous.isAuthenticated != current.isAuthenticated,
-        listener: (context, state) {
-          if (context.read<SearchCubit>().state.query.trim().isNotEmpty) {
-            context.read<SearchCubit>().retry();
-          }
-        },
-        child: const _SearchView(),
-      ),
+          SearchCubit(sl<MetadataPluginEngine>(), sl<NoticeBus>())..loadChips(),
+      child: const _SearchView(),
     );
   }
 }
@@ -149,7 +139,9 @@ class _SearchBar extends StatelessWidget {
         ),
         isDense: true,
         filled: true,
-        fillColor: context.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        fillColor: context.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.5,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(28.0),
           borderSide: BorderSide.none,
@@ -176,8 +168,7 @@ class _SearchChipsBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<SearchCubit, SearchState>(
       buildWhen: (prev, curr) =>
-          prev.chips != curr.chips ||
-          prev.selectedChip != curr.selectedChip,
+          prev.chips != curr.chips || prev.selectedChip != curr.selectedChip,
       builder: (context, state) {
         final categories = <SearchCategory?>[null, ...state.chips];
 
@@ -185,7 +176,10 @@ class _SearchChipsBar extends StatelessWidget {
           height: 48.0,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 6.0,
+            ),
             itemCount: categories.length,
             separatorBuilder: (context, index) => const SizedBox(width: 8.0),
             itemBuilder: (context, index) {
@@ -255,8 +249,8 @@ class _SearchResultsBody extends StatelessWidget {
 
             if (state.error != null) {
               return _ScrollableCentered(
-                child: state.error!.toStatusCard(
-                  context,
+                child: ErrorCard(
+                  error: state.error!,
                   onRetry: () => context.read<SearchCubit>().retry(),
                 ),
               );
@@ -327,17 +321,14 @@ class _SearchLoadingView extends StatelessWidget {
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(vertical: 8.0),
-          children: const [
-            SkeletonTrackList(count: 10),
-          ],
+          children: const [SkeletonTrackList(count: 10)],
         );
       case SearchCategory.albums:
       case SearchCategory.artists:
       case SearchCategory.playlists:
         return LayoutBuilder(
           builder: (context, constraints) {
-            final columns =
-                MediaCardMetrics.gridColumns(constraints.maxWidth);
+            final columns = MediaCardMetrics.gridColumns(constraints.maxWidth);
             return SkeletonMediaGrid(
               itemCount: MediaCardMetrics.pageSizeForColumns(10, columns),
             );
@@ -374,9 +365,9 @@ class _AllResultsView extends StatelessWidget {
             onTrackTap: (track) {
               final index = tracks.indexOf(track);
               context.read<PlayerCubit>().playQueue(
-                    tracks,
-                    index: index >= 0 ? index : 0,
-                  );
+                tracks,
+                index: index >= 0 ? index : 0,
+              );
             },
             onTrackOptionsTap: (track) {
               TrackOptionsBottomSheet.show(context, track);
@@ -447,10 +438,7 @@ class _CategoryResultsView extends StatelessWidget {
                 track: track,
                 isPlaying: track.id == activeTrackId,
                 onTap: () {
-                  context.read<PlayerCubit>().playQueue(
-                        items,
-                        index: index,
-                      );
+                  context.read<PlayerCubit>().playQueue(items, index: index);
                 },
                 onOptionsTap: () {
                   TrackOptionsBottomSheet.show(context, track);
@@ -499,9 +487,7 @@ class _PaginatedMediaGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return NotificationListener<ScrollNotification>(
       onNotification: (scrollInfo) {
-        if (hasMore &&
-            !isLoadingMore &&
-            scrollInfo.metrics.extentAfter < 200) {
+        if (hasMore && !isLoadingMore && scrollInfo.metrics.extentAfter < 200) {
           context.read<SearchCubit>().loadMore();
         }
         return false;
@@ -532,9 +518,7 @@ class _PaginatedMediaGrid extends StatelessWidget {
                 return ShimmerBox(
                   width: cellWidth,
                   height: cellHeight,
-                  borderRadius: BorderRadius.circular(
-                    MediaCardMetrics.radius,
-                  ),
+                  borderRadius: BorderRadius.circular(MediaCardMetrics.radius),
                 );
               }
               final item = items[index];

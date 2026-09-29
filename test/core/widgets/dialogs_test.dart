@@ -95,5 +95,90 @@ void main() {
       expect(find.text('Network failed'), findsOneWidget);
       expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
     });
+
+    testWidgets('showErrorSnackBar shows the action and runs it', (
+      tester,
+    ) async {
+      var tapped = 0;
+
+      await tester.pumpWidget(
+        buildTestableApp(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () {
+                Dialogs.showErrorSnackBar(
+                  context,
+                  message: 'Metadata sign-in required.',
+                  actionLabel: 'Sign in',
+                  onAction: () => tapped++,
+                );
+              },
+              child: const Text('Show Notice'),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Show Notice'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Metadata sign-in required.'), findsOneWidget);
+
+      await tester.tap(find.text('Sign in'));
+      await tester.pump();
+
+      expect(tapped, 1);
+    });
+
+    testWidgets('showErrorSnackBar without an action shows no button', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildTestableApp(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () =>
+                  Dialogs.showErrorSnackBar(context, message: 'Plain notice'),
+              child: const Text('Show Plain'),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Show Plain'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Plain notice'), findsOneWidget);
+      expect(find.byType(SnackBarAction), findsNothing);
+    });
+
+    testWidgets('showErrorSnackBar auto-dismisses even with an action', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildTestableApp(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => Dialogs.showErrorSnackBar(
+                context,
+                message: 'Metadata sign-in required.',
+                actionLabel: 'Sign in',
+                onAction: () {},
+              ),
+              child: const Text('Show Notice'),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Show Notice'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SnackBar), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.byType(SnackBar), findsNothing);
+    });
   });
 }

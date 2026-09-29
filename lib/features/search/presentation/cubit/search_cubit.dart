@@ -1,13 +1,16 @@
 import 'dart:async';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
+import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 import 'package:music_are/features/search/presentation/cubit/search_state.dart';
 
 class SearchCubit extends SafeCubit<SearchState> {
   final MetadataPluginEngine _pluginEngine;
+  final NoticeBus _notices;
   Timer? _debounceTimer;
   final Duration debounceDuration;
   final int pageSize;
@@ -20,7 +23,8 @@ class SearchCubit extends SafeCubit<SearchState> {
   int _gridColumns = 2;
 
   SearchCubit(
-    this._pluginEngine, {
+    this._pluginEngine,
+    this._notices, {
     this.debounceDuration = const Duration(milliseconds: 350),
     this.pageSize = 20,
   }) : super(const SearchState());
@@ -196,6 +200,7 @@ class SearchCubit extends SafeCubit<SearchState> {
       }
     } catch (e) {
       emit(state.copyWith(isLoading: false, error: e));
+      if (e.needsNotice) _notices.emit(e);
     }
   }
 
@@ -280,6 +285,7 @@ class SearchCubit extends SafeCubit<SearchState> {
       }
     } catch (e) {
       emit(state.copyWith(isLoadingMore: false, loadMoreError: e));
+      if (e.needsNotice) _notices.emit(e);
     }
   }
 

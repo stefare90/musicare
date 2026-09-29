@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/router/app_router.dart';
 import 'package:music_are/core/services/network_service.dart';
 import 'package:music_are/core/services/preferences_service.dart';
@@ -24,6 +25,7 @@ Future<void> initDependencies() async {
   final sharedPreferences = await SharedPreferences.getInstance();
 
   sl.registerLazySingleton<SharedPreferences>(() => sharedPreferences);
+  sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
   sl.registerLazySingleton<NetworkService>(() => NetworkService());
   sl.registerLazySingleton<PreferencesService>(
     () => PreferencesService(sl<SharedPreferences>()),

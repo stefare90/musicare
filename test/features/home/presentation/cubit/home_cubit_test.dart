@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/features/home/presentation/cubit/home_cubit.dart';
 import 'package:music_are/features/home/presentation/cubit/home_state.dart';
@@ -20,6 +21,7 @@ void main() {
     late MockPluginEngine mockEngine;
     late MockMetadataPlugin mockMetadata;
     late MockBrowseService mockBrowse;
+    late NoticeBus noticeBus;
     late HomeCubit cubit;
 
     final testSection = const Section(
@@ -41,7 +43,8 @@ void main() {
       mockEngine = MockPluginEngine();
       mockMetadata = MockMetadataPlugin();
       mockBrowse = MockBrowseService();
-      cubit = HomeCubit(mockEngine);
+      noticeBus = NoticeBus();
+      cubit = HomeCubit(mockEngine, noticeBus);
     });
 
     tearDown(() {
@@ -163,5 +166,32 @@ void main() {
         expect(cubit.state.sections.first.itemsState.hasError, isFalse);
       },
     );
+
+    test('a section auth error emits a notice', () async {
+      when(() => mockEngine.hasMetadata).thenReturn(true);
+      when(() => mockEngine.metadata).thenReturn(mockMetadata);
+      when(() => mockMetadata.browse).thenReturn(mockBrowse);
+      when(() => mockBrowse.sections(offset: 0, limit: 10)).thenAnswer(
+        (_) async => PaginatedResult<Section>(
+          items: [testSection],
+          total: 1,
+          offset: 0,
+          limit: 10,
+        ),
+      );
+      final error = const MetadataAuthRequiredException('sign in');
+      when(
+        () => mockBrowse.sectionItems('s1', offset: 0, limit: 10),
+      ).thenAnswer((_) async => throw error);
+
+      final notices = <Object>[];
+      final subscription = noticeBus.notices.listen(notices.add);
+      await cubit.fetchSections();
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+
+      expect(notices, hasLength(1));
+      expect(notices.single, same(error));
+      await subscription.cancel();
+    });
   });
 }

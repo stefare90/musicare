@@ -5,12 +5,12 @@ import 'package:get_it/get_it.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
+import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/features/home/presentation/pages/home_page.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
-
-import 'dart:async';
+import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
 
@@ -35,6 +35,7 @@ void main() {
     mockBrowse = MockBrowseService();
 
     sl.registerLazySingleton<MetadataPluginEngine>(() => mockEngine);
+    sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
 
     when(() => mockEngine.hasMetadata).thenReturn(true);
     when(() => mockEngine.metadata).thenReturn(mockMetadata);
@@ -45,9 +46,12 @@ void main() {
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: BlocProvider<MetadataPluginCubit>.value(
-        value: metadataCubit ?? buildMockMetadataPluginCubit(),
-        child: const HomePage(),
+      home: NoticeListener(
+        notices: sl<NoticeBus>().notices,
+        child: BlocProvider<MetadataPluginCubit>.value(
+          value: metadataCubit ?? buildMockMetadataPluginCubit(),
+          child: const HomePage(),
+        ),
       ),
     );
   }
@@ -111,34 +115,24 @@ void main() {
       expect(find.text('No Content Available'), findsOneWidget);
     });
 
-    testWidgets('reloads sections when the auth state changes', (tester) async {
-      var sectionsCalls = 0;
-      when(() => mockBrowse.sections(offset: 0, limit: 10)).thenAnswer((
-        _,
-      ) async {
-        sectionsCalls++;
-        return PaginatedResult<Section>(
-          items: [],
-          total: 0,
-          offset: 0,
-          limit: 10,
-        );
-      });
-
-      final controller = StreamController<MetadataPluginState>.broadcast();
-      addTearDown(controller.close);
-      final cubit = buildMockMetadataPluginCubit(stream: controller.stream);
-
-      await tester.pumpWidget(buildTestableWidget(metadataCubit: cubit));
-      await tester.pumpAndSettle();
-      expect(sectionsCalls, 1);
-
-      controller.add(
-        testLoadedState(isAuthenticated: true, userName: 'listener'),
+    testWidgets('announces an auth error with the sign-in invitation', (
+      tester,
+    ) async {
+      when(() => mockBrowse.sections(offset: 0, limit: 10)).thenAnswer(
+        (_) async => throw const MetadataAuthRequiredException('sign in'),
       );
+
+      await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
 
-      expect(sectionsCalls, 2);
+      expect(find.byType(ErrorCard), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(SnackBar),
+          matching: find.text('Metadata sign-in required.'),
+        ),
+        findsOneWidget,
+      );
     });
   });
 }

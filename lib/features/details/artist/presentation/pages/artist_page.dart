@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/router/app_navigator.dart';
 import 'package:music_are/core/widgets/bottom_sheets/bottom_sheets.dart';
+import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/media/section_row.dart';
 import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
 import 'package:music_are/core/widgets/media/track_matrix.dart';
@@ -12,7 +14,6 @@ import 'package:music_are/features/details/artist/presentation/cubit/artist_cubi
 import 'package:music_are/features/details/artist/presentation/cubit/artist_state.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
-import 'package:music_are/features/plugin/metadata/presentation/utils/plugin_status_card.dart';
 
 class ArtistPage extends StatelessWidget {
   final Artist artist;
@@ -23,7 +24,8 @@ class ArtistPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<ArtistCubit>(
       create: (context) =>
-          ArtistCubit(sl<MetadataPluginEngine>(), artist)..loadArtist(),
+          ArtistCubit(sl<MetadataPluginEngine>(), sl<NoticeBus>(), artist)
+            ..loadArtist(),
       child: const _ArtistView(),
     );
   }
@@ -41,8 +43,8 @@ class _ArtistView extends StatelessWidget {
               state.firstError ?? Exception(context.l10n.noContentTitle);
           return SliverMediaScaffold(
             metadata: state.metadata,
-            statusCard: errorToShow.toStatusCard(
-              context,
+            statusCard: ErrorCard(
+              error: errorToShow,
               onRetry: () => context.read<ArtistCubit>().loadArtist(),
             ),
           );

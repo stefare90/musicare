@@ -56,13 +56,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authSignInFailed =>
-      'Sign-in failed. Please check your details and try again.';
-
-  @override
-  String get authRequiredTitle => 'Sign in to continue';
-
-  @override
-  String get authRequiredMessage => 'This content belongs to your account.';
+      'Metadata sign-in failed. Please check your details and try again.';
 
   @override
   String get accountTooltip => 'Account';
@@ -105,13 +99,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pluginAccountSection => 'Account';
-
-  @override
-  String get librarySignInTitle => 'Your library';
-
-  @override
-  String get librarySignInMessage =>
-      'Sign in to see your saved tracks, albums, artists and playlists.';
 
   @override
   String get libraryEmptyTitle => 'Nothing saved yet';
@@ -217,8 +204,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'No playable audio stream could be found for this track.';
 
   @override
-  String get pluginErrorAuthRequired =>
-      'This content is not available for your account.';
+  String get pluginErrorAuthRequired => 'Metadata sign-in required.';
 
   @override
   String get noSectionsFound => 'No browse sections found.';
