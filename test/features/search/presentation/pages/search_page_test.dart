@@ -715,6 +715,58 @@ void main() {
     },
   );
 
+  testWidgets('a failed load-more keeps the results and shows no error card', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    when(
+      () => mockSearch.albums(
+        'Coldplay',
+        offset: 0,
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer(
+      (_) async => PaginatedResult<Album>(
+        items: buildAlbums(4),
+        total: 8,
+        offset: 0,
+        limit: 4,
+      ),
+    );
+    when(
+      () => mockSearch.albums(
+        'Coldplay',
+        offset: 4,
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer((_) async => throw Exception('boom'));
+
+    await tester.pumpWidget(buildTestWidget());
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'Coldplay');
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+
+    final cubit = BlocProvider.of<SearchCubit>(
+      tester.element(find.byType(FilterChip).first),
+    );
+    await cubit.selectChip(SearchCategory.albums);
+    await tester.pumpAndSettle();
+    expect(cubit.state.hasMore, isTrue);
+
+    await cubit.loadMore();
+    await tester.pumpAndSettle();
+
+    expect(cubit.state.loadMoreError, isNotNull);
+    expect(cubit.state.error, isNull);
+    expect(find.byType(MediaCard), findsNWidgets(4));
+    expect(find.byType(ErrorCard), findsNothing);
+  });
+
   group('non-list states scroll in landscape without overflow', () {
     const viewports = <Size>[Size(800, 360), Size(800, 320), Size(800, 280)];
 

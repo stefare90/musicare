@@ -112,7 +112,7 @@ void main() {
     test('onQueryChanged clears state if query is empty', () {
       cubit.onQueryChanged('   ');
       expect(cubit.state.query, equals('   '));
-      expect(cubit.state.allResults, isNull);
+      expect(cubit.state.hasResults, isFalse);
       expect(cubit.state.isLoading, isFalse);
     });
 
@@ -228,6 +228,52 @@ void main() {
 
       expect(pagedCubit.state.trackResults?.items.length, equals(2));
       expect(pagedCubit.state.trackResults?.items.last.id, equals('t2'));
+
+      pagedCubit.close();
+    });
+
+    test('a failed search surfaces the error and retry clears it', () async {
+      when(
+        () => mockSearch.all('rock'),
+      ).thenAnswer((_) async => throw Exception('boom'));
+
+      await cubit.search('rock');
+
+      expect(cubit.state.error, isNotNull);
+      expect(cubit.state.hasResults, isFalse);
+
+      when(() => mockSearch.all('rock')).thenAnswer((_) async => dummyResponse);
+      await cubit.retry();
+
+      expect(cubit.state.error, isNull);
+      expect(cubit.state.allResults, equals(dummyResponse));
+    });
+
+    test('a failed load-more keeps the results and flags the error', () async {
+      final page1 = PaginatedResult<Track>(
+        items: [dummyTrack],
+        total: 2,
+        offset: 0,
+        limit: 1,
+      );
+
+      when(
+        () => mockSearch.tracks('rock', offset: 0, limit: 1),
+      ).thenAnswer((_) async => page1);
+      when(
+        () => mockSearch.tracks('rock', offset: 1, limit: 1),
+      ).thenAnswer((_) async => throw Exception('boom'));
+
+      final pagedCubit = SearchCubit(mockEngine, noticeBus, pageSize: 1);
+      await pagedCubit.selectChip(SearchCategory.tracks);
+      await pagedCubit.search('rock');
+
+      await pagedCubit.loadMore();
+
+      expect(pagedCubit.state.loadMoreError, isNotNull);
+      expect(pagedCubit.state.error, isNull);
+      expect(pagedCubit.state.trackResults?.items.length, equals(1));
+      expect(pagedCubit.state.hasResults, isTrue);
 
       pagedCubit.close();
     });
