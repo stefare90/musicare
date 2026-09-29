@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/core/widgets/skeletons/shimmer_box.dart';
 
-/// Skeleton grid matching `_PaginatedMediaGrid` in the search page.
+/// Skeleton grid matching `PaginatedMediaGrid` in the search page.
 ///
 /// It reuses [MediaCardMetrics.gridDelegate] so each placeholder occupies
 /// exactly the same cell as a real `MediaCard` (same column count, gap and
