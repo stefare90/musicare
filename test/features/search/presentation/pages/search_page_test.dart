@@ -828,5 +828,21 @@ void main() {
         findsOneWidget,
       );
     });
+
+    testWidgets('focuses the field again when the branch becomes visible', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        TickerMode(enabled: false, child: buildTestWidget()),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.testTextInput.isVisible, isFalse);
+
+      await tester.pumpWidget(
+        TickerMode(enabled: true, child: buildTestWidget()),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.testTextInput.isVisible, isTrue);
+    });
   });
 }

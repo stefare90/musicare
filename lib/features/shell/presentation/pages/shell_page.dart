@@ -40,6 +40,10 @@ class _ShellPageState extends State<ShellPage>
   }
 
   void _expand() {
+    // The search field keeps focus while the player covers it, and a route
+    // opened from the player (its source list) would restore that focus on
+    // pop, re-opening the keyboard over the player.
+    FocusManager.instance.primaryFocus?.unfocus();
     _panelController.animateTo(
       1.0,
       curve: Curves.easeOutCubic,
@@ -56,6 +60,7 @@ class _ShellPageState extends State<ShellPage>
   }
 
   void _handleDragStart(DragStartDetails details) {
+    FocusManager.instance.primaryFocus?.unfocus();
     _panelController.stop();
     _dragStartProgress = _panelController.value;
   }

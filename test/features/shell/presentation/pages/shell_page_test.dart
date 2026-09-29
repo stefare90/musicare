@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -67,7 +68,15 @@ void main() {
                 GoRoute(
                   path: '/search',
                   builder: (context, state) => const Scaffold(
-                    body: Center(child: Text('Search Screen Content')),
+                    body: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('Search Screen Content'),
+                          TextField(),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -250,6 +259,47 @@ void main() {
         // FullPlayerPage is collapsed and Home screen remains intact
         expect(find.byType(FullPlayerPage), findsNothing);
         expect(find.text('Home Screen Content'), findsOneWidget);
+      },
+    );
+    testWidgets(
+      'expanding the player dismisses the search keyboard, and a modal opened '
+      'from the player does not restore it',
+      (tester) async {
+        when(() => mockPlayerCubit.state).thenReturn(
+          PlayerState(queue: QueueState(tracks: [testTrack])),
+        );
+
+        await tester.pumpWidget(buildTestableWidget());
+        await tester.pumpAndSettle();
+
+        // Switch to Search and focus its field.
+        await tester.tap(find.text('Search'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(TextField));
+        await tester.pumpAndSettle();
+        expect(tester.testTextInput.isVisible, isTrue);
+
+        // Expanding the player releases the search field focus.
+        await tester.tap(find.byType(MiniPlayer));
+        await tester.pumpAndSettle();
+        expect(find.byType(FullPlayerPage), findsOneWidget);
+        expect(tester.testTextInput.isVisible, isFalse);
+
+        // A modal opened from the player (its source list) must not restore it.
+        final playerContext = tester.element(find.byType(FullPlayerPage));
+        unawaited(
+          showModalBottomSheet<void>(
+            context: playerContext,
+            builder: (_) => const SizedBox(height: 100),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.testTextInput.isVisible, isFalse);
+
+        Navigator.of(playerContext).pop();
+        await tester.pumpAndSettle();
+
+        expect(tester.testTextInput.isVisible, isFalse);
       },
     );
   });
