@@ -60,6 +60,20 @@ void main() {
                   builder: (context, state) => const Scaffold(
                     body: Center(child: Text('Home Screen Content')),
                   ),
+                  routes: [
+                    GoRoute(
+                      path: 'album',
+                      builder: (context, state) => const Scaffold(
+                        body: Center(child: Text('Album Screen Content')),
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'artist',
+                      builder: (context, state) => const Scaffold(
+                        body: Center(child: Text('Artist Screen Content')),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -300,6 +314,62 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(tester.testTextInput.isVisible, isFalse);
+      },
+    );
+
+    testWidgets(
+      'going to the album from the player options lowers the panel',
+      (tester) async {
+        when(() => mockPlayerCubit.state).thenReturn(
+          PlayerState(queue: QueueState(tracks: [testTrack])),
+        );
+
+        await tester.pumpWidget(buildTestableWidget());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(MiniPlayer));
+        await tester.pumpAndSettle();
+        expect(find.byType(FullPlayerPage), findsOneWidget);
+
+        await tester.tap(find.byIcon(Icons.more_vert_rounded));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Go to Album'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(FullPlayerPage), findsNothing);
+        expect(find.byType(MiniPlayer), findsOneWidget);
+        expect(
+          find.text('Album Screen Content').hitTestable(),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'going to the artist from the player options lowers the panel',
+      (tester) async {
+        when(() => mockPlayerCubit.state).thenReturn(
+          PlayerState(queue: QueueState(tracks: [testTrack])),
+        );
+
+        await tester.pumpWidget(buildTestableWidget());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(MiniPlayer));
+        await tester.pumpAndSettle();
+        expect(find.byType(FullPlayerPage), findsOneWidget);
+
+        await tester.tap(find.byIcon(Icons.more_vert_rounded));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Go to Artist'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(FullPlayerPage), findsNothing);
+        expect(find.byType(MiniPlayer), findsOneWidget);
+        expect(
+          find.text('Artist Screen Content').hitTestable(),
+          findsOneWidget,
+        );
       },
     );
   });

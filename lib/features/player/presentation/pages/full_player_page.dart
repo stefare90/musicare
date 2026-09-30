@@ -49,7 +49,11 @@ class FullPlayerPage extends StatelessWidget {
             actions: [
               IconButton(
                 icon: const Icon(Icons.more_vert_rounded),
-                onPressed: () => TrackOptionsBottomSheet.show(context, track),
+                onPressed: () => TrackOptionsBottomSheet.show(
+                  context,
+                  track,
+                  onBeforeNavigate: onCollapse,
+                ),
               ),
             ],
           ),

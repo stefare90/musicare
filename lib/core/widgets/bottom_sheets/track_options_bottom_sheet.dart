@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/router/app_navigator.dart';
+import 'package:music_are/core/widgets/bottom_sheets/artist_selection_bottom_sheet.dart';
 import 'package:music_are/core/widgets/bottom_sheets/media_options_bottom_sheet.dart';
 
 abstract class TrackOptionsBottomSheet {
@@ -10,6 +11,7 @@ abstract class TrackOptionsBottomSheet {
     Track track, {
     VoidCallback? onAddToQueue,
     VoidCallback? onToggleFavorite,
+    VoidCallback? onBeforeNavigate,
   }) {
     final l10n = context.l10n;
     return MediaOptionsBottomSheet.show(
@@ -38,6 +40,7 @@ abstract class TrackOptionsBottomSheet {
             title: Text(l10n.goToAlbum),
             onTap: () {
               Navigator.of(context).pop();
+              onBeforeNavigate?.call();
               AppNavigator.toAlbumDetail(context, track.album);
             },
           ),
@@ -47,6 +50,15 @@ abstract class TrackOptionsBottomSheet {
             title: Text(l10n.goToArtist),
             onTap: () {
               Navigator.of(context).pop();
+              if (track.artists.length > 1) {
+                ArtistSelectionBottomSheet.show(
+                  context,
+                  track.artists,
+                  onSelected: onBeforeNavigate,
+                );
+                return;
+              }
+              onBeforeNavigate?.call();
               AppNavigator.toArtistDetail(context, track.artists.first);
             },
           ),

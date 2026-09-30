@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/widgets/bottom_sheets/bottom_sheets.dart';
@@ -107,6 +108,128 @@ void main() {
 
       expect(queueTapped, isTrue);
     });
+
+    testWidgets(
+      'TrackOptionsBottomSheet runs onBeforeNavigate before opening the album',
+      (tester) async {
+        var beforeNavigate = false;
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => Scaffold(
+                body: Builder(
+                  builder: (context) => ElevatedButton(
+                    onPressed: () => TrackOptionsBottomSheet.show(
+                      context,
+                      testTrack,
+                      onBeforeNavigate: () => beforeNavigate = true,
+                    ),
+                    child: const Text('Show Track Options'),
+                  ),
+                ),
+              ),
+            ),
+            GoRoute(
+              path: '/album',
+              builder: (context, state) =>
+                  const Scaffold(body: Text('Album Page')),
+            ),
+            GoRoute(
+              path: '/artist',
+              builder: (context, state) =>
+                  const Scaffold(body: Text('Artist Page')),
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          MaterialApp.router(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            routerConfig: router,
+          ),
+        );
+
+        await tester.tap(find.text('Show Track Options'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Go to Album'));
+        await tester.pumpAndSettle();
+
+        expect(beforeNavigate, isTrue);
+        expect(find.text('Album Page'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'TrackOptionsBottomSheet asks which artist when the track has several',
+      (tester) async {
+        var beforeNavigate = false;
+        final multiArtistTrack = Track(
+          id: 't2',
+          name: 'Song 2',
+          externalUri: '',
+          artists: [
+            Artist(id: 'a1', name: 'Artist One', externalUri: ''),
+            Artist(id: 'a2', name: 'Artist Two', externalUri: ''),
+          ],
+          album: testTrack.album,
+          durationMs: 120000,
+        );
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => Scaffold(
+                body: Builder(
+                  builder: (context) => ElevatedButton(
+                    onPressed: () => TrackOptionsBottomSheet.show(
+                      context,
+                      multiArtistTrack,
+                      onBeforeNavigate: () => beforeNavigate = true,
+                    ),
+                    child: const Text('Show Track Options'),
+                  ),
+                ),
+              ),
+            ),
+            GoRoute(
+              path: '/artist',
+              builder: (context, state) =>
+                  const Scaffold(body: Text('Artist Page')),
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          MaterialApp.router(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            routerConfig: router,
+          ),
+        );
+
+        await tester.tap(find.text('Show Track Options'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Go to Artist'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Select Artist'), findsOneWidget);
+        expect(find.text('Artist One'), findsOneWidget);
+        expect(find.text('Artist Two'), findsOneWidget);
+        expect(beforeNavigate, isFalse);
+
+        await tester.tap(find.text('Artist Two'));
+        await tester.pumpAndSettle();
+
+        expect(beforeNavigate, isTrue);
+        expect(find.text('Artist Page'), findsOneWidget);
+      },
+    );
     testWidgets('AlbumOptionsBottomSheet renders save and share options', (
       tester,
     ) async {
