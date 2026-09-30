@@ -8,7 +8,6 @@ import 'package:music_are/features/player/presentation/widgets/player_track_info
 void main() {
   group('PlayerTrackInfo Widget Tests', () {
     final artist1 = Artist(id: 'a1', name: 'The Beatles', externalUri: '');
-    final artist2 = Artist(id: 'a2', name: 'John Lennon', externalUri: '');
 
     Track createTrack(List<Artist> artists) {
       return Track(
@@ -35,13 +34,13 @@ void main() {
         routes: [
           GoRoute(
             path: '/',
-            builder: (_, __) => Scaffold(
+            builder: (_, _) => Scaffold(
               body: PlayerTrackInfo(track: track, onCollapse: onCollapse),
             ),
           ),
           GoRoute(
             path: '/artist',
-            builder: (_, __) => const Scaffold(body: Text('Artist Detail Page')),
+            builder: (_, _) => const Scaffold(body: Text('Artist Detail Page')),
           ),
         ],
       );

@@ -41,20 +41,14 @@ class AudioSourcePluginCubit extends SafeCubit<AudioSourcePluginState> {
   }
 
   Future<void> installDiscoveredPlugin(PluginManifest manifest) async {
-    debugPrint(
-      '👉 [Cubit] 1. installDiscoveredPlugin triggered for: ${manifest.name} (${manifest.id})',
-    );
     emit(AudioSourcePluginLoadingState());
     try {
-      debugPrint('👉 [Cubit] 2. Retrieving zip bytes from DiscoveryService...');
       final zipBytes = _discoveryService.getZipBytesForPlugin(manifest);
-      debugPrint(
-        '👉 [Cubit] 3. Got ${zipBytes.length} bytes. Passing to loadFromZipBytes...',
-      );
       await loadFromZipBytes(zipBytes);
-      debugPrint('👉 [Cubit] 4. loadFromZipBytes finished successfully!');
     } catch (e, st) {
-      debugPrint('💥 [Cubit] ERROR in installDiscoveredPlugin: $e\n$st');
+      debugPrint(
+        '[AudioSourcePluginCubit] installDiscoveredPlugin failed: $e\n$st',
+      );
       emit(AudioSourcePluginErrorState(e));
     }
   }
@@ -64,12 +58,8 @@ class AudioSourcePluginCubit extends SafeCubit<AudioSourcePluginState> {
       emit(AudioSourcePluginLoadingState());
     }
     try {
-      debugPrint('👉 [Cubit] 5. Calling _engine.loadFromZipBytes...');
       await _engine.loadFromZipBytes(zipBytes);
       final manifest = _engine.activeManifest!;
-      debugPrint(
-        '👉 [Cubit] 6. Saving active audio source plugin ID: ${manifest.id}',
-      );
       await _preferences.setActiveAudioSourcePluginId(manifest.id);
 
       emit(
@@ -78,11 +68,8 @@ class AudioSourcePluginCubit extends SafeCubit<AudioSourcePluginState> {
           port: _engine.activePort!,
         ),
       );
-      debugPrint(
-        '👉 [Cubit] 7. Emitted AudioSourcePluginLoadedState on port ${_engine.activePort}',
-      );
     } catch (e, st) {
-      debugPrint('💥 [Cubit] ERROR in loadFromZipBytes: $e\n$st');
+      debugPrint('[AudioSourcePluginCubit] loadFromZipBytes failed: $e\n$st');
       emit(AudioSourcePluginErrorState(e));
     }
   }

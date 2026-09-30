@@ -111,7 +111,6 @@ void main() {
       tester,
     ) async {
       bool saveTapped = false;
-      bool shareTapped = false;
 
       final testAlbum = Album(
         id: 'al1',
@@ -132,7 +131,6 @@ void main() {
                   context,
                   testAlbum,
                   onToggleSave: () => saveTapped = true,
-                  onShare: () => shareTapped = true,
                 );
               },
               child: const Text('Show Album Options'),

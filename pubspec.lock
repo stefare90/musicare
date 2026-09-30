@@ -467,10 +467,10 @@ packages:
     description:
       path: "dart/metadata_host_sdk"
       ref: main
-      resolved-ref: "12a183fe361d76ed52f6029a8cb4cdab4780b029"
+      resolved-ref: ce315399a5ed70a6bbe4a609322c92238e7e6c2c
       url: "https://github.com/stefare90/musicare_plugin_sdk.git"
     source: git
-    version: "4.1.0"
+    version: "4.2.0"
   musicare_runtime_host:
     dependency: "direct main"
     description:

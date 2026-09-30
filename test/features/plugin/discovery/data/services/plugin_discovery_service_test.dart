@@ -30,7 +30,7 @@ Uint8List createTestZipBytes({String type = 'metadata'}) {
   archive.addFile(ArchiveFile('plugin.json', jsonBytes.length, jsonBytes));
   archive.addFile(ArchiveFile('plugin.evc', 4, [1, 2, 3, 4]));
   final encoded = ZipEncoder().encode(archive);
-  return Uint8List.fromList(encoded!);
+  return Uint8List.fromList(encoded);
 }
 
 void main() {

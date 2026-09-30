@@ -109,7 +109,7 @@ void main() {
       final router = GoRouter(
         initialLocation: '/welcome',
         routes: [
-          GoRoute(path: '/welcome', builder: (_, __) => const WelcomePage()),
+          GoRoute(path: '/welcome', builder: (_, _) => const WelcomePage()),
         ],
       );
 
@@ -135,7 +135,7 @@ void main() {
       final router = GoRouter(
         initialLocation: '/welcome',
         routes: [
-          GoRoute(path: '/welcome', builder: (_, __) => const WelcomePage()),
+          GoRoute(path: '/welcome', builder: (_, _) => const WelcomePage()),
         ],
       );
 
@@ -165,7 +165,7 @@ void main() {
       final router = GoRouter(
         initialLocation: '/welcome',
         routes: [
-          GoRoute(path: '/welcome', builder: (_, __) => const WelcomePage()),
+          GoRoute(path: '/welcome', builder: (_, _) => const WelcomePage()),
         ],
       );
 
@@ -220,10 +220,10 @@ void main() {
         final router = GoRouter(
           initialLocation: '/welcome',
           routes: [
-            GoRoute(path: '/welcome', builder: (_, __) => const WelcomePage()),
+            GoRoute(path: '/welcome', builder: (_, _) => const WelcomePage()),
             GoRoute(
               path: '/',
-              builder: (_, __) {
+              builder: (_, _) {
                 navigatedToHome = true;
                 return const Scaffold(body: Text('Home Screen Content'));
               },
@@ -263,7 +263,7 @@ void main() {
       final router = GoRouter(
         initialLocation: '/welcome',
         routes: [
-          GoRoute(path: '/welcome', builder: (_, __) => const WelcomePage()),
+          GoRoute(path: '/welcome', builder: (_, _) => const WelcomePage()),
         ],
       );
 
