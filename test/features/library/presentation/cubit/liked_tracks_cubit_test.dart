@@ -1,0 +1,97 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
+import 'package:music_are/features/library/presentation/cubit/liked_tracks_cubit.dart';
+import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+
+class MockPluginEngine extends Mock implements MetadataPluginEngine {}
+
+class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
+
+class MockUserService extends Mock implements IUser {}
+
+void main() {
+  late MockPluginEngine engine;
+  late MockMetadataPlugin metadata;
+  late MockUserService user;
+  late NoticeBus notices;
+  late LikedTracksCubit cubit;
+
+  final track = Track(
+    id: 't1',
+    name: 'Song',
+    externalUri: '',
+    artists: [Artist(id: 'a1', name: 'Artist', externalUri: '')],
+    album: const Album(
+      id: 'al1',
+      name: 'Album',
+      artists: [],
+      releaseDate: '',
+      externalUri: '',
+      totalTracks: 1,
+      albumType: AlbumType.album,
+    ),
+    durationMs: 1000,
+  );
+
+  setUp(() {
+    engine = MockPluginEngine();
+    metadata = MockMetadataPlugin();
+    user = MockUserService();
+    notices = NoticeBus();
+    cubit = LikedTracksCubit(engine, notices);
+
+    when(() => engine.hasMetadata).thenReturn(true);
+    when(() => engine.metadata).thenReturn(metadata);
+    when(() => metadata.user).thenReturn(user);
+  });
+
+  tearDown(() => cubit.close());
+
+  test('load fetches the first page of liked tracks', () async {
+    when(
+      () => user.savedTracks(offset: 0, limit: 20),
+    ).thenAnswer(
+      (_) async => PaginatedResult<Track>(
+        items: [track],
+        total: 1,
+        offset: 0,
+        limit: 20,
+      ),
+    );
+
+    await cubit.load();
+
+    expect(cubit.state.tracks.data.items.single.id, 't1');
+    expect(cubit.state.tracks.error, isNull);
+  });
+
+  test('loadMore appends the next page', () async {
+    when(
+      () => user.savedTracks(offset: 0, limit: 20),
+    ).thenAnswer(
+      (_) async => PaginatedResult<Track>(
+        items: [track],
+        total: 2,
+        offset: 0,
+        limit: 20,
+      ),
+    );
+    when(
+      () => user.savedTracks(offset: 1, limit: 20),
+    ).thenAnswer(
+      (_) async => PaginatedResult<Track>(
+        items: [track],
+        total: 2,
+        offset: 1,
+        limit: 20,
+      ),
+    );
+
+    await cubit.load();
+    await cubit.loadMore();
+
+    expect(cubit.state.tracks.data.items.length, 2);
+  });
+}

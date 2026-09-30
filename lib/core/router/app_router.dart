@@ -6,7 +6,9 @@ import 'package:music_are/features/details/album/presentation/pages/album_page.d
 import 'package:music_are/features/details/artist/presentation/pages/artist_page.dart';
 import 'package:music_are/features/details/playlist/presentation/pages/playlist_page.dart';
 import 'package:music_are/features/home/presentation/pages/home_page.dart';
+import 'package:music_are/features/library/presentation/pages/downloads_page.dart';
 import 'package:music_are/features/library/presentation/pages/library_page.dart';
+import 'package:music_are/features/library/presentation/pages/liked_tracks_page.dart';
 import 'package:music_are/features/onboarding/presentation/pages/welcome_page.dart';
 import 'package:music_are/features/plugin/metadata/presentation/pages/metadata_plugin_update_page.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
@@ -99,7 +101,17 @@ GoRouter createRouter({required String initialLocation}) {
               GoRoute(
                 path: AppRoutes.library,
                 builder: (context, state) => const LibraryPage(),
-                routes: _sharedDetailRoutes,
+                routes: [
+                  ..._sharedDetailRoutes,
+                  GoRoute(
+                    path: AppRoutes.likedSegment,
+                    builder: (context, state) => const LikedTracksPage(),
+                  ),
+                  GoRoute(
+                    path: AppRoutes.downloadsSegment,
+                    builder: (context, state) => const DownloadsPage(),
+                  ),
+                ],
               ),
             ],
           ),

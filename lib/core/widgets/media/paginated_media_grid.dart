@@ -1,21 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:music_are/core/router/app_navigator.dart';
 import 'package:music_are/core/widgets/media/media_card.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/core/widgets/skeletons/shimmer_box.dart';
-import 'package:music_are/features/search/presentation/cubit/search_cubit.dart';
 
+/// Scrollable grid of [MediaCard]s with lazy pagination.
+///
+/// Source-agnostic on purpose: it does not know about cubits. The caller owns
+/// the data and the pagination state and reacts to [onLoadMore], so the search
+/// results, the user library and the downloads page share one implementation.
 class PaginatedMediaGrid extends StatelessWidget {
   final List<Object> items;
+
+  /// Cell-sized widgets pinned before the data items (e.g. the *Liked Songs*
+  /// collection card), so a special entry shares the grid instead of breaking
+  /// the layout with a differently-shaped row.
+  final List<Widget> leading;
   final bool hasMore;
   final bool isLoadingMore;
+  final VoidCallback? onLoadMore;
+  final void Function(Object item)? onItemTap;
+  final EdgeInsetsGeometry padding;
 
   const PaginatedMediaGrid({
     super.key,
     required this.items,
-    required this.hasMore,
-    required this.isLoadingMore,
+    this.leading = const [],
+    this.hasMore = false,
+    this.isLoadingMore = false,
+    this.onLoadMore,
+    this.onItemTap,
+    this.padding = const EdgeInsets.all(MediaCardMetrics.edgeInset),
   });
 
   @override
@@ -23,7 +37,7 @@ class PaginatedMediaGrid extends StatelessWidget {
     return NotificationListener<ScrollNotification>(
       onNotification: (scrollInfo) {
         if (hasMore && !isLoadingMore && scrollInfo.metrics.extentAfter < 200) {
-          context.read<SearchCubit>().loadMore();
+          onLoadMore?.call();
         }
         return false;
       },
@@ -45,21 +59,26 @@ class PaginatedMediaGrid extends StatelessWidget {
           final skeletonCount = isLoadingMore ? columns : 0;
 
           return GridView.builder(
-            padding: const EdgeInsets.all(MediaCardMetrics.edgeInset),
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: padding,
             gridDelegate: delegate,
-            itemCount: items.length + skeletonCount,
+            itemCount: leading.length + items.length + skeletonCount,
             itemBuilder: (context, index) {
-              if (index >= items.length) {
+              if (index < leading.length) {
+                return leading[index];
+              }
+              final dataIndex = index - leading.length;
+              if (dataIndex >= items.length) {
                 return ShimmerBox(
                   width: cellWidth,
                   height: cellHeight,
                   borderRadius: BorderRadius.circular(MediaCardMetrics.radius),
                 );
               }
-              final item = items[index];
+              final item = items[dataIndex];
               return MediaCard(
                 item: item,
-                onTap: () => AppNavigator.toMediaDetail(context, item),
+                onTap: onItemTap != null ? () => onItemTap!(item) : null,
               );
             },
           );

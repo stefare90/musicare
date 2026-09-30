@@ -46,6 +46,14 @@ abstract class AppNavigator {
     }
   }
 
+  static void toLikedTracks(BuildContext context) {
+    context.push(AppRoutes.likedTracks);
+  }
+
+  static void toDownloads(BuildContext context) {
+    context.push(AppRoutes.downloads);
+  }
+
   static void toSettings(BuildContext context) {
     context.push(AppRoutes.settings);
   }

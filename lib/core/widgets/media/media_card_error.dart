@@ -8,14 +8,16 @@ class MediaCardError extends StatelessWidget {
   final String title;
   final Object error;
   final VoidCallback? onRetry;
-  final double width;
+
+  /// Fixed width; `null` fills the (width-bounded) parent, e.g. a grid cell.
+  final double? width;
 
   const MediaCardError({
     super.key,
     required this.title,
     required this.error,
     this.onRetry,
-    required this.width,
+    this.width,
   });
 
   @override

@@ -121,5 +121,20 @@
   "searchTracksHeader": "Songs",
   "searchAlbumsHeader": "Albums",
   "searchArtistsHeader": "Artists",
-  "searchPlaylistsHeader": "Playlists"
+  "searchPlaylistsHeader": "Playlists",
+  "likedSongs": "Liked Songs",
+  "libraryPlaylistsTab": "Playlists",
+  "libraryAlbumsTab": "Albums",
+  "libraryArtistsTab": "Artists",
+  "librarySignInTitle": "Sign in to see your library",
+  "librarySignInMessage": "Your liked songs, playlists, albums and artists will appear here.",
+  "libraryAlbumsEmpty": "No saved albums",
+  "libraryAlbumsEmptyMessage": "Albums you save will appear here.",
+  "libraryArtistsEmpty": "No saved artists",
+  "libraryArtistsEmptyMessage": "Artists you follow will appear here.",
+  "likedSongsEmptyTitle": "No liked songs yet",
+  "likedSongsEmptyMessage": "Songs you like will appear here.",
+  "downloads": "Downloads",
+  "downloadsEmptyTitle": "No downloads yet",
+  "downloadsEmptyMessage": "Tracks and playlists you download will appear here."
 }

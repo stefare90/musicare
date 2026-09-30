@@ -8,7 +8,7 @@ import 'package:music_are/features/search/presentation/cubit/search_cubit.dart';
 import 'package:music_are/features/search/presentation/cubit/search_state.dart';
 import 'package:music_are/features/search/presentation/widgets/all_results_view.dart';
 import 'package:music_are/features/search/presentation/widgets/category_results_view.dart';
-import 'package:music_are/features/search/presentation/widgets/scrollable_centered.dart';
+import 'package:music_are/core/widgets/scrollable_centered.dart';
 import 'package:music_are/features/search/presentation/widgets/search_loading_view.dart';
 
 class SearchResultsBody extends StatelessWidget {

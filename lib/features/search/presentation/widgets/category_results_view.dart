@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:music_are/core/router/app_navigator.dart';
 import 'package:music_are/core/widgets/bottom_sheets/track_options_bottom_sheet.dart';
+import 'package:music_are/core/widgets/media/paginated_media_grid.dart';
 import 'package:music_are/core/widgets/media/track_list_tile.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/search/presentation/cubit/search_cubit.dart';
 import 'package:music_are/features/search/presentation/cubit/search_state.dart';
-import 'package:music_are/features/search/presentation/widgets/paginated_media_grid.dart';
 
 class CategoryResultsView extends StatelessWidget {
   final SearchState state;
@@ -69,6 +70,8 @@ class CategoryResultsView extends StatelessWidget {
           items: state.albumResults?.items ?? [],
           hasMore: state.hasMore,
           isLoadingMore: state.isLoadingMore,
+          onLoadMore: () => context.read<SearchCubit>().loadMore(),
+          onItemTap: (item) => AppNavigator.toMediaDetail(context, item),
         );
 
       case SearchCategory.artists:
@@ -76,6 +79,8 @@ class CategoryResultsView extends StatelessWidget {
           items: state.artistResults?.items ?? [],
           hasMore: state.hasMore,
           isLoadingMore: state.isLoadingMore,
+          onLoadMore: () => context.read<SearchCubit>().loadMore(),
+          onItemTap: (item) => AppNavigator.toMediaDetail(context, item),
         );
 
       case SearchCategory.playlists:
@@ -83,6 +88,8 @@ class CategoryResultsView extends StatelessWidget {
           items: state.playlistResults?.items ?? [],
           hasMore: state.hasMore,
           isLoadingMore: state.isLoadingMore,
+          onLoadMore: () => context.read<SearchCubit>().loadMore(),
+          onItemTap: (item) => AppNavigator.toMediaDetail(context, item),
         );
     }
   }

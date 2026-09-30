@@ -15,6 +15,12 @@ abstract class AppRoutes {
   static const String album = '/$albumSegment';
   static const String artist = '/$artistSegment';
 
+  // Library children.
+  static const String likedSegment = 'liked';
+  static const String downloadsSegment = 'downloads';
+  static const String likedTracks = '$library/$likedSegment';
+  static const String downloads = '$library/$downloadsSegment';
+
   static const String settings = '/settings';
   static const String pluginTypeParam = 'type';
   static const String settingsPluginSegment = 'plugin/:$pluginTypeParam';

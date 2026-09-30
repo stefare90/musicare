@@ -825,6 +825,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Playlists'**
   String get searchPlaylistsHeader;
+
+  /// No description provided for @likedSongs.
+  ///
+  /// In en, this message translates to:
+  /// **'Liked Songs'**
+  String get likedSongs;
+
+  /// No description provided for @libraryPlaylistsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists'**
+  String get libraryPlaylistsTab;
+
+  /// No description provided for @libraryAlbumsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Albums'**
+  String get libraryAlbumsTab;
+
+  /// No description provided for @libraryArtistsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Artists'**
+  String get libraryArtistsTab;
+
+  /// No description provided for @librarySignInTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to see your library'**
+  String get librarySignInTitle;
+
+  /// No description provided for @librarySignInMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your liked songs, playlists, albums and artists will appear here.'**
+  String get librarySignInMessage;
+
+  /// No description provided for @libraryAlbumsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved albums'**
+  String get libraryAlbumsEmpty;
+
+  /// No description provided for @libraryAlbumsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Albums you save will appear here.'**
+  String get libraryAlbumsEmptyMessage;
+
+  /// No description provided for @libraryArtistsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved artists'**
+  String get libraryArtistsEmpty;
+
+  /// No description provided for @libraryArtistsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Artists you follow will appear here.'**
+  String get libraryArtistsEmptyMessage;
+
+  /// No description provided for @likedSongsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No liked songs yet'**
+  String get likedSongsEmptyTitle;
+
+  /// No description provided for @likedSongsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs you like will appear here.'**
+  String get likedSongsEmptyMessage;
+
+  /// No description provided for @downloads.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads'**
+  String get downloads;
+
+  /// No description provided for @downloadsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No downloads yet'**
+  String get downloadsEmptyTitle;
+
+  /// No description provided for @downloadsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracks and playlists you download will appear here.'**
+  String get downloadsEmptyMessage;
 }
 
 class _AppLocalizationsDelegate

@@ -407,4 +407,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchPlaylistsHeader => 'Playlists';
+
+  @override
+  String get likedSongs => 'Liked Songs';
+
+  @override
+  String get libraryPlaylistsTab => 'Playlists';
+
+  @override
+  String get libraryAlbumsTab => 'Albums';
+
+  @override
+  String get libraryArtistsTab => 'Artists';
+
+  @override
+  String get librarySignInTitle => 'Sign in to see your library';
+
+  @override
+  String get librarySignInMessage =>
+      'Your liked songs, playlists, albums and artists will appear here.';
+
+  @override
+  String get libraryAlbumsEmpty => 'No saved albums';
+
+  @override
+  String get libraryAlbumsEmptyMessage => 'Albums you save will appear here.';
+
+  @override
+  String get libraryArtistsEmpty => 'No saved artists';
+
+  @override
+  String get libraryArtistsEmptyMessage =>
+      'Artists you follow will appear here.';
+
+  @override
+  String get likedSongsEmptyTitle => 'No liked songs yet';
+
+  @override
+  String get likedSongsEmptyMessage => 'Songs you like will appear here.';
+
+  @override
+  String get downloads => 'Downloads';
+
+  @override
+  String get downloadsEmptyTitle => 'No downloads yet';
+
+  @override
+  String get downloadsEmptyMessage =>
+      'Tracks and playlists you download will appear here.';
 }

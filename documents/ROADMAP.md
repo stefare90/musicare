@@ -35,7 +35,8 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 
 ## 📚 Library (`lib/features/library/`)
 ✅ Sign-in invitation when signed out, with the account entry point in the page header.
-⬜ Saved-content tabs (tracks, albums, artists, playlists) when signed in.
+✅ Saved-content tabs (playlists, albums, artists) with pagination, empty/error states and a pinned *Liked Songs* list backed by the provider.
+⬜ Downloads: browse and manage local tracks and downloaded collections, account-free (entry point only, empty until the local storage subsystem lands).
 
 ## ⚙️ Settings (`lib/features/settings/`)
 ✅ Settings hub with a Plugins section: the active metadata and audio-source plugins with their versions, and a per-plugin detail page (version and, when the plugin exposes authentication, the account).
