@@ -180,13 +180,11 @@ void main() {
       when(() => mockMetadataCubit.state).thenReturn(
         MetadataPluginLoadedState(
           manifest: metadataManifest,
-          isAuthenticated: false,
         ),
       );
       metadataStream.add(
         MetadataPluginLoadedState(
           manifest: metadataManifest,
-          isAuthenticated: false,
         ),
       );
       await tester.pumpAndSettle();
@@ -208,7 +206,6 @@ void main() {
         when(() => mockMetadataCubit.state).thenReturn(
           MetadataPluginLoadedState(
             manifest: metadataManifest,
-            isAuthenticated: false,
           ),
         );
         when(() => mockAudioSourceCubit.state).thenReturn(

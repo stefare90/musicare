@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/library/presentation/pages/liked_tracks_page.dart';
@@ -53,6 +54,7 @@ void main() {
 
     sl.registerLazySingleton<MetadataPluginEngine>(() => engine);
     sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
+  sl.registerLazySingleton<LibraryRepository>(() => LibraryRepository(engine));
 
     when(() => playerCubit.state).thenReturn(const PlayerState());
     when(() => playerCubit.stream).thenAnswer((_) => const Stream.empty());

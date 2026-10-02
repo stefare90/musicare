@@ -4,10 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/library/presentation/pages/library_page.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
 
@@ -19,15 +21,13 @@ class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
 
 class MockUserService extends Mock implements IUser {}
 
-class MockAuthService extends Mock implements IAuth {}
-
 void main() {
   final sl = GetIt.instance;
 
   late MockPluginEngine engine;
   late MockMetadataPlugin metadata;
   late MockUserService user;
-  late MockAuthService auth;
+  late AccountCubit authCubit;
 
   final playlist = Playlist(
     id: 'pl1',
@@ -42,14 +42,15 @@ void main() {
     engine = MockPluginEngine();
     metadata = MockMetadataPlugin();
     user = MockUserService();
-    auth = MockAuthService();
 
     sl.registerLazySingleton<MetadataPluginEngine>(() => engine);
     sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
+  sl.registerLazySingleton<LibraryRepository>(() => LibraryRepository(engine));
+    authCubit = buildMockAccountCubit(state: testAccountState());
+    sl.registerLazySingleton<AccountCubit>(() => authCubit);
 
     when(() => engine.hasMetadata).thenReturn(true);
     when(() => engine.metadata).thenReturn(metadata);
-    when(() => metadata.auth).thenReturn(auth);
     when(() => metadata.user).thenReturn(user);
 
     when(
@@ -73,8 +74,11 @@ void main() {
   });
 
   Widget buildTestableWidget(MetadataPluginCubit cubit) {
-    return BlocProvider<MetadataPluginCubit>.value(
-      value: cubit,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<MetadataPluginCubit>.value(value: cubit),
+        BlocProvider<AccountCubit>.value(value: sl<AccountCubit>()),
+      ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -84,14 +88,8 @@ void main() {
   }
 
   testWidgets('signed out shows the sign-in invitation', (tester) async {
-    when(() => auth.isAuthenticated()).thenAnswer((_) async => false);
-
     await tester.pumpWidget(
-      buildTestableWidget(
-        buildMockMetadataPluginCubit(
-          state: testLoadedState(isAuthenticated: false),
-        ),
-      ),
+      buildTestableWidget(buildMockMetadataPluginCubit()),
     );
     await tester.pumpAndSettle();
 
@@ -103,7 +101,9 @@ void main() {
   testWidgets('signed in shows the pinned liked songs and saved playlists', (
     tester,
   ) async {
-    when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
+    when(
+      () => authCubit.state,
+    ).thenReturn(testAccountState(isAuthenticated: true, userName: 'me'));
     when(
       () => user.savedPlaylists(
         offset: any(named: 'offset'),
@@ -119,11 +119,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      buildTestableWidget(
-        buildMockMetadataPluginCubit(
-          state: testLoadedState(isAuthenticated: true, userName: 'me'),
-        ),
-      ),
+      buildTestableWidget(buildMockMetadataPluginCubit()),
     );
     await tester.pumpAndSettle();
 

@@ -1,0 +1,31 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:music_are/core/l10n/l10n_extension.dart';
+import 'package:music_are/core/theme/theme_extension.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
+
+/// Save/unsave toggle for a track.
+///
+/// A pure consumer of [SavedMediaCubit]: the index is warmed by the cubit
+/// itself on sign-in, so this only observes the state and toggles it.
+class FavoriteButton extends StatelessWidget {
+  final Track track;
+
+  const FavoriteButton({super.key, required this.track});
+
+  @override
+  Widget build(BuildContext context) {
+    final isSaved = context.select<SavedMediaCubit, bool>(
+      (c) => c.isTrackSaved(track.id),
+    );
+    return IconButton(
+      icon: Icon(
+        isSaved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+      ),
+      color: isSaved ? context.colorScheme.primary : null,
+      tooltip: context.l10n.tooltipFavorite,
+      onPressed: () => context.read<SavedMediaCubit>().toggleTrack(track),
+    );
+  }
+}

@@ -9,8 +9,10 @@ abstract class TrackOptionsBottomSheet {
   static Future<void> show(
     BuildContext context,
     Track track, {
+    bool isSaved = false,
     VoidCallback? onAddToQueue,
     VoidCallback? onToggleFavorite,
+    VoidCallback? onAddToPlaylist,
     VoidCallback? onBeforeNavigate,
   }) {
     final l10n = context.l10n;
@@ -19,7 +21,7 @@ abstract class TrackOptionsBottomSheet {
       item: track,
       options: [
         ListTile(
-          leading: const Icon(Icons.playlist_add_rounded),
+          leading: const Icon(Icons.queue_music_rounded),
           title: Text(l10n.addToQueue),
           onTap: () {
             Navigator.of(context).pop();
@@ -27,11 +29,23 @@ abstract class TrackOptionsBottomSheet {
           },
         ),
         ListTile(
-          leading: const Icon(Icons.favorite_border_rounded),
-          title: Text(l10n.saveToFavorites),
+          leading: Icon(
+            isSaved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+          ),
+          title: Text(
+            isSaved ? l10n.removeFromFavorites : l10n.saveToFavorites,
+          ),
           onTap: () {
             Navigator.of(context).pop();
             onToggleFavorite?.call();
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.playlist_add_rounded),
+          title: Text(l10n.addToPlaylist),
+          onTap: () {
+            Navigator.of(context).pop();
+            onAddToPlaylist?.call();
           },
         ),
         if (track.album.id.isNotEmpty)

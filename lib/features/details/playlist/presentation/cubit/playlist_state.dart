@@ -21,13 +21,8 @@ class PlaylistLoadingState extends PlaylistState {
 class PlaylistLoadedState extends PlaylistState {
   final Playlist playlist;
   final PaginatedResult<Track> tracks;
-  final bool isSaved;
 
-  PlaylistLoadedState({
-    required this.playlist,
-    required this.tracks,
-    this.isSaved = false,
-  });
+  PlaylistLoadedState({required this.playlist, required this.tracks});
 
   @override
   MediaItemMetadata get metadata => MediaItemMetadata.from(playlist);
@@ -36,12 +31,10 @@ class PlaylistLoadedState extends PlaylistState {
   PlaylistLoadedState copyWith({
     Playlist? playlist,
     PaginatedResult<Track>? tracks,
-    bool? isSaved,
   }) {
     return PlaylistLoadedState(
       playlist: playlist ?? this.playlist,
       tracks: tracks ?? this.tracks,
-      isSaved: isSaved ?? this.isSaved,
     );
   }
 }
@@ -52,7 +45,6 @@ class PlaylistLoadMoreErrorState extends PlaylistLoadedState {
   PlaylistLoadMoreErrorState({
     required super.playlist,
     required super.tracks,
-    required super.isSaved,
     required this.error,
   });
 }

@@ -754,12 +754,6 @@ abstract class AppLocalizations {
   /// **'Download coming soon'**
   String get downloadComingSoon;
 
-  /// No description provided for @favoritesComingSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'Favorites coming soon'**
-  String get favoritesComingSoon;
-
   /// No description provided for @selectArtistTitle.
   ///
   /// In en, this message translates to:
@@ -915,6 +909,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tracks and playlists you download will appear here.'**
   String get downloadsEmptyMessage;
+
+  /// No description provided for @removeAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Album'**
+  String get removeAlbum;
+
+  /// No description provided for @removePlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Playlist'**
+  String get removePlaylist;
+
+  /// No description provided for @removeArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Artist'**
+  String get removeArtist;
+
+  /// No description provided for @removeFromFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from Favorites'**
+  String get removeFromFavorites;
+
+  /// No description provided for @addToPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Playlist'**
+  String get addToPlaylist;
+
+  /// No description provided for @newPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'New playlist'**
+  String get newPlaylist;
+
+  /// No description provided for @playlistNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get playlistNameLabel;
+
+  /// No description provided for @playlistDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get playlistDescriptionLabel;
+
+  /// No description provided for @playlistPublicLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Public'**
+  String get playlistPublicLabel;
+
+  /// No description provided for @createPlaylistAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get createPlaylistAction;
+
+  /// No description provided for @playlistCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist created'**
+  String get playlistCreated;
+
+  /// No description provided for @addedToPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to {playlist}'**
+  String addedToPlaylist(Object playlist);
+
+  /// No description provided for @addedToQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to queue'**
+  String get addedToQueue;
+
+  /// No description provided for @noPlaylistsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No playlists yet'**
+  String get noPlaylistsYet;
+
+  /// No description provided for @noPlaylistsYetMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a playlist to start collecting tracks.'**
+  String get noPlaylistsYetMessage;
+
+  /// No description provided for @playlistsSignInTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to add tracks to playlists'**
+  String get playlistsSignInTitle;
+
+  /// No description provided for @pluginErrorRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'The provider is limiting requests. Please try again shortly.'**
+  String get pluginErrorRateLimited;
 }
 
 class _AppLocalizationsDelegate

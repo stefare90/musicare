@@ -3,18 +3,18 @@ import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/features/home/presentation/cubit/home_state.dart';
-import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/browse_repository.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
 class HomeCubit extends SafeCubit<HomeState> {
-  final MetadataPluginEngine _pluginEngine;
+  final BrowseRepository _browse;
   final NoticeBus _notices;
 
-  HomeCubit(this._pluginEngine, this._notices) : super(const HomeState());
+  HomeCubit(this._browse, this._notices) : super(const HomeState());
 
   Future<void> fetchSections() async {
-    if (!_pluginEngine.hasMetadata) {
+    if (!_browse.hasMetadata) {
       final err = PluginNotLoadedException();
       emit(
         HomeState(
@@ -30,7 +30,7 @@ class HomeCubit extends SafeCubit<HomeState> {
     }
 
     try {
-      final browse = _pluginEngine.metadata.browse;
+      final browse = _browse;
       final sectionsResult = await browse.sections(offset: 0, limit: 10);
 
       if (sectionsResult.items.isEmpty) {
@@ -68,7 +68,7 @@ class HomeCubit extends SafeCubit<HomeState> {
   }
 
   void _fetchSectionItems(String sectionId) {
-    _pluginEngine.metadata.browse
+    _browse
         .sectionItems(sectionId, offset: 0, limit: 10)
         .then((itemsResult) {
           final List<Object> safeItems = itemsResult.items

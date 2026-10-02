@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
-import 'package:music_are/core/widgets/bottom_sheets/track_options_bottom_sheet.dart';
+import 'package:music_are/features/library/presentation/utils/track_actions.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/player/presentation/widgets/full_player_landscape_view.dart';
@@ -49,7 +49,7 @@ class FullPlayerPage extends StatelessWidget {
             actions: [
               IconButton(
                 icon: const Icon(Icons.more_vert_rounded),
-                onPressed: () => TrackOptionsBottomSheet.show(
+                onPressed: () => TrackActions.showOptions(
                   context,
                   track,
                   onBeforeNavigate: onCollapse,

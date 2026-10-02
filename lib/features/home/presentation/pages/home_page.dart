@@ -10,7 +10,7 @@ import 'package:music_are/core/widgets/media/section_row.dart';
 import 'package:music_are/core/widgets/settings_button.dart';
 import 'package:music_are/features/home/presentation/cubit/home_cubit.dart';
 import 'package:music_are/features/home/presentation/cubit/home_state.dart';
-import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/browse_repository.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -19,7 +19,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<HomeCubit>(
       create: (context) =>
-          HomeCubit(sl<MetadataPluginEngine>(), sl<NoticeBus>())
+          HomeCubit(sl<BrowseRepository>(), sl<NoticeBus>())
             ..fetchSections(),
       child: const _HomeView(),
     );

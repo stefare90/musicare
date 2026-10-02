@@ -1,8 +1,8 @@
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 
-abstract class MetadataPluginState {
-  bool get isAuthenticated => false;
-}
+/// State of the metadata plugin lifecycle. The account identity lives in
+/// `AccountCubit`, not here.
+abstract class MetadataPluginState {}
 
 class MetadataPluginInitialState extends MetadataPluginState {}
 
@@ -18,18 +18,7 @@ class MetadataPluginIncompatibleState extends MetadataPluginState {
 class MetadataPluginLoadedState extends MetadataPluginState {
   final PluginManifest manifest;
 
-  @override
-  final bool isAuthenticated;
-
-  /// Identity reported by the plugin (`IUser.me()['user_id']`); null while
-  /// signed out or when the provider does not expose one.
-  final String? userName;
-
-  MetadataPluginLoadedState({
-    required this.manifest,
-    required this.isAuthenticated,
-    this.userName,
-  });
+  MetadataPluginLoadedState({required this.manifest});
 }
 
 class MetadataPluginErrorState extends MetadataPluginState {

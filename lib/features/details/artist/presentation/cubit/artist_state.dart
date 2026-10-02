@@ -4,14 +4,12 @@ import 'package:music_are/core/models/section_state.dart';
 
 class ArtistState {
   final Artist artist;
-  final bool isSaved;
   final SectionState<PaginatedResult<Track>> topTracks;
   final SectionState<PaginatedResult<Album>> albums;
   final SectionState<PaginatedResult<Artist>> related;
 
   const ArtistState({
     required this.artist,
-    this.isSaved = false,
     this.topTracks = const SectionState(
       data: PaginatedResult<Track>.empty(),
       isLoading: true,
@@ -45,7 +43,6 @@ class ArtistState {
 
   ArtistState copyWith({
     Artist? artist,
-    bool? isSaved,
     SectionState<PaginatedResult<Track>>? topTracks,
     SectionState<PaginatedResult<Album>>? albums,
     SectionState<PaginatedResult<Artist>>? related,
@@ -55,7 +52,6 @@ class ArtistState {
       topTracks: topTracks ?? this.topTracks,
       albums: albums ?? this.albums,
       related: related ?? this.related,
-      isSaved: isSaved ?? this.isSaved,
     );
   }
 }

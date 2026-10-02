@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
@@ -52,7 +53,7 @@ void main() {
       mockPlaylistService = MockPlaylistService();
 
       noticeBus = NoticeBus();
-      cubit = PlaylistCubit(mockPluginEngine, noticeBus);
+      cubit = PlaylistCubit(MediaRepository(mockPluginEngine), noticeBus);
     });
 
     tearDown(() {
@@ -113,31 +114,6 @@ void main() {
       await cubit.loadPlaylist(testPlaylist);
     });
 
-    test('toggleSave updates isSaved state in PlaylistLoadedState', () async {
-      when(() => mockPluginEngine.hasMetadata).thenReturn(true);
-      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
-      when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
-      when(() => mockPlaylistService.save('pl1')).thenAnswer((_) async {});
-
-      cubit.emit(
-        PlaylistLoadedState(
-          playlist: testPlaylist,
-          tracks: PaginatedResult<Track>(
-            items: [],
-            total: 0,
-            offset: 0,
-            limit: 20,
-          ),
-          isSaved: false,
-        ),
-      );
-
-      await cubit.toggleSave();
-
-      expect(cubit.state, isA<PlaylistLoadedState>());
-      expect((cubit.state as PlaylistLoadedState).isSaved, isTrue);
-      verify(() => mockPlaylistService.save('pl1')).called(1);
-    });
     test(
       'loadMoreTracks appends newly fetched tracks to current tracks',
       () async {
@@ -216,39 +192,6 @@ void main() {
         expect(errorState.tracks.items.length, equals(1));
       },
     );
-
-    test('toggleSave emits a notice when the plugin rejects', () async {
-      when(() => mockPluginEngine.hasMetadata).thenReturn(true);
-      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
-      when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
-      final error = const MetadataAuthRequiredException('sign in');
-      when(() => mockPlaylistService.save('pl1')).thenAnswer((_) async {
-        throw error;
-      });
-
-      cubit.emit(
-        PlaylistLoadedState(
-          playlist: testPlaylist,
-          tracks: PaginatedResult<Track>(
-            items: [],
-            total: 0,
-            offset: 0,
-            limit: 20,
-          ),
-          isSaved: false,
-        ),
-      );
-
-      final notices = <Object>[];
-      final subscription = noticeBus.notices.listen(notices.add);
-      await cubit.toggleSave();
-      await Future<void>.delayed(Duration.zero);
-
-      expect((cubit.state as PlaylistLoadedState).isSaved, isFalse);
-      expect(notices, hasLength(1));
-      expect(notices.single, same(error));
-      await subscription.cancel();
-    });
 
     test('a section fetch emits a notice when it needs one', () async {
       when(() => mockPluginEngine.hasMetadata).thenReturn(true);

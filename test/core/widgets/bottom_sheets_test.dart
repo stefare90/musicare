@@ -110,6 +110,82 @@ void main() {
     });
 
     testWidgets(
+      'TrackOptionsBottomSheet shows remove + add to playlist when saved',
+      (tester) async {
+        var addToPlaylistTapped = false;
+
+        await tester.pumpWidget(
+          buildTestableWidget(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () {
+                  TrackOptionsBottomSheet.show(
+                    context,
+                    testTrack,
+                    isSaved: true,
+                    onAddToPlaylist: () => addToPlaylistTapped = true,
+                  );
+                },
+                child: const Text('Show Options'),
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Show Options'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Remove from Favorites'), findsOneWidget);
+        expect(find.text('Add to Playlist'), findsOneWidget);
+
+        await tester.tap(find.text('Add to Playlist'));
+        await tester.pumpAndSettle();
+
+        expect(addToPlaylistTapped, isTrue);
+      },
+    );
+
+    testWidgets('Album options show remove when saved', (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => AlbumOptionsBottomSheet.show(
+                context,
+                testTrack.album,
+                isSaved: true,
+              ),
+              child: const Text('Show Album'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Show Album'));
+      await tester.pumpAndSettle();
+      expect(find.text('Remove Album'), findsOneWidget);
+    });
+
+    testWidgets('Playlist options show remove when saved', (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => PlaylistOptionsBottomSheet.show(
+                context,
+                testPlaylist,
+                isSaved: true,
+              ),
+              child: const Text('Show Playlist'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Show Playlist'));
+      await tester.pumpAndSettle();
+      expect(find.text('Remove Playlist'), findsOneWidget);
+    });
+
+    testWidgets(
       'TrackOptionsBottomSheet runs onBeforeNavigate before opening the album',
       (tester) async {
         var beforeNavigate = false;

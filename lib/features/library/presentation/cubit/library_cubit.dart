@@ -1,12 +1,14 @@
 import 'dart:async';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/features/library/presentation/cubit/library_state.dart';
-import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/account_state.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
@@ -17,9 +19,11 @@ import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart'
 /// pagination and error. It only reads from the provider; the local downloads
 /// live in the storage layer.
 class LibraryCubit extends SafeCubit<LibraryState> {
-  final MetadataPluginEngine _pluginEngine;
+  final LibraryRepository _library;
   final NoticeBus _notices;
   final int pageSize;
+  final StateStreamable<AccountState> _auth;
+  StreamSubscription<AccountState>? _authSubscription;
 
   /// Number of grid columns currently used by the library grids.
   ///
@@ -29,10 +33,16 @@ class LibraryCubit extends SafeCubit<LibraryState> {
   int _gridColumns = 2;
 
   LibraryCubit(
-    this._pluginEngine,
+    this._library,
     this._notices, {
     this.pageSize = 20,
-  }) : super(const LibraryState());
+    required StateStreamable<AccountState> auth,
+  }) : _auth = auth,
+       super(const LibraryState()) {
+    _authSubscription = auth.stream.listen((state) {
+      if (!isClosed) loadAll();
+    });
+  }
 
   /// Pagination size rounded up to a whole number of grid rows.
   int get _gridPageSize =>
@@ -49,7 +59,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
   }
 
   Future<void> loadAll() async {
-    if (!_pluginEngine.hasMetadata) {
+    if (!_library.hasMetadata) {
       final error = PluginNotLoadedException();
       emit(
         LibraryState(
@@ -61,13 +71,11 @@ class LibraryCubit extends SafeCubit<LibraryState> {
       return;
     }
 
-    final isAuthenticated = await _pluginEngine.metadata.auth.isAuthenticated();
-    if (!isAuthenticated) {
+    if (!_auth.state.isAuthenticated) {
       emit(const LibraryState());
       return;
     }
 
-    emit(state.copyWith(isAuthenticated: true));
     unawaited(_loadPlaylists());
     unawaited(_loadAlbums());
     unawaited(_loadArtists());
@@ -78,7 +86,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
       LibrarySection.playlists => _loadMore<Playlist>(
         current: state.playlists,
         fetch: (offset, limit) =>
-            _pluginEngine.metadata.user.savedPlaylists(
+            _library.savedPlaylists(
               offset: offset,
               limit: limit,
             ),
@@ -87,7 +95,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
       LibrarySection.albums => _loadMore<Album>(
         current: state.albums,
         fetch: (offset, limit) =>
-            _pluginEngine.metadata.user.savedAlbums(
+            _library.savedAlbums(
               offset: offset,
               limit: limit,
             ),
@@ -96,7 +104,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
       LibrarySection.artists => _loadMore<Artist>(
         current: state.artists,
         fetch: (offset, limit) =>
-            _pluginEngine.metadata.user.savedArtists(
+            _library.savedArtists(
               offset: offset,
               limit: limit,
             ),
@@ -108,7 +116,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
   Future<void> _loadPlaylists() async {
     emit(state.copyWith(playlists: SectionState.loading(state.playlists.data)));
     try {
-      final result = await _pluginEngine.metadata.user.savedPlaylists(
+      final result = await _library.savedPlaylists(
         offset: 0,
         limit: _gridPageSize,
       );
@@ -122,7 +130,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
   Future<void> _loadAlbums() async {
     emit(state.copyWith(albums: SectionState.loading(state.albums.data)));
     try {
-      final result = await _pluginEngine.metadata.user.savedAlbums(
+      final result = await _library.savedAlbums(
         offset: 0,
         limit: _gridPageSize,
       );
@@ -136,7 +144,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
   Future<void> _loadArtists() async {
     emit(state.copyWith(artists: SectionState.loading(state.artists.data)));
     try {
-      final result = await _pluginEngine.metadata.user.savedArtists(
+      final result = await _library.savedArtists(
         offset: 0,
         limit: _gridPageSize,
       );
@@ -171,5 +179,11 @@ class LibraryCubit extends SafeCubit<LibraryState> {
       emit(update(SectionState.error(e, current.data)));
       if (e.needsNotice) _notices.emit(e);
     }
+  }
+
+  @override
+  Future<void> close() async {
+    await _authSubscription?.cancel();
+    return super.close();
   }
 }

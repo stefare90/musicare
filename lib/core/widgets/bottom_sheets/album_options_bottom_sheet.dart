@@ -8,6 +8,7 @@ abstract class AlbumOptionsBottomSheet {
   static Future<void> show(
     BuildContext context,
     Album album, {
+    bool isSaved = false,
     VoidCallback? onToggleSave,
     VoidCallback? onShare,
   }) {
@@ -17,8 +18,10 @@ abstract class AlbumOptionsBottomSheet {
       item: album,
       options: [
         ListTile(
-          leading: const Icon(Icons.favorite_border_rounded),
-          title: Text(l10n.saveAlbum),
+          leading: Icon(
+            isSaved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+          ),
+          title: Text(isSaved ? l10n.removeAlbum : l10n.saveAlbum),
           onTap: () {
             Navigator.of(context).pop();
             onToggleSave?.call();

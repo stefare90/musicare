@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../../helpers/metadata_plugin_test_helpers.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/details/album/presentation/pages/album_page.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
@@ -18,6 +22,8 @@ class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
 class MockAlbumService extends Mock implements IAlbum {}
 
 class MockPlayerCubit extends Mock implements PlayerCubit {}
+
+class MockAuthService extends Mock implements IAuth {}
 
 void main() {
   final sl = GetIt.instance;
@@ -60,18 +66,33 @@ void main() {
 
     sl.registerLazySingleton<MetadataPluginEngine>(() => mockEngine);
     sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
+  sl.registerLazySingleton<MediaRepository>(() => MediaRepository(mockEngine));
 
     when(() => mockEngine.hasMetadata).thenReturn(true);
     when(() => mockEngine.metadata).thenReturn(mockMetadata);
     when(() => mockMetadata.album).thenReturn(mockAlbum);
+
+    final mockAuth = MockAuthService();
+    when(() => mockMetadata.auth).thenReturn(mockAuth);
+    when(() => mockAuth.isAuthenticated()).thenAnswer((_) async => false);
+    sl.registerLazySingleton<SavedMediaCubit>(
+      () => SavedMediaCubit(
+        LibraryRepository(mockEngine),
+        sl<NoticeBus>(),
+        auth: TestAccountCubit(testAccountState()),
+      ),
+    );
   });
 
   Widget buildTestableWidget() {
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: BlocProvider<PlayerCubit>.value(
-        value: mockPlayerCubit,
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider<PlayerCubit>.value(value: mockPlayerCubit),
+          BlocProvider<SavedMediaCubit>.value(value: sl<SavedMediaCubit>()),
+        ],
         child: AlbumPage(album: testAlbum),
       ),
     );

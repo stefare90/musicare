@@ -2,20 +2,20 @@ import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
-import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
 class PlaylistCubit extends SafeCubit<PlaylistState> {
-  final MetadataPluginEngine _pluginEngine;
+  final MediaRepository _media;
   final NoticeBus _notices;
   bool _isFetchingMoreTracks = false;
 
-  PlaylistCubit(this._pluginEngine, this._notices)
+  PlaylistCubit(this._media, this._notices)
     : super(PlaylistInitialState());
 
   Future<void> loadPlaylist(Playlist playlist) async {
-    if (!_pluginEngine.hasMetadata) {
+    if (!_media.hasMetadata) {
       emit(
         PlaylistErrorState(
           error: PluginNotLoadedException(),
@@ -30,7 +30,7 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
     }
 
     try {
-      final result = await _pluginEngine.metadata.playlist.tracks(
+      final result = await _media.playlistTracks(
         playlist.id,
         offset: 0,
         limit: 20,
@@ -54,14 +54,13 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
         PlaylistLoadedState(
           playlist: currentState.playlist,
           tracks: currentState.tracks,
-          isSaved: currentState.isSaved,
         ),
       );
     }
 
     try {
       final offset = currentState.tracks.items.length;
-      final result = await _pluginEngine.metadata.playlist.tracks(
+      final result = await _media.playlistTracks(
         currentState.playlist.id,
         offset: offset,
         limit: 20,
@@ -81,29 +80,12 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
         PlaylistLoadMoreErrorState(
           playlist: currentState.playlist,
           tracks: currentState.tracks,
-          isSaved: currentState.isSaved,
           error: e,
         ),
       );
       if (e.needsNotice) _notices.emit(e);
     } finally {
       _isFetchingMoreTracks = false;
-    }
-  }
-
-  Future<void> toggleSave() async {
-    if (state is! PlaylistLoadedState) return;
-    final currentState = state as PlaylistLoadedState;
-    final isSavedNow = !currentState.isSaved;
-    try {
-      if (isSavedNow) {
-        await _pluginEngine.metadata.playlist.save(currentState.playlist.id);
-      } else {
-        await _pluginEngine.metadata.playlist.unsave(currentState.playlist.id);
-      }
-      emit(currentState.copyWith(isSaved: isSavedNow));
-    } catch (e) {
-      _notices.emit(e);
     }
   }
 }

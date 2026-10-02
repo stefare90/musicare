@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/browse_repository.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/features/home/presentation/cubit/home_cubit.dart';
@@ -44,7 +45,7 @@ void main() {
       mockMetadata = MockMetadataPlugin();
       mockBrowse = MockBrowseService();
       noticeBus = NoticeBus();
-      cubit = HomeCubit(mockEngine, noticeBus);
+      cubit = HomeCubit(BrowseRepository(mockEngine), noticeBus);
     });
 
     tearDown(() {

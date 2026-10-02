@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/search_repository.dart';
 import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
@@ -112,6 +113,7 @@ void main() {
     }
     sl.registerSingleton<MetadataPluginEngine>(mockEngine);
     sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
+  sl.registerLazySingleton<SearchRepository>(() => SearchRepository(mockEngine));
   });
 
   tearDown(() {

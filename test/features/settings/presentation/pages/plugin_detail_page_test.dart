@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
@@ -16,6 +17,7 @@ void main() {
     required PluginType type,
     MetadataPluginCubit? metadataCubit,
     AudioSourcePluginCubit? audioCubit,
+    AccountCubit? authCubit,
   }) {
     return MultiBlocProvider(
       providers: [
@@ -24,6 +26,9 @@ void main() {
         ),
         BlocProvider<AudioSourcePluginCubit>.value(
           value: audioCubit ?? buildMockAudioSourcePluginCubit(),
+        ),
+        BlocProvider<AccountCubit>.value(
+          value: authCubit ?? buildMockAccountCubit(),
         ),
       ],
       child: MaterialApp(
@@ -40,8 +45,8 @@ void main() {
     await tester.pumpWidget(
       buildTestableWidget(
         type: PluginType.metadata,
-        metadataCubit: buildMockMetadataPluginCubit(
-          state: testLoadedState(isAuthenticated: true, userName: 'listener'),
+        authCubit: buildMockAccountCubit(
+          state: testAccountState(isAuthenticated: true, userName: 'listener'),
         ),
       ),
     );
@@ -57,14 +62,13 @@ void main() {
   });
 
   testWidgets('metadata detail signs in when signed out', (tester) async {
-    var authenticateCalls = 0;
+    var signInCalls = 0;
     await tester.pumpWidget(
       buildTestableWidget(
         type: PluginType.metadata,
-        metadataCubit: buildMockMetadataPluginCubit(
-          state: testLoadedState(isAuthenticated: false),
-          onAuthenticate: () async {
-            authenticateCalls++;
+        authCubit: buildMockAccountCubit(
+          onSignIn: () async {
+            signInCalls++;
             return AuthResult.authenticated;
           },
         ),
@@ -77,7 +81,7 @@ void main() {
     await tester.tap(find.text('Sign in'));
     await tester.pumpAndSettle();
 
-    expect(authenticateCalls, 1);
+    expect(signInCalls, 1);
   });
 
   testWidgets('audio source detail shows the version without an account', (

@@ -7,6 +7,7 @@ abstract class PlaylistOptionsBottomSheet {
   static Future<void> show(
     BuildContext context,
     Playlist playlist, {
+    bool isSaved = false,
     VoidCallback? onToggleSave,
     VoidCallback? onDelete,
     VoidCallback? onShare,
@@ -17,8 +18,10 @@ abstract class PlaylistOptionsBottomSheet {
       item: playlist,
       options: [
         ListTile(
-          leading: const Icon(Icons.favorite_border_rounded),
-          title: Text(l10n.savePlaylist),
+          leading: Icon(
+            isSaved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+          ),
+          title: Text(isSaved ? l10n.removePlaylist : l10n.savePlaylist),
           onTap: () {
             Navigator.of(context).pop();
             onToggleSave?.call();

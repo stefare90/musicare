@@ -28,6 +28,8 @@ extension ExceptionLocalizer on Object {
 
       // Metadata SDK
       MetadataAuthRequiredException() => context.l10n.pluginErrorAuthRequired,
+      MetadataTransportException() => context.l10n.pluginErrorNetwork,
+      MetadataRateLimitedException() => context.l10n.pluginErrorRateLimited,
 
       // Generics & System (Network, Timeout, Fallbacks)
       SocketException() => context.l10n.pluginErrorNetwork,

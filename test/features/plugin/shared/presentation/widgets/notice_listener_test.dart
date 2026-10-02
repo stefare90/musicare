@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
 import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 
 import '../../../../../helpers/metadata_plugin_test_helpers.dart';
@@ -20,9 +20,9 @@ void main() {
     await controller.close();
   });
 
-  Widget buildTestableWidget({MetadataPluginCubit? cubit}) {
-    return BlocProvider<MetadataPluginCubit>.value(
-      value: cubit ?? buildMockMetadataPluginCubit(),
+  Widget buildTestableWidget({AccountCubit? cubit}) {
+    return BlocProvider<AccountCubit>.value(
+      value: cubit ?? buildMockAccountCubit(),
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -64,10 +64,10 @@ void main() {
   });
 
   testWidgets('offers the auth action for auth notices', (tester) async {
-    var authenticateCalls = 0;
-    final cubit = buildMockMetadataPluginCubit(
-      onAuthenticate: () async {
-        authenticateCalls++;
+    var signInCalls = 0;
+    final cubit = buildMockAccountCubit(
+      onSignIn: () async {
+        signInCalls++;
         return AuthResult.authenticated;
       },
     );
@@ -83,6 +83,6 @@ void main() {
     await tester.tap(find.text('Sign in'));
     await tester.pumpAndSettle();
 
-    expect(authenticateCalls, 1);
+    expect(signInCalls, 1);
   });
 }

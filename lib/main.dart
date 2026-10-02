@@ -7,6 +7,8 @@ import 'package:music_are/core/router/app_router.dart';
 import 'package:music_are/core/services/app_initializer.dart';
 import 'package:music_are/core/theme/app_theme.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
 import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
@@ -32,6 +34,8 @@ class MusicAreApp extends StatelessWidget {
           value: sl<AudioSourcePluginCubit>(),
         ),
         BlocProvider<PlayerCubit>.value(value: sl<PlayerCubit>()),
+        BlocProvider<SavedMediaCubit>.value(value: sl<SavedMediaCubit>()),
+        BlocProvider<AccountCubit>.value(value: sl<AccountCubit>()),
       ],
       child: MaterialApp.router(
         title: 'MusicAre',

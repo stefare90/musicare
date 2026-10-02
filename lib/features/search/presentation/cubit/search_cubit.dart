@@ -4,13 +4,13 @@ import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
-import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/search_repository.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 import 'package:music_are/features/search/presentation/cubit/search_state.dart';
 
 class SearchCubit extends SafeCubit<SearchState> {
-  final MetadataPluginEngine _pluginEngine;
+  final SearchRepository _search;
   final NoticeBus _notices;
   Timer? _debounceTimer;
   final Duration debounceDuration;
@@ -24,7 +24,7 @@ class SearchCubit extends SafeCubit<SearchState> {
   int _gridColumns = 2;
 
   SearchCubit(
-    this._pluginEngine,
+    this._search,
     this._notices, {
     this.debounceDuration = const Duration(milliseconds: 350),
     this.pageSize = 20,
@@ -52,9 +52,9 @@ class SearchCubit extends SafeCubit<SearchState> {
   }
 
   Future<void> loadChips() async {
-    if (!_pluginEngine.hasMetadata) return;
+    if (!_search.hasMetadata) return;
     try {
-      final chips = await _pluginEngine.metadata.search.chips();
+      final chips = await _search.chips();
       if (!isClosed) emit(state.copyWith(chips: chips));
     } catch (_) {
       // chips() is optional: fall back to every known category.
@@ -99,7 +99,7 @@ class SearchCubit extends SafeCubit<SearchState> {
     final cleanQuery = query.trim();
     if (cleanQuery.isEmpty) return;
 
-    if (!_pluginEngine.hasMetadata) {
+    if (!_search.hasMetadata) {
       emit(_activeError(state, PluginNotLoadedException(), keepData: false));
       return;
     }
@@ -107,12 +107,11 @@ class SearchCubit extends SafeCubit<SearchState> {
     emit(_activeLoading(state, keepData: false).copyWith(query: query));
 
     try {
-      final searchApi = _pluginEngine.metadata.search;
       final filter = state.filter;
 
       switch (filter) {
         case SearchFilter.tracks:
-          final res = await searchApi.tracks(
+          final res = await _search.tracks(
             cleanQuery,
             offset: 0,
             limit: pageSize,
@@ -120,7 +119,7 @@ class SearchCubit extends SafeCubit<SearchState> {
           emit(state.copyWith(tracks: SectionState.success(res)));
           break;
         case SearchFilter.albums:
-          final res = await searchApi.albums(
+          final res = await _search.albums(
             cleanQuery,
             offset: 0,
             limit: _gridPageSize,
@@ -128,7 +127,7 @@ class SearchCubit extends SafeCubit<SearchState> {
           emit(state.copyWith(albums: SectionState.success(res)));
           break;
         case SearchFilter.artists:
-          final res = await searchApi.artists(
+          final res = await _search.artists(
             cleanQuery,
             offset: 0,
             limit: _gridPageSize,
@@ -136,7 +135,7 @@ class SearchCubit extends SafeCubit<SearchState> {
           emit(state.copyWith(artists: SectionState.success(res)));
           break;
         case SearchFilter.playlists:
-          final res = await searchApi.playlists(
+          final res = await _search.playlists(
             cleanQuery,
             offset: 0,
             limit: _gridPageSize,
@@ -144,7 +143,7 @@ class SearchCubit extends SafeCubit<SearchState> {
           emit(state.copyWith(playlists: SectionState.success(res)));
           break;
         case SearchFilter.all:
-          final results = await searchApi.all(cleanQuery);
+          final results = await _search.all(cleanQuery);
           emit(state.copyWith(all: SectionState.success(results)));
       }
     } catch (e) {
@@ -162,18 +161,17 @@ class SearchCubit extends SafeCubit<SearchState> {
       return;
     }
 
-    if (!_pluginEngine.hasMetadata) return;
+    if (!_search.hasMetadata) return;
 
     emit(_activeLoading(state, keepData: true));
 
     try {
-      final searchApi = _pluginEngine.metadata.search;
       final cleanQuery = state.query.trim();
 
       switch (filter) {
         case SearchFilter.tracks:
           final current = state.tracks.data;
-          final res = await searchApi.tracks(
+          final res = await _search.tracks(
             cleanQuery,
             offset: current.items.length,
             limit: pageSize,
@@ -188,7 +186,7 @@ class SearchCubit extends SafeCubit<SearchState> {
           break;
         case SearchFilter.albums:
           final current = state.albums.data;
-          final res = await searchApi.albums(
+          final res = await _search.albums(
             cleanQuery,
             offset: current.items.length,
             limit: _gridPageSize,
@@ -203,7 +201,7 @@ class SearchCubit extends SafeCubit<SearchState> {
           break;
         case SearchFilter.artists:
           final current = state.artists.data;
-          final res = await searchApi.artists(
+          final res = await _search.artists(
             cleanQuery,
             offset: current.items.length,
             limit: _gridPageSize,
@@ -218,7 +216,7 @@ class SearchCubit extends SafeCubit<SearchState> {
           break;
         case SearchFilter.playlists:
           final current = state.playlists.data;
-          final res = await searchApi.playlists(
+          final res = await _search.playlists(
             cleanQuery,
             offset: current.items.length,
             limit: _gridPageSize,

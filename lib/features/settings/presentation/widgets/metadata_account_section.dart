@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/widgets/monogram.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/account_state.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
 import 'package:music_are/features/plugin/metadata/presentation/utils/metadata_account_actions.dart';
@@ -16,37 +18,45 @@ class MetadataAccountSection extends StatelessWidget {
     final l10n = context.l10n;
 
     return BlocBuilder<MetadataPluginCubit, MetadataPluginState>(
-      builder: (context, state) {
-        if (state is! MetadataPluginLoadedState) {
+      builder: (context, pluginState) {
+        if (pluginState is! MetadataPluginLoadedState) {
           return const SizedBox.shrink();
         }
 
-        final isAuthenticated = state.isAuthenticated;
-        final userName = state.userName;
+        return BlocBuilder<AccountCubit, AccountState>(
+          builder: (context, auth) {
+            final isAuthenticated = auth.isAuthenticated;
+            final userName = auth.userName;
 
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SettingsSectionHeader(label: l10n.pluginAccountSection),
-            ListTile(
-              leading: Monogram(name: userName, radius: 20.0),
-              title: Text(
-                isAuthenticated
-                    ? (userName ?? l10n.accountSignedIn)
-                    : l10n.accountNotSignedIn,
-              ),
-              trailing: isAuthenticated
-                  ? TextButton(
-                      onPressed: () => MetadataAccountActions.signOut(context),
-                      child: Text(l10n.accountSignOut),
-                    )
-                  : FilledButton(
-                      onPressed: () => MetadataAccountActions.signIn(context),
-                      child: Text(l10n.accountSignIn),
-                    ),
-            ),
-          ],
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SettingsSectionHeader(label: l10n.pluginAccountSection),
+                ListTile(
+                  leading: Monogram(name: userName, radius: 20.0),
+                  title: Text(
+                    isAuthenticated
+                        ? (userName ?? l10n.accountSignedIn)
+                        : l10n.accountNotSignedIn,
+                  ),
+                  trailing: isAuthenticated
+                      ? TextButton(
+                          onPressed: () => MetadataAccountActions.signOut(
+                            context,
+                          ),
+                          child: Text(l10n.accountSignOut),
+                        )
+                      : FilledButton(
+                          onPressed: () => MetadataAccountActions.signIn(
+                            context,
+                          ),
+                          child: Text(l10n.accountSignIn),
+                        ),
+                ),
+              ],
+            );
+          },
         );
       },
     );

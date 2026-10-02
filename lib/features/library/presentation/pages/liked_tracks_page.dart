@@ -9,7 +9,7 @@ import 'package:music_are/core/widgets/skeletons/skeleton_track_list.dart';
 import 'package:music_are/features/library/presentation/cubit/liked_tracks_cubit.dart';
 import 'package:music_are/features/library/presentation/cubit/liked_tracks_state.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
-import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 
 class LikedTracksPage extends StatelessWidget {
   const LikedTracksPage({super.key});
@@ -18,7 +18,7 @@ class LikedTracksPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<LikedTracksCubit>(
       create: (context) =>
-          LikedTracksCubit(sl<MetadataPluginEngine>(), sl<NoticeBus>())..load(),
+          LikedTracksCubit(sl<LibraryRepository>(), sl<NoticeBus>())..load(),
       child: const _LikedSongsView(),
     );
   }

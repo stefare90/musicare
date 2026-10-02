@@ -21,27 +21,17 @@ class AlbumLoadingState extends AlbumState {
 class AlbumLoadedState extends AlbumState {
   final Album album;
   final PaginatedResult<Track> tracks;
-  final bool isSaved;
 
-  AlbumLoadedState({
-    required this.album,
-    required this.tracks,
-    this.isSaved = false,
-  });
+  AlbumLoadedState({required this.album, required this.tracks});
 
   @override
   MediaItemMetadata get metadata => MediaItemMetadata.from(album);
   bool get hasMoreTracks => tracks.items.length < tracks.total;
 
-  AlbumLoadedState copyWith({
-    Album? album,
-    PaginatedResult<Track>? tracks,
-    bool? isSaved,
-  }) {
+  AlbumLoadedState copyWith({Album? album, PaginatedResult<Track>? tracks}) {
     return AlbumLoadedState(
       album: album ?? this.album,
       tracks: tracks ?? this.tracks,
-      isSaved: isSaved ?? this.isSaved,
     );
   }
 }
@@ -52,7 +42,6 @@ class AlbumLoadMoreErrorState extends AlbumLoadedState {
   AlbumLoadMoreErrorState({
     required super.album,
     required super.tracks,
-    required super.isSaved,
     required this.error,
   });
 }

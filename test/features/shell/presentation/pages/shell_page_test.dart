@@ -1,19 +1,26 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../helpers/metadata_plugin_test_helpers.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/player/presentation/cubit/queue_state.dart';
 import 'package:music_are/features/player/presentation/pages/full_player_page.dart';
 import 'package:music_are/features/player/presentation/widgets/mini_player.dart';
+import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/shell/presentation/pages/shell_page.dart';
 
 class MockPlayerCubit extends Mock implements PlayerCubit {}
+
+class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
 Track createTestTrack(String id, String name) {
   return Track(
@@ -112,8 +119,19 @@ void main() {
   }
 
   Widget buildTestableWidget() {
-    return BlocProvider<PlayerCubit>.value(
-      value: mockPlayerCubit,
+    final engine = MockPluginEngine();
+    when(() => engine.hasMetadata).thenReturn(false);
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<PlayerCubit>.value(value: mockPlayerCubit),
+        BlocProvider<SavedMediaCubit>(
+          create: (_) => SavedMediaCubit(
+            LibraryRepository(engine),
+            NoticeBus(),
+            auth: TestAccountCubit(testAccountState()),
+          ),
+        ),
+      ],
       child: MaterialApp.router(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,

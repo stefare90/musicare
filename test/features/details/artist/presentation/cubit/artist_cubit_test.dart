@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/details/artist/presentation/cubit/artist_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
@@ -67,7 +68,7 @@ void main() {
       mockArtistService = MockArtistService();
 
       noticeBus = NoticeBus();
-      cubit = ArtistCubit(mockPluginEngine, noticeBus, initialArtist);
+      cubit = ArtistCubit(MediaRepository(mockPluginEngine), noticeBus, initialArtist);
     });
 
     tearDown(() {
@@ -76,7 +77,6 @@ void main() {
 
     test('initial state holds initial artist', () {
       expect(cubit.state.artist, equals(initialArtist));
-      expect(cubit.state.isSaved, isFalse);
     });
 
     test(
@@ -192,45 +192,6 @@ void main() {
       await cubit.fetchMoreTopTracks(limit: 6);
       expect(cubit.state.topTracks.data.items.length, equals(2));
       expect(cubit.state.topTracks.data.items[1].name, equals('Track 2'));
-    });
-
-    test(
-      'toggleSave updates isSaved state and calls plugin save/unsave',
-      () async {
-        when(() => mockPluginEngine.hasMetadata).thenReturn(true);
-        when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
-        when(() => mockMetadataPlugin.artist).thenReturn(mockArtistService);
-        when(() => mockArtistService.save(['a1'])).thenAnswer((_) async {});
-        when(() => mockArtistService.unsave(['a1'])).thenAnswer((_) async {});
-
-        await cubit.toggleSave();
-        expect(cubit.state.isSaved, isTrue);
-        verify(() => mockArtistService.save(['a1'])).called(1);
-
-        await cubit.toggleSave();
-        expect(cubit.state.isSaved, isFalse);
-        verify(() => mockArtistService.unsave(['a1'])).called(1);
-      },
-    );
-
-    test('toggleSave emits a notice when the plugin rejects', () async {
-      when(() => mockPluginEngine.hasMetadata).thenReturn(true);
-      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
-      when(() => mockMetadataPlugin.artist).thenReturn(mockArtistService);
-      final error = const MetadataAuthRequiredException('sign in');
-      when(() => mockArtistService.save(['a1'])).thenAnswer((_) async {
-        throw error;
-      });
-
-      final notices = <Object>[];
-      final subscription = noticeBus.notices.listen(notices.add);
-      await cubit.toggleSave();
-      await Future<void>.delayed(Duration.zero);
-
-      expect(cubit.state.isSaved, isFalse);
-      expect(notices, hasLength(1));
-      expect(notices.single, same(error));
-      await subscription.cancel();
     });
 
     test('a section fetch emits a notice when it needs one', () async {

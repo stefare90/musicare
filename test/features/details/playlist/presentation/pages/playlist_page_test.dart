@@ -4,11 +4,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/details/playlist/presentation/pages/playlist_page.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
@@ -22,6 +25,8 @@ class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
 class MockPlaylistService extends Mock implements IPlaylist {}
 
 class MockPlayerCubit extends Mock implements PlayerCubit {}
+
+class MockAuthService extends Mock implements IAuth {}
 
 void main() {
   final sl = GetIt.instance;
@@ -52,10 +57,22 @@ void main() {
 
     sl.registerLazySingleton<MetadataPluginEngine>(() => mockEngine);
     sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
+  sl.registerLazySingleton<MediaRepository>(() => MediaRepository(mockEngine));
 
     when(() => mockEngine.hasMetadata).thenReturn(true);
     when(() => mockEngine.metadata).thenReturn(mockMetadata);
     when(() => mockMetadata.playlist).thenReturn(mockPlaylist);
+
+    final mockAuth = MockAuthService();
+    when(() => mockMetadata.auth).thenReturn(mockAuth);
+    when(() => mockAuth.isAuthenticated()).thenAnswer((_) async => false);
+    sl.registerLazySingleton<SavedMediaCubit>(
+      () => SavedMediaCubit(
+        LibraryRepository(mockEngine),
+        sl<NoticeBus>(),
+        auth: TestAccountCubit(testAccountState()),
+      ),
+    );
   });
 
   Widget buildTestableWidget({MetadataPluginCubit? metadataCubit}) {
@@ -70,6 +87,7 @@ void main() {
             BlocProvider<MetadataPluginCubit>.value(
               value: metadataCubit ?? buildMockMetadataPluginCubit(),
             ),
+            BlocProvider<SavedMediaCubit>.value(value: sl<SavedMediaCubit>()),
           ],
           child: PlaylistPage(playlist: testPlaylist),
         ),

@@ -5,15 +5,16 @@ import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/router/app_navigator.dart';
-import 'package:music_are/core/widgets/bottom_sheets/bottom_sheets.dart';
 import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/media/section_row.dart';
 import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
 import 'package:music_are/core/widgets/media/track_matrix.dart';
 import 'package:music_are/features/details/artist/presentation/cubit/artist_cubit.dart';
 import 'package:music_are/features/details/artist/presentation/cubit/artist_state.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
+import 'package:music_are/features/library/presentation/utils/track_actions.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
-import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 
 class ArtistPage extends StatelessWidget {
   final Artist artist;
@@ -24,7 +25,7 @@ class ArtistPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<ArtistCubit>(
       create: (context) =>
-          ArtistCubit(sl<MetadataPluginEngine>(), sl<NoticeBus>(), artist)
+          ArtistCubit(sl<MediaRepository>(), sl<NoticeBus>(), artist)
             ..loadArtist(),
       child: const _ArtistView(),
     );
@@ -49,10 +50,14 @@ class _ArtistView extends StatelessWidget {
             ),
           );
         }
+        final isSaved = context.select<SavedMediaCubit, bool>(
+          (c) => c.isArtistSaved(state.artist.id),
+        );
         return SliverMediaScaffold(
           metadata: state.metadata,
-          isSaved: state.isSaved,
-          onSaveTap: () => context.read<ArtistCubit>().toggleSave(),
+          isSaved: isSaved,
+          onSaveTap: () =>
+              context.read<SavedMediaCubit>().toggleArtist(state.artist),
           slivers: [
             SliverToBoxAdapter(
               child: TrackMatrix(
@@ -87,7 +92,7 @@ class _ArtistView extends StatelessWidget {
                 onLoadMore: () =>
                     context.read<ArtistCubit>().fetchMoreTopTracks(),
                 onTrackOptionsTap: (track) =>
-                    TrackOptionsBottomSheet.show(context, track),
+                    TrackActions.showOptions(context, track),
               ),
             ),
             SliverToBoxAdapter(

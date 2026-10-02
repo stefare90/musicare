@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/search_repository.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
@@ -57,7 +58,7 @@ void main() {
 
       noticeBus = NoticeBus();
       cubit = SearchCubit(
-        mockEngine,
+        SearchRepository(mockEngine),
         noticeBus,
         debounceDuration: const Duration(milliseconds: 50),
       );
@@ -213,7 +214,7 @@ void main() {
       ).thenAnswer((_) async => page2);
 
       final pagedCubit = SearchCubit(
-        mockEngine,
+        SearchRepository(mockEngine),
         noticeBus,
         pageSize: 1,
       );
@@ -264,7 +265,7 @@ void main() {
         () => mockSearch.tracks('rock', offset: 1, limit: 1),
       ).thenAnswer((_) async => throw Exception('boom'));
 
-      final pagedCubit = SearchCubit(mockEngine, noticeBus, pageSize: 1);
+      final pagedCubit = SearchCubit(SearchRepository(mockEngine), noticeBus, pageSize: 1);
       await pagedCubit.selectChip(SearchCategory.tracks);
       await pagedCubit.search('rock');
 
@@ -308,7 +309,7 @@ void main() {
       test('grid categories request a limit rounded up to the columns',
           () async {
         for (final columns in [2, 3, 4]) {
-          final gridCubit = SearchCubit(mockEngine, noticeBus, pageSize: 20);
+          final gridCubit = SearchCubit(SearchRepository(mockEngine), noticeBus, pageSize: 20);
           gridCubit.updateGridColumns(columns);
           final expected =
               MediaCardMetrics.pageSizeForColumns(20, columns);
@@ -392,7 +393,7 @@ void main() {
         const columns = 3;
         const expected = 21; // pageSizeForColumns(20, 3)
 
-        final gridCubit = SearchCubit(mockEngine, noticeBus, pageSize: 20);
+        final gridCubit = SearchCubit(SearchRepository(mockEngine), noticeBus, pageSize: 20);
         gridCubit.updateGridColumns(columns);
 
         when(

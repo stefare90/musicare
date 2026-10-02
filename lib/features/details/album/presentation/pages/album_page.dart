@@ -10,8 +10,10 @@ import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
 import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 import 'package:music_are/features/details/album/presentation/cubit/album_cubit.dart';
 import 'package:music_are/features/details/album/presentation/cubit/album_state.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
+import 'package:music_are/features/library/presentation/utils/track_actions.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
-import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 
 class AlbumPage extends StatelessWidget {
   final Album album;
@@ -22,8 +24,7 @@ class AlbumPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<AlbumCubit>(
       create: (context) =>
-          AlbumCubit(sl<MetadataPluginEngine>(), sl<NoticeBus>())
-            ..loadAlbum(album),
+          AlbumCubit(sl<MediaRepository>(), sl<NoticeBus>())..loadAlbum(album),
       child: const _AlbumView(),
     );
   }
@@ -46,14 +47,20 @@ class _AlbumView extends StatelessWidget {
           );
         }
         if (state is AlbumLoadedState) {
+          final isSaved = context.select<SavedMediaCubit, bool>(
+            (c) => c.isAlbumSaved(state.album.id),
+          );
           return SliverMediaScaffold(
             metadata: state.metadata,
-            isSaved: state.isSaved,
-            onSaveTap: () => context.read<AlbumCubit>().toggleSave(),
+            isSaved: isSaved,
+            onSaveTap: () =>
+                context.read<SavedMediaCubit>().toggleAlbum(state.album),
             onOptionsTap: () => AlbumOptionsBottomSheet.show(
               context,
               state.album,
-              onToggleSave: () => context.read<AlbumCubit>().toggleSave(),
+              isSaved: isSaved,
+              onToggleSave: () =>
+                  context.read<SavedMediaCubit>().toggleAlbum(state.album),
             ),
             slivers: [
               SliverTrackList(
@@ -75,7 +82,7 @@ class _AlbumView extends StatelessWidget {
                   );
                 },
                 onTrackOptionsTap: (track) =>
-                    TrackOptionsBottomSheet.show(context, track),
+                    TrackActions.showOptions(context, track),
               ),
             ],
           );

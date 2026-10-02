@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/router/app_navigator.dart';
-import 'package:music_are/core/widgets/bottom_sheets/track_options_bottom_sheet.dart';
+import 'package:music_are/features/library/presentation/utils/track_actions.dart';
 import 'package:music_are/core/widgets/media/paginated_media_grid.dart';
 import 'package:music_are/core/widgets/media/track_list_tile.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
@@ -58,7 +58,7 @@ class CategoryResultsView extends StatelessWidget {
                   context.read<PlayerCubit>().playQueue(items, index: index);
                 },
                 onOptionsTap: () {
-                  TrackOptionsBottomSheet.show(context, track);
+                  TrackActions.showOptions(context, track);
                 },
               );
             },

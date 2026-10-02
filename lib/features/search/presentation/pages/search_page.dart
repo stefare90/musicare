@@ -4,7 +4,7 @@ import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/widgets/settings_button.dart';
-import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/search_repository.dart';
 import 'package:music_are/features/search/presentation/cubit/search_cubit.dart';
 import 'package:music_are/features/search/presentation/widgets/search_chips_bar.dart';
 import 'package:music_are/features/search/presentation/widgets/search_field.dart';
@@ -17,7 +17,7 @@ class SearchPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<SearchCubit>(
       create: (context) =>
-          SearchCubit(sl<MetadataPluginEngine>(), sl<NoticeBus>())..loadChips(),
+          SearchCubit(sl<SearchRepository>(), sl<NoticeBus>())..loadChips(),
       child: const _SearchView(),
     );
   }

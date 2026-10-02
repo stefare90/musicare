@@ -10,8 +10,10 @@ import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
 import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
+import 'package:music_are/features/library/presentation/utils/track_actions.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
-import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 
 class PlaylistPage extends StatelessWidget {
   final Playlist playlist;
@@ -22,7 +24,7 @@ class PlaylistPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<PlaylistCubit>(
       create: (context) =>
-          PlaylistCubit(sl<MetadataPluginEngine>(), sl<NoticeBus>())
+          PlaylistCubit(sl<MediaRepository>(), sl<NoticeBus>())
             ..loadPlaylist(playlist),
       child: const _PlaylistView(),
     );
@@ -47,14 +49,21 @@ class _PlaylistView extends StatelessWidget {
           );
         }
         if (state is PlaylistLoadedState) {
+          final isSaved = context.select<SavedMediaCubit, bool>(
+            (c) => c.isPlaylistSaved(state.playlist.id),
+          );
           return SliverMediaScaffold(
             metadata: state.metadata,
-            isSaved: state.isSaved,
-            onSaveTap: () => context.read<PlaylistCubit>().toggleSave(),
+            isSaved: isSaved,
+            onSaveTap: () =>
+                context.read<SavedMediaCubit>().togglePlaylist(state.playlist),
             onOptionsTap: () => PlaylistOptionsBottomSheet.show(
               context,
               state.playlist,
-              onToggleSave: () => context.read<PlaylistCubit>().toggleSave(),
+              isSaved: isSaved,
+              onToggleSave: () => context
+                  .read<SavedMediaCubit>()
+                  .togglePlaylist(state.playlist),
             ),
             slivers: [
               SliverTrackList(
@@ -77,7 +86,7 @@ class _PlaylistView extends StatelessWidget {
                   );
                 },
                 onTrackOptionsTap: (track) =>
-                    TrackOptionsBottomSheet.show(context, track),
+                    TrackActions.showOptions(context, track),
               ),
             ],
           );

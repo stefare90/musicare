@@ -3,7 +3,7 @@ import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/library/presentation/cubit/liked_tracks_state.dart';
-import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
@@ -12,16 +12,16 @@ import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart'
 /// Liked tracks are provider feedback, not a playlist, so they get their own
 /// screen reached from the pinned *Liked Songs* entry.
 class LikedTracksCubit extends SafeCubit<LikedTracksState> {
-  final MetadataPluginEngine _pluginEngine;
+  final LibraryRepository _library;
   final NoticeBus _notices;
 
   static const int _pageSize = 20;
 
-  LikedTracksCubit(this._pluginEngine, this._notices)
+  LikedTracksCubit(this._library, this._notices)
     : super(const LikedTracksState());
 
   Future<void> load() async {
-    if (!_pluginEngine.hasMetadata) {
+    if (!_library.hasMetadata) {
       emit(
         LikedTracksState(
           tracks: SectionState.error(
@@ -35,7 +35,7 @@ class LikedTracksCubit extends SafeCubit<LikedTracksState> {
 
     emit(state.copyWith(tracks: SectionState.loading(state.tracks.data)));
     try {
-      final result = await _pluginEngine.metadata.user.savedTracks(
+      final result = await _library.savedTracks(
         offset: 0,
         limit: _pageSize,
       );
@@ -54,7 +54,7 @@ class LikedTracksCubit extends SafeCubit<LikedTracksState> {
     emit(state.copyWith(tracks: SectionState.loading(current.data)));
     final offset = current.data.items.length;
     try {
-      final next = await _pluginEngine.metadata.user.savedTracks(
+      final next = await _library.savedTracks(
         offset: offset,
         limit: _pageSize,
       );

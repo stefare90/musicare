@@ -23,19 +23,20 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ## 📚 Details (`lib/features/details/{album,artist,playlist}`)
 ✅ Album, artist and playlist pages with cover header, track list, discography, "Fans Also Like" and pagination.
 ✅ Contextual queue playback from any track list and save toggle in the header.
-⬜ Read the initial "saved" state from the provider on detail pages (today the toggle is session-only).
+✅ Initial "saved" state read from the provider on detail pages, so the toggle reflects the real library.
 
 ## 🎧 Player (`lib/features/player/`)
 ✅ Native background playback with notification, lock-screen controls and media buttons.
 ✅ Immutable queue with shuffle and repeat.
 ✅ Multi-candidate stream resolution with automatic fallback on expired streams or 403 responses.
 ✅ Mini-player, full player, reorderable queue sheet and live candidate switching.
-⬜ Download, favorites and lyrics.
-⬜ "Add to queue" and "Save to favorites" actions in the track options bottom sheet.
+⬜ Download and lyrics.
+✅ "Add to queue" and "Save to favorites" wired in the track options bottom sheet (with the real saved state and optimistic rollback).
 
 ## 📚 Library (`lib/features/library/`)
 ✅ Sign-in invitation when signed out, with the account entry point in the page header.
 ✅ Saved-content tabs (playlists, albums, artists) with pagination, empty/error states and a pinned *Liked Songs* list backed by the provider.
+✅ Global saved-media state (per-type IDs + optimistic toggle) and "Add to playlist" picker with a create-and-add flow.
 ⬜ Downloads: browse and manage local tracks and downloaded collections, account-free (entry point only, empty until the local storage subsystem lands).
 
 ## ⚙️ Settings (`lib/features/settings/`)

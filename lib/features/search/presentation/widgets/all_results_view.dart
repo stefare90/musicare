@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/router/app_navigator.dart';
-import 'package:music_are/core/widgets/bottom_sheets/track_options_bottom_sheet.dart';
+import 'package:music_are/features/library/presentation/utils/track_actions.dart';
 import 'package:music_are/core/widgets/media/section_row.dart';
 import 'package:music_are/core/widgets/media/track_matrix.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
@@ -40,7 +40,7 @@ class AllResultsView extends StatelessWidget {
               );
             },
             onTrackOptionsTap: (track) {
-              TrackOptionsBottomSheet.show(context, track);
+              TrackActions.showOptions(context, track);
             },
           ),
         if (albums.isNotEmpty)

@@ -3,22 +3,22 @@ import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/features/details/artist/presentation/cubit/artist_state.dart';
-import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
 class ArtistCubit extends SafeCubit<ArtistState> {
-  final MetadataPluginEngine _pluginEngine;
+  final MediaRepository _media;
   final NoticeBus _notices;
   bool _isFetchingMoreTopTracks = false;
   bool _isFetchingMoreAlbums = false;
   bool _isFetchingMoreRelated = false;
 
-  ArtistCubit(this._pluginEngine, this._notices, Artist initialArtist)
+  ArtistCubit(this._media, this._notices, Artist initialArtist)
     : super(ArtistState(artist: initialArtist));
 
   Future<void> loadArtist() async {
-    if (!_pluginEngine.hasMetadata) {
+    if (!_media.hasMetadata) {
       final error = PluginNotLoadedException();
       emit(
         state.copyWith(
@@ -38,8 +38,8 @@ class ArtistCubit extends SafeCubit<ArtistState> {
 
   void _fetchFullArtist(String id) {
     try {
-      _pluginEngine.metadata.artist
-          .getArtist(id)
+      _media
+          .artist(id)
           .then((fullArtist) {
             emit(state.copyWith(artist: fullArtist));
           })
@@ -50,8 +50,8 @@ class ArtistCubit extends SafeCubit<ArtistState> {
   void fetchTopTracks({int offset = 0, int limit = 6}) {
     emit(state.copyWith(topTracks: SectionState.loading(state.topTracks.data)));
 
-    _pluginEngine.metadata.artist
-        .topTracks(state.artist.id, offset: offset, limit: limit)
+    _media
+        .artistTopTracks(state.artist.id, offset: offset, limit: limit)
         .then((tracks) {
           emit(state.copyWith(topTracks: SectionState.success(tracks)));
         })
@@ -75,7 +75,7 @@ class ArtistCubit extends SafeCubit<ArtistState> {
 
     try {
       final offset = currentData.items.length;
-      final result = await _pluginEngine.metadata.artist.topTracks(
+      final result = await _media.artistTopTracks(
         state.artist.id,
         offset: offset,
         limit: limit,
@@ -101,8 +101,8 @@ class ArtistCubit extends SafeCubit<ArtistState> {
   void fetchAlbums({int offset = 0, int limit = 6}) {
     emit(state.copyWith(albums: SectionState.loading(state.albums.data)));
 
-    _pluginEngine.metadata.artist
-        .albums(state.artist.id, offset: offset, limit: limit)
+    _media
+        .artistAlbums(state.artist.id, offset: offset, limit: limit)
         .then((albums) {
           emit(state.copyWith(albums: SectionState.success(albums)));
         })
@@ -124,7 +124,7 @@ class ArtistCubit extends SafeCubit<ArtistState> {
 
     try {
       final offset = currentData.items.length;
-      final result = await _pluginEngine.metadata.artist.albums(
+      final result = await _media.artistAlbums(
         state.artist.id,
         offset: offset,
         limit: limit,
@@ -157,7 +157,7 @@ class ArtistCubit extends SafeCubit<ArtistState> {
 
     try {
       final offset = currentData.items.length;
-      final result = await _pluginEngine.metadata.artist.related(
+      final result = await _media.artistRelated(
         state.artist.id,
         offset: offset,
         limit: limit,
@@ -183,8 +183,8 @@ class ArtistCubit extends SafeCubit<ArtistState> {
   void fetchRelated({int offset = 0, int limit = 6}) {
     emit(state.copyWith(related: SectionState.loading(state.related.data)));
 
-    _pluginEngine.metadata.artist
-        .related(state.artist.id, offset: offset, limit: limit)
+    _media
+        .artistRelated(state.artist.id, offset: offset, limit: limit)
         .then((related) {
           emit(state.copyWith(related: SectionState.success(related)));
         })
@@ -194,19 +194,5 @@ class ArtistCubit extends SafeCubit<ArtistState> {
           );
           if (e.needsNotice) _notices.emit(e);
         });
-  }
-
-  Future<void> toggleSave() async {
-    final isSavedNow = !state.isSaved;
-    try {
-      if (isSavedNow) {
-        await _pluginEngine.metadata.artist.save([state.artist.id]);
-      } else {
-        await _pluginEngine.metadata.artist.unsave([state.artist.id]);
-      }
-      emit(state.copyWith(isSaved: isSavedNow));
-    } catch (e) {
-      _notices.emit(e);
-    }
   }
 }

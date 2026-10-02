@@ -371,9 +371,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadComingSoon => 'Download coming soon';
 
   @override
-  String get favoritesComingSoon => 'Favorites coming soon';
-
-  @override
   String get selectArtistTitle => 'Select Artist';
 
   @override
@@ -455,4 +452,59 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get downloadsEmptyMessage =>
       'Tracks and playlists you download will appear here.';
+
+  @override
+  String get removeAlbum => 'Remove Album';
+
+  @override
+  String get removePlaylist => 'Remove Playlist';
+
+  @override
+  String get removeArtist => 'Remove Artist';
+
+  @override
+  String get removeFromFavorites => 'Remove from Favorites';
+
+  @override
+  String get addToPlaylist => 'Add to Playlist';
+
+  @override
+  String get newPlaylist => 'New playlist';
+
+  @override
+  String get playlistNameLabel => 'Name';
+
+  @override
+  String get playlistDescriptionLabel => 'Description';
+
+  @override
+  String get playlistPublicLabel => 'Public';
+
+  @override
+  String get createPlaylistAction => 'Create';
+
+  @override
+  String get playlistCreated => 'Playlist created';
+
+  @override
+  String addedToPlaylist(Object playlist) {
+    return 'Added to $playlist';
+  }
+
+  @override
+  String get addedToQueue => 'Added to queue';
+
+  @override
+  String get noPlaylistsYet => 'No playlists yet';
+
+  @override
+  String get noPlaylistsYetMessage =>
+      'Create a playlist to start collecting tracks.';
+
+  @override
+  String get playlistsSignInTitle => 'Sign in to add tracks to playlists';
+
+  @override
+  String get pluginErrorRateLimited =>
+      'The provider is limiting requests. Please try again shortly.';
 }

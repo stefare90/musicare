@@ -4,6 +4,7 @@ import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/models/media_type.dart';
 import 'package:music_are/core/widgets/dialogs.dart';
 import 'package:music_are/core/widgets/media/media_cover_image.dart';
+import 'package:music_are/features/library/presentation/widgets/favorite_button.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/player/presentation/widgets/player_playback_controls.dart';
 import 'package:music_are/features/player/presentation/widgets/player_scrubber.dart';
@@ -79,14 +80,7 @@ class FullPlayerPortraitView extends StatelessWidget {
                   message: context.l10n.downloadComingSoon,
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.favorite_border_rounded),
-                tooltip: context.l10n.tooltipFavorite,
-                onPressed: () => Dialogs.showSnackBar(
-                  context,
-                  message: context.l10n.favoritesComingSoon,
-                ),
-              ),
+              FavoriteButton(track: track),
             ],
           ),
           const SizedBox(height: 18),
