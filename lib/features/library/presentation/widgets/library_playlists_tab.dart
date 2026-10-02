@@ -6,6 +6,7 @@ import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/core/router/app_navigator.dart';
 import 'package:music_are/core/widgets/library/library_collection_card.dart';
 import 'package:music_are/core/widgets/media/media_card_error.dart';
+import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/core/widgets/media/paginated_media_grid.dart';
 import 'package:music_are/features/library/presentation/cubit/library_cubit.dart';
 import 'package:music_are/features/library/presentation/cubit/library_state.dart';
@@ -49,6 +50,13 @@ class LibraryPlaylistsTab extends StatelessWidget {
       onLoadMore: () =>
           context.read<LibraryCubit>().loadMore(LibrarySection.playlists),
       onItemTap: (item) => AppNavigator.toMediaDetail(context, item),
+      // Extra bottom room so the "New playlist" FAB never covers the last row.
+      padding: EdgeInsets.fromLTRB(
+        MediaCardMetrics.edgeInset,
+        MediaCardMetrics.edgeInset,
+        MediaCardMetrics.edgeInset,
+        MediaCardMetrics.edgeInset + 72,
+      ),
     );
   }
 }

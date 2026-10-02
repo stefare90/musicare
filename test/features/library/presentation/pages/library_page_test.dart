@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/library/presentation/pages/library_page.dart';
@@ -47,6 +48,9 @@ void main() {
     sl.registerLazySingleton<MetadataPluginEngine>(() => engine);
     sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
   sl.registerLazySingleton<LibraryRepository>(() => LibraryRepository(engine));
+    sl.registerLazySingleton<PlaylistRepository>(
+      () => PlaylistRepository(engine),
+    );
     authCubit = buildMockAccountCubit(state: testAccountState());
     sl.registerLazySingleton<AccountCubit>(() => authCubit);
     sl.registerLazySingleton<SavedMediaCubit>(
@@ -104,6 +108,7 @@ void main() {
     expect(find.text('Sign in to see your library'), findsOneWidget);
     expect(find.text('Sign in'), findsOneWidget);
     expect(find.text('Liked Songs'), findsNothing);
+    expect(find.byType(FloatingActionButton), findsNothing);
   });
 
   testWidgets('signed in shows the pinned liked songs and saved playlists', (
@@ -136,6 +141,77 @@ void main() {
     expect(find.text('Playlists'), findsOneWidget);
     expect(find.text('Albums'), findsOneWidget);
     expect(find.text('Artists'), findsOneWidget);
+  });
+
+  testWidgets('signed in shows the new-playlist action on the playlists tab', (
+    tester,
+  ) async {
+    when(
+      () => authCubit.state,
+    ).thenReturn(testAccountState(isAuthenticated: true, userName: 'me'));
+    when(
+      () => user.savedPlaylists(
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer(
+      (_) async => const PaginatedResult<Playlist>(
+        items: [],
+        total: 0,
+        offset: 0,
+        limit: 20,
+      ),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(buildMockMetadataPluginCubit()),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.widgetWithText(FloatingActionButton, 'New playlist'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Albums'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.widgetWithText(FloatingActionButton, 'New playlist'),
+      findsNothing,
+    );
+  });
+
+  testWidgets('the new-playlist action opens the create dialog', (
+    tester,
+  ) async {
+    when(
+      () => authCubit.state,
+    ).thenReturn(testAccountState(isAuthenticated: true, userName: 'me'));
+    when(
+      () => user.savedPlaylists(
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer(
+      (_) async => const PaginatedResult<Playlist>(
+        items: [],
+        total: 0,
+        offset: 0,
+        limit: 20,
+      ),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(buildMockMetadataPluginCubit()),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(FloatingActionButton, 'New playlist'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Name'), findsOneWidget);
+    expect(find.text('Create'), findsOneWidget);
   });
 
   testWidgets('renders nothing when no plugin is loaded', (tester) async {

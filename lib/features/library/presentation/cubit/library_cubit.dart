@@ -7,6 +7,7 @@ import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/features/library/presentation/cubit/library_state.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/account_session.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
@@ -20,6 +21,7 @@ import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart'
 class LibraryCubit extends SafeCubit<LibraryState> {
   final LibraryRepository _library;
   final NoticeBus _notices;
+  final PlaylistRepository _playlist;
   final AccountSession _session;
   final int pageSize;
   StreamSubscription<bool>? _authSubscription;
@@ -35,6 +37,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
   LibraryCubit(
     this._library,
     this._notices, {
+    required this._playlist,
     this.pageSize = 20,
     required AccountSession session,
     required Stream<MediaItemType> savedMediaChanges,
@@ -106,31 +109,44 @@ class LibraryCubit extends SafeCubit<LibraryState> {
       LibrarySection.playlists => _loadMore<Playlist>(
         current: state.playlists,
         fetch: (offset, limit) =>
-            _library.savedPlaylists(
-              offset: offset,
-              limit: limit,
-            ),
+            _library.savedPlaylists(offset: offset, limit: limit),
         update: (section) => state.copyWith(playlists: section),
       ),
       LibrarySection.albums => _loadMore<Album>(
         current: state.albums,
         fetch: (offset, limit) =>
-            _library.savedAlbums(
-              offset: offset,
-              limit: limit,
-            ),
+            _library.savedAlbums(offset: offset, limit: limit),
         update: (section) => state.copyWith(albums: section),
       ),
       LibrarySection.artists => _loadMore<Artist>(
         current: state.artists,
         fetch: (offset, limit) =>
-            _library.savedArtists(
-              offset: offset,
-              limit: limit,
-            ),
+            _library.savedArtists(offset: offset, limit: limit),
         update: (section) => state.copyWith(artists: section),
       ),
     };
+  }
+
+  /// Creates a playlist for the signed-in user.
+  ///
+  /// Returns null on failure; a missing sign-in or a write error is announced
+  /// on the notice bus (never silently swallowed).
+  Future<Playlist?> createPlaylist({
+    required String name,
+    String? description,
+    bool isPublic = false,
+  }) async {
+    if (!_library.hasMetadata) return null;
+    try {
+      return await _playlist.createPlaylist(
+        name,
+        description: description,
+        isPublic: isPublic,
+      );
+    } catch (e) {
+      _notices.emit(e);
+      return null;
+    }
   }
 
   Future<void> _loadPlaylists() async {
@@ -142,7 +158,9 @@ class LibraryCubit extends SafeCubit<LibraryState> {
       );
       emit(state.copyWith(playlists: SectionState.success(result)));
     } catch (e) {
-      emit(state.copyWith(playlists: SectionState.error(e, state.playlists.data)));
+      emit(
+        state.copyWith(playlists: SectionState.error(e, state.playlists.data)),
+      );
       if (e.needsNotice) _notices.emit(e);
     }
   }
@@ -178,8 +196,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
   Future<void> _loadMore<T extends Object>({
     required SectionState<PaginatedResult<T>> current,
     required Future<PaginatedResult<T>> Function(int offset, int limit) fetch,
-    required LibraryState Function(SectionState<PaginatedResult<T>>)
-    update,
+    required LibraryState Function(SectionState<PaginatedResult<T>>) update,
   }) async {
     if (current.isLoading) return;
     if (current.data.items.length >= current.data.total) return;

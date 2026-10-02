@@ -16,7 +16,6 @@ import 'package:music_are/features/library/presentation/cubit/add_to_playlist_st
 import 'package:music_are/features/library/presentation/widgets/create_playlist_dialog.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/utils/metadata_account_actions.dart';
 
 /// Picker for "Add to playlist": the user's playlists plus a "New playlist"
@@ -41,7 +40,6 @@ class AddToPlaylistBottomSheet extends StatelessWidget {
             sl<LibraryRepository>(),
             sl<PlaylistRepository>(),
             sl<NoticeBus>(),
-            session: sl<AccountCubit>(),
           )..load(),
       child: _AddToPlaylistBody(track: track),
     );

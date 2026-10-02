@@ -10,6 +10,10 @@ class PlaylistRepository {
 
   bool get hasMetadata => _engine.hasMetadata;
 
+  /// Creates a playlist for the signed-in user.
+  ///
+  /// Throws [MetadataAuthRequiredException] when the provider reports no user,
+  /// so callers surface a sign-in prompt instead of a silent no-op.
   Future<Playlist?> createPlaylist(
     String name, {
     String? description,
@@ -17,7 +21,7 @@ class PlaylistRepository {
   }) async {
     final me = await _engine.metadata.user.me();
     final userId = me['user_id'] as String?;
-    if (userId == null) return null;
+    if (userId == null) throw const MetadataAuthRequiredException('');
 
     return _engine.metadata.playlist.createPlaylist(
       userId,

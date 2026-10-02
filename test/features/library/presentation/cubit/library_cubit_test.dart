@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
 import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/library/presentation/cubit/library_cubit.dart';
@@ -18,10 +19,13 @@ class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
 
 class MockUserService extends Mock implements IUser {}
 
+class MockPlaylistService extends Mock implements IPlaylist {}
+
 void main() {
   late MockPluginEngine engine;
   late MockMetadataPlugin metadata;
   late MockUserService user;
+  late MockPlaylistService playlists;
   late NoticeBus notices;
   late LibraryCubit cubit;
   late StreamController<MediaItemType> savedMediaChanges;
@@ -45,11 +49,13 @@ void main() {
     engine = MockPluginEngine();
     metadata = MockMetadataPlugin();
     user = MockUserService();
+    playlists = MockPlaylistService();
     notices = NoticeBus();
 
     when(() => engine.hasMetadata).thenReturn(true);
     when(() => engine.metadata).thenReturn(metadata);
     when(() => metadata.user).thenReturn(user);
+    when(() => metadata.playlist).thenReturn(playlists);
   });
 
   tearDown(() async {
@@ -65,6 +71,7 @@ void main() {
     return LibraryCubit(
       LibraryRepository(engine),
       notices,
+      playlist: PlaylistRepository(engine),
       session: authCubit,
       savedMediaChanges: savedMediaChanges.stream,
     );
@@ -242,5 +249,62 @@ void main() {
         limit: any(named: 'limit'),
       ),
     );
+  });
+
+  test('createPlaylist returns the created playlist', () async {
+    cubit = buildCubit(authenticated: true);
+    when(() => user.me()).thenAnswer((_) async => {'user_id': 'me'});
+    when(
+      () => playlists.createPlaylist(
+        'me',
+        'My list',
+        description: 'desc',
+        public_: true,
+      ),
+    ).thenAnswer((_) async => playlist);
+
+    final created = await cubit.createPlaylist(
+      name: 'My list',
+      description: 'desc',
+      isPublic: true,
+    );
+
+    expect(created?.id, 'pl1');
+  });
+
+  test('createPlaylist announces when sign-in is required', () async {
+    cubit = buildCubit();
+    when(() => user.me()).thenAnswer((_) async => const <String, dynamic>{});
+
+    final seen = <Object>[];
+    final subscription = notices.notices.listen(seen.add);
+    final created = await cubit.createPlaylist(name: 'x');
+    await Future<void>.delayed(Duration.zero);
+
+    expect(created, isNull);
+    expect(seen.single, isA<MetadataAuthRequiredException>());
+    await subscription.cancel();
+  });
+
+  test('createPlaylist announces a write failure', () async {
+    cubit = buildCubit(authenticated: true);
+    when(() => user.me()).thenAnswer((_) async => {'user_id': 'me'});
+    when(
+      () => playlists.createPlaylist(
+        'me',
+        'x',
+        description: null,
+        public_: false,
+      ),
+    ).thenAnswer((_) async => throw const MetadataAuthRequiredException(''));
+
+    final seen = <Object>[];
+    final subscription = notices.notices.listen(seen.add);
+    final created = await cubit.createPlaylist(name: 'x');
+    await Future<void>.delayed(Duration.zero);
+
+    expect(created, isNull);
+    expect(seen, hasLength(1));
+    await subscription.cancel();
   });
 }

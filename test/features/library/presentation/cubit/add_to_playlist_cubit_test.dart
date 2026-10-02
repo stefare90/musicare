@@ -7,8 +7,6 @@ import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/library/presentation/cubit/add_to_playlist_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
-import '../../../../helpers/metadata_plugin_test_helpers.dart';
-
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
 class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
@@ -64,15 +62,11 @@ void main() {
 
   tearDown(() => cubit.close());
 
-  AddToPlaylistCubit buildCubit({bool authenticated = false}) {
-    final authCubit = TestAccountCubit(
-      testAccountState(isAuthenticated: authenticated),
-    );
+  AddToPlaylistCubit buildCubit() {
     return AddToPlaylistCubit(
       LibraryRepository(engine),
       PlaylistRepository(engine),
       notices,
-      session: authCubit,
     );
   }
 
@@ -111,7 +105,7 @@ void main() {
   });
 
   test('createPlaylist resolves the user and adds the track', () async {
-    cubit = buildCubit(authenticated: true);
+    cubit = buildCubit();
     when(() => user.me()).thenAnswer((_) async => {'user_id': 'me'});
     when(
       () => playlists.createPlaylist(
@@ -136,6 +130,9 @@ void main() {
 
   test('createPlaylist announces when sign-in is required', () async {
     cubit = buildCubit();
+    // The provider reports no user when signed out; the repository turns that
+    // into an auth-required error, which the cubit announces.
+    when(() => user.me()).thenAnswer((_) async => const <String, dynamic>{});
 
     final seen = <Object>[];
     final subscription = notices.notices.listen(seen.add);
