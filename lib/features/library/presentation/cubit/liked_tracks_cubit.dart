@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/models/section_state.dart';
@@ -14,11 +16,19 @@ import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart'
 class LikedTracksCubit extends SafeCubit<LikedTracksState> {
   final LibraryRepository _library;
   final NoticeBus _notices;
+  StreamSubscription<MediaItemType>? _savedMediaSubscription;
 
   static const int _pageSize = 20;
 
-  LikedTracksCubit(this._library, this._notices)
-    : super(const LikedTracksState());
+  LikedTracksCubit(
+    this._library,
+    this._notices, {
+    required Stream<MediaItemType> savedMediaChanges,
+  }) : super(const LikedTracksState()) {
+    _savedMediaSubscription = savedMediaChanges
+        .where((type) => type == MediaItemType.track)
+        .listen((_) => unawaited(load()));
+  }
 
   Future<void> load() async {
     if (!_library.hasMetadata) {
@@ -69,5 +79,11 @@ class LikedTracksCubit extends SafeCubit<LikedTracksState> {
       emit(state.copyWith(tracks: SectionState.error(e, current.data)));
       if (e.needsNotice) _notices.emit(e);
     }
+  }
+
+  @override
+  Future<void> close() async {
+    await _savedMediaSubscription?.cancel();
+    return super.close();
   }
 }

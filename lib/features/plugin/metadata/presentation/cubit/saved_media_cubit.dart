@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
@@ -13,7 +14,10 @@ import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_medi
 /// Deliberately small (IDs only) and global: the paginated listings belong to
 /// the page cubits, but *any* page needs to know "is this saved?" and to
 /// toggle it, because the actions live in the search, the detail pages, the
-/// player and the track sheet. Loading is lazy per media type.
+/// player and the track sheet. The index warms up eagerly when the account
+/// signs in, one set per media type. Through [changes] it also announces real
+/// changes per type, so a listing (library tabs, liked songs) reloads without
+/// polling the state.
 ///
 /// [auth] is the single account source (current state + changes): the index
 /// belongs to the current account, so it must be dropped when the account
@@ -23,7 +27,21 @@ class SavedMediaCubit extends SafeCubit<SavedMediaState> {
   final NoticeBus _notices;
   final Set<MediaItemType> _loading = {};
   final StateStreamable<AccountState> _auth;
+  final StreamController<MediaItemType> _changes =
+      StreamController<MediaItemType>.broadcast();
   StreamSubscription<AccountState>? _authSubscription;
+
+  /// Emits a type only for a genuine change (a successful toggle, or a refresh
+  /// returning a different set), never for the warm-up or an identical refetch.
+  Stream<MediaItemType> get changes => _changes.stream;
+
+  /// Last settled set per type: lets [_applyLoaded] tell a real change from the
+  /// warm-up (first read) and from a refresh that returned the same IDs.
+  final Map<MediaItemType, Set<String>> _snapshot = {};
+
+  /// Invalidates in-flight loads on [reset], so a load started under the old
+  /// account can never repopulate the index of the new one.
+  int _generation = 0;
 
   SavedMediaCubit(
     this._library,
@@ -50,7 +68,17 @@ class SavedMediaCubit extends SafeCubit<SavedMediaState> {
   }
 
   /// Drops the cached IDs, e.g. on sign-in/sign-out so the next access reloads.
-  void reset() => emit(const SavedMediaState());
+  ///
+  /// Distinct from a [changes] event: the reset of the index is not a change a
+  /// listing has to react to. The in-flight markers are dropped too, so a load
+  /// started under the previous account does not block the new account's
+  /// warm-up; its result is discarded by [_applyLoaded]'s generation check.
+  void reset() {
+    _generation++;
+    _snapshot.clear();
+    _loading.clear();
+    emit(const SavedMediaState());
+  }
 
   bool isTrackSaved(String id) => state.isTrackSaved(id);
   bool isAlbumSaved(String id) => state.isAlbumSaved(id);
@@ -64,15 +92,42 @@ class SavedMediaCubit extends SafeCubit<SavedMediaState> {
       emit(state.copyWith(loaded: {...state.loaded, type}));
       return;
     }
+    await _load(type);
+  }
 
+  /// Re-reads the saved IDs of [type] even when already loaded, announcing a
+  /// change only if the returned set differs from the last one.
+  ///
+  /// Used after a write whose effect on the saved set is not inferable locally,
+  /// such as creating a playlist.
+  Future<void> refresh(MediaItemType type) async {
+    if (_loading.contains(type)) return;
+    if (!_library.hasMetadata || !_auth.state.isAuthenticated) return;
+    await _load(type);
+  }
+
+  Future<void> _load(MediaItemType type) async {
+    final generation = _generation;
     _loading.add(type);
     try {
-      final ids = await _loadIds(type);
-      emit(state.withIds(type, ids).copyWith(loaded: {...state.loaded, type}));
+      _applyLoaded(type, await _loadIds(type), generation);
     } catch (_) {
       // Background load: stays silent and retries on the next access.
     } finally {
       _loading.remove(type);
+    }
+  }
+
+  void _applyLoaded(MediaItemType type, Set<String> ids, int generation) {
+    if (generation != _generation) return;
+    final previous = _snapshot[type];
+    _snapshot[type] = ids;
+
+    emit(state.withIds(type, ids).copyWith(loaded: {...state.loaded, type}));
+    // A missing previous set means this is the first read of the type: the
+    // warm-up must not be announced as a change.
+    if (previous != null && !setEquals(previous, ids)) {
+      _changes.add(type);
     }
   }
 
@@ -113,11 +168,17 @@ class SavedMediaCubit extends SafeCubit<SavedMediaState> {
   }) async {
     final wasSaved = state.isSaved(type, id);
     final previous = state.idsOf(type).toSet();
+    final optimistic = _flip(previous, id, !wasSaved);
 
-    emit(state.withIds(type, _flip(previous, id, !wasSaved)));
+    emit(state.withIds(type, optimistic));
     try {
       await (wasSaved ? unsave() : save());
+      // Announce only after the write lands: a reload started optimistically
+      // could read the server before the change is committed and stay stale.
+      _snapshot[type] = optimistic;
+      _changes.add(type);
     } catch (e) {
+      _snapshot[type] = previous;
       emit(state.withIds(type, previous));
       _notices.emit(e);
     }
@@ -174,6 +235,7 @@ class SavedMediaCubit extends SafeCubit<SavedMediaState> {
   @override
   Future<void> close() async {
     await _authSubscription?.cancel();
+    await _changes.close();
     return super.close();
   }
 }

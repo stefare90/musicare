@@ -24,6 +24,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
   final int pageSize;
   final StateStreamable<AccountState> _auth;
   StreamSubscription<AccountState>? _authSubscription;
+  StreamSubscription<MediaItemType>? _savedMediaSubscription;
 
   /// Number of grid columns currently used by the library grids.
   ///
@@ -37,11 +38,31 @@ class LibraryCubit extends SafeCubit<LibraryState> {
     this._notices, {
     this.pageSize = 20,
     required StateStreamable<AccountState> auth,
+    required Stream<MediaItemType> savedMediaChanges,
   }) : _auth = auth,
        super(const LibraryState()) {
+    _savedMediaSubscription = savedMediaChanges.listen(_onSavedMediaChanged);
     _authSubscription = auth.stream.listen((state) {
       if (!isClosed) loadAll();
     });
+  }
+
+  /// Reloads a section when the saved set of its type actually changed.
+  ///
+  /// The stream carries only real changes (never the warm-up), so there is no
+  /// baseline to keep here.
+  void _onSavedMediaChanged(MediaItemType type) {
+    if (isClosed || !_auth.state.isAuthenticated) return;
+    switch (type) {
+      case MediaItemType.album:
+        unawaited(_loadAlbums());
+      case MediaItemType.artist:
+        unawaited(_loadArtists());
+      case MediaItemType.playlist:
+        unawaited(_loadPlaylists());
+      case MediaItemType.track:
+        break;
+    }
   }
 
   /// Pagination size rounded up to a whole number of grid rows.
@@ -184,6 +205,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
   @override
   Future<void> close() async {
     await _authSubscription?.cancel();
+    await _savedMediaSubscription?.cancel();
     return super.close();
   }
 }

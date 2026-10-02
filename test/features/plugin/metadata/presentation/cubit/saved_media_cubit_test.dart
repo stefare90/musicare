@@ -29,6 +29,8 @@ void main() {
   late NoticeBus notices;
   late TestAccountCubit authCubit;
   late SavedMediaCubit cubit;
+  late List<MediaItemType> changes;
+  late StreamSubscription<MediaItemType> changesSubscription;
 
   final track = Track(
     id: 't1',
@@ -47,6 +49,16 @@ void main() {
     durationMs: 1000,
   );
 
+  const album = Album(
+    id: 'al1',
+    name: 'Album',
+    artists: [],
+    releaseDate: '',
+    externalUri: '',
+    totalTracks: 1,
+    albumType: AlbumType.album,
+  );
+
   setUp(() {
     engine = MockPluginEngine();
     metadata = MockMetadataPlugin();
@@ -60,6 +72,8 @@ void main() {
       notices,
       auth: authCubit,
     );
+    changes = [];
+    changesSubscription = cubit.changes.listen(changes.add);
 
     when(() => engine.hasMetadata).thenReturn(true);
     when(() => engine.metadata).thenReturn(metadata);
@@ -69,6 +83,7 @@ void main() {
   });
 
   tearDown(() async {
+    await changesSubscription.cancel();
     await cubit.close();
     await authCubit.close();
   });
@@ -105,6 +120,23 @@ void main() {
         limit: 100,
       ),
     );
+  }
+
+  /// Signs in with an empty saved library, so the warm-up settles the index.
+  Future<void> signIn() async {
+    stubEmptyLibrary();
+    when(
+      () => user.savedTracks(offset: 0, limit: 100),
+    ).thenAnswer(
+      (_) async => const PaginatedResult<Track>(
+        items: [],
+        total: 0,
+        offset: 0,
+        limit: 100,
+      ),
+    );
+    authCubit.set(testAccountState(isAuthenticated: true));
+    await Future<void>.delayed(const Duration(milliseconds: 1));
   }
 
   test('warms the saved index when the account signs in', () async {
@@ -188,5 +220,143 @@ void main() {
     await Future<void>.delayed(Duration.zero);
 
     expect(cubit.state.trackIds, isEmpty);
+  });
+
+  test('the warm-up announces nothing', () async {
+    stubEmptyLibrary();
+    when(
+      () => user.savedTracks(offset: 0, limit: 100),
+    ).thenAnswer(
+      (_) async => PaginatedResult<Track>(
+        items: [track],
+        total: 1,
+        offset: 0,
+        limit: 100,
+      ),
+    );
+
+    authCubit.set(testAccountState(isAuthenticated: true));
+    await Future<void>.delayed(const Duration(milliseconds: 1));
+
+    expect(cubit.state.trackIds, {'t1'});
+    expect(changes, isEmpty);
+  });
+
+  test('a successful toggle announces the type', () async {
+    when(() => tracks.save(['t1'])).thenAnswer((_) async {});
+
+    await cubit.toggleTrack(track);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(cubit.isTrackSaved('t1'), isTrue);
+    expect(changes, [MediaItemType.track]);
+  });
+
+  test('a failed toggle announces nothing', () async {
+    when(
+      () => tracks.save(['t1']),
+    ).thenAnswer((_) async => throw const MetadataAuthRequiredException(''));
+
+    await cubit.toggleTrack(track);
+
+    expect(cubit.isTrackSaved('t1'), isFalse);
+    expect(changes, isEmpty);
+  });
+
+  test('refresh announces only when the saved set differs', () async {
+    await signIn();
+    expect(changes, isEmpty);
+
+    await cubit.refresh(MediaItemType.album);
+    await Future<void>.delayed(Duration.zero);
+    expect(changes, isEmpty);
+
+    when(
+      () => user.savedAlbums(offset: 0, limit: 100),
+    ).thenAnswer(
+      (_) async =>
+          const PaginatedResult<Album>(items: [album], total: 1, offset: 0, limit: 100),
+    );
+    await cubit.refresh(MediaItemType.album);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(cubit.state.albumIds, {'al1'});
+    expect(changes, [MediaItemType.album]);
+  });
+
+  test('reset announces nothing and clears the index', () async {
+    when(() => tracks.save(['t1'])).thenAnswer((_) async {});
+    await cubit.toggleTrack(track);
+    await Future<void>.delayed(Duration.zero);
+    expect(changes, [MediaItemType.track]);
+
+    cubit.reset();
+
+    expect(cubit.state.trackIds, isEmpty);
+    expect(changes, [MediaItemType.track]);
+  });
+
+  test('an in-flight load cannot populate the next account index', () async {
+    final hanging = Completer<PaginatedResult<Album>>();
+    stubEmptyLibrary();
+    when(
+      () => user.savedTracks(offset: 0, limit: 100),
+    ).thenAnswer(
+      (_) async => const PaginatedResult<Track>(
+        items: [],
+        total: 0,
+        offset: 0,
+        limit: 100,
+      ),
+    );
+    when(
+      () => user.savedAlbums(
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer((_) => hanging.future);
+
+    authCubit.set(testAccountState(isAuthenticated: true, userName: 'A'));
+    await Future<void>.delayed(const Duration(milliseconds: 1));
+
+    authCubit.set(testAccountState(isAuthenticated: false));
+    await Future<void>.delayed(const Duration(milliseconds: 1));
+
+    const bAlbum = Album(
+      id: 'b1',
+      name: 'B Album',
+      artists: [],
+      releaseDate: '',
+      externalUri: '',
+      totalTracks: 1,
+      albumType: AlbumType.album,
+    );
+    when(
+      () => user.savedAlbums(
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer(
+      (_) async => const PaginatedResult<Album>(
+        items: [bAlbum],
+        total: 1,
+        offset: 0,
+        limit: 100,
+      ),
+    );
+    authCubit.set(testAccountState(isAuthenticated: true, userName: 'B'));
+    await Future<void>.delayed(const Duration(milliseconds: 1));
+
+    hanging.complete(
+      const PaginatedResult<Album>(
+        items: [album],
+        total: 1,
+        offset: 0,
+        limit: 100,
+      ),
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 1));
+
+    expect(cubit.state.albumIds, {'b1'});
   });
 }

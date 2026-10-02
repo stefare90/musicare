@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
@@ -18,6 +20,7 @@ void main() {
   late MockUserService user;
   late NoticeBus notices;
   late LikedTracksCubit cubit;
+  late StreamController<MediaItemType> savedMediaChanges;
 
   final track = Track(
     id: 't1',
@@ -41,14 +44,22 @@ void main() {
     metadata = MockMetadataPlugin();
     user = MockUserService();
     notices = NoticeBus();
-    cubit = LikedTracksCubit(LibraryRepository(engine), notices);
+    savedMediaChanges = StreamController<MediaItemType>.broadcast();
+    cubit = LikedTracksCubit(
+      LibraryRepository(engine),
+      notices,
+      savedMediaChanges: savedMediaChanges.stream,
+    );
 
     when(() => engine.hasMetadata).thenReturn(true);
     when(() => engine.metadata).thenReturn(metadata);
     when(() => metadata.user).thenReturn(user);
   });
 
-  tearDown(() => cubit.close());
+  tearDown(() async {
+    await cubit.close();
+    await savedMediaChanges.close();
+  });
 
   test('load fetches the first page of liked tracks', () async {
     when(
@@ -94,5 +105,23 @@ void main() {
     await cubit.loadMore();
 
     expect(cubit.state.tracks.data.items.length, 2);
+  });
+
+  test('a track change reloads the liked tracks', () async {
+    when(
+      () => user.savedTracks(offset: 0, limit: 20),
+    ).thenAnswer(
+      (_) async => PaginatedResult<Track>(
+        items: [track],
+        total: 1,
+        offset: 0,
+        limit: 20,
+      ),
+    );
+
+    savedMediaChanges.add(MediaItemType.track);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(cubit.state.tracks.data.items.single.id, 't1');
   });
 }

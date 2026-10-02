@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
@@ -22,6 +24,7 @@ void main() {
   late MockUserService user;
   late NoticeBus notices;
   late LibraryCubit cubit;
+  late StreamController<MediaItemType> savedMediaChanges;
 
   final playlist = Playlist(
     id: 'pl1',
@@ -49,13 +52,22 @@ void main() {
     when(() => metadata.user).thenReturn(user);
   });
 
-  tearDown(() => cubit.close());
+  tearDown(() async {
+    await cubit.close();
+    await savedMediaChanges.close();
+  });
 
   LibraryCubit buildCubit({bool authenticated = false}) {
     final authCubit = TestAccountCubit(
       testAccountState(isAuthenticated: authenticated),
     );
-    return LibraryCubit(LibraryRepository(engine), notices, auth: authCubit);
+    savedMediaChanges = StreamController<MediaItemType>.broadcast();
+    return LibraryCubit(
+      LibraryRepository(engine),
+      notices,
+      auth: authCubit,
+      savedMediaChanges: savedMediaChanges.stream,
+    );
   }
 
   PaginatedResult<T> page<T>(List<T> items, {int total = -1}) =>
@@ -175,5 +187,60 @@ void main() {
 
   test('a section starts in the loading state while fetching', () {
     expect(const LibraryState().playlists, isA<SectionState>());
+  });
+
+  test('a saved-album change reloads only the albums section', () async {
+    cubit = buildCubit(authenticated: true);
+    stubEmptySections();
+    await cubit.loadAll();
+    await Future<void>.delayed(Duration.zero);
+    clearInteractions(user);
+
+    savedMediaChanges.add(MediaItemType.album);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(() => user.savedAlbums(offset: 0, limit: 20)).called(1);
+    verifyNever(
+      () => user.savedArtists(
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+      ),
+    );
+    verifyNever(
+      () => user.savedPlaylists(
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+      ),
+    );
+  });
+
+  test('a track change reloads no library section', () async {
+    cubit = buildCubit(authenticated: true);
+    stubEmptySections();
+    await cubit.loadAll();
+    await Future<void>.delayed(Duration.zero);
+    clearInteractions(user);
+
+    savedMediaChanges.add(MediaItemType.track);
+    await Future<void>.delayed(Duration.zero);
+
+    verifyNever(
+      () => user.savedAlbums(
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+      ),
+    );
+    verifyNever(
+      () => user.savedArtists(
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+      ),
+    );
+    verifyNever(
+      () => user.savedPlaylists(
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+      ),
+    );
   });
 }

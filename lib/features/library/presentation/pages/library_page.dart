@@ -18,6 +18,7 @@ import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cu
 import 'package:music_are/features/plugin/metadata/presentation/cubit/account_state.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/utils/metadata_account_actions.dart';
 
 class LibraryPage extends StatelessWidget {
@@ -36,6 +37,7 @@ class LibraryPage extends StatelessWidget {
             sl<LibraryRepository>(),
             sl<NoticeBus>(),
             auth: sl<AccountCubit>(),
+            savedMediaChanges: sl<SavedMediaCubit>().changes,
           )
             ..updateGridColumns(columns)
             ..loadAll(),

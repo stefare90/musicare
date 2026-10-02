@@ -12,6 +12,7 @@ import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin
 import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
 
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
 
@@ -48,6 +49,13 @@ void main() {
   sl.registerLazySingleton<LibraryRepository>(() => LibraryRepository(engine));
     authCubit = buildMockAccountCubit(state: testAccountState());
     sl.registerLazySingleton<AccountCubit>(() => authCubit);
+    sl.registerLazySingleton<SavedMediaCubit>(
+      () => SavedMediaCubit(
+        sl<LibraryRepository>(),
+        sl<NoticeBus>(),
+        auth: sl<AccountCubit>(),
+      ),
+    );
 
     when(() => engine.hasMetadata).thenReturn(true);
     when(() => engine.metadata).thenReturn(metadata);
