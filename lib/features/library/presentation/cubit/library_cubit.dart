@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/models/section_state.dart';
@@ -8,7 +7,7 @@ import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/features/library/presentation/cubit/library_state.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_state.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/account_session.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
@@ -21,9 +20,9 @@ import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart'
 class LibraryCubit extends SafeCubit<LibraryState> {
   final LibraryRepository _library;
   final NoticeBus _notices;
+  final AccountSession _session;
   final int pageSize;
-  final StateStreamable<AccountState> _auth;
-  StreamSubscription<AccountState>? _authSubscription;
+  StreamSubscription<bool>? _authSubscription;
   StreamSubscription<MediaItemType>? _savedMediaSubscription;
 
   /// Number of grid columns currently used by the library grids.
@@ -37,12 +36,12 @@ class LibraryCubit extends SafeCubit<LibraryState> {
     this._library,
     this._notices, {
     this.pageSize = 20,
-    required StateStreamable<AccountState> auth,
+    required AccountSession session,
     required Stream<MediaItemType> savedMediaChanges,
-  }) : _auth = auth,
+  }) : _session = session,
        super(const LibraryState()) {
     _savedMediaSubscription = savedMediaChanges.listen(_onSavedMediaChanged);
-    _authSubscription = auth.stream.listen((state) {
+    _authSubscription = session.authenticationChanges.listen((_) {
       if (!isClosed) loadAll();
     });
   }
@@ -52,7 +51,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
   /// The stream carries only real changes (never the warm-up), so there is no
   /// baseline to keep here.
   void _onSavedMediaChanged(MediaItemType type) {
-    if (isClosed || !_auth.state.isAuthenticated) return;
+    if (isClosed || !_session.isAuthenticated) return;
     switch (type) {
       case MediaItemType.album:
         unawaited(_loadAlbums());
@@ -92,7 +91,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
       return;
     }
 
-    if (!_auth.state.isAuthenticated) {
+    if (!_session.isAuthenticated) {
       emit(const LibraryState());
       return;
     }

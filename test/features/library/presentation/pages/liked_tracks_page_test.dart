@@ -64,7 +64,7 @@ void main() {
       () => SavedMediaCubit(
         sl<LibraryRepository>(),
         sl<NoticeBus>(),
-        auth: sl<AccountCubit>(),
+        session: sl<AccountCubit>(),
       ),
     );
 

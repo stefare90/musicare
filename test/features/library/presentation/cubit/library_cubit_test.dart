@@ -65,7 +65,7 @@ void main() {
     return LibraryCubit(
       LibraryRepository(engine),
       notices,
-      auth: authCubit,
+      session: authCubit,
       savedMediaChanges: savedMediaChanges.stream,
     );
   }

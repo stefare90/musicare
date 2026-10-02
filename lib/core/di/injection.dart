@@ -132,7 +132,7 @@ Future<void> initDependencies() async {
     () => SavedMediaCubit(
       sl<LibraryRepository>(),
       sl<NoticeBus>(),
-      auth: sl<AccountCubit>(),
+      session: sl<AccountCubit>(),
     ),
   );
 }

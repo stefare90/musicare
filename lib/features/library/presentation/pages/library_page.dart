@@ -36,7 +36,7 @@ class LibraryPage extends StatelessWidget {
           LibraryCubit(
             sl<LibraryRepository>(),
             sl<NoticeBus>(),
-            auth: sl<AccountCubit>(),
+            session: sl<AccountCubit>(),
             savedMediaChanges: sl<SavedMediaCubit>().changes,
           )
             ..updateGridColumns(columns)

@@ -68,7 +68,12 @@ void main() {
     final authCubit = TestAccountCubit(
       testAccountState(isAuthenticated: authenticated),
     );
-    return AddToPlaylistCubit(LibraryRepository(engine), PlaylistRepository(engine), notices, auth: authCubit);
+    return AddToPlaylistCubit(
+      LibraryRepository(engine),
+      PlaylistRepository(engine),
+      notices,
+      session: authCubit,
+    );
   }
 
   test('load fetches the saved playlists', () async {

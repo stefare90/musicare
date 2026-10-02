@@ -70,7 +70,7 @@ void main() {
     cubit = SavedMediaCubit(
       LibraryRepository(engine),
       notices,
-      auth: authCubit,
+      session: authCubit,
     );
     changes = [];
     changesSubscription = cubit.changes.listen(changes.add);

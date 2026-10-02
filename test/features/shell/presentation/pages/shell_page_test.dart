@@ -128,7 +128,7 @@ void main() {
           create: (_) => SavedMediaCubit(
             LibraryRepository(engine),
             NoticeBus(),
-            auth: TestAccountCubit(testAccountState()),
+            session: TestAccountSession(),
           ),
         ),
       ],

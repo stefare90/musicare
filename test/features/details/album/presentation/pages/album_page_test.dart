@@ -79,7 +79,7 @@ void main() {
       () => SavedMediaCubit(
         LibraryRepository(mockEngine),
         sl<NoticeBus>(),
-        auth: TestAccountCubit(testAccountState()),
+        session: TestAccountSession(),
       ),
     );
   });

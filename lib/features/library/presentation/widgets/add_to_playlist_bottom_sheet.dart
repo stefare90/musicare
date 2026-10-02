@@ -41,7 +41,7 @@ class AddToPlaylistBottomSheet extends StatelessWidget {
             sl<LibraryRepository>(),
             sl<PlaylistRepository>(),
             sl<NoticeBus>(),
-            auth: sl<AccountCubit>(),
+            session: sl<AccountCubit>(),
           )..load(),
       child: _AddToPlaylistBody(track: track),
     );

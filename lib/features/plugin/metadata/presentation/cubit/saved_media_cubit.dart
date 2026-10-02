@@ -1,12 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_state.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/account_session.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_state.dart';
 
 /// Global index of the signed-in user's saved media, plus the save actions.
@@ -25,11 +24,11 @@ import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_medi
 class SavedMediaCubit extends SafeCubit<SavedMediaState> {
   final LibraryRepository _library;
   final NoticeBus _notices;
+  final AccountSession _session;
   final Set<MediaItemType> _loading = {};
-  final StateStreamable<AccountState> _auth;
   final StreamController<MediaItemType> _changes =
       StreamController<MediaItemType>.broadcast();
-  StreamSubscription<AccountState>? _authSubscription;
+  StreamSubscription<bool>? _authSubscription;
 
   /// Emits a type only for a genuine change (a successful toggle, or a refresh
   /// returning a different set), never for the warm-up or an identical refetch.
@@ -46,16 +45,16 @@ class SavedMediaCubit extends SafeCubit<SavedMediaState> {
   SavedMediaCubit(
     this._library,
     this._notices, {
-    required StateStreamable<AccountState> auth,
-  }) : _auth = auth,
+    required AccountSession session,
+  }) : _session = session,
        super(const SavedMediaState()) {
-    _authSubscription = auth.stream.listen(_onAccountChanged);
-    _onAccountChanged(auth.state);
+    _authSubscription = session.authenticationChanges.listen(_onAccountChanged);
+    _onAccountChanged(session.isAuthenticated);
   }
 
-  void _onAccountChanged(AccountState state) {
+  void _onAccountChanged(bool authenticated) {
     if (isClosed) return;
-    if (state.isAuthenticated) {
+    if (authenticated) {
       // Warm the index in the background: the saved set belongs to the
       // account, so it loads with it instead of being requested by each page.
       unawaited(_ensureLoaded(MediaItemType.track));
@@ -88,7 +87,7 @@ class SavedMediaCubit extends SafeCubit<SavedMediaState> {
   Future<void> _ensureLoaded(MediaItemType type) async {
     if (state.loaded.contains(type) || _loading.contains(type)) return;
     if (!_library.hasMetadata) return;
-    if (!_auth.state.isAuthenticated) {
+    if (!_session.isAuthenticated) {
       emit(state.copyWith(loaded: {...state.loaded, type}));
       return;
     }
@@ -102,7 +101,7 @@ class SavedMediaCubit extends SafeCubit<SavedMediaState> {
   /// such as creating a playlist.
   Future<void> refresh(MediaItemType type) async {
     if (_loading.contains(type)) return;
-    if (!_library.hasMetadata || !_auth.state.isAuthenticated) return;
+    if (!_library.hasMetadata || !_session.isAuthenticated) return;
     await _load(type);
   }
 

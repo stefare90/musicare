@@ -1,4 +1,3 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/models/section_state.dart';
@@ -6,7 +5,7 @@ import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/library/presentation/cubit/add_to_playlist_state.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_state.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/account_session.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 
 /// Backs the "Add to playlist" sheet: lists the user's playlists and performs
@@ -15,7 +14,7 @@ class AddToPlaylistCubit extends SafeCubit<AddToPlaylistState> {
   final LibraryRepository _library;
   final PlaylistRepository _playlist;
   final NoticeBus _notices;
-  final StateStreamable<AccountState> auth;
+  final AccountSession session;
 
   static const int _pageSize = 20;
 
@@ -23,7 +22,7 @@ class AddToPlaylistCubit extends SafeCubit<AddToPlaylistState> {
     this._library,
     this._playlist,
     this._notices, {
-    required this.auth,
+    required this.session,
   }) : super(const AddToPlaylistState());
 
   Future<void> load() async {
@@ -96,7 +95,7 @@ class AddToPlaylistCubit extends SafeCubit<AddToPlaylistState> {
     List<String> trackIds = const [],
   }) async {
     if (!_library.hasMetadata) return null;
-    if (!auth.state.isAuthenticated) {
+    if (!session.isAuthenticated) {
       _notices.emit(const MetadataAuthRequiredException(''));
       return null;
     }

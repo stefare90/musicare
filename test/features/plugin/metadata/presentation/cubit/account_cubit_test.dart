@@ -4,6 +4,7 @@ import 'package:music_are/features/plugin/metadata/data/repositories/account_rep
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/account_state.dart';
 
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
@@ -97,5 +98,36 @@ void main() {
 
     expect(cubit.state.isAuthenticated, isFalse);
     expect(cubit.state.userName, isNull);
+  });
+
+  test('authenticationChanges drops a repeated sign-in value', () async {
+    final seen = <bool>[];
+    final subscription = cubit.authenticationChanges.listen(seen.add);
+
+    when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
+    when(() => user.me()).thenAnswer((_) async => {'user_id': 'listener'});
+    await cubit.initialize();
+    // A different identity but the same sign-in value must not be announced.
+    cubit.emit(const AccountState(isAuthenticated: true, userName: 'renamed'));
+    await Future<void>.delayed(Duration.zero);
+
+    expect(seen, [true]);
+
+    when(() => auth.logout()).thenAnswer((_) async {});
+    await cubit.signOut();
+    await Future<void>.delayed(Duration.zero);
+
+    expect(seen, [true, false]);
+    await subscription.cancel();
+  });
+
+  test('isAuthenticated mirrors the current state', () async {
+    expect(cubit.isAuthenticated, isFalse);
+
+    when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
+    when(() => user.me()).thenAnswer((_) async => {'user_id': 'listener'});
+    await cubit.initialize();
+
+    expect(cubit.isAuthenticated, isTrue);
   });
 }
