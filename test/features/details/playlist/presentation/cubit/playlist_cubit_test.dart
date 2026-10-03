@@ -298,5 +298,60 @@ void main() {
         await subscription.cancel();
       },
     );
+
+    test('deletePlaylist calls the repository and reports success', () async {
+      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+      when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
+      when(
+        () => mockPlaylistService.deletePlaylist('pl1'),
+      ).thenAnswer((_) async {});
+
+      cubit.emit(
+        PlaylistLoadedState(
+          playlist: testPlaylist,
+          tracks: PaginatedResult<Track>(
+            items: [testTrack],
+            total: 1,
+            offset: 0,
+            limit: 20,
+          ),
+        ),
+      );
+
+      final deleted = await cubit.deletePlaylist();
+
+      expect(deleted, isTrue);
+      verify(() => mockPlaylistService.deletePlaylist('pl1')).called(1);
+    });
+
+    test('deletePlaylist notifies and reports failure when the write fails', () async {
+      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+      when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
+      final error = Exception('delete failed');
+      when(
+        () => mockPlaylistService.deletePlaylist('pl1'),
+      ).thenAnswer((_) async => throw error);
+
+      cubit.emit(
+        PlaylistLoadedState(
+          playlist: testPlaylist,
+          tracks: PaginatedResult<Track>(
+            items: [testTrack],
+            total: 1,
+            offset: 0,
+            limit: 20,
+          ),
+        ),
+      );
+
+      final notices = <Object>[];
+      final subscription = noticeBus.notices.listen(notices.add);
+      final deleted = await cubit.deletePlaylist();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(deleted, isFalse);
+      expect(notices.single, same(error));
+      await subscription.cancel();
+    });
   });
 }

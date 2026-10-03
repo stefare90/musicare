@@ -54,8 +54,8 @@ PluginManifest testPluginManifest({String name = 'Test Provider'}) =>
 MetadataPluginLoadedState testLoadedState({String pluginName = 'Test Provider'}) =>
     MetadataPluginLoadedState(manifest: testPluginManifest(name: pluginName));
 
-AccountState testAccountState({bool isAuthenticated = false, String? userName}) =>
-    AccountState(isAuthenticated: isAuthenticated, userName: userName);
+AccountState testAccountState({bool isAuthenticated = false, String? userId}) =>
+    AccountState(isAuthenticated: isAuthenticated, userId: userId);
 
 MetadataPluginCubit buildMockMetadataPluginCubit({MetadataPluginState? state}) {
   final cubit = MockMetadataPluginCubit();

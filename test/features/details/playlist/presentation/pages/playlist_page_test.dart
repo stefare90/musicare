@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
@@ -12,6 +13,7 @@ import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/details/playlist/presentation/pages/playlist_page.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
@@ -36,6 +38,7 @@ void main() {
   late MockMetadataPlugin mockMetadata;
   late MockPlaylistService mockPlaylist;
   late MockPlayerCubit mockPlayerCubit;
+  late AccountCubit accountCubit;
 
   final testPlaylist = Playlist(
     id: 'pl1',
@@ -81,6 +84,9 @@ void main() {
     sl.registerLazySingleton<PlaylistRepository>(
       () => PlaylistRepository(mockEngine),
     );
+    accountCubit = buildMockAccountCubit(
+      state: testAccountState(isAuthenticated: true, userId: 'me'),
+    );
 
     when(() => mockEngine.hasMetadata).thenReturn(true);
     when(() => mockEngine.metadata).thenReturn(mockMetadata);
@@ -99,10 +105,25 @@ void main() {
   });
 
   Widget buildTestableWidget({MetadataPluginCubit? metadataCubit}) {
-    return MaterialApp(
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => PlaylistPage(playlist: testPlaylist),
+        ),
+        GoRoute(
+          path: '/library',
+          builder: (context, state) =>
+              const Scaffold(body: Text('Library Page')),
+        ),
+      ],
+    );
+    return MaterialApp.router(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: NoticeListener(
+      routerConfig: router,
+      builder: (context, child) => NoticeListener(
         notices: sl<NoticeBus>().notices,
         child: MultiBlocProvider(
           providers: [
@@ -111,8 +132,9 @@ void main() {
               value: metadataCubit ?? buildMockMetadataPluginCubit(),
             ),
             BlocProvider<SavedMediaCubit>.value(value: sl<SavedMediaCubit>()),
+            BlocProvider<AccountCubit>.value(value: accountCubit),
           ],
-          child: PlaylistPage(playlist: testPlaylist),
+          child: child ?? const SizedBox.shrink(),
         ),
       ),
     );
@@ -153,6 +175,9 @@ void main() {
     testWidgets('swiping a track asks for confirmation and removes it', (
       tester,
     ) async {
+      when(
+        () => accountCubit.state,
+      ).thenReturn(testAccountState(isAuthenticated: true, userId: 'u1'));
       when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
         (_) async => PaginatedResult<Track>(
           items: [testTrack],
@@ -181,6 +206,9 @@ void main() {
     });
 
     testWidgets('cancelling the removal keeps the track', (tester) async {
+      when(
+        () => accountCubit.state,
+      ).thenReturn(testAccountState(isAuthenticated: true, userId: 'u1'));
       when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
         (_) async => PaginatedResult<Track>(
           items: [testTrack],
@@ -201,6 +229,122 @@ void main() {
 
       verifyNever(() => mockPlaylist.removeTracks(any(), any()));
       expect(find.text('Song A'), findsOneWidget);
+    });
+
+    testWidgets(
+      'a playlist owned by someone else does not allow removing tracks',
+      (tester) async {
+        when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [testTrack],
+            total: 1,
+            offset: 0,
+            limit: 20,
+          ),
+        );
+
+        await tester.pumpWidget(buildTestableWidget());
+        await tester.pumpAndSettle();
+
+        expect(find.byType(Dismissible), findsNothing);
+
+        await tester.drag(find.text('Song A'), const Offset(-500, 0));
+        await tester.pumpAndSettle();
+
+        verifyNever(() => mockPlaylist.removeTracks(any(), any()));
+        expect(find.text('Song A'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'an owned playlist offers delete, confirms and returns to the library',
+      (tester) async {
+        when(
+          () => accountCubit.state,
+        ).thenReturn(testAccountState(isAuthenticated: true, userId: 'u1'));
+        when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [testTrack],
+            total: 1,
+            offset: 0,
+            limit: 20,
+          ),
+        );
+        when(() => mockPlaylist.deletePlaylist('pl1')).thenAnswer((_) async {});
+
+        await tester.pumpWidget(buildTestableWidget());
+        await tester.pumpAndSettle();
+
+        expect(find.byIcon(Icons.favorite_border_rounded), findsNothing);
+
+        await tester.tap(find.byIcon(Icons.more_vert_rounded));
+        await tester.pumpAndSettle();
+        expect(find.text('Delete Playlist'), findsOneWidget);
+        expect(find.text('Save Playlist'), findsNothing);
+
+        await tester.tap(find.text('Delete Playlist'));
+        await tester.pumpAndSettle();
+        expect(find.text('Delete playlist?'), findsOneWidget);
+
+        await tester.tap(
+          find.widgetWithText(ElevatedButton, 'Delete Playlist'),
+        );
+        await tester.pumpAndSettle();
+
+        verify(() => mockPlaylist.deletePlaylist('pl1')).called(1);
+        expect(find.text('Library Page'), findsOneWidget);
+      },
+    );
+
+    testWidgets('cancelling the delete keeps the playlist', (tester) async {
+      when(
+        () => accountCubit.state,
+      ).thenReturn(testAccountState(isAuthenticated: true, userId: 'u1'));
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: [testTrack],
+          total: 1,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.more_vert_rounded));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete Playlist'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => mockPlaylist.deletePlaylist(any()));
+      expect(find.text('Top 50 Hits'), findsNWidgets(2));
+    });
+
+    testWidgets('a playlist owned by someone else offers save, not delete', (
+      tester,
+    ) async {
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: [testTrack],
+          total: 1,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.favorite_border_rounded), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.more_vert_rounded));
+      await tester.pumpAndSettle();
+      expect(find.text('Save Playlist'), findsOneWidget);
+      expect(find.text('Delete Playlist'), findsNothing);
     });
   });
 }

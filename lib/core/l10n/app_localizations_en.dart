@@ -179,6 +179,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Plugin files were not found on local disk.';
 
   @override
+  String get pluginErrorResourceNotFound => 'The requested item was not found.';
+
+  @override
   String get pluginErrorNotLoaded => 'No active metadata plugin is loaded.';
 
   @override
@@ -508,6 +511,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String removeFromPlaylistMessage(Object track) {
     return 'Remove \"$track\" from this playlist?';
+  }
+
+  @override
+  String get deletePlaylistTitle => 'Delete playlist?';
+
+  @override
+  String deletePlaylistMessage(Object playlist) {
+    return 'Delete \"$playlist\"? This can\'t be undone.';
   }
 
   @override

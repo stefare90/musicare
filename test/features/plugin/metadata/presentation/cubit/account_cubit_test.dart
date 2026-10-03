@@ -43,7 +43,7 @@ void main() {
     await cubit.initialize();
 
     expect(cubit.state.isAuthenticated, isTrue);
-    expect(cubit.state.userName, 'listener');
+    expect(cubit.state.userId, 'listener');
   });
 
   test('initialize stays signed out when not authenticated', () async {
@@ -52,7 +52,7 @@ void main() {
     await cubit.initialize();
 
     expect(cubit.state.isAuthenticated, isFalse);
-    expect(cubit.state.userName, isNull);
+    expect(cubit.state.userId, isNull);
   });
 
   test('signIn authenticates and reports success with the user name', () async {
@@ -64,7 +64,7 @@ void main() {
 
     expect(result, AuthResult.authenticated);
     expect(cubit.state.isAuthenticated, isTrue);
-    expect(cubit.state.userName, 'listener');
+    expect(cubit.state.userId, 'listener');
   });
 
   test('signIn reports cancellation when the form is dismissed', () async {
@@ -97,7 +97,7 @@ void main() {
     await cubit.signOut();
 
     expect(cubit.state.isAuthenticated, isFalse);
-    expect(cubit.state.userName, isNull);
+    expect(cubit.state.userId, isNull);
   });
 
   test('authenticationChanges drops a repeated sign-in value', () async {
@@ -108,7 +108,7 @@ void main() {
     when(() => user.me()).thenAnswer((_) async => {'user_id': 'listener'});
     await cubit.initialize();
     // A different identity but the same sign-in value must not be announced.
-    cubit.emit(const AccountState(isAuthenticated: true, userName: 'renamed'));
+    cubit.emit(const AccountState(isAuthenticated: true, userId: 'renamed'));
     await Future<void>.delayed(Duration.zero);
 
     expect(seen, [true]);

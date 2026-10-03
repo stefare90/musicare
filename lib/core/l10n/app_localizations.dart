@@ -418,6 +418,12 @@ abstract class AppLocalizations {
   /// **'Plugin files were not found on local disk.'**
   String get pluginErrorNotFound;
 
+  /// No description provided for @pluginErrorResourceNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'The requested item was not found.'**
+  String get pluginErrorResourceNotFound;
+
   /// No description provided for @pluginErrorNotLoaded.
   ///
   /// In en, this message translates to:
@@ -1011,6 +1017,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove \"{track}\" from this playlist?'**
   String removeFromPlaylistMessage(Object track);
+
+  /// No description provided for @deletePlaylistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete playlist?'**
+  String get deletePlaylistTitle;
+
+  /// No description provided for @deletePlaylistMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{playlist}\"? This can\'t be undone.'**
+  String deletePlaylistMessage(Object playlist);
 
   /// No description provided for @noPlaylistsYet.
   ///

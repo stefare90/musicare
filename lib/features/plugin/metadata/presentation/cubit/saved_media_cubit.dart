@@ -176,6 +176,11 @@ class SavedMediaCubit extends SafeCubit<SavedMediaState> {
       // could read the server before the change is committed and stay stale.
       _snapshot[type] = optimistic;
       _changes.add(type);
+      // Saving a playlist may persist a different id (a copy), so the requested
+      // id is not authoritative: re-read the library and settle the set.
+      if (type == MediaItemType.playlist) {
+        await _load(type);
+      }
     } catch (e) {
       _snapshot[type] = previous;
       emit(state.withIds(type, previous));

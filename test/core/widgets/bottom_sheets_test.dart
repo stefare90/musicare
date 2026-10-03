@@ -174,6 +174,7 @@ void main() {
                 context,
                 testPlaylist,
                 isSaved: true,
+                onToggleSave: () {},
               ),
               child: const Text('Show Playlist'),
             ),
@@ -183,6 +184,38 @@ void main() {
       await tester.tap(find.text('Show Playlist'));
       await tester.pumpAndSettle();
       expect(find.text('Remove Playlist'), findsOneWidget);
+    });
+
+    testWidgets('Playlist options show delete only when a delete handler is given', (
+      tester,
+    ) async {
+      var deleteTapped = false;
+
+      await tester.pumpWidget(
+        buildTestableWidget(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => PlaylistOptionsBottomSheet.show(
+                context,
+                testPlaylist,
+                onDelete: () => deleteTapped = true,
+              ),
+              child: const Text('Show Playlist'),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Show Playlist'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Delete Playlist'), findsOneWidget);
+      expect(find.text('Save Playlist'), findsNothing);
+
+      await tester.tap(find.text('Delete Playlist'));
+      await tester.pumpAndSettle();
+
+      expect(deleteTapped, isTrue);
     });
 
     testWidgets(

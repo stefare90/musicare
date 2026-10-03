@@ -46,7 +46,7 @@ void main() {
       buildTestableWidget(
         type: PluginType.metadata,
         authCubit: buildMockAccountCubit(
-          state: testAccountState(isAuthenticated: true, userName: 'listener'),
+          state: testAccountState(isAuthenticated: true, userId: 'listener'),
         ),
       ),
     );

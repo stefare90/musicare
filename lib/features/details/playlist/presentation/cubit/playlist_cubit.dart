@@ -74,6 +74,18 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
     }
   }
 
+  Future<bool> deletePlaylist() async {
+    final current = state;
+    if (current is! PlaylistLoadedState) return false;
+    try {
+      await _playlist.deletePlaylist(current.playlist.id);
+      return true;
+    } catch (e) {
+      _notices.emit(e);
+      return false;
+    }
+  }
+
   Future<void> loadMoreTracks() async {
     if (state is! PlaylistLoadedState || _isFetchingMoreTracks) return;
     final currentState = state as PlaylistLoadedState;

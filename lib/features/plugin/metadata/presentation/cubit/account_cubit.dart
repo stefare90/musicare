@@ -36,16 +36,16 @@ class AccountCubit extends SafeCubit<AccountState> implements AccountSession {
   Future<void> initialize() async {
     if (!_auth.hasMetadata) return;
     final isAuthenticated = await _auth.isAuthenticated();
-    final userName = isAuthenticated ? await _auth.userName() : null;
-    emit(AccountState(isAuthenticated: isAuthenticated, userName: userName));
+    final userId = isAuthenticated ? await _auth.userId() : null;
+    emit(AccountState(isAuthenticated: isAuthenticated, userId: userId));
   }
 
   Future<AuthResult> signIn() async {
     try {
       await _auth.authenticate();
       final isAuthenticated = await _auth.isAuthenticated();
-      final userName = isAuthenticated ? await _auth.userName() : null;
-      emit(AccountState(isAuthenticated: isAuthenticated, userName: userName));
+      final userId = isAuthenticated ? await _auth.userId() : null;
+      emit(AccountState(isAuthenticated: isAuthenticated, userId: userId));
       return isAuthenticated ? AuthResult.authenticated : AuthResult.cancelled;
     } catch (_) {
       return AuthResult.failed;

@@ -24,7 +24,8 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ✅ Album, artist and playlist pages with cover header, track list, discography, "Fans Also Like" and pagination.
 ✅ Contextual queue playback from any track list and save toggle in the header.
 ✅ Initial "saved" state read from the provider on detail pages, so the toggle reflects the real library.
-✅ Remove tracks from a playlist by swiping the row, behind a confirmation dialog.
+✅ Remove tracks from a playlist you own by swiping the row, behind a confirmation dialog.
+✅ Playlist actions reflect ownership: "Delete playlist" (confirmation) for playlists you own, save/remove for the others.
 
 ## 🎧 Player (`lib/features/player/`)
 ✅ Native background playback with notification, lock-screen controls and media buttons.

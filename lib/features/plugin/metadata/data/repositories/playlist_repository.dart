@@ -1,8 +1,9 @@
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
-/// Data access for playlist writes: creation (resolving the signed-in user)
-/// and adding tracks. The callers orchestrate the flows and surface errors.
+/// Data access for playlist writes: creation (resolving the signed-in user),
+/// adding/removing tracks and deletion. Callers orchestrate the flows and
+/// surface errors.
 class PlaylistRepository {
   PlaylistRepository(this._engine);
 
@@ -36,4 +37,7 @@ class PlaylistRepository {
 
   Future<void> removeTracks(String playlistId, List<String> trackIds) =>
       _engine.metadata.playlist.removeTracks(playlistId, trackIds);
+
+  Future<void> deletePlaylist(String playlistId) =>
+      _engine.metadata.playlist.deletePlaylist(playlistId);
 }

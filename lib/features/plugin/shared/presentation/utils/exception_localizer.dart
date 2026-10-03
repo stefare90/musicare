@@ -28,6 +28,7 @@ extension ExceptionLocalizer on Object {
 
       // Metadata SDK
       MetadataAuthRequiredException() => context.l10n.pluginErrorAuthRequired,
+      MetadataNotFoundException() => context.l10n.pluginErrorResourceNotFound,
       MetadataTransportException() => context.l10n.pluginErrorNetwork,
       MetadataRateLimitedException() => context.l10n.pluginErrorRateLimited,
 

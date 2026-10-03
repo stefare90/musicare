@@ -5,6 +5,7 @@ import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/models/media_type.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
+import 'package:music_are/core/router/app_navigator.dart';
 import 'package:music_are/core/widgets/bottom_sheets/bottom_sheets.dart';
 import 'package:music_are/core/widgets/dialogs.dart';
 import 'package:music_are/core/widgets/error_card.dart';
@@ -12,6 +13,7 @@ import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
 import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
 import 'package:music_are/features/library/presentation/utils/track_actions.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
@@ -54,21 +56,34 @@ class _PlaylistView extends StatelessWidget {
           );
         }
         if (state is PlaylistLoadedState) {
-          final isSaved = context.select<SavedMediaCubit, bool>(
-            (c) => c.isPlaylistSaved(state.playlist.id),
+          final playlist = state.playlist;
+          final currentUserId = context.select<AccountCubit, String?>(
+            (c) => c.state.userId,
           );
+          final isOwned =
+              currentUserId != null && playlist.owner.id == currentUserId;
+          final isSaved =
+              !isOwned &&
+              context.select<SavedMediaCubit, bool>(
+                (c) => c.isPlaylistSaved(playlist.id),
+              );
           return SliverMediaScaffold(
             metadata: state.metadata,
             isSaved: isSaved,
-            onSaveTap: () =>
-                context.read<SavedMediaCubit>().togglePlaylist(state.playlist),
+            onSaveTap: isOwned
+                ? null
+                : () => context.read<SavedMediaCubit>().togglePlaylist(playlist),
             onOptionsTap: () => PlaylistOptionsBottomSheet.show(
               context,
-              state.playlist,
+              playlist,
               isSaved: isSaved,
-              onToggleSave: () => context
-                  .read<SavedMediaCubit>()
-                  .togglePlaylist(state.playlist),
+              onToggleSave: isOwned
+                  ? null
+                  : () =>
+                        context.read<SavedMediaCubit>().togglePlaylist(playlist),
+              onDelete: isOwned
+                  ? () => _deletePlaylist(context, playlist)
+                  : null,
             ),
             slivers: [
               SliverTrackList(
@@ -92,14 +107,19 @@ class _PlaylistView extends StatelessWidget {
                 },
                 onTrackOptionsTap: (track) =>
                     TrackActions.showOptions(context, track),
-                confirmTrackDismiss: (track) => Dialogs.confirm(
-                  context,
-                  title: context.l10n.removeFromPlaylistTitle,
-                  message: context.l10n.removeFromPlaylistMessage(track.name),
-                  confirmLabel: context.l10n.remove,
-                ),
-                onTrackDismissed: (track) =>
-                    _removeTrack(context, state.playlist, track),
+                confirmTrackDismiss: isOwned
+                    ? (track) => Dialogs.confirm(
+                        context,
+                        title: context.l10n.removeFromPlaylistTitle,
+                        message: context.l10n.removeFromPlaylistMessage(
+                          track.name,
+                        ),
+                        confirmLabel: context.l10n.remove,
+                      )
+                    : null,
+                onTrackDismissed: isOwned
+                    ? (track) => _removeTrack(context, playlist, track)
+                    : null,
               ),
             ],
           );
@@ -107,6 +127,25 @@ class _PlaylistView extends StatelessWidget {
         return SliverMediaScaffold(metadata: state.metadata, isLoading: true);
       },
     );
+  }
+
+  Future<void> _deletePlaylist(BuildContext context, Playlist playlist) async {
+    final confirmed = await Dialogs.confirm(
+      context,
+      title: context.l10n.deletePlaylistTitle,
+      message: context.l10n.deletePlaylistMessage(playlist.name),
+      confirmLabel: context.l10n.deletePlaylist,
+    );
+    if (!confirmed || !context.mounted) return;
+
+    final cubit = context.read<PlaylistCubit>();
+    final saved = context.read<SavedMediaCubit>();
+    final deleted = await cubit.deletePlaylist();
+    if (!deleted || !context.mounted) return;
+
+    await saved.refresh(MediaItemType.playlist);
+    if (!context.mounted) return;
+    AppNavigator.toLibrary(context);
   }
 
   Future<void> _removeTrack(

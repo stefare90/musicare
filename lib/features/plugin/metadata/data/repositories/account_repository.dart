@@ -18,7 +18,7 @@ class AccountRepository {
   Future<void> logout() => _engine.metadata.auth.logout();
 
   /// The provider's user id (its user name), or null when unavailable.
-  Future<String?> userName() async {
+  Future<String?> userId() async {
     final me = await _engine.metadata.user.me();
     final userId = me['user_id'];
     return userId is String && userId.isNotEmpty ? userId : null;

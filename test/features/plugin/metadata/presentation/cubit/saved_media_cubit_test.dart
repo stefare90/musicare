@@ -20,6 +20,8 @@ class MockTrackService extends Mock implements ITrack {}
 
 class MockAlbumService extends Mock implements IAlbum {}
 
+class MockPlaylistService extends Mock implements IPlaylist {}
+
 void main() {
   late MockPluginEngine engine;
   late MockMetadataPlugin metadata;
@@ -57,6 +59,14 @@ void main() {
     externalUri: '',
     totalTracks: 1,
     albumType: AlbumType.album,
+  );
+
+  const originalPlaylist = Playlist(
+    id: 'pl-original',
+    name: 'Weekly Exploration',
+    description: '',
+    externalUri: '',
+    owner: User(id: 'other', name: 'other', externalUri: ''),
   );
 
   setUp(() {
@@ -206,6 +216,41 @@ void main() {
     verifyNever(() => tracks.save(any()));
   });
 
+  test('a playlist save re-reads the library instead of trusting the id', () async {
+    final playlistService = MockPlaylistService();
+    when(() => metadata.playlist).thenReturn(playlistService);
+    when(() => playlistService.save('pl-original')).thenAnswer((_) async {});
+
+    await signIn();
+
+    // The provider saved a copy under a different id.
+    const copy = Playlist(
+      id: 'pl-copy',
+      name: 'Weekly Exploration',
+      description: '',
+      externalUri: '',
+      owner: User(id: 'me', name: 'me', externalUri: ''),
+    );
+    when(
+      () => user.savedPlaylists(
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer(
+      (_) async => const PaginatedResult<Playlist>(
+        items: [copy],
+        total: 1,
+        offset: 0,
+        limit: 100,
+      ),
+    );
+
+    await cubit.togglePlaylist(originalPlaylist);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(cubit.state.playlistIds, {'pl-copy'});
+  });
+
   test('reset clears the cached IDs', () async {
     cubit.emit(cubit.state.withIds(MediaItemType.track, {'t1'}));
     cubit.reset();
@@ -316,7 +361,7 @@ void main() {
       ),
     ).thenAnswer((_) => hanging.future);
 
-    authCubit.set(testAccountState(isAuthenticated: true, userName: 'A'));
+    authCubit.set(testAccountState(isAuthenticated: true, userId: 'A'));
     await Future<void>.delayed(const Duration(milliseconds: 1));
 
     authCubit.set(testAccountState(isAuthenticated: false));
@@ -344,7 +389,7 @@ void main() {
         limit: 100,
       ),
     );
-    authCubit.set(testAccountState(isAuthenticated: true, userName: 'B'));
+    authCubit.set(testAccountState(isAuthenticated: true, userId: 'B'));
     await Future<void>.delayed(const Duration(milliseconds: 1));
 
     hanging.complete(

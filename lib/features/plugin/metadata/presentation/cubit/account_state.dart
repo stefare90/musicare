@@ -1,7 +1,7 @@
 /// The signed-in identity of the active metadata provider.
 class AccountState {
-  const AccountState({this.isAuthenticated = false, this.userName});
+  const AccountState({this.isAuthenticated = false, this.userId});
 
   final bool isAuthenticated;
-  final String? userName;
+  final String? userId;
 }

@@ -17,16 +17,17 @@ abstract class PlaylistOptionsBottomSheet {
       context: context,
       item: playlist,
       options: [
-        ListTile(
-          leading: Icon(
-            isSaved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+        if (onToggleSave != null)
+          ListTile(
+            leading: Icon(
+              isSaved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+            ),
+            title: Text(isSaved ? l10n.removePlaylist : l10n.savePlaylist),
+            onTap: () {
+              Navigator.of(context).pop();
+              onToggleSave.call();
+            },
           ),
-          title: Text(isSaved ? l10n.removePlaylist : l10n.savePlaylist),
-          onTap: () {
-            Navigator.of(context).pop();
-            onToggleSave?.call();
-          },
-        ),
         ListTile(
           leading: const Icon(Icons.share_rounded),
           title: Text(l10n.sharePlaylist),

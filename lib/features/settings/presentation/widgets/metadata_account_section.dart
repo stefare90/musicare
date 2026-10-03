@@ -26,7 +26,7 @@ class MetadataAccountSection extends StatelessWidget {
         return BlocBuilder<AccountCubit, AccountState>(
           builder: (context, auth) {
             final isAuthenticated = auth.isAuthenticated;
-            final userName = auth.userName;
+            final userId = auth.userId;
 
             return Column(
               mainAxisSize: MainAxisSize.min,
@@ -34,10 +34,10 @@ class MetadataAccountSection extends StatelessWidget {
               children: [
                 SettingsSectionHeader(label: l10n.pluginAccountSection),
                 ListTile(
-                  leading: Monogram(name: userName, radius: 20.0),
+                  leading: Monogram(name: userId, radius: 20.0),
                   title: Text(
                     isAuthenticated
-                        ? (userName ?? l10n.accountSignedIn)
+                        ? (userId ?? l10n.accountSignedIn)
                         : l10n.accountNotSignedIn,
                   ),
                   trailing: isAuthenticated

@@ -116,7 +116,7 @@ void main() {
   ) async {
     when(
       () => authCubit.state,
-    ).thenReturn(testAccountState(isAuthenticated: true, userName: 'me'));
+    ).thenReturn(testAccountState(isAuthenticated: true, userId: 'me'));
     when(
       () => user.savedPlaylists(
         offset: any(named: 'offset'),
@@ -148,7 +148,7 @@ void main() {
   ) async {
     when(
       () => authCubit.state,
-    ).thenReturn(testAccountState(isAuthenticated: true, userName: 'me'));
+    ).thenReturn(testAccountState(isAuthenticated: true, userId: 'me'));
     when(
       () => user.savedPlaylists(
         offset: any(named: 'offset'),
@@ -187,7 +187,7 @@ void main() {
   ) async {
     when(
       () => authCubit.state,
-    ).thenReturn(testAccountState(isAuthenticated: true, userName: 'me'));
+    ).thenReturn(testAccountState(isAuthenticated: true, userId: 'me'));
     when(
       () => user.savedPlaylists(
         offset: any(named: 'offset'),
