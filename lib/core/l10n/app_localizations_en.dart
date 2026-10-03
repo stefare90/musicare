@@ -492,7 +492,23 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String removedFromPlaylist(Object playlist) {
+    return 'Removed from $playlist';
+  }
+
+  @override
   String get addedToQueue => 'Added to queue';
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get removeFromPlaylistTitle => 'Remove from playlist?';
+
+  @override
+  String removeFromPlaylistMessage(Object track) {
+    return 'Remove \"$track\" from this playlist?';
+  }
 
   @override
   String get noPlaylistsYet => 'No playlists yet';

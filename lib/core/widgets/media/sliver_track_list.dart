@@ -21,6 +21,8 @@ class SliverTrackList extends StatelessWidget {
   final VoidCallback? onLoadMore;
   final void Function(Track track)? onTrackTap;
   final void Function(Track track)? onTrackOptionsTap;
+  final Future<bool> Function(Track track)? confirmTrackDismiss;
+  final void Function(Track track)? onTrackDismissed;
 
   const SliverTrackList({
     super.key,
@@ -36,6 +38,8 @@ class SliverTrackList extends StatelessWidget {
     this.onLoadMore,
     this.onTrackTap,
     this.onTrackOptionsTap,
+    this.confirmTrackDismiss,
+    this.onTrackDismissed,
   });
 
   bool get _shouldShowTrackNumbers {
@@ -79,7 +83,7 @@ class SliverTrackList extends StatelessWidget {
         }
         final track = tracks[index];
         final isPlaying = activeTrackId != null && activeTrackId == track.id;
-        return TrackListTile(
+        final tile = TrackListTile(
           track: track,
           index: _shouldShowTrackNumbers ? index + 1 : null,
           isPlaying: isPlaying,
@@ -87,6 +91,25 @@ class SliverTrackList extends StatelessWidget {
           onOptionsTap: onTrackOptionsTap != null
               ? () => onTrackOptionsTap!(track)
               : null,
+        );
+        if (onTrackDismissed == null) return tile;
+        return Dismissible(
+          key: ValueKey('track_dismiss_${index}_${track.id}'),
+          direction: DismissDirection.endToStart,
+          background: Container(
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            color: context.colorScheme.error,
+            child: Icon(
+              Icons.delete_outline_rounded,
+              color: context.colorScheme.onError,
+            ),
+          ),
+          confirmDismiss: confirmTrackDismiss != null
+              ? (_) => confirmTrackDismiss!(track)
+              : null,
+          onDismissed: (_) => onTrackDismissed!(track),
+          child: tile,
         );
       }, childCount: tracks.length + (hasMore ? 1 : 0)),
     );

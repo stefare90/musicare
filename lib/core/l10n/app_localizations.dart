@@ -982,11 +982,35 @@ abstract class AppLocalizations {
   /// **'Added to {playlist}'**
   String addedToPlaylist(Object playlist);
 
+  /// No description provided for @removedFromPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from {playlist}'**
+  String removedFromPlaylist(Object playlist);
+
   /// No description provided for @addedToQueue.
   ///
   /// In en, this message translates to:
   /// **'Added to queue'**
   String get addedToQueue;
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
+
+  /// No description provided for @removeFromPlaylistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from playlist?'**
+  String get removeFromPlaylistTitle;
+
+  /// No description provided for @removeFromPlaylistMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{track}\" from this playlist?'**
+  String removeFromPlaylistMessage(Object track);
 
   /// No description provided for @noPlaylistsYet.
   ///

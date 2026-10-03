@@ -3,15 +3,17 @@ import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
 class PlaylistCubit extends SafeCubit<PlaylistState> {
   final MediaRepository _media;
+  final PlaylistRepository _playlist;
   final NoticeBus _notices;
   bool _isFetchingMoreTracks = false;
 
-  PlaylistCubit(this._media, this._notices)
+  PlaylistCubit(this._media, this._playlist, this._notices)
     : super(PlaylistInitialState());
 
   Future<void> loadPlaylist(Playlist playlist) async {
@@ -39,6 +41,36 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
     } catch (e) {
       emit(PlaylistErrorState(error: e, playlist: playlist));
       if (e.needsNotice) _notices.emit(e);
+    }
+  }
+
+  Future<bool> removeTrack(Track track) async {
+    final current = state;
+    if (current is! PlaylistLoadedState) return false;
+    final previous = current.tracks;
+    final remaining = previous.items
+        .where((item) => item.id != track.id)
+        .toList();
+    if (remaining.length == previous.items.length) return false;
+
+    emit(
+      current.copyWith(
+        tracks: PaginatedResult<Track>(
+          items: remaining,
+          total: previous.total - 1,
+          offset: previous.offset,
+          limit: previous.limit,
+        ),
+      ),
+    );
+
+    try {
+      await _playlist.removeTracks(current.playlist.id, [track.id]);
+      return true;
+    } catch (e) {
+      emit(current.copyWith(tracks: previous));
+      _notices.emit(e);
+      return false;
     }
   }
 

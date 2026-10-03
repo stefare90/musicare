@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
@@ -53,7 +54,11 @@ void main() {
       mockPlaylistService = MockPlaylistService();
 
       noticeBus = NoticeBus();
-      cubit = PlaylistCubit(MediaRepository(mockPluginEngine), noticeBus);
+      cubit = PlaylistCubit(
+        MediaRepository(mockPluginEngine),
+        PlaylistRepository(mockPluginEngine),
+        noticeBus,
+      );
     });
 
     tearDown(() {
@@ -229,5 +234,69 @@ void main() {
       expect(notices, isEmpty);
       await subscription.cancel();
     });
+
+    test('removeTrack drops the track and writes the removal', () async {
+      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+      when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
+      when(
+        () => mockPlaylistService.removeTracks('pl1', ['t1']),
+      ).thenAnswer((_) async {});
+
+      cubit.emit(
+        PlaylistLoadedState(
+          playlist: testPlaylist,
+          tracks: PaginatedResult<Track>(
+            items: [testTrack],
+            total: 1,
+            offset: 0,
+            limit: 20,
+          ),
+        ),
+      );
+
+      final removed = await cubit.removeTrack(testTrack);
+
+      expect(removed, isTrue);
+      final state = cubit.state as PlaylistLoadedState;
+      expect(state.tracks.items, isEmpty);
+      expect(state.tracks.total, 0);
+      verify(() => mockPlaylistService.removeTracks('pl1', ['t1'])).called(1);
+    });
+
+    test(
+      'removeTrack restores the track and notifies when the write fails',
+      () async {
+        when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+        when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
+        final error = Exception('write failed');
+        when(
+          () => mockPlaylistService.removeTracks('pl1', ['t1']),
+        ).thenAnswer((_) async => throw error);
+
+        cubit.emit(
+          PlaylistLoadedState(
+            playlist: testPlaylist,
+            tracks: PaginatedResult<Track>(
+              items: [testTrack],
+              total: 1,
+              offset: 0,
+              limit: 20,
+            ),
+          ),
+        );
+
+        final notices = <Object>[];
+        final subscription = noticeBus.notices.listen(notices.add);
+        final removed = await cubit.removeTrack(testTrack);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(removed, isFalse);
+        final state = cubit.state as PlaylistLoadedState;
+        expect(state.tracks.items, hasLength(1));
+        expect(state.tracks.total, 1);
+        expect(notices.single, same(error));
+        await subscription.cancel();
+      },
+    );
   });
 }

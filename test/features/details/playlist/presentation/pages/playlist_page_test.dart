@@ -6,6 +6,7 @@ import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/details/playlist/presentation/pages/playlist_page.dart';
@@ -44,6 +45,23 @@ void main() {
     owner: User(id: 'u1', name: 'Spotify', externalUri: ''),
   );
 
+  final testTrack = Track(
+    id: 't1',
+    name: 'Song A',
+    externalUri: '',
+    artists: [Artist(id: 'a1', name: 'Artist', externalUri: '')],
+    album: Album(
+      id: 'al1',
+      name: 'Album',
+      artists: [],
+      releaseDate: '',
+      externalUri: '',
+      totalTracks: 1,
+      albumType: AlbumType.album,
+    ),
+    durationMs: 180000,
+  );
+
   setUp(() async {
     await sl.reset();
 
@@ -57,7 +75,12 @@ void main() {
 
     sl.registerLazySingleton<MetadataPluginEngine>(() => mockEngine);
     sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
-  sl.registerLazySingleton<MediaRepository>(() => MediaRepository(mockEngine));
+    sl.registerLazySingleton<MediaRepository>(
+      () => MediaRepository(mockEngine),
+    );
+    sl.registerLazySingleton<PlaylistRepository>(
+      () => PlaylistRepository(mockEngine),
+    );
 
     when(() => mockEngine.hasMetadata).thenReturn(true);
     when(() => mockEngine.metadata).thenReturn(mockMetadata);
@@ -125,6 +148,59 @@ void main() {
         ),
         findsOneWidget,
       );
+    });
+
+    testWidgets('swiping a track asks for confirmation and removes it', (
+      tester,
+    ) async {
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: [testTrack],
+          total: 1,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+      when(
+        () => mockPlaylist.removeTracks('pl1', ['t1']),
+      ).thenAnswer((_) async {});
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.text('Song A'), const Offset(-500, 0));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Remove from playlist?'), findsOneWidget);
+
+      await tester.tap(find.text('Remove'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockPlaylist.removeTracks('pl1', ['t1'])).called(1);
+      expect(find.text('Removed from Top 50 Hits'), findsOneWidget);
+    });
+
+    testWidgets('cancelling the removal keeps the track', (tester) async {
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: [testTrack],
+          total: 1,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.text('Song A'), const Offset(-500, 0));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => mockPlaylist.removeTracks(any(), any()));
+      expect(find.text('Song A'), findsOneWidget);
     });
   });
 }
