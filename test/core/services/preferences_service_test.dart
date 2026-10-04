@@ -40,5 +40,29 @@ void main() {
       expect(service.getActivePluginId(), isNull);
       expect(prefs.getString('active_metadata_plugin_id'), isNull);
     });
+
+    test('metadata user id is cached per active plugin', () async {
+      await service.setMetadataUserId('listener');
+      expect(service.getMetadataUserId(), 'listener');
+      expect(
+        prefs.getString('metadata_user_id_org.gyawun.musicbrainz'),
+        'listener',
+      );
+
+      await service.setActivePluginId('org.gyawun.spotify');
+      expect(service.getMetadataUserId(), isNull);
+
+      await service.setMetadataUserId('other');
+      await service.setActivePluginId('org.gyawun.musicbrainz');
+      expect(service.getMetadataUserId(), 'listener');
+    });
+
+    test('removeMetadataUserId clears the cached identity', () async {
+      await service.setMetadataUserId('listener');
+
+      await service.removeMetadataUserId();
+
+      expect(service.getMetadataUserId(), isNull);
+    });
   });
 }

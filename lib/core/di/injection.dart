@@ -73,7 +73,7 @@ Future<void> initDependencies() async {
     ),
   );
   sl.registerLazySingleton<AccountRepository>(
-    () => AccountRepository(sl<MetadataPluginEngine>()),
+    () => AccountRepository(sl<MetadataPluginEngine>(), sl<PreferencesService>()),
   );
   sl.registerLazySingleton<PluginRepository>(
     () => PluginRepository(sl<MetadataPluginEngine>()),

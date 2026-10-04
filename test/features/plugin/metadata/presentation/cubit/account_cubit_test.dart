@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:music_are/core/services/preferences_service.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/account_repository.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
@@ -14,19 +15,38 @@ class MockAuthService extends Mock implements IAuth {}
 
 class MockUserService extends Mock implements IUser {}
 
+class MockPreferencesService extends Mock implements PreferencesService {}
+
 void main() {
   late MockPluginEngine engine;
   late MockMetadataPlugin metadata;
   late MockAuthService auth;
   late MockUserService user;
+  late MockPreferencesService preferences;
   late AccountCubit cubit;
+  String? cachedUserId;
 
   setUp(() {
     engine = MockPluginEngine();
     metadata = MockMetadataPlugin();
     auth = MockAuthService();
     user = MockUserService();
-    cubit = AccountCubit(AccountRepository(engine));
+    preferences = MockPreferencesService();
+    cachedUserId = null;
+
+    when(() => preferences.getMetadataUserId()).thenAnswer((_) => cachedUserId);
+    when(() => preferences.setMetadataUserId(any())).thenAnswer((
+      invocation,
+    ) async {
+      cachedUserId = invocation.positionalArguments.first as String;
+      return true;
+    });
+    when(() => preferences.removeMetadataUserId()).thenAnswer((_) async {
+      cachedUserId = null;
+      return true;
+    });
+
+    cubit = AccountCubit(AccountRepository(engine, preferences));
 
     when(() => engine.hasMetadata).thenReturn(true);
     when(() => engine.metadata).thenReturn(metadata);
@@ -41,9 +61,11 @@ void main() {
     when(() => user.me()).thenAnswer((_) async => {'user_id': 'listener'});
 
     await cubit.initialize();
+    await pumpEventQueue();
 
     expect(cubit.state.isAuthenticated, isTrue);
     expect(cubit.state.userId, 'listener');
+    expect(cachedUserId, 'listener');
   });
 
   test('initialize stays signed out when not authenticated', () async {
@@ -61,9 +83,37 @@ void main() {
     when(() => user.me()).thenAnswer((_) async => throw Exception('timeout'));
 
     await cubit.initialize();
+    await pumpEventQueue();
 
     expect(cubit.state.isAuthenticated, isTrue);
     expect(cubit.state.userId, isNull);
+  });
+
+  test('initialize restores the cached identity when the provider is offline',
+      () async {
+    cachedUserId = 'cached-listener';
+    when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
+    when(() => user.me()).thenAnswer((_) async => throw Exception('offline'));
+
+    await cubit.initialize();
+    await pumpEventQueue();
+
+    expect(cubit.state.isAuthenticated, isTrue);
+    expect(cubit.state.userId, 'cached-listener');
+  });
+
+  test('initialize refreshes a stale cached identity', () async {
+    cachedUserId = 'old-name';
+    when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
+    when(() => user.me()).thenAnswer((_) async => {'user_id': 'new-name'});
+
+    await cubit.initialize();
+    expect(cubit.state.userId, 'old-name');
+
+    await pumpEventQueue();
+
+    expect(cubit.state.userId, 'new-name');
+    expect(cachedUserId, 'new-name');
   });
 
   test('signIn authenticates and reports success with the user name', () async {
@@ -76,6 +126,7 @@ void main() {
     expect(result, AuthResult.authenticated);
     expect(cubit.state.isAuthenticated, isTrue);
     expect(cubit.state.userId, 'listener');
+    expect(cachedUserId, 'listener');
   });
 
   test('signIn reports cancellation when the form is dismissed', () async {
@@ -111,16 +162,31 @@ void main() {
     expect(cubit.state.userId, isNull);
   });
 
+  test('signIn falls back to the cached identity when resolution fails',
+      () async {
+    cachedUserId = 'cached-listener';
+    when(() => auth.authenticate()).thenAnswer((_) async {});
+    when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
+    when(() => user.me()).thenAnswer((_) async => throw Exception('timeout'));
+
+    final result = await cubit.signIn();
+
+    expect(result, AuthResult.authenticated);
+    expect(cubit.state.userId, 'cached-listener');
+  });
+
   test('signOut clears the identity', () async {
     when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
     when(() => user.me()).thenAnswer((_) async => {'user_id': 'listener'});
     await cubit.initialize();
+    await pumpEventQueue();
 
     when(() => auth.logout()).thenAnswer((_) async {});
     await cubit.signOut();
 
     expect(cubit.state.isAuthenticated, isFalse);
     expect(cubit.state.userId, isNull);
+    expect(cachedUserId, isNull);
   });
 
   test('authenticationChanges drops a repeated sign-in value', () async {
@@ -130,6 +196,7 @@ void main() {
     when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
     when(() => user.me()).thenAnswer((_) async => {'user_id': 'listener'});
     await cubit.initialize();
+    await pumpEventQueue();
     // A different identity but the same sign-in value must not be announced.
     cubit.emit(const AccountState(isAuthenticated: true, userId: 'renamed'));
     await Future<void>.delayed(Duration.zero);

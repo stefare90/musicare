@@ -36,6 +36,12 @@ class AccountCubit extends SafeCubit<AccountState> implements AccountSession {
   Stream<bool> get authenticationChanges =>
       stream.map((state) => state.isAuthenticated).distinct();
 
+  /// Resolves the sign-in flag locally, then emits at once with the identity
+  /// last known; the provider identity is refreshed in the background.
+  ///
+  /// Reading the identity needs a provider round-trip that can be slow or fail
+  /// (offline boot). Emitting the cached value first keeps the app usable and
+  /// avoids blocking `initialize()` (and therefore `runApp`) on the network.
   Future<void> initialize() async {
     if (!_auth.hasMetadata) return;
     var isAuthenticated = false;
@@ -44,35 +50,48 @@ class AccountCubit extends SafeCubit<AccountState> implements AccountSession {
     } catch (_) {
       // Without the local flag we cannot claim a session; stay signed out.
     }
-    final userId = await _resolveUserId(isAuthenticated);
     if (isClosed) return;
-    emit(AccountState(isAuthenticated: isAuthenticated, userId: userId));
+    emit(
+      AccountState(
+        isAuthenticated: isAuthenticated,
+        userId: isAuthenticated ? _auth.cachedUserId : null,
+      ),
+    );
+
+    if (!isAuthenticated) return;
+    unawaited(_refreshIdentity());
+  }
+
+  /// Resolves the identity from the provider and updates the state if it changed.
+  Future<void> _refreshIdentity() async {
+    try {
+      final userId = await _auth.resolveUserId();
+      if (isClosed || userId == null || userId == state.userId) return;
+      emit(AccountState(isAuthenticated: state.isAuthenticated, userId: userId));
+    } catch (_) {
+      // The cached identity (if any) stays authoritative until the next attempt.
+    }
   }
 
   Future<AuthResult> signIn() async {
     try {
       await _auth.authenticate();
       final isAuthenticated = await _auth.isAuthenticated();
-      final userId = await _resolveUserId(isAuthenticated);
+      String? userId;
+      if (isAuthenticated) {
+        String? resolved;
+        try {
+          resolved = await _auth.resolveUserId();
+        } catch (_) {
+          resolved = null;
+        }
+        userId = resolved ?? _auth.cachedUserId;
+      }
       if (isClosed) return AuthResult.cancelled;
       emit(AccountState(isAuthenticated: isAuthenticated, userId: userId));
       return isAuthenticated ? AuthResult.authenticated : AuthResult.cancelled;
     } catch (_) {
       return AuthResult.failed;
-    }
-  }
-
-  /// Resolves the provider identity, best effort.
-  ///
-  /// The id needs a provider round-trip, which can fail transiently (e.g. the
-  /// provider timing out on its token check). That must never fail the caller:
-  /// the account stays usable, with a null id, until the next resolution.
-  Future<String?> _resolveUserId(bool isAuthenticated) async {
-    if (!isAuthenticated) return null;
-    try {
-      return await _auth.userId();
-    } catch (_) {
-      return null;
     }
   }
 
