@@ -15,6 +15,9 @@ class SliverMediaScaffold extends StatefulWidget {
 
   final VoidCallback? onSaveTap;
   final VoidCallback? onOptionsTap;
+
+  /// Optional element shown right below the header title.
+  final Widget? headerBadge;
   final List<Widget> slivers;
 
   const SliverMediaScaffold({
@@ -25,6 +28,7 @@ class SliverMediaScaffold extends StatefulWidget {
     this.statusCard,
     this.onSaveTap,
     this.onOptionsTap,
+    this.headerBadge,
     this.slivers = const [],
   });
 
@@ -89,7 +93,11 @@ class _SliverMediaScaffoldState extends State<SliverMediaScaffold> {
                 onOptionsTap: widget.onOptionsTap,
               ),
             if (metadata != null)
-              SliverMediaHeader(meta: metadata, titleKey: _largeTitleKey),
+              SliverMediaHeader(
+                meta: metadata,
+                titleKey: _largeTitleKey,
+                badge: widget.headerBadge,
+              ),
             if (widget.statusCard != null)
               SliverFillRemaining(
                 hasScrollBody: false,

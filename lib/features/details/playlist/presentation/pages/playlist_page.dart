@@ -14,6 +14,7 @@ import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
 import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
+import 'package:music_are/features/details/playlist/presentation/widgets/playlist_visibility_badge.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
@@ -71,6 +72,9 @@ class _PlaylistView extends StatelessWidget {
               );
           return SliverMediaScaffold(
             metadata: state.metadata,
+            headerBadge: PlaylistVisibilityBadge(
+              isPublic: isOwned ? playlist.isPublic : null,
+            ),
             isSaved: isSaved,
             onSaveTap: isOwned
                 ? null

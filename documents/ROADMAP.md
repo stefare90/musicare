@@ -26,6 +26,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ✅ Initial "saved" state read from the provider on detail pages, so the toggle reflects the real library.
 ✅ Remove tracks from a playlist you own by swiping the row, behind a confirmation dialog.
 ✅ Playlist actions reflect ownership: "Delete playlist" (confirmation) for playlists you own, save/remove for the others.
+✅ Playlist visibility (Public / Private) shown in the header for the playlists you own.
 
 ## 🎧 Player (`lib/features/player/`)
 ✅ Native background playback with notification, lock-screen controls and media buttons.

@@ -8,9 +8,17 @@ class SliverMediaHeader extends StatelessWidget {
   final MediaItemMetadata meta;
   final Key? titleKey;
 
+  /// Optional element shown right below the title (e.g. playlist visibility).
+  final Widget? badge;
+
   static const double _coverSize = 160.0;
 
-  const SliverMediaHeader({super.key, required this.meta, this.titleKey});
+  const SliverMediaHeader({
+    super.key,
+    required this.meta,
+    this.titleKey,
+    this.badge,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +56,10 @@ class SliverMediaHeader extends StatelessWidget {
                 color: context.colorScheme.primary,
               ),
             ),
+            if (badge != null) ...[
+              const SizedBox(height: 8),
+              badge!,
+            ],
             if (meta.subtitle.isNotEmpty) ...[
               const SizedBox(height: 6),
               Text(

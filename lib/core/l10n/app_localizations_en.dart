@@ -484,6 +484,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistPublicLabel => 'Public';
 
   @override
+  String get playlistPrivateLabel => 'Private';
+
+  @override
   String get createPlaylistAction => 'Create';
 
   @override

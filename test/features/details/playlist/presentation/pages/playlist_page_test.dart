@@ -106,13 +106,17 @@ void main() {
     sl.registerLazySingleton<SavedMediaIndex>(() => sl<SavedMediaCubit>());
   });
 
-  Widget buildTestableWidget({MetadataPluginCubit? metadataCubit}) {
+  Widget buildTestableWidget({
+    MetadataPluginCubit? metadataCubit,
+    Playlist? playlist,
+  }) {
     final router = GoRouter(
       initialLocation: '/',
       routes: [
         GoRoute(
           path: '/',
-          builder: (context, state) => PlaylistPage(playlist: testPlaylist),
+          builder: (context, state) =>
+              PlaylistPage(playlist: playlist ?? testPlaylist),
         ),
         GoRoute(
           path: '/library',
@@ -153,6 +157,58 @@ void main() {
 
       expect(find.text('Top 50 Hits'), findsNWidgets(2)); // Header + AppBar
       expect(find.text('Spotify'), findsOneWidget);
+    });
+
+    testWidgets('shows Public for an owned public playlist', (tester) async {
+      when(
+        () => accountCubit.state,
+      ).thenReturn(testAccountState(isAuthenticated: true, userId: 'u1'));
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
+        (_) async => PaginatedResult(items: [], total: 0, offset: 0, limit: 20),
+      );
+      final publicPlaylist = Playlist(
+        id: 'pl1',
+        name: 'Top 50 Hits',
+        description: 'Best songs',
+        externalUri: '',
+        owner: User(id: 'u1', name: 'Spotify', externalUri: ''),
+        isPublic: true,
+      );
+
+      await tester.pumpWidget(buildTestableWidget(playlist: publicPlaylist));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Public'), findsOneWidget);
+      expect(find.text('Private'), findsNothing);
+    });
+
+    testWidgets('shows Private for an owned private playlist', (tester) async {
+      when(
+        () => accountCubit.state,
+      ).thenReturn(testAccountState(isAuthenticated: true, userId: 'u1'));
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
+        (_) async => PaginatedResult(items: [], total: 0, offset: 0, limit: 20),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Private'), findsOneWidget);
+      expect(find.text('Public'), findsNothing);
+    });
+
+    testWidgets('shows no visibility for a playlist owned by someone else', (
+      tester,
+    ) async {
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
+        (_) async => PaginatedResult(items: [], total: 0, offset: 0, limit: 20),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Public'), findsNothing);
+      expect(find.text('Private'), findsNothing);
     });
 
     testWidgets('announces the sign-in invitation when access is required', (

@@ -146,6 +146,7 @@
   "playlistNameLabel": "Name",
   "playlistDescriptionLabel": "Description",
   "playlistPublicLabel": "Public",
+  "playlistPrivateLabel": "Private",
   "createPlaylistAction": "Create",
   "playlistCreated": "Playlist created",
   "playlistCreatedAndTrackAdded": "Playlist created and track added",

@@ -970,6 +970,12 @@ abstract class AppLocalizations {
   /// **'Public'**
   String get playlistPublicLabel;
 
+  /// No description provided for @playlistPrivateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get playlistPrivateLabel;
+
   /// No description provided for @createPlaylistAction.
   ///
   /// In en, this message translates to:
