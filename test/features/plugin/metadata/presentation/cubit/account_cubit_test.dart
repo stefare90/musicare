@@ -55,6 +55,17 @@ void main() {
     expect(cubit.state.userId, isNull);
   });
 
+  test('initialize keeps the account usable when the identity times out',
+      () async {
+    when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
+    when(() => user.me()).thenAnswer((_) async => throw Exception('timeout'));
+
+    await cubit.initialize();
+
+    expect(cubit.state.isAuthenticated, isTrue);
+    expect(cubit.state.userId, isNull);
+  });
+
   test('signIn authenticates and reports success with the user name', () async {
     when(() => auth.authenticate()).thenAnswer((_) async {});
     when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
@@ -86,6 +97,18 @@ void main() {
 
     expect(result, AuthResult.failed);
     expect(cubit.state.isAuthenticated, isFalse);
+  });
+
+  test('signIn succeeds even when the identity cannot be resolved', () async {
+    when(() => auth.authenticate()).thenAnswer((_) async {});
+    when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
+    when(() => user.me()).thenAnswer((_) async => throw Exception('timeout'));
+
+    final result = await cubit.signIn();
+
+    expect(result, AuthResult.authenticated);
+    expect(cubit.state.isAuthenticated, isTrue);
+    expect(cubit.state.userId, isNull);
   });
 
   test('signOut clears the identity', () async {

@@ -490,6 +490,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistCreated => 'Playlist created';
 
   @override
+  String get playlistCreatedAndTrackAdded => 'Playlist created and track added';
+
+  @override
+  String get playlistCreatedTrackNotAdded =>
+      'Playlist created, but the track could not be added';
+
+  @override
   String addedToPlaylist(Object playlist) {
     return 'Added to $playlist';
   }

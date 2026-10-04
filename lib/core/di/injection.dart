@@ -10,6 +10,7 @@ import 'package:music_are/features/player/data/services/audio_player_service.dar
 import 'package:music_are/features/player/data/services/audio_stream_resolver.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/account_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/browse_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
@@ -135,4 +136,5 @@ Future<void> initDependencies() async {
       session: sl<AccountCubit>(),
     ),
   );
+  sl.registerLazySingleton<SavedMediaIndex>(() => sl<SavedMediaCubit>());
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
@@ -21,7 +20,7 @@ import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cu
 import 'package:music_are/features/plugin/metadata/presentation/cubit/account_state.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
 import 'package:music_are/features/plugin/metadata/presentation/utils/metadata_account_actions.dart';
 
 class LibraryPage extends StatelessWidget {
@@ -41,7 +40,7 @@ class LibraryPage extends StatelessWidget {
             sl<NoticeBus>(),
             playlist: sl<PlaylistRepository>(),
             session: sl<AccountCubit>(),
-            savedMediaChanges: sl<SavedMediaCubit>().changes,
+            savedMedia: sl<SavedMediaIndex>(),
           )
             ..updateGridColumns(columns)
             ..loadAll(),
@@ -99,9 +98,8 @@ class _LibraryViewState extends State<_LibraryView>
     );
     if (created == null || !context.mounted) return;
 
-    // Re-read the saved index: the new playlist exists, so the change stream
-    // fires and LibraryCubit reloads the Playlists tab on its own.
-    await sl<SavedMediaCubit>().refresh(MediaItemType.playlist);
+    // The new playlist is announced by `LibraryCubit.createPlaylist`, so the
+    // change stream reloads the Playlists tab on its own.
     messenger.showSnackBar(
       SnackBar(
         content: Text(l10n.playlistCreated),

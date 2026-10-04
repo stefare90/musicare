@@ -25,6 +25,9 @@ class AccountCubit extends SafeCubit<AccountState> implements AccountSession {
   @override
   bool get isAuthenticated => state.isAuthenticated;
 
+  @override
+  String? get userId => state.userId;
+
   /// Emits the sign-in state whenever it changes; a repeated value is dropped.
   ///
   /// A broadcast stream does not replay the current value: consumers read
@@ -35,8 +38,14 @@ class AccountCubit extends SafeCubit<AccountState> implements AccountSession {
 
   Future<void> initialize() async {
     if (!_auth.hasMetadata) return;
-    final isAuthenticated = await _auth.isAuthenticated();
-    final userId = isAuthenticated ? await _auth.userId() : null;
+    var isAuthenticated = false;
+    try {
+      isAuthenticated = await _auth.isAuthenticated();
+    } catch (_) {
+      // Without the local flag we cannot claim a session; stay signed out.
+    }
+    final userId = await _resolveUserId(isAuthenticated);
+    if (isClosed) return;
     emit(AccountState(isAuthenticated: isAuthenticated, userId: userId));
   }
 
@@ -44,11 +53,26 @@ class AccountCubit extends SafeCubit<AccountState> implements AccountSession {
     try {
       await _auth.authenticate();
       final isAuthenticated = await _auth.isAuthenticated();
-      final userId = isAuthenticated ? await _auth.userId() : null;
+      final userId = await _resolveUserId(isAuthenticated);
+      if (isClosed) return AuthResult.cancelled;
       emit(AccountState(isAuthenticated: isAuthenticated, userId: userId));
       return isAuthenticated ? AuthResult.authenticated : AuthResult.cancelled;
     } catch (_) {
       return AuthResult.failed;
+    }
+  }
+
+  /// Resolves the provider identity, best effort.
+  ///
+  /// The id needs a provider round-trip, which can fail transiently (e.g. the
+  /// provider timing out on its token check). That must never fail the caller:
+  /// the account stays usable, with a null id, until the next resolution.
+  Future<String?> _resolveUserId(bool isAuthenticated) async {
+    if (!isAuthenticated) return null;
+    try {
+      return await _auth.userId();
+    } catch (_) {
+      return null;
     }
   }
 

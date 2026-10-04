@@ -17,20 +17,23 @@ class LibraryAlbumsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SectionSlot<Album>(
-      section: section,
-      loadingBuilder: (_) => const SkeletonMediaGrid(),
-      emptyTitle: context.l10n.libraryAlbumsEmpty,
-      emptyMessage: context.l10n.libraryAlbumsEmptyMessage,
-      emptyIcon: Icons.album_rounded,
-      onRetry: () => context.read<LibraryCubit>().loadAll(),
-      contentBuilder: (context, result) => PaginatedMediaGrid(
-        items: result.items,
-        hasMore: result.items.length < result.total,
-        isLoadingMore: section.isLoading,
-        onLoadMore: () =>
-            context.read<LibraryCubit>().loadMore(LibrarySection.albums),
-        onItemTap: (item) => AppNavigator.toMediaDetail(context, item),
+    return RefreshIndicator(
+      onRefresh: () => context.read<LibraryCubit>().refresh(LibrarySection.albums),
+      child: SectionSlot<Album>(
+        section: section,
+        loadingBuilder: (_) => const SkeletonMediaGrid(),
+        emptyTitle: context.l10n.libraryAlbumsEmpty,
+        emptyMessage: context.l10n.libraryAlbumsEmptyMessage,
+        emptyIcon: Icons.album_rounded,
+        onRetry: () => context.read<LibraryCubit>().loadAll(),
+        contentBuilder: (context, result) => PaginatedMediaGrid(
+          items: result.items,
+          hasMore: result.items.length < result.total,
+          isLoadingMore: section.isLoading,
+          onLoadMore: () =>
+              context.read<LibraryCubit>().loadMore(LibrarySection.albums),
+          onItemTap: (item) => AppNavigator.toMediaDetail(context, item),
+        ),
       ),
     );
   }

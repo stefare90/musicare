@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
@@ -7,6 +5,8 @@ import 'package:music_are/features/plugin/metadata/data/repositories/library_rep
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/library/presentation/cubit/liked_tracks_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+
+import '../../../../helpers/metadata_plugin_test_helpers.dart';
 
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
@@ -20,7 +20,7 @@ void main() {
   late MockUserService user;
   late NoticeBus notices;
   late LikedTracksCubit cubit;
-  late StreamController<MediaItemType> savedMediaChanges;
+  late TestSavedMediaIndex savedMedia;
 
   final track = Track(
     id: 't1',
@@ -44,11 +44,11 @@ void main() {
     metadata = MockMetadataPlugin();
     user = MockUserService();
     notices = NoticeBus();
-    savedMediaChanges = StreamController<MediaItemType>.broadcast();
+    savedMedia = TestSavedMediaIndex();
     cubit = LikedTracksCubit(
       LibraryRepository(engine),
       notices,
-      savedMediaChanges: savedMediaChanges.stream,
+      savedMedia: savedMedia,
     );
 
     when(() => engine.hasMetadata).thenReturn(true);
@@ -58,7 +58,7 @@ void main() {
 
   tearDown(() async {
     await cubit.close();
-    await savedMediaChanges.close();
+    await savedMedia.close();
   });
 
   test('load fetches the first page of liked tracks', () async {
@@ -119,9 +119,28 @@ void main() {
       ),
     );
 
-    savedMediaChanges.add(MediaItemType.track);
+    savedMedia.emit(MediaItemType.track);
     await Future<void>.delayed(Duration.zero);
 
     expect(cubit.state.tracks.data.items.single.id, 't1');
+  });
+
+  test('refresh reloads the list and refreshes the saved set silently',
+      () async {
+    when(
+      () => user.savedTracks(offset: 0, limit: 20),
+    ).thenAnswer(
+      (_) async => PaginatedResult<Track>(
+        items: [track],
+        total: 1,
+        offset: 0,
+        limit: 20,
+      ),
+    );
+
+    await cubit.refresh();
+
+    verify(() => user.savedTracks(offset: 0, limit: 20)).called(1);
+    expect(savedMedia.refreshed, [MediaItemType.track]);
   });
 }

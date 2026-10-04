@@ -982,6 +982,18 @@ abstract class AppLocalizations {
   /// **'Playlist created'**
   String get playlistCreated;
 
+  /// No description provided for @playlistCreatedAndTrackAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist created and track added'**
+  String get playlistCreatedAndTrackAdded;
+
+  /// No description provided for @playlistCreatedTrackNotAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist created, but the track could not be added'**
+  String get playlistCreatedTrackNotAdded;
+
   /// No description provided for @addedToPlaylist.
   ///
   /// In en, this message translates to:

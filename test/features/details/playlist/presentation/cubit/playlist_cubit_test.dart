@@ -9,6 +9,8 @@ import 'package:music_are/features/details/playlist/presentation/cubit/playlist_
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 
+import '../../../../../helpers/metadata_plugin_test_helpers.dart';
+
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
 class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
@@ -21,6 +23,7 @@ void main() {
     late MockMetadataPlugin mockMetadataPlugin;
     late MockPlaylistService mockPlaylistService;
     late NoticeBus noticeBus;
+    late TestSavedMediaIndex savedMedia;
     late PlaylistCubit cubit;
 
     final testPlaylist = Playlist(
@@ -54,15 +57,18 @@ void main() {
       mockPlaylistService = MockPlaylistService();
 
       noticeBus = NoticeBus();
+      savedMedia = TestSavedMediaIndex();
       cubit = PlaylistCubit(
         MediaRepository(mockPluginEngine),
         PlaylistRepository(mockPluginEngine),
         noticeBus,
+        savedMedia: savedMedia,
       );
     });
 
-    tearDown(() {
-      cubit.close();
+    tearDown(() async {
+      await cubit.close();
+      await savedMedia.close();
     });
 
     test('initial state is PlaylistInitialState', () {

@@ -11,5 +11,8 @@ import 'dart:async';
 abstract interface class AccountSession {
   bool get isAuthenticated;
 
+  /// The provider id of the signed-in user, null when signed out.
+  String? get userId;
+
   Stream<bool> get authenticationChanges;
 }

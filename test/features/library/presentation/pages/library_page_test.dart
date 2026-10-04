@@ -14,6 +14,7 @@ import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cu
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
 
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
 
@@ -60,6 +61,7 @@ void main() {
         session: sl<AccountCubit>(),
       ),
     );
+    sl.registerLazySingleton<SavedMediaIndex>(() => sl<SavedMediaCubit>());
 
     when(() => engine.hasMetadata).thenReturn(true);
     when(() => engine.metadata).thenReturn(metadata);
@@ -141,6 +143,80 @@ void main() {
     expect(find.text('Playlists'), findsOneWidget);
     expect(find.text('Albums'), findsOneWidget);
     expect(find.text('Artists'), findsOneWidget);
+  });
+
+  testWidgets('pull-to-refresh reloads the section and the saved set', (
+    tester,
+  ) async {
+    when(
+      () => authCubit.state,
+    ).thenReturn(testAccountState(isAuthenticated: true, userId: 'me'));
+    when(
+      () => user.savedPlaylists(
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer(
+      (_) async => PaginatedResult<Playlist>(
+        items: [playlist],
+        total: 1,
+        offset: 0,
+        limit: 20,
+      ),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(buildMockMetadataPluginCubit()),
+    );
+    await tester.pumpAndSettle();
+    clearInteractions(user);
+
+    await tester.fling(find.byType(GridView), const Offset(0, 300), 1000);
+    await tester.pumpAndSettle();
+
+    // One reload of the Playlists section (limit = grid page size) plus the
+    // silent saved-set refresh (the fixed 100-item page).
+    verify(
+      () => user.savedPlaylists(offset: 0, limit: any(named: 'limit')),
+    ).called(2);
+  });
+
+  testWidgets('the refresh indicator closes even when the refresh fails', (
+    tester,
+  ) async {
+    when(
+      () => authCubit.state,
+    ).thenReturn(testAccountState(isAuthenticated: true, userId: 'me'));
+    when(
+      () => user.savedPlaylists(
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer(
+      (_) async => PaginatedResult<Playlist>(
+        items: [playlist],
+        total: 1,
+        offset: 0,
+        limit: 20,
+      ),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(buildMockMetadataPluginCubit()),
+    );
+    await tester.pumpAndSettle();
+
+    when(
+      () => user.savedPlaylists(
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer((_) async => throw Exception('offline'));
+
+    await tester.fling(find.byType(GridView), const Offset(0, 300), 1000);
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('signed in shows the new-playlist action on the playlists tab', (

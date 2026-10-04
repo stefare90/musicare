@@ -148,6 +148,8 @@
   "playlistPublicLabel": "Public",
   "createPlaylistAction": "Create",
   "playlistCreated": "Playlist created",
+  "playlistCreatedAndTrackAdded": "Playlist created and track added",
+  "playlistCreatedTrackNotAdded": "Playlist created, but the track could not be added",
   "addedToPlaylist": "Added to {playlist}",
   "removedFromPlaylist": "Removed from {playlist}",
   "addedToQueue": "Added to queue",

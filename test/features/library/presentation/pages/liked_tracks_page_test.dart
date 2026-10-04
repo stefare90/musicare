@@ -13,6 +13,7 @@ import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
 
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
 
@@ -67,6 +68,7 @@ void main() {
         session: sl<AccountCubit>(),
       ),
     );
+    sl.registerLazySingleton<SavedMediaIndex>(() => sl<SavedMediaCubit>());
 
     when(() => playerCubit.state).thenReturn(const PlayerState());
     when(() => playerCubit.stream).thenAnswer((_) => const Stream.empty());
@@ -130,5 +132,32 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('No liked songs yet'), findsOneWidget);
+  });
+
+  testWidgets('pull-to-refresh reloads the list and the saved set', (
+    tester,
+  ) async {
+    when(
+      () => user.savedTracks(
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer(
+      (_) async => PaginatedResult<Track>(
+        items: [track],
+        total: 1,
+        offset: 0,
+        limit: 20,
+      ),
+    );
+
+    await tester.pumpWidget(buildTestableWidget());
+    await tester.pumpAndSettle();
+    clearInteractions(user);
+
+    await tester.fling(find.text('Come Together'), const Offset(0, 300), 1000);
+    await tester.pumpAndSettle();
+
+    verify(() => user.savedTracks(offset: 0, limit: 20)).called(1);
   });
 }

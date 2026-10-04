@@ -10,7 +10,7 @@ import 'package:music_are/features/library/presentation/cubit/liked_tracks_cubit
 import 'package:music_are/features/library/presentation/cubit/liked_tracks_state.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
 
 class LikedTracksPage extends StatelessWidget {
   const LikedTracksPage({super.key});
@@ -22,7 +22,7 @@ class LikedTracksPage extends StatelessWidget {
           LikedTracksCubit(
             sl<LibraryRepository>(),
             sl<NoticeBus>(),
-            savedMediaChanges: sl<SavedMediaCubit>().changes,
+            savedMedia: sl<SavedMediaIndex>(),
           )..load(),
       child: const _LikedSongsView(),
     );
@@ -38,28 +38,31 @@ class _LikedSongsView extends StatelessWidget {
       appBar: AppBar(title: Text(context.l10n.likedSongs)),
       body: BlocBuilder<LikedTracksCubit, LikedTracksState>(
         builder: (context, state) {
-          return SectionSlot(
-            section: state.tracks,
-            loadingBuilder: (_) => const SkeletonTrackList(count: 8),
-            emptyTitle: context.l10n.likedSongsEmptyTitle,
-            emptyMessage: context.l10n.likedSongsEmptyMessage,
-            emptyIcon: Icons.favorite_border_rounded,
-            onRetry: () => context.read<LikedTracksCubit>().load(),
-            contentBuilder: (context, result) => PaginatedTrackList(
-              tracks: result.items,
-              activeTrackId: context.select<PlayerCubit, String?>(
-                (c) => c.state.currentTrack?.id,
+          return RefreshIndicator(
+            onRefresh: () => context.read<LikedTracksCubit>().refresh(),
+            child: SectionSlot(
+              section: state.tracks,
+              loadingBuilder: (_) => const SkeletonTrackList(count: 8),
+              emptyTitle: context.l10n.likedSongsEmptyTitle,
+              emptyMessage: context.l10n.likedSongsEmptyMessage,
+              emptyIcon: Icons.favorite_border_rounded,
+              onRetry: () => context.read<LikedTracksCubit>().load(),
+              contentBuilder: (context, result) => PaginatedTrackList(
+                tracks: result.items,
+                activeTrackId: context.select<PlayerCubit, String?>(
+                  (c) => c.state.currentTrack?.id,
+                ),
+                hasMore: result.items.length < result.total,
+                isLoadingMore: state.tracks.isLoading,
+                onLoadMore: () => context.read<LikedTracksCubit>().loadMore(),
+                onTrackTap: (track) {
+                  final index = result.items.indexOf(track);
+                  context.read<PlayerCubit>().playQueue(
+                    result.items,
+                    index: index >= 0 ? index : 0,
+                  );
+                },
               ),
-              hasMore: result.items.length < result.total,
-              isLoadingMore: state.tracks.isLoading,
-              onLoadMore: () => context.read<LikedTracksCubit>().loadMore(),
-              onTrackTap: (track) {
-                final index = result.items.indexOf(track);
-                context.read<PlayerCubit>().playQueue(
-                  result.items,
-                  index: index >= 0 ? index : 0,
-                );
-              },
             ),
           );
         },

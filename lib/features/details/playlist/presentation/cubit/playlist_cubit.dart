@@ -4,6 +4,7 @@ import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
@@ -11,9 +12,10 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
   final MediaRepository _media;
   final PlaylistRepository _playlist;
   final NoticeBus _notices;
+  final SavedMediaIndex _savedMedia;
   bool _isFetchingMoreTracks = false;
 
-  PlaylistCubit(this._media, this._playlist, this._notices)
+  PlaylistCubit(this._media, this._playlist, this._notices, {required this._savedMedia})
     : super(PlaylistInitialState());
 
   Future<void> loadPlaylist(Playlist playlist) async {
@@ -79,6 +81,7 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
     if (current is! PlaylistLoadedState) return false;
     try {
       await _playlist.deletePlaylist(current.playlist.id);
+      await _savedMedia.refresh(MediaItemType.playlist);
       return true;
     } catch (e) {
       _notices.emit(e);

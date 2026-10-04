@@ -42,20 +42,24 @@ class LibraryPlaylistsTab extends StatelessWidget {
       );
     }
 
-    return PaginatedMediaGrid(
-      leading: leading,
-      items: items,
-      hasMore: items.length < section.data.total,
-      isLoadingMore: section.isLoading,
-      onLoadMore: () =>
-          context.read<LibraryCubit>().loadMore(LibrarySection.playlists),
-      onItemTap: (item) => AppNavigator.toMediaDetail(context, item),
-      // Extra bottom room so the "New playlist" FAB never covers the last row.
-      padding: EdgeInsets.fromLTRB(
-        MediaCardMetrics.edgeInset,
-        MediaCardMetrics.edgeInset,
-        MediaCardMetrics.edgeInset,
-        MediaCardMetrics.edgeInset + 72,
+    return RefreshIndicator(
+      onRefresh: () =>
+          context.read<LibraryCubit>().refresh(LibrarySection.playlists),
+      child: PaginatedMediaGrid(
+        leading: leading,
+        items: items,
+        hasMore: items.length < section.data.total,
+        isLoadingMore: section.isLoading,
+        onLoadMore: () =>
+            context.read<LibraryCubit>().loadMore(LibrarySection.playlists),
+        onItemTap: (item) => AppNavigator.toMediaDetail(context, item),
+        // Extra bottom room so the "New playlist" FAB never covers the last row.
+        padding: EdgeInsets.fromLTRB(
+          MediaCardMetrics.edgeInset,
+          MediaCardMetrics.edgeInset,
+          MediaCardMetrics.edgeInset,
+          MediaCardMetrics.edgeInset + 72,
+        ),
       ),
     );
   }

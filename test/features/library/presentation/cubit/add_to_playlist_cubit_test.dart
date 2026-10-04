@@ -7,6 +7,8 @@ import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/library/presentation/cubit/add_to_playlist_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
+import '../../../../helpers/metadata_plugin_test_helpers.dart';
+
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
 class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
@@ -21,6 +23,7 @@ void main() {
   late MockUserService user;
   late MockPlaylistService playlists;
   late NoticeBus notices;
+  late TestSavedMediaIndex savedMedia;
   late AddToPlaylistCubit cubit;
 
   final playlist = Playlist(
@@ -29,6 +32,13 @@ void main() {
     description: '',
     externalUri: '',
     owner: User(id: 'me', name: 'me', externalUri: ''),
+  );
+  final otherPlaylist = Playlist(
+    id: 'pl2',
+    name: 'Someone else',
+    description: '',
+    externalUri: '',
+    owner: User(id: 'other', name: 'other', externalUri: ''),
   );
   final track = Track(
     id: 't1',
@@ -53,6 +63,7 @@ void main() {
     user = MockUserService();
     playlists = MockPlaylistService();
     notices = NoticeBus();
+    savedMedia = TestSavedMediaIndex();
 
     when(() => engine.hasMetadata).thenReturn(true);
     when(() => engine.metadata).thenReturn(metadata);
@@ -60,32 +71,78 @@ void main() {
     when(() => metadata.playlist).thenReturn(playlists);
   });
 
-  tearDown(() => cubit.close());
+  tearDown(() async {
+    await cubit.close();
+    await savedMedia.close();
+  });
 
-  AddToPlaylistCubit buildCubit() {
+  AddToPlaylistCubit buildCubit({bool authenticated = true, String? userId = 'me'}) {
     return AddToPlaylistCubit(
       LibraryRepository(engine),
       PlaylistRepository(engine),
       notices,
+      session: TestAccountSession(isAuthenticated: authenticated, userId: userId),
+      savedMedia: savedMedia,
     );
   }
 
-  test('load fetches the saved playlists', () async {
+  PaginatedResult<Playlist> page(List<Playlist> items, {int? total}) =>
+      PaginatedResult<Playlist>(
+        items: items,
+        total: total ?? items.length,
+        offset: 0,
+        limit: 100,
+      );
+
+  test('load lists only the playlists the user owns', () async {
     cubit = buildCubit();
     when(
-      () => user.savedPlaylists(offset: 0, limit: 20),
-    ).thenAnswer(
-      (_) async => PaginatedResult<Playlist>(
-        items: [playlist],
-        total: 1,
-        offset: 0,
-        limit: 20,
-      ),
-    );
+      () => user.savedPlaylists(offset: 0, limit: 100),
+    ).thenAnswer((_) async => page([playlist, otherPlaylist]));
 
     await cubit.load();
 
-    expect(cubit.state.playlists.data.items.single.id, 'pl1');
+    expect(cubit.state.playlists.data.items.map((p) => p.id), ['pl1']);
+    expect(cubit.state.playlists.data.total, 1);
+  });
+
+  test('load keeps fetching while the pages hold only other people playlists',
+      () async {
+    cubit = buildCubit();
+    final other = List.generate(
+      100,
+      (i) => Playlist(
+        id: 'other$i',
+        name: 'Other $i',
+        description: '',
+        externalUri: '',
+        owner: const User(id: 'other', name: 'other', externalUri: ''),
+      ),
+    );
+    when(
+      () => user.savedPlaylists(offset: 0, limit: 100),
+    ).thenAnswer((_) async => page(other, total: 101));
+    when(
+      () => user.savedPlaylists(offset: 100, limit: 100),
+    ).thenAnswer((_) async => page([playlist], total: 101));
+
+    await cubit.load();
+
+    expect(cubit.state.playlists.data.items.map((p) => p.id), ['pl1']);
+  });
+
+  test('load asks for sign-in when the session is anonymous', () async {
+    cubit = buildCubit(authenticated: false, userId: null);
+
+    await cubit.load();
+
+    expect(cubit.state.playlists.error, isA<MetadataAuthRequiredException>());
+    verifyNever(
+      () => user.savedPlaylists(
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+      ),
+    );
   });
 
   test('addTrack reports failure on the bus', () async {
@@ -104,7 +161,7 @@ void main() {
     await subscription.cancel();
   });
 
-  test('createPlaylist resolves the user and adds the track', () async {
+  test('createPlaylist resolves the user, adds the track and announces', () async {
     cubit = buildCubit();
     when(() => user.me()).thenAnswer((_) async => {'user_id': 'me'});
     when(
@@ -117,15 +174,40 @@ void main() {
     ).thenAnswer((_) async => playlist);
     when(() => playlists.addTracks('pl1', ['t1'])).thenAnswer((_) async {});
 
-    final created = await cubit.createPlaylist(
+    final outcome = await cubit.createPlaylist(
       name: 'My list',
       description: 'desc',
       isPublic: true,
       trackIds: ['t1'],
     );
 
-    expect(created?.id, 'pl1');
-    verify(() => playlists.addTracks('pl1', ['t1'])).called(1);
+    expect(outcome?.playlist.id, 'pl1');
+    expect(outcome?.trackAdded, isTrue);
+    expect(savedMedia.refreshed, [MediaItemType.playlist]);
+  });
+
+  test('createPlaylist reports a partial success when the track fails',
+      () async {
+    cubit = buildCubit();
+    when(() => user.me()).thenAnswer((_) async => {'user_id': 'me'});
+    when(
+      () => playlists.createPlaylist(
+        'me',
+        'My list',
+        description: null,
+        public_: false,
+      ),
+    ).thenAnswer((_) async => playlist);
+    when(
+      () => playlists.addTracks('pl1', ['t1']),
+    ).thenAnswer((_) async => throw Exception('offline'));
+
+    final outcome = await cubit.createPlaylist(name: 'My list', trackIds: ['t1']);
+
+    expect(outcome?.playlist.id, 'pl1');
+    expect(outcome?.trackAdded, isFalse);
+    // The created playlist is still announced so the Library reloads.
+    expect(savedMedia.refreshed, [MediaItemType.playlist]);
   });
 
   test('createPlaylist announces when sign-in is required', () async {
@@ -136,10 +218,10 @@ void main() {
 
     final seen = <Object>[];
     final subscription = notices.notices.listen(seen.add);
-    final created = await cubit.createPlaylist(name: 'x');
+    final outcome = await cubit.createPlaylist(name: 'x');
     await Future<void>.delayed(Duration.zero);
 
-    expect(created, isNull);
+    expect(outcome, isNull);
     expect(seen.single, isA<MetadataAuthRequiredException>());
     await subscription.cancel();
   });

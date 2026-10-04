@@ -38,8 +38,9 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ## 📚 Library (`lib/features/library/`)
 ✅ Sign-in invitation when signed out, with the account entry point in the page header.
 ✅ Saved-content tabs (playlists, albums, artists) with pagination, empty/error states and a pinned *Liked Songs* list backed by the provider, reloaded reactively when the saved set changes.
-✅ Create a playlist from the library's Playlists tab, with the new entry appearing without a manual refresh.
-✅ Global saved-media state (per-type IDs + optimistic toggle) and "Add to playlist" picker with a create-and-add flow.
+✅ Create a playlist from the library's Playlists tab or a track's sheet, with the new entry appearing without a manual refresh.
+✅ Global saved-media state (per-type IDs + optimistic toggle) and "Add to playlist" picker with a create-and-add flow, listing only the playlists you own.
+✅ Manual refresh (pull-to-refresh) on each library tab and on *Liked Songs*, reloading the list and the saved set.
 ⬜ Downloads: browse and manage local tracks and downloaded collections, account-free (entry point only, empty until the local storage subsystem lands).
 
 ## ⚙️ Settings (`lib/features/settings/`)
@@ -76,4 +77,5 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ⬜ Track favorites and a unified saved-content view.
 ✅ Real artist top tracks via ListenBrainz instead of work metadata.
 ⬜ Bluetooth next/prev buttons.
+⬜ Reload the open playlist detail when a track is added from the player or the track sheet.
 ⬜ "Play all" when the playlist is only partially loaded.

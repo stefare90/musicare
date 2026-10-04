@@ -28,7 +28,7 @@ void main() {
   late MockPlaylistService playlists;
   late NoticeBus notices;
   late LibraryCubit cubit;
-  late StreamController<MediaItemType> savedMediaChanges;
+  late TestSavedMediaIndex savedMedia;
 
   final playlist = Playlist(
     id: 'pl1',
@@ -60,20 +60,20 @@ void main() {
 
   tearDown(() async {
     await cubit.close();
-    await savedMediaChanges.close();
+    await savedMedia.close();
   });
 
   LibraryCubit buildCubit({bool authenticated = false}) {
     final authCubit = TestAccountCubit(
       testAccountState(isAuthenticated: authenticated),
     );
-    savedMediaChanges = StreamController<MediaItemType>.broadcast();
+    savedMedia = TestSavedMediaIndex();
     return LibraryCubit(
       LibraryRepository(engine),
       notices,
       playlist: PlaylistRepository(engine),
       session: authCubit,
-      savedMediaChanges: savedMediaChanges.stream,
+      savedMedia: savedMedia,
     );
   }
 
@@ -203,7 +203,7 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     clearInteractions(user);
 
-    savedMediaChanges.add(MediaItemType.album);
+    savedMedia.emit(MediaItemType.album);
     await Future<void>.delayed(Duration.zero);
 
     verify(() => user.savedAlbums(offset: 0, limit: 20)).called(1);
@@ -228,7 +228,7 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     clearInteractions(user);
 
-    savedMediaChanges.add(MediaItemType.track);
+    savedMedia.emit(MediaItemType.track);
     await Future<void>.delayed(Duration.zero);
 
     verifyNever(
@@ -306,5 +306,59 @@ void main() {
     expect(created, isNull);
     expect(seen, hasLength(1));
     await subscription.cancel();
+  });
+
+  test('createPlaylist announces the new playlist through the change stream',
+      () async {
+    cubit = buildCubit(authenticated: true);
+    when(() => user.me()).thenAnswer((_) async => {'user_id': 'me'});
+    when(
+      () => playlists.createPlaylist(
+        'me',
+        'My list',
+        description: null,
+        public_: false,
+      ),
+    ).thenAnswer((_) async => playlist);
+
+    await cubit.createPlaylist(name: 'My list');
+
+    expect(savedMedia.refreshed, [MediaItemType.playlist]);
+  });
+
+  test('refresh reloads the section and the saved set only once', () async {
+    cubit = buildCubit(authenticated: true);
+    stubEmptySections();
+    when(
+      () => user.savedPlaylists(offset: 0, limit: 20),
+    ).thenAnswer((_) async => page<Playlist>([playlist]));
+    await cubit.loadAll();
+    await Future<void>.delayed(Duration.zero);
+    clearInteractions(user);
+
+    await cubit.refresh(LibrarySection.playlists);
+
+    // One reload of the section and one silent refresh of the saved set: the
+    // silent refresh must not trigger a second section load through `changes`.
+    verify(() => user.savedPlaylists(offset: 0, limit: 20)).called(1);
+    expect(savedMedia.refreshed, [MediaItemType.playlist]);
+    // Silent: the section was reloaded explicitly above.
+    expect(savedMedia.refreshNotifies, [false]);
+  });
+
+  test('refresh does not duplicate a section load already in flight', () async {
+    cubit = buildCubit(authenticated: true);
+    stubEmptySections();
+    final completer = Completer<PaginatedResult<Playlist>>();
+    when(
+      () => user.savedPlaylists(offset: 0, limit: 20),
+    ).thenAnswer((_) => completer.future);
+
+    final first = cubit.refresh(LibrarySection.playlists);
+    final second = cubit.refresh(LibrarySection.playlists);
+    completer.complete(page<Playlist>([playlist]));
+    await Future.wait([first, second]);
+
+    verify(() => user.savedPlaylists(offset: 0, limit: 20)).called(1);
   });
 }

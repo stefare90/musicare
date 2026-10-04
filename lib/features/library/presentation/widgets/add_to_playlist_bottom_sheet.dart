@@ -7,6 +7,7 @@ import 'package:music_are/core/models/media_type.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/core/widgets/bottom_sheets/base_modal_bottom_sheet.dart';
+import 'package:music_are/core/widgets/dialogs.dart';
 import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/info_card.dart';
 import 'package:music_are/core/widgets/media/media_cover_image.dart';
@@ -16,6 +17,8 @@ import 'package:music_are/features/library/presentation/cubit/add_to_playlist_st
 import 'package:music_are/features/library/presentation/widgets/create_playlist_dialog.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
 import 'package:music_are/features/plugin/metadata/presentation/utils/metadata_account_actions.dart';
 
 /// Picker for "Add to playlist": the user's playlists plus a "New playlist"
@@ -40,6 +43,8 @@ class AddToPlaylistBottomSheet extends StatelessWidget {
             sl<LibraryRepository>(),
             sl<PlaylistRepository>(),
             sl<NoticeBus>(),
+            session: sl<AccountCubit>(),
+            savedMedia: sl<SavedMediaIndex>(),
           )..load(),
       child: _AddToPlaylistBody(track: track),
     );
@@ -57,21 +62,32 @@ class _AddToPlaylistBody extends StatelessWidget {
 
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-    final created = await context.read<AddToPlaylistCubit>().createPlaylist(
+    final navigator = Navigator.of(context);
+    final outcome = await context.read<AddToPlaylistCubit>().createPlaylist(
       name: result.name,
       description: result.description,
       isPublic: result.isPublic,
       trackIds: [track.id],
     );
-    if (created == null || !context.mounted) return;
+    if (outcome == null || !context.mounted) return;
 
-    Navigator.of(context).pop();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(l10n.playlistCreated),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    if (outcome.trackAdded) {
+      navigator.pop();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.playlistCreatedAndTrackAdded),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } else {
+      // The playlist exists but is empty: say so before closing, instead of
+      // leaving a plain "created" that hides the partial failure.
+      Dialogs.showErrorSnackBar(
+        context,
+        message: l10n.playlistCreatedTrackNotAdded,
+      );
+      navigator.pop();
+    }
   }
 
   Future<void> _addToPlaylist(BuildContext context, Playlist playlist) async {

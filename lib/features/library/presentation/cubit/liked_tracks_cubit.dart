@@ -6,6 +6,7 @@ import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/library/presentation/cubit/liked_tracks_state.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
@@ -16,21 +17,34 @@ import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart'
 class LikedTracksCubit extends SafeCubit<LikedTracksState> {
   final LibraryRepository _library;
   final NoticeBus _notices;
+  final SavedMediaIndex _savedMedia;
   StreamSubscription<MediaItemType>? _savedMediaSubscription;
+  bool _isLoading = false;
 
   static const int _pageSize = 20;
 
   LikedTracksCubit(
     this._library,
     this._notices, {
-    required Stream<MediaItemType> savedMediaChanges,
+    required this._savedMedia,
   }) : super(const LikedTracksState()) {
-    _savedMediaSubscription = savedMediaChanges
+    _savedMediaSubscription = _savedMedia.changes
         .where((type) => type == MediaItemType.track)
         .listen((_) => unawaited(load()));
   }
 
+  /// Manual reload (pull-to-refresh): refetches the list and the saved track
+  /// set. The set is refreshed silently because the list is already reloaded
+  /// here; an announced change would reload it again.
+  Future<void> refresh() async {
+    await Future.wait([
+      load(),
+      _savedMedia.refresh(MediaItemType.track, notify: false),
+    ]);
+  }
+
   Future<void> load() async {
+    if (_isLoading) return;
     if (!_library.hasMetadata) {
       emit(
         LikedTracksState(
@@ -43,6 +57,7 @@ class LikedTracksCubit extends SafeCubit<LikedTracksState> {
       return;
     }
 
+    _isLoading = true;
     emit(state.copyWith(tracks: SectionState.loading(state.tracks.data)));
     try {
       final result = await _library.savedTracks(
@@ -53,6 +68,8 @@ class LikedTracksCubit extends SafeCubit<LikedTracksState> {
     } catch (e) {
       emit(state.copyWith(tracks: SectionState.error(e, state.tracks.data)));
       if (e.needsNotice) _notices.emit(e);
+    } finally {
+      _isLoading = false;
     }
   }
 

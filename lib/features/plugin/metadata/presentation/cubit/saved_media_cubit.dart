@@ -6,6 +6,7 @@ import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/account_session.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_state.dart';
 
 /// Global index of the signed-in user's saved media, plus the save actions.
@@ -21,7 +22,8 @@ import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_medi
 /// [auth] is the single account source (current state + changes): the index
 /// belongs to the current account, so it must be dropped when the account
 /// changes.
-class SavedMediaCubit extends SafeCubit<SavedMediaState> {
+class SavedMediaCubit extends SafeCubit<SavedMediaState>
+    implements SavedMediaIndex {
   final LibraryRepository _library;
   final NoticeBus _notices;
   final AccountSession _session;
@@ -32,6 +34,7 @@ class SavedMediaCubit extends SafeCubit<SavedMediaState> {
 
   /// Emits a type only for a genuine change (a successful toggle, or a refresh
   /// returning a different set), never for the warm-up or an identical refetch.
+  @override
   Stream<MediaItemType> get changes => _changes.stream;
 
   /// Last settled set per type: lets [_applyLoaded] tell a real change from the
@@ -95,21 +98,24 @@ class SavedMediaCubit extends SafeCubit<SavedMediaState> {
   }
 
   /// Re-reads the saved IDs of [type] even when already loaded, announcing a
-  /// change only if the returned set differs from the last one.
+  /// change only if [notify] is true and the returned set differs from the last
+  /// one.
   ///
   /// Used after a write whose effect on the saved set is not inferable locally,
-  /// such as creating a playlist.
-  Future<void> refresh(MediaItemType type) async {
+  /// such as creating a playlist; a silent refresh is used by pull-to-refresh,
+  /// which reloads the listing explicitly.
+  @override
+  Future<void> refresh(MediaItemType type, {bool notify = true}) async {
     if (_loading.contains(type)) return;
     if (!_library.hasMetadata || !_session.isAuthenticated) return;
-    await _load(type);
+    await _load(type, notify: notify);
   }
 
-  Future<void> _load(MediaItemType type) async {
+  Future<void> _load(MediaItemType type, {bool notify = true}) async {
     final generation = _generation;
     _loading.add(type);
     try {
-      _applyLoaded(type, await _loadIds(type), generation);
+      _applyLoaded(type, await _loadIds(type), generation, notify: notify);
     } catch (_) {
       // Background load: stays silent and retries on the next access.
     } finally {
@@ -117,7 +123,12 @@ class SavedMediaCubit extends SafeCubit<SavedMediaState> {
     }
   }
 
-  void _applyLoaded(MediaItemType type, Set<String> ids, int generation) {
+  void _applyLoaded(
+    MediaItemType type,
+    Set<String> ids,
+    int generation, {
+    required bool notify,
+  }) {
     if (generation != _generation) return;
     final previous = _snapshot[type];
     _snapshot[type] = ids;
@@ -125,7 +136,7 @@ class SavedMediaCubit extends SafeCubit<SavedMediaState> {
     emit(state.withIds(type, ids).copyWith(loaded: {...state.loaded, type}));
     // A missing previous set means this is the first read of the type: the
     // warm-up must not be announced as a change.
-    if (previous != null && !setEquals(previous, ids)) {
+    if (notify && previous != null && !setEquals(previous, ids)) {
       _changes.add(type);
     }
   }

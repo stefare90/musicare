@@ -9,6 +9,7 @@ import 'package:music_are/features/library/presentation/cubit/library_state.dart
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/account_session.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
@@ -23,9 +24,14 @@ class LibraryCubit extends SafeCubit<LibraryState> {
   final NoticeBus _notices;
   final PlaylistRepository _playlist;
   final AccountSession _session;
+  final SavedMediaIndex _savedMedia;
   final int pageSize;
   StreamSubscription<bool>? _authSubscription;
   StreamSubscription<MediaItemType>? _savedMediaSubscription;
+
+  /// Sections with a reload in flight, so a manual refresh and a reactive one
+  /// never fetch the same section twice at the same time.
+  final Set<LibrarySection> _reloading = {};
 
   /// Number of grid columns currently used by the library grids.
   ///
@@ -39,12 +45,11 @@ class LibraryCubit extends SafeCubit<LibraryState> {
     this._notices, {
     required this._playlist,
     this.pageSize = 20,
-    required AccountSession session,
-    required Stream<MediaItemType> savedMediaChanges,
-  }) : _session = session,
-       super(const LibraryState()) {
-    _savedMediaSubscription = savedMediaChanges.listen(_onSavedMediaChanged);
-    _authSubscription = session.authenticationChanges.listen((_) {
+    required this._session,
+    required this._savedMedia,
+  }) : super(const LibraryState()) {
+    _savedMediaSubscription = _savedMedia.changes.listen(_onSavedMediaChanged);
+    _authSubscription = _session.authenticationChanges.listen((_) {
       if (!isClosed) loadAll();
     });
   }
@@ -70,6 +75,28 @@ class LibraryCubit extends SafeCubit<LibraryState> {
   /// Pagination size rounded up to a whole number of grid rows.
   int get _gridPageSize =>
       MediaCardMetrics.pageSizeForColumns(pageSize, _gridColumns);
+
+  /// Reloads one section from the provider (pull-to-refresh).
+  ///
+  /// Refreshes the corresponding saved set **silently**: the section is
+  /// reloaded explicitly here, so an announced change would reload it again.
+  Future<void> refresh(LibrarySection section) async {
+    if (!_library.hasMetadata || !_session.isAuthenticated) return;
+    await Future.wait([
+      switch (section) {
+        LibrarySection.playlists => _loadPlaylists(),
+        LibrarySection.albums => _loadAlbums(),
+        LibrarySection.artists => _loadArtists(),
+      },
+      _savedMedia.refresh(_mediaTypeOf(section), notify: false),
+    ]);
+  }
+
+  MediaItemType _mediaTypeOf(LibrarySection section) => switch (section) {
+    LibrarySection.playlists => MediaItemType.playlist,
+    LibrarySection.albums => MediaItemType.album,
+    LibrarySection.artists => MediaItemType.artist,
+  };
 
   /// Records the number of columns of the grids.
   ///
@@ -138,11 +165,17 @@ class LibraryCubit extends SafeCubit<LibraryState> {
   }) async {
     if (!_library.hasMetadata) return null;
     try {
-      return await _playlist.createPlaylist(
+      final playlist = await _playlist.createPlaylist(
         name,
         description: description,
         isPublic: isPublic,
       );
+      // A new playlist lands in the saved set: announce it (through `changes`)
+      // so the Playlists tab reloads instead of staying stale.
+      if (playlist != null) {
+        await _savedMedia.refresh(MediaItemType.playlist);
+      }
+      return playlist;
     } catch (e) {
       _notices.emit(e);
       return null;
@@ -150,6 +183,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
   }
 
   Future<void> _loadPlaylists() async {
+    if (!_reloading.add(LibrarySection.playlists)) return;
     emit(state.copyWith(playlists: SectionState.loading(state.playlists.data)));
     try {
       final result = await _library.savedPlaylists(
@@ -162,10 +196,13 @@ class LibraryCubit extends SafeCubit<LibraryState> {
         state.copyWith(playlists: SectionState.error(e, state.playlists.data)),
       );
       if (e.needsNotice) _notices.emit(e);
+    } finally {
+      _reloading.remove(LibrarySection.playlists);
     }
   }
 
   Future<void> _loadAlbums() async {
+    if (!_reloading.add(LibrarySection.albums)) return;
     emit(state.copyWith(albums: SectionState.loading(state.albums.data)));
     try {
       final result = await _library.savedAlbums(
@@ -176,10 +213,13 @@ class LibraryCubit extends SafeCubit<LibraryState> {
     } catch (e) {
       emit(state.copyWith(albums: SectionState.error(e, state.albums.data)));
       if (e.needsNotice) _notices.emit(e);
+    } finally {
+      _reloading.remove(LibrarySection.albums);
     }
   }
 
   Future<void> _loadArtists() async {
+    if (!_reloading.add(LibrarySection.artists)) return;
     emit(state.copyWith(artists: SectionState.loading(state.artists.data)));
     try {
       final result = await _library.savedArtists(
@@ -190,6 +230,8 @@ class LibraryCubit extends SafeCubit<LibraryState> {
     } catch (e) {
       emit(state.copyWith(artists: SectionState.error(e, state.artists.data)));
       if (e.needsNotice) _notices.emit(e);
+    } finally {
+      _reloading.remove(LibrarySection.artists);
     }
   }
 
