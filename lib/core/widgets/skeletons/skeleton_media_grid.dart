@@ -26,17 +26,21 @@ class SkeletonMediaGrid extends StatelessWidget {
           maxWidth: constraints.maxWidth,
           textBlockHeight: textBlockHeight,
         );
+        final columns = delegate.crossAxisCount;
         final cellWidth = MediaCardMetrics.gridCellWidth(
           constraints.maxWidth,
-          delegate.crossAxisCount,
+          columns,
         );
         final cellHeight = cellWidth + textBlockHeight;
+        // Pad the placeholders to a whole number of rows: a partial last row
+        // would look unfinished while loading.
+        final count = MediaCardMetrics.pageSizeForColumns(itemCount, columns);
 
         return GridView.builder(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: padding,
           gridDelegate: delegate,
-          itemCount: itemCount,
+          itemCount: count,
           itemBuilder: (context, index) {
             return ShimmerBox(
               width: cellWidth,

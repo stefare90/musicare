@@ -54,9 +54,11 @@ class PaginatedMediaGrid extends StatelessWidget {
             columns,
           );
           final cellHeight = cellWidth + textBlockHeight;
-          // A whole row of skeletons keeps the progressive loading coherent
-          // with the initial grid skeleton instead of showing a lone spinner.
-          final skeletonCount = isLoadingMore ? columns : 0;
+          final loadedCells = leading.length + items.length;
+          final remainder = loadedCells % columns;
+          final skeletonCount = isLoadingMore
+              ? (remainder == 0 ? columns : columns - remainder)
+              : 0;
 
           return GridView.builder(
             physics: const AlwaysScrollableScrollPhysics(),

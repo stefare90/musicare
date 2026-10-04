@@ -14,7 +14,7 @@ import 'package:music_are/core/widgets/skeletons/skeleton_track_matrix.dart';
 void main() {
   group('Search Skeletons Tests', () {
     testWidgets(
-      'SkeletonMediaGrid renders specified number of skeleton items and scrolls',
+      'SkeletonMediaGrid pads its placeholders to whole rows',
       (tester) async {
         await tester.pumpWidget(
           const MaterialApp(
@@ -25,7 +25,11 @@ void main() {
         );
 
         expect(find.byType(GridView), findsOneWidget);
-        expect(find.byType(ShimmerBox), findsNWidgets(6));
+        final columns = MediaCardMetrics.gridColumns(800);
+        expect(
+          find.byType(ShimmerBox),
+          findsNWidgets(MediaCardMetrics.pageSizeForColumns(6, columns)),
+        );
       },
     );
 
