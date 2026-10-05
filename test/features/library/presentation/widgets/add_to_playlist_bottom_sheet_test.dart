@@ -136,7 +136,9 @@ void main() {
 
   testWidgets('tapping a playlist adds the track', (tester) async {
     stubPlaylists([owned]);
-    when(() => playlistService.addTracks('pl1', ['t1'])).thenAnswer((_) async {});
+    when(() => playlistService.addTracks('pl1', ['t1'])).thenAnswer(
+      (_) async => const AddTracksResult(added: 1, alreadyPresent: []),
+    );
 
     await tester.pumpWidget(buildTestableWidget());
     await tester.tap(find.text('Open'));
@@ -147,6 +149,26 @@ void main() {
 
     verify(() => playlistService.addTracks('pl1', ['t1'])).called(1);
     expect(find.text('Added to Chill Vibes'), findsOneWidget);
+  });
+
+  testWidgets('tapping a playlist says "already in" when it was there', (
+    tester,
+  ) async {
+    stubPlaylists([owned]);
+    when(() => playlistService.addTracks('pl1', ['t1'])).thenAnswer(
+      (_) async => const AddTracksResult(added: 0, alreadyPresent: ['t1']),
+    );
+
+    await tester.pumpWidget(buildTestableWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Chill Vibes'));
+    await tester.pumpAndSettle();
+
+    verify(() => playlistService.addTracks('pl1', ['t1'])).called(1);
+    expect(find.text('Already in Chill Vibes'), findsOneWidget);
+    expect(find.text('Added to Chill Vibes'), findsNothing);
   });
 
   testWidgets('lists only the playlists the user can write to', (tester) async {

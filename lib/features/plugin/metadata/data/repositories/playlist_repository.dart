@@ -32,7 +32,7 @@ class PlaylistRepository {
     );
   }
 
-  Future<void> addTracks(String playlistId, List<String> trackIds) =>
+  Future<AddTracksResult> addTracks(String playlistId, List<String> trackIds) =>
       _engine.metadata.playlist.addTracks(playlistId, trackIds);
 
   Future<void> removeTracks(String playlistId, List<String> trackIds) =>

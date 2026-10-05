@@ -505,6 +505,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String alreadyInPlaylist(Object playlist) {
+    return 'Already in $playlist';
+  }
+
+  @override
   String removedFromPlaylist(Object playlist) {
     return 'Removed from $playlist';
   }

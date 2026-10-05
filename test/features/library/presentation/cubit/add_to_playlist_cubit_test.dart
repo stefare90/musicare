@@ -153,12 +153,36 @@ void main() {
 
     final seen = <Object>[];
     final subscription = notices.notices.listen(seen.add);
-    final ok = await cubit.addTrack(playlist, track);
+    final result = await cubit.addTrack(playlist, track);
     await Future<void>.delayed(Duration.zero);
 
-    expect(ok, isFalse);
+    expect(result, isNull);
     expect(seen, hasLength(1));
     await subscription.cancel();
+  });
+
+  test('addTrack returns the outcome when the track is new', () async {
+    cubit = buildCubit();
+    when(() => playlists.addTracks('pl1', ['t1'])).thenAnswer(
+      (_) async => const AddTracksResult(added: 1, alreadyPresent: []),
+    );
+
+    final result = await cubit.addTrack(playlist, track);
+
+    expect(result?.added, 1);
+  });
+
+  test('addTrack returns the outcome when the track was already there',
+      () async {
+    cubit = buildCubit();
+    when(() => playlists.addTracks('pl1', ['t1'])).thenAnswer(
+      (_) async => const AddTracksResult(added: 0, alreadyPresent: ['t1']),
+    );
+
+    final result = await cubit.addTrack(playlist, track);
+
+    expect(result?.added, 0);
+    expect(result?.alreadyPresent, ['t1']);
   });
 
   test('createPlaylist resolves the user, adds the track and announces', () async {
@@ -172,7 +196,9 @@ void main() {
         public_: true,
       ),
     ).thenAnswer((_) async => playlist);
-    when(() => playlists.addTracks('pl1', ['t1'])).thenAnswer((_) async {});
+    when(() => playlists.addTracks('pl1', ['t1'])).thenAnswer(
+      (_) async => const AddTracksResult(added: 1, alreadyPresent: []),
+    );
 
     final outcome = await cubit.createPlaylist(
       name: 'My list',

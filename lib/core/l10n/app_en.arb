@@ -152,6 +152,7 @@
   "playlistCreatedAndTrackAdded": "Playlist created and track added",
   "playlistCreatedTrackNotAdded": "Playlist created, but the track could not be added",
   "addedToPlaylist": "Added to {playlist}",
+  "alreadyInPlaylist": "Already in {playlist}",
   "removedFromPlaylist": "Removed from {playlist}",
   "addedToQueue": "Added to queue",
   "remove": "Remove",

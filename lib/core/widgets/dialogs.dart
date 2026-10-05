@@ -229,6 +229,7 @@ abstract class Dialogs {
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.0),
+          side: BorderSide(color: context.colorScheme.primary, width: 1.2),
         ),
         backgroundColor: context.colorScheme.surfaceContainerHigh,
         // Actionable snackbars persist by default (Flutter 3.44+); keep the

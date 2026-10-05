@@ -1006,6 +1006,12 @@ abstract class AppLocalizations {
   /// **'Added to {playlist}'**
   String addedToPlaylist(Object playlist);
 
+  /// No description provided for @alreadyInPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in {playlist}'**
+  String alreadyInPlaylist(Object playlist);
+
   /// No description provided for @removedFromPlaylist.
   ///
   /// In en, this message translates to:

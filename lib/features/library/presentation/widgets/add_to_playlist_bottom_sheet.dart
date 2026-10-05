@@ -76,13 +76,17 @@ class _AddToPlaylistBody extends StatelessWidget {
   }
 
   Future<void> _addToPlaylist(BuildContext context, Playlist playlist) async {
-    final added = await context.read<AddToPlaylistCubit>().addTrack(
+    final result = await context.read<AddToPlaylistCubit>().addTrack(
       playlist,
       track,
     );
-    if (!added || !context.mounted) return;
+    if (result == null || !context.mounted) return;
 
-    final message = context.l10n.addedToPlaylist(playlist.name);
+    // `added == 0` means the track was already there: say so instead of a plain
+    // "added" that would be false.
+    final message = result.added > 0
+        ? context.l10n.addedToPlaylist(playlist.name)
+        : context.l10n.alreadyInPlaylist(playlist.name);
     Navigator.of(context).pop();
     sl<NoticeBus>().emit(Notice.message(message));
   }

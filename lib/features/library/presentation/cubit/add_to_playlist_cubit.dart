@@ -127,16 +127,16 @@ class AddToPlaylistCubit extends SafeCubit<AddToPlaylistState> {
     );
   }
 
-  /// Returns whether the track was added; failures are announced on the bus.
-  Future<bool> addTrack(Playlist playlist, Track track) async {
-    if (state.isMutating) return false;
+  /// Adds the track and returns the outcome (`added == 0` when the track was
+  /// already there); failures are announced on the bus and return null.
+  Future<AddTracksResult?> addTrack(Playlist playlist, Track track) async {
+    if (state.isMutating) return null;
     emit(state.copyWith(isMutating: true));
     try {
-      await _playlist.addTracks(playlist.id, [track.id]);
-      return true;
+      return await _playlist.addTracks(playlist.id, [track.id]);
     } catch (e) {
       _notices.emit(Notice.error(e));
-      return false;
+      return null;
     } finally {
       emit(state.copyWith(isMutating: false));
     }
@@ -164,7 +164,10 @@ class AddToPlaylistCubit extends SafeCubit<AddToPlaylistState> {
       var trackAdded = true;
       if (trackIds.isNotEmpty) {
         try {
-          await _playlist.addTracks(playlist.id, trackIds);
+          final result = await _playlist.addTracks(playlist.id, trackIds);
+          // A brand new playlist cannot already hold them, but a duplicate in
+          // the batch is still reported as not added.
+          trackAdded = result.added > 0;
         } catch (_) {
           // The playlist exists but is empty: surfaced as a partial success by
           // the caller, never left silent.

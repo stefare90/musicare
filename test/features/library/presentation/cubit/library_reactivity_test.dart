@@ -169,7 +169,9 @@ void main() {
         public_: false,
       ),
     ).thenAnswer((_) async => created);
-    when(() => playlists.addTracks('pl2', ['t1'])).thenAnswer((_) async {});
+    when(() => playlists.addTracks('pl2', ['t1'])).thenAnswer(
+      (_) async => const AddTracksResult(added: 1, alreadyPresent: []),
+    );
 
     await addToPlaylist.createPlaylist(name: 'Fresh', trackIds: ['t1']);
     await Future<void>.delayed(Duration.zero);
