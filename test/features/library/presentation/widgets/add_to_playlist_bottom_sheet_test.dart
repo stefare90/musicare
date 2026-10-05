@@ -11,6 +11,7 @@ import 'package:music_are/features/plugin/metadata/data/repositories/playlist_re
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
+import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
 
@@ -115,6 +116,13 @@ void main() {
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      builder: (context, child) => Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: NoticeListener(
+          notices: sl<NoticeBus>().notices,
+          child: child ?? const SizedBox.shrink(),
+        ),
+      ),
       home: Scaffold(
         body: Builder(
           builder: (context) => ElevatedButton(

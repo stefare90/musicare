@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/widgets/bottom_sheets/audio_source_bottom_sheet.dart';
 import 'package:music_are/core/widgets/bottom_sheets/queue_bottom_sheet.dart';
-import 'package:music_are/core/widgets/dialogs.dart';
 
 class PlayerSecondaryActions extends StatelessWidget {
   final Track track;
@@ -23,8 +24,9 @@ class PlayerSecondaryActions extends StatelessWidget {
         IconButton(
           icon: const Icon(Icons.lyrics_outlined),
           tooltip: 'Lyrics',
-          onPressed: () =>
-              Dialogs.showSnackBar(context, message: context.l10n.lyricsComingSoon),
+          onPressed: () => sl<NoticeBus>().emit(
+            Notice.message(context.l10n.lyricsComingSoon),
+          ),
         ),
         IconButton(
           icon: const Icon(Icons.queue_music_rounded),

@@ -1,13 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/utils/metadata_account_actions.dart';
+import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 
 import '../../../../../helpers/metadata_plugin_test_helpers.dart';
 
 void main() {
+  late NoticeBus bus;
+  final sl = GetIt.instance;
+
+  setUp(() {
+    bus = NoticeBus();
+    sl.registerSingleton<NoticeBus>(bus);
+  });
+
+  tearDown(() async {
+    await bus.close();
+    await sl.reset();
+  });
+
   Widget buildTestableWidget(
     AccountCubit cubit, {
     required void Function(bool) onResult,
@@ -17,6 +33,13 @@ void main() {
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => Scaffold(
+          resizeToAvoidBottomInset: false,
+          body: NoticeListener(
+            notices: bus.notices,
+            child: child ?? const SizedBox.shrink(),
+          ),
+        ),
         home: Scaffold(
           body: Builder(
             builder: (context) => ElevatedButton(

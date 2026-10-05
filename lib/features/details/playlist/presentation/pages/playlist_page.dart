@@ -158,16 +158,11 @@ class _PlaylistView extends StatelessWidget {
     Playlist playlist,
     Track track,
   ) async {
-    final cubit = context.read<PlaylistCubit>();
-    final messenger = ScaffoldMessenger.of(context);
-    final removed = await cubit.removeTrack(track);
+    final removed = await context.read<PlaylistCubit>().removeTrack(track);
     if (!removed || !context.mounted) return;
 
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(context.l10n.removedFromPlaylist(playlist.name)),
-        behavior: SnackBarBehavior.floating,
-      ),
+    sl<NoticeBus>().emit(
+      Notice.message(context.l10n.removedFromPlaylist(playlist.name)),
     );
   }
 }

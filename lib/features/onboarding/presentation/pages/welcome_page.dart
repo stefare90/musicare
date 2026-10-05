@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/widgets/dialogs.dart';
 import 'package:music_are/features/onboarding/presentation/pages/welcome_audio_source_page.dart';
 import 'package:music_are/features/onboarding/presentation/pages/welcome_intro_page.dart';
@@ -11,7 +13,6 @@ import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_
 import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_state.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
-import 'package:music_are/features/plugin/shared/presentation/utils/exception_localizer.dart';
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
@@ -81,10 +82,7 @@ class _WelcomePageState extends State<WelcomePage> {
                     Dialogs.hide(context);
                   } else if (state is MetadataPluginErrorState) {
                     Dialogs.hide(context);
-                    Dialogs.showErrorSnackBar(
-                      context,
-                      message: state.error.toLocalizedString(context),
-                    );
+                    sl<NoticeBus>().emit(Notice.error(state.error));
                   }
                 },
               ),
@@ -99,10 +97,7 @@ class _WelcomePageState extends State<WelcomePage> {
                     Dialogs.hide(context);
                   } else if (state is AudioSourcePluginErrorState) {
                     Dialogs.hide(context);
-                    Dialogs.showErrorSnackBar(
-                      context,
-                      message: state.error.toLocalizedString(context),
-                    );
+                    sl<NoticeBus>().emit(Notice.error(state.error));
                   }
                 },
               ),

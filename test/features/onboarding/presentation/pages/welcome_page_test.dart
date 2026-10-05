@@ -7,6 +7,7 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/onboarding/presentation/pages/welcome_page.dart';
 import 'package:music_are/features/onboarding/presentation/widgets/onboarding_dots_indicator.dart';
 import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
@@ -16,6 +17,7 @@ import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_p
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
+import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 
 class MockMetadataPluginCubit extends Mock implements MetadataPluginCubit {}
 
@@ -31,6 +33,7 @@ void main() {
   late MockMetadataPluginCubit mockMetadataCubit;
   late MockAudioSourcePluginCubit mockAudioSourceCubit;
   late MockPluginDiscoveryService mockDiscoveryService;
+  late NoticeBus bus;
 
   final metadataManifest = PluginManifest(
     id: 'org.gyawun.musicbrainz',
@@ -67,6 +70,8 @@ void main() {
     sl.registerLazySingleton<PluginDiscoveryService>(
       () => mockDiscoveryService,
     );
+    bus = NoticeBus();
+    sl.registerLazySingleton<NoticeBus>(() => bus);
 
     when(
       () => mockMetadataCubit.state,
@@ -97,6 +102,13 @@ void main() {
       child: MaterialApp.router(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => Scaffold(
+          resizeToAvoidBottomInset: false,
+          body: NoticeListener(
+            notices: bus.notices,
+            child: child ?? const SizedBox.shrink(),
+          ),
+        ),
         routerConfig: router,
       ),
     );
@@ -249,7 +261,7 @@ void main() {
       },
     );
 
-    testWidgets('shows error snackbar on metadata plugin error', (
+    testWidgets('shows an error snackbar on metadata plugin error', (
       tester,
     ) async {
       final metadataStream = StreamController<MetadataPluginState>.broadcast();

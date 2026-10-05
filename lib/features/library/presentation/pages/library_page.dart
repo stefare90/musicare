@@ -89,8 +89,6 @@ class _LibraryViewState extends State<_LibraryView>
     final result = await CreatePlaylistDialog.show(context);
     if (result == null || !context.mounted) return;
 
-    final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
     final created = await context.read<LibraryCubit>().createPlaylist(
       name: result.name,
       description: result.description,
@@ -98,14 +96,9 @@ class _LibraryViewState extends State<_LibraryView>
     );
     if (created == null || !context.mounted) return;
 
-    // The new playlist is announced by `LibraryCubit.createPlaylist`, so the
-    // change stream reloads the Playlists tab on its own.
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(l10n.playlistCreated),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    // The Playlists tab reloads through `LibraryCubit`'s change stream; the
+    // confirmation is shown by the notice host.
+    sl<NoticeBus>().emit(Notice.message(context.l10n.playlistCreated));
   }
 
   @override

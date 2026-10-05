@@ -67,12 +67,11 @@ class _NoticeListenerState extends State<NoticeListener> {
 
     switch (notice) {
       case MessageNotice(:final message, :final action):
-        final resolved = action?.call(context);
         Dialogs.showMessageSnackBar(
           context,
-          message: message(context),
-          actionLabel: resolved?.label,
-          onAction: resolved?.onAction,
+          message: message,
+          actionLabel: action?.label,
+          onAction: action?.onAction,
           keyboardInset: keyboardInset,
         );
       case ErrorNotice(:final error):

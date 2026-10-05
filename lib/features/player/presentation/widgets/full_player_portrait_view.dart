@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/models/media_type.dart';
-import 'package:music_are/core/widgets/dialogs.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/widgets/media/media_cover_image.dart';
 import 'package:music_are/features/library/presentation/widgets/favorite_button.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
@@ -75,9 +76,8 @@ class FullPlayerPortraitView extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.download_rounded),
                 tooltip: 'Download',
-                onPressed: () => Dialogs.showSnackBar(
-                  context,
-                  message: context.l10n.downloadComingSoon,
+                onPressed: () => sl<NoticeBus>().emit(
+                  Notice.message(context.l10n.downloadComingSoon),
                 ),
               ),
               FavoriteButton(track: track),

@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/foundation.dart';
 
 /// Optional action a notice can offer to the user.
 typedef NoticeAction = ({String label, VoidCallback onAction});
@@ -14,10 +14,8 @@ sealed class Notice {
 
   factory Notice.error(Object error) = ErrorNotice;
 
-  factory Notice.message(
-    String Function(BuildContext context) message, {
-    NoticeAction Function(BuildContext context)? action,
-  }) = MessageNotice;
+  factory Notice.message(String message, {NoticeAction? action}) =
+      MessageNotice;
 }
 
 final class ErrorNotice extends Notice {
@@ -26,12 +24,15 @@ final class ErrorNotice extends Notice {
   const ErrorNotice(this.error);
 }
 
+/// A message already localized by the emitter (normally a widget, which has a
+/// `BuildContext`).
+///
+/// Unlike [ErrorNotice], whose message and action are derived from the error
+/// when the snackbar is shown, this one carries plain text, so the notice stays
+/// a simple value.
 final class MessageNotice extends Notice {
-  /// Built lazily because the emitter (a cubit, usually) has no `BuildContext`:
-  /// the message is localized when the snackbar is shown.
-  final String Function(BuildContext context) message;
-
-  final NoticeAction Function(BuildContext context)? action;
+  final String message;
+  final NoticeAction? action;
 
   const MessageNotice(this.message, {this.action});
 }

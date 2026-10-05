@@ -7,7 +7,6 @@ import 'package:music_are/core/models/media_type.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/core/widgets/bottom_sheets/base_modal_bottom_sheet.dart';
-import 'package:music_are/core/widgets/dialogs.dart';
 import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/info_card.dart';
 import 'package:music_are/core/widgets/media/media_cover_image.dart';
@@ -60,8 +59,6 @@ class _AddToPlaylistBody extends StatelessWidget {
     final result = await CreatePlaylistDialog.show(context);
     if (result == null || !context.mounted) return;
 
-    final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     final outcome = await context.read<AddToPlaylistCubit>().createPlaylist(
       name: result.name,
@@ -71,41 +68,23 @@ class _AddToPlaylistBody extends StatelessWidget {
     );
     if (outcome == null || !context.mounted) return;
 
-    if (outcome.trackAdded) {
-      navigator.pop();
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(l10n.playlistCreatedAndTrackAdded),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } else {
-      // The playlist exists but is empty: say so before closing, instead of
-      // leaving a plain "created" that hides the partial failure.
-      Dialogs.showErrorSnackBar(
-        context,
-        message: l10n.playlistCreatedTrackNotAdded,
-      );
-      navigator.pop();
-    }
+    final message = outcome.trackAdded
+        ? context.l10n.playlistCreatedAndTrackAdded
+        : context.l10n.playlistCreatedTrackNotAdded;
+    navigator.pop();
+    sl<NoticeBus>().emit(Notice.message(message));
   }
 
   Future<void> _addToPlaylist(BuildContext context, Playlist playlist) async {
-    final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
     final added = await context.read<AddToPlaylistCubit>().addTrack(
       playlist,
       track,
     );
     if (!added || !context.mounted) return;
 
+    final message = context.l10n.addedToPlaylist(playlist.name);
     Navigator.of(context).pop();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(l10n.addedToPlaylist(playlist.name)),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    sl<NoticeBus>().emit(Notice.message(message));
   }
 
   @override

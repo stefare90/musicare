@@ -1,10 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/plugin/metadata/presentation/widgets/dynamic_plugin_form_dialog.dart';
+import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 
 void main() {
+  late NoticeBus bus;
+  final sl = GetIt.instance;
+
+  setUp(() {
+    bus = NoticeBus();
+    sl.registerSingleton<NoticeBus>(bus);
+  });
+
+  tearDown(() async {
+    await bus.close();
+    await sl.reset();
+  });
+
   Future<void> pumpDialog(
     WidgetTester tester, {
     String? message,
@@ -14,6 +30,13 @@ void main() {
     MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      builder: (context, child) => Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: NoticeListener(
+          notices: bus.notices,
+          child: child ?? const SizedBox.shrink(),
+        ),
+      ),
       home: Scaffold(
         body: DynamicPluginFormDialog(
           title: 'Connect to ListenBrainz',

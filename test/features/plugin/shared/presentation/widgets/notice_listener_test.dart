@@ -78,8 +78,8 @@ void main() {
 
     controller.add(
       Notice.message(
-        (context) => 'Already in Chill',
-        action: (context) => (label: 'View', onAction: () => actionCalls++),
+        'Already in Chill',
+        action: (label: 'View', onAction: () => actionCalls++),
       ),
     );
     await tester.pumpAndSettle();

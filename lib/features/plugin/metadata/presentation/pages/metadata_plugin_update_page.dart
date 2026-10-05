@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/core/widgets/dialogs.dart';
 import 'package:music_are/features/plugin/discovery/presentation/widgets/plugin_discovery_widget.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
-import 'package:music_are/features/plugin/shared/presentation/utils/exception_localizer.dart';
 
 class MetadataPluginUpdatePage extends StatelessWidget {
   const MetadataPluginUpdatePage({super.key});
@@ -29,10 +30,7 @@ class MetadataPluginUpdatePage extends StatelessWidget {
               context.go('/');
             } else if (state is MetadataPluginErrorState) {
               Dialogs.hide(context);
-              Dialogs.showErrorSnackBar(
-                context,
-                message: state.error.toLocalizedString(context),
-              );
+              sl<NoticeBus>().emit(Notice.error(state.error));
             }
           },
           child: SingleChildScrollView(
@@ -105,9 +103,9 @@ class MetadataPluginUpdatePage extends StatelessWidget {
                 PluginDiscoveryWidget(
                   pluginType: PluginType.metadata,
                   onInstallTap: (manifest) {
-                    context
-                        .read<MetadataPluginCubit>()
-                        .installDiscoveredPlugin(manifest);
+                    context.read<MetadataPluginCubit>().installDiscoveredPlugin(
+                      manifest,
+                    );
                   },
                 ),
               ],
