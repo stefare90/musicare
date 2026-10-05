@@ -4,34 +4,39 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
+import 'package:music_are/core/notice/notice.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
 import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 
 import '../../../../../helpers/metadata_plugin_test_helpers.dart';
 
 void main() {
-  late StreamController<Object> controller;
+  late StreamController<Notice> controller;
 
   setUp(() {
-    controller = StreamController<Object>.broadcast();
+    controller = StreamController<Notice>.broadcast();
   });
 
   tearDown(() async {
     await controller.close();
   });
 
-  Widget buildTestableWidget({AccountCubit? cubit}) {
+  /// Mirrors `main.dart`: the listener wraps the Navigator inside a root
+  /// Scaffold, so the snackbar is painted above every route.
+  Widget buildTestableWidget({AccountCubit? cubit, Widget? home}) {
     return BlocProvider<AccountCubit>.value(
       value: cubit ?? buildMockAccountCubit(),
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
+        builder: (context, child) => Scaffold(
+          resizeToAvoidBottomInset: false,
           body: NoticeListener(
             notices: controller.stream,
-            child: const SizedBox.shrink(),
+            child: child ?? const SizedBox.shrink(),
           ),
         ),
+        home: home ?? const Scaffold(body: SizedBox.shrink()),
       ),
     );
   }
@@ -41,11 +46,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(SnackBar), findsNothing);
 
-    controller.add(Exception('boom'));
+    controller.add(Notice.error(Exception('boom')));
     await tester.pumpAndSettle();
     expect(find.text('An unexpected error occurred: boom'), findsOneWidget);
 
-    controller.add(Exception('second'));
+    controller.add(Notice.error(Exception('second')));
     await tester.pumpAndSettle();
     expect(find.text('An unexpected error occurred: second'), findsOneWidget);
   });
@@ -56,11 +61,35 @@ void main() {
     await tester.pumpWidget(buildTestableWidget());
     await tester.pumpAndSettle();
 
-    controller.add(Exception('boom'));
+    controller.add(Notice.error(Exception('boom')));
     await tester.pumpAndSettle();
 
     expect(find.text('An unexpected error occurred: boom'), findsOneWidget);
     expect(find.byType(SnackBarAction), findsNothing);
+    expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
+  });
+
+  testWidgets('renders a neutral message notice without the error icon', (
+    tester,
+  ) async {
+    var actionCalls = 0;
+    await tester.pumpWidget(buildTestableWidget());
+    await tester.pumpAndSettle();
+
+    controller.add(
+      Notice.message(
+        (context) => 'Already in Chill',
+        action: (context) => (label: 'View', onAction: () => actionCalls++),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Already in Chill'), findsOneWidget);
+    expect(find.byIcon(Icons.error_outline_rounded), findsNothing);
+
+    await tester.tap(find.text('View'));
+    await tester.pumpAndSettle();
+    expect(actionCalls, 1);
   });
 
   testWidgets('offers the auth action for auth notices', (tester) async {
@@ -75,7 +104,7 @@ void main() {
     await tester.pumpWidget(buildTestableWidget(cubit: cubit));
     await tester.pumpAndSettle();
 
-    controller.add(const MetadataAuthRequiredException('sign in'));
+    controller.add(Notice.error(const MetadataAuthRequiredException('sign in')));
     await tester.pumpAndSettle();
 
     expect(find.text('Metadata sign-in required.'), findsOneWidget);
@@ -84,5 +113,38 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(signInCalls, 1);
+  });
+
+  // Regression: the snackbar used to be rendered by the page Scaffold, which
+  // sits *under* a modal route, so it was invisible (hitTestable == 0) while a
+  // sheet or dialog was open.
+  testWidgets('stays visible above an open modal route', (tester) async {
+    await tester.pumpWidget(
+      buildTestableWidget(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () {
+                showDialog<void>(
+                  context: context,
+                  builder: (_) => const AlertDialog(title: Text('DIALOG')),
+                );
+                controller.add(Notice.error(Exception('boom')));
+              },
+              child: const Text('Open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('DIALOG'), findsOneWidget);
+    final snack = find.text('An unexpected error occurred: boom');
+    expect(snack, findsOneWidget);
+    expect(snack.hitTestable(), findsOneWidget);
   });
 }

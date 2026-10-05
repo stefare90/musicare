@@ -37,7 +37,7 @@ class AlbumCubit extends SafeCubit<AlbumState> {
       emit(AlbumLoadedState(album: fullAlbum, tracks: result));
     } catch (e) {
       emit(AlbumErrorState(error: e, album: album));
-      if (e.needsNotice) _notices.emit(e);
+      if (e.needsNotice) _notices.emit(Notice.error(e));
     }
   }
 
@@ -82,7 +82,7 @@ class AlbumCubit extends SafeCubit<AlbumState> {
           error: e,
         ),
       );
-      if (e.needsNotice) _notices.emit(e);
+      if (e.needsNotice) _notices.emit(Notice.error(e));
     } finally {
       _isFetchingMoreTracks = false;
     }

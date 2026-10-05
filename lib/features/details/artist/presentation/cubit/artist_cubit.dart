@@ -61,7 +61,7 @@ class ArtistCubit extends SafeCubit<ArtistState> {
               topTracks: SectionState.error(e, state.topTracks.data),
             ),
           );
-          if (e.needsNotice) _notices.emit(e);
+          if (e.needsNotice) _notices.emit(Notice.error(e));
         });
   }
 
@@ -92,7 +92,7 @@ class ArtistCubit extends SafeCubit<ArtistState> {
       emit(state.copyWith(topTracks: SectionState.success(updatedResult)));
     } catch (e) {
       emit(state.copyWith(topTracks: SectionState.error(e, currentData)));
-      if (e.needsNotice) _notices.emit(e);
+      if (e.needsNotice) _notices.emit(Notice.error(e));
     } finally {
       _isFetchingMoreTopTracks = false;
     }
@@ -110,7 +110,7 @@ class ArtistCubit extends SafeCubit<ArtistState> {
           emit(
             state.copyWith(albums: SectionState.error(e, state.albums.data)),
           );
-          if (e.needsNotice) _notices.emit(e);
+          if (e.needsNotice) _notices.emit(Notice.error(e));
         });
   }
 
@@ -141,7 +141,7 @@ class ArtistCubit extends SafeCubit<ArtistState> {
       emit(state.copyWith(albums: SectionState.success(updatedResult)));
     } catch (e) {
       emit(state.copyWith(albums: SectionState.error(e, currentData)));
-      if (e.needsNotice) _notices.emit(e);
+      if (e.needsNotice) _notices.emit(Notice.error(e));
     } finally {
       _isFetchingMoreAlbums = false;
     }
@@ -174,7 +174,7 @@ class ArtistCubit extends SafeCubit<ArtistState> {
       emit(state.copyWith(related: SectionState.success(updatedResult)));
     } catch (e) {
       emit(state.copyWith(related: SectionState.error(e, currentData)));
-      if (e.needsNotice) _notices.emit(e);
+      if (e.needsNotice) _notices.emit(Notice.error(e));
     } finally {
       _isFetchingMoreRelated = false;
     }
@@ -192,7 +192,7 @@ class ArtistCubit extends SafeCubit<ArtistState> {
           emit(
             state.copyWith(related: SectionState.error(e, state.related.data)),
           );
-          if (e.needsNotice) _notices.emit(e);
+          if (e.needsNotice) _notices.emit(Notice.error(e));
         });
   }
 }

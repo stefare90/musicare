@@ -63,7 +63,7 @@ class HomeCubit extends SafeCubit<HomeState> {
           ],
         ),
       );
-      if (e.needsNotice) _notices.emit(e);
+      if (e.needsNotice) _notices.emit(Notice.error(e));
     }
   }
 
@@ -99,7 +99,7 @@ class HomeCubit extends SafeCubit<HomeState> {
           }).toList();
 
           emit(state.copyWith(sections: updatedSections));
-          if (e.needsNotice) _notices.emit(e);
+          if (e.needsNotice) _notices.emit(Notice.error(e));
         });
   }
 

@@ -1,5 +1,9 @@
 import 'dart:async';
 
+import 'package:music_are/core/notice/notice.dart';
+
+export 'package:music_are/core/notice/notice.dart';
+
 /// App-wide one-shot notice channel.
 ///
 /// Any cubit or background service can emit; a single `NoticeListener` at the
@@ -10,26 +14,26 @@ class NoticeBus {
     _controller.onListen = _flush;
   }
 
-  final StreamController<Object> _controller =
-      StreamController<Object>.broadcast();
-  final List<Object> _pending = [];
+  final StreamController<Notice> _controller =
+      StreamController<Notice>.broadcast();
+  final List<Notice> _pending = [];
 
-  Stream<Object> get notices => _controller.stream;
+  Stream<Notice> get notices => _controller.stream;
 
-  void emit(Object error) {
+  void emit(Notice notice) {
     if (_controller.hasListener) {
-      _controller.add(error);
+      _controller.add(notice);
     } else {
-      _pending.add(error);
+      _pending.add(notice);
     }
   }
 
   void _flush() {
     if (_pending.isEmpty) return;
-    final pending = List<Object>.of(_pending);
+    final pending = List<Notice>.of(_pending);
     _pending.clear();
-    for (final error in pending) {
-      _controller.add(error);
+    for (final notice in pending) {
+      _controller.add(notice);
     }
   }
 

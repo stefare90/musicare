@@ -220,7 +220,7 @@ void main() {
 
       expect(cubit.state, isA<PlaylistErrorState>());
       expect(notices, hasLength(1));
-      expect(notices.single, same(error));
+      expect((notices.single as ErrorNotice).error, same(error));
       await subscription.cancel();
     });
 
@@ -300,7 +300,7 @@ void main() {
         final state = cubit.state as PlaylistLoadedState;
         expect(state.tracks.items, hasLength(1));
         expect(state.tracks.total, 1);
-        expect(notices.single, same(error));
+        expect((notices.single as ErrorNotice).error, same(error));
         await subscription.cancel();
       },
     );
@@ -356,7 +356,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(deleted, isFalse);
-      expect(notices.single, same(error));
+      expect((notices.single as ErrorNotice).error, same(error));
       await subscription.cancel();
     });
   });

@@ -177,7 +177,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
       }
       return playlist;
     } catch (e) {
-      _notices.emit(e);
+      _notices.emit(Notice.error(e));
       return null;
     }
   }
@@ -195,7 +195,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
       emit(
         state.copyWith(playlists: SectionState.error(e, state.playlists.data)),
       );
-      if (e.needsNotice) _notices.emit(e);
+      if (e.needsNotice) _notices.emit(Notice.error(e));
     } finally {
       _reloading.remove(LibrarySection.playlists);
     }
@@ -212,7 +212,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
       emit(state.copyWith(albums: SectionState.success(result)));
     } catch (e) {
       emit(state.copyWith(albums: SectionState.error(e, state.albums.data)));
-      if (e.needsNotice) _notices.emit(e);
+      if (e.needsNotice) _notices.emit(Notice.error(e));
     } finally {
       _reloading.remove(LibrarySection.albums);
     }
@@ -229,7 +229,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
       emit(state.copyWith(artists: SectionState.success(result)));
     } catch (e) {
       emit(state.copyWith(artists: SectionState.error(e, state.artists.data)));
-      if (e.needsNotice) _notices.emit(e);
+      if (e.needsNotice) _notices.emit(Notice.error(e));
     } finally {
       _reloading.remove(LibrarySection.artists);
     }
@@ -256,7 +256,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
       emit(update(SectionState.success(combined)));
     } catch (e) {
       emit(update(SectionState.error(e, current.data)));
-      if (e.needsNotice) _notices.emit(e);
+      if (e.needsNotice) _notices.emit(Notice.error(e));
     }
   }
 

@@ -148,7 +148,7 @@ class SearchCubit extends SafeCubit<SearchState> {
       }
     } catch (e) {
       emit(_activeError(state, e, keepData: false));
-      if (e.needsNotice) _notices.emit(e);
+      if (e.needsNotice) _notices.emit(Notice.error(e));
     }
   }
 
@@ -234,7 +234,7 @@ class SearchCubit extends SafeCubit<SearchState> {
       }
     } catch (e) {
       emit(_activeError(state, e, keepData: true));
-      if (e.needsNotice) _notices.emit(e);
+      if (e.needsNotice) _notices.emit(Notice.error(e));
     }
   }
 

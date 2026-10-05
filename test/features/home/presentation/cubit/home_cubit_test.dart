@@ -191,7 +191,7 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 20));
 
       expect(notices, hasLength(1));
-      expect(notices.single, same(error));
+      expect((notices.single as ErrorNotice).error, same(error));
       await subscription.cancel();
     });
   });

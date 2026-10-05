@@ -180,12 +180,53 @@ abstract class Dialogs {
     required String message,
     String? actionLabel,
     VoidCallback? onAction,
+    double keyboardInset = 0.0,
+  }) => _showSnackBar(
+    context,
+    message: message,
+    icon: Icons.error_outline_rounded,
+    iconColor: context.colorScheme.error,
+    actionLabel: actionLabel,
+    onAction: onAction,
+    keyboardInset: keyboardInset,
+  );
+
+  /// Message-only variant (no error icon), for notices that are not failures.
+  static void showMessageSnackBar(
+    BuildContext context, {
+    required String message,
+    String? actionLabel,
+    VoidCallback? onAction,
+    double keyboardInset = 0.0,
+  }) => _showSnackBar(
+    context,
+    message: message,
+    actionLabel: actionLabel,
+    onAction: onAction,
+    keyboardInset: keyboardInset,
+  );
+
+  static void _showSnackBar(
+    BuildContext context, {
+    required String message,
+    IconData? icon,
+    Color? iconColor,
+    String? actionLabel,
+    VoidCallback? onAction,
+    // Non-zero only when the Scaffold on screen does not lift the snackbar for
+    // the keyboard itself (the root notice host keeps the app's MediaQuery
+    // untouched, so it cannot).
+    double keyboardInset = 0.0,
   }) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+        margin: EdgeInsets.only(
+          left: 16.0,
+          right: 16.0,
+          bottom: 16.0 + keyboardInset,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.0),
         ),
@@ -202,8 +243,10 @@ abstract class Dialogs {
             : null,
         content: Row(
           children: [
-            Icon(Icons.error_outline_rounded, color: context.colorScheme.error),
-            const SizedBox(width: 12),
+            if (icon != null) ...[
+              Icon(icon, color: iconColor ?? context.colorScheme.error),
+              const SizedBox(width: 12),
+            ],
             Expanded(
               child: Text(
                 message,

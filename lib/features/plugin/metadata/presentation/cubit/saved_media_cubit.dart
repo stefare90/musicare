@@ -195,7 +195,7 @@ class SavedMediaCubit extends SafeCubit<SavedMediaState>
     } catch (e) {
       _snapshot[type] = previous;
       emit(state.withIds(type, previous));
-      _notices.emit(e);
+      _notices.emit(Notice.error(e));
     }
   }
 

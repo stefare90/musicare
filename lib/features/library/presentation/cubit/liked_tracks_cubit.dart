@@ -67,7 +67,7 @@ class LikedTracksCubit extends SafeCubit<LikedTracksState> {
       emit(state.copyWith(tracks: SectionState.success(result)));
     } catch (e) {
       emit(state.copyWith(tracks: SectionState.error(e, state.tracks.data)));
-      if (e.needsNotice) _notices.emit(e);
+      if (e.needsNotice) _notices.emit(Notice.error(e));
     } finally {
       _isLoading = false;
     }
@@ -94,7 +94,7 @@ class LikedTracksCubit extends SafeCubit<LikedTracksState> {
       emit(state.copyWith(tracks: SectionState.success(combined)));
     } catch (e) {
       emit(state.copyWith(tracks: SectionState.error(e, current.data)));
-      if (e.needsNotice) _notices.emit(e);
+      if (e.needsNotice) _notices.emit(Notice.error(e));
     }
   }
 

@@ -135,7 +135,7 @@ class AddToPlaylistCubit extends SafeCubit<AddToPlaylistState> {
       await _playlist.addTracks(playlist.id, [track.id]);
       return true;
     } catch (e) {
-      _notices.emit(e);
+      _notices.emit(Notice.error(e));
       return false;
     } finally {
       emit(state.copyWith(isMutating: false));
@@ -176,7 +176,7 @@ class AddToPlaylistCubit extends SafeCubit<AddToPlaylistState> {
       await _savedMedia.refresh(MediaItemType.playlist);
       return CreatePlaylistOutcome(playlist: playlist, trackAdded: trackAdded);
     } catch (e) {
-      _notices.emit(e);
+      _notices.emit(Notice.error(e));
       return null;
     }
   }

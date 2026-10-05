@@ -1,9 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
+import 'package:music_are/core/notice/notice.dart';
 import 'package:music_are/features/plugin/metadata/presentation/utils/metadata_account_actions.dart';
-
-typedef NoticeAction = ({String label, VoidCallback onAction});
 
 /// The two independent questions a notice answers: does it need to be shown,
 /// and does it offer an action.

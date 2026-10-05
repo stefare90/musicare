@@ -42,7 +42,7 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
       emit(PlaylistLoadedState(playlist: playlist, tracks: result));
     } catch (e) {
       emit(PlaylistErrorState(error: e, playlist: playlist));
-      if (e.needsNotice) _notices.emit(e);
+      if (e.needsNotice) _notices.emit(Notice.error(e));
     }
   }
 
@@ -71,7 +71,7 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
       return true;
     } catch (e) {
       emit(current.copyWith(tracks: previous));
-      _notices.emit(e);
+      _notices.emit(Notice.error(e));
       return false;
     }
   }
@@ -84,7 +84,7 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
       await _savedMedia.refresh(MediaItemType.playlist);
       return true;
     } catch (e) {
-      _notices.emit(e);
+      _notices.emit(Notice.error(e));
       return false;
     }
   }
@@ -130,7 +130,7 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
           error: e,
         ),
       );
-      if (e.needsNotice) _notices.emit(e);
+      if (e.needsNotice) _notices.emit(Notice.error(e));
     } finally {
       _isFetchingMoreTracks = false;
     }

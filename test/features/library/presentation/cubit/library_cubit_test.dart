@@ -282,7 +282,7 @@ void main() {
     await Future<void>.delayed(Duration.zero);
 
     expect(created, isNull);
-    expect(seen.single, isA<MetadataAuthRequiredException>());
+    expect((seen.single as ErrorNotice).error, isA<MetadataAuthRequiredException>());
     await subscription.cancel();
   });
 
