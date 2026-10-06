@@ -1,7 +1,7 @@
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 
 /// State of the metadata plugin lifecycle. The account identity lives in
-/// `AccountCubit`, not here.
+/// `UserCubit`, not here.
 abstract class MetadataPluginState {}
 
 class MetadataPluginInitialState extends MetadataPluginState {}

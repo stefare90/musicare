@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
 import '../../../../../helpers/metadata_plugin_test_helpers.dart';
@@ -11,9 +11,9 @@ import '../../../../../helpers/metadata_plugin_test_helpers.dart';
 void main() {
   late BuildContext context;
 
-  Future<void> pumpContext(WidgetTester tester, AccountCubit cubit) async {
+  Future<void> pumpContext(WidgetTester tester, UserCubit cubit) async {
     await tester.pumpWidget(
-      BlocProvider<AccountCubit>.value(
+      BlocProvider<UserCubit>.value(
         value: cubit,
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -35,12 +35,11 @@ void main() {
     var signInCalls = 0;
     await pumpContext(
       tester,
-      buildMockAccountCubit(
-        onSignIn: () async {
+      TestUserCubit(testUserState())
+        ..onSignIn = () async {
           signInCalls++;
           return AuthResult.authenticated;
         },
-      ),
     );
 
     final error = const MetadataAuthRequiredException('sign in');
@@ -60,7 +59,7 @@ void main() {
   testWidgets('other errors are neither notifiable nor actionable', (
     tester,
   ) async {
-    await pumpContext(tester, buildMockAccountCubit());
+    await pumpContext(tester, TestUserCubit(testUserState()));
 
     expect(Exception('boom').needsNotice, isFalse);
     expect(Exception('boom').noticeAction(context), isNull);

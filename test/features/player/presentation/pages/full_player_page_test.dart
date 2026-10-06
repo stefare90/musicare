@@ -4,9 +4,7 @@ import '../../../../helpers/metadata_plugin_test_helpers.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
-import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/widgets/bottom_sheets/audio_source_bottom_sheet.dart';
 import 'package:music_are/core/widgets/bottom_sheets/queue_bottom_sheet.dart';
 import 'package:music_are/features/player/data/models/playback_repeat_mode.dart';
@@ -16,7 +14,7 @@ import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/player/presentation/cubit/queue_state.dart';
 import 'package:music_are/features/player/presentation/pages/full_player_page.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
 
 class MockPlayerCubit extends Mock implements PlayerCubit {}
@@ -93,12 +91,8 @@ void main() {
             body: MultiBlocProvider(
               providers: [
                 BlocProvider<PlayerCubit>.value(value: mockPlayerCubit),
-                BlocProvider<SavedMediaCubit>(
-                  create: (_) => SavedMediaCubit(
-                    LibraryRepository(engine),
-                    NoticeBus(),
-                    session: TestAccountSession(),
-                  ),
+                BlocProvider<UserCubit>(
+                  create: (_) => TestUserCubit(testUserState()),
                 ),
               ],
               child: FullPlayerPage(onCollapse: onCollapse),

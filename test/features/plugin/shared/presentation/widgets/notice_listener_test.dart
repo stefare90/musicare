@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 
 import '../../../../../helpers/metadata_plugin_test_helpers.dart';
@@ -23,9 +23,9 @@ void main() {
 
   /// Mirrors `main.dart`: the listener wraps the Navigator inside a root
   /// Scaffold, so the snackbar is painted above every route.
-  Widget buildTestableWidget({AccountCubit? cubit, Widget? home}) {
-    return BlocProvider<AccountCubit>.value(
-      value: cubit ?? buildMockAccountCubit(),
+  Widget buildTestableWidget({UserCubit? cubit, Widget? home}) {
+    return BlocProvider<UserCubit>.value(
+      value: cubit ?? TestUserCubit(testUserState()),
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -94,12 +94,11 @@ void main() {
 
   testWidgets('offers the auth action for auth notices', (tester) async {
     var signInCalls = 0;
-    final cubit = buildMockAccountCubit(
-      onSignIn: () async {
+    final cubit = TestUserCubit(testUserState())
+      ..onSignIn = () async {
         signInCalls++;
         return AuthResult.authenticated;
-      },
-    );
+      };
 
     await tester.pumpWidget(buildTestableWidget(cubit: cubit));
     await tester.pumpAndSettle();

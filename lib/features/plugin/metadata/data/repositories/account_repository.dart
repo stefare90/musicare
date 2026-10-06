@@ -3,7 +3,7 @@ import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin
 
 /// Data access for the account: authentication and the provider identity.
 ///
-/// Limited scope on purpose: it exposes only what `AccountCubit` needs (`IAuth`
+/// Limited scope on purpose: it exposes only what `UserCubit` needs (`IAuth`
 /// plus the user id from `IUser.me()`), never the whole engine.
 class AccountRepository {
   AccountRepository(this._engine, this._preferences);

@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/utils/metadata_account_actions.dart';
 import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 
@@ -25,10 +25,10 @@ void main() {
   });
 
   Widget buildTestableWidget(
-    AccountCubit cubit, {
+    UserCubit cubit, {
     required void Function(bool) onResult,
   }) {
-    return BlocProvider<AccountCubit>.value(
+    return BlocProvider<UserCubit>.value(
       value: cubit,
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -55,9 +55,8 @@ void main() {
 
   testWidgets('reports a failed sign-in with a snackbar', (tester) async {
     var signedIn = true;
-    final cubit = buildMockAccountCubit(
-      onSignIn: () async => AuthResult.failed,
-    );
+    final cubit = TestUserCubit(testUserState())
+      ..nextSignInResult = AuthResult.failed;
 
     await tester.pumpWidget(
       buildTestableWidget(cubit, onResult: (value) => signedIn = value),
@@ -76,9 +75,8 @@ void main() {
 
   testWidgets('stays silent when the form is cancelled', (tester) async {
     var signedIn = true;
-    final cubit = buildMockAccountCubit(
-      onSignIn: () async => AuthResult.cancelled,
-    );
+    final cubit = TestUserCubit(testUserState())
+      ..nextSignInResult = AuthResult.cancelled;
 
     await tester.pumpWidget(
       buildTestableWidget(cubit, onResult: (value) => signedIn = value),
@@ -92,9 +90,7 @@ void main() {
 
   testWidgets('returns true when the sign-in succeeds', (tester) async {
     var signedIn = false;
-    final cubit = buildMockAccountCubit(
-      onSignIn: () async => AuthResult.authenticated,
-    );
+    final cubit = TestUserCubit(testUserState());
 
     await tester.pumpWidget(
       buildTestableWidget(cubit, onResult: (value) => signedIn = value),
@@ -107,12 +103,11 @@ void main() {
 
   testWidgets('signOut logs the plugin out', (tester) async {
     var logoutCalls = 0;
-    final cubit = buildMockAccountCubit(
-      onSignOut: () async => logoutCalls++,
-    );
+    final cubit = TestUserCubit(testUserState())
+      ..onSignOut = () async => logoutCalls++;
 
     await tester.pumpWidget(
-      BlocProvider<AccountCubit>.value(
+      BlocProvider<UserCubit>.value(
         value: cubit,
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,

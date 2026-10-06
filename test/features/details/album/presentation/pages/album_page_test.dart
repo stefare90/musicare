@@ -6,13 +6,12 @@ import 'package:get_it/get_it.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
-import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/details/album/presentation/pages/album_page.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
@@ -75,13 +74,7 @@ void main() {
     final mockAuth = MockAuthService();
     when(() => mockMetadata.auth).thenReturn(mockAuth);
     when(() => mockAuth.isAuthenticated()).thenAnswer((_) async => false);
-    sl.registerLazySingleton<SavedMediaCubit>(
-      () => SavedMediaCubit(
-        LibraryRepository(mockEngine),
-        sl<NoticeBus>(),
-        session: TestAccountSession(),
-      ),
-    );
+    sl.registerLazySingleton<UserCubit>(() => TestUserCubit(testUserState()));
   });
 
   Widget buildTestableWidget() {
@@ -91,7 +84,7 @@ void main() {
       home: MultiBlocProvider(
         providers: [
           BlocProvider<PlayerCubit>.value(value: mockPlayerCubit),
-          BlocProvider<SavedMediaCubit>.value(value: sl<SavedMediaCubit>()),
+          BlocProvider<UserCubit>.value(value: sl<UserCubit>()),
         ],
         child: AlbumPage(album: testAlbum),
       ),

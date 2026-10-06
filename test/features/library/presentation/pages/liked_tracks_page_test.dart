@@ -11,9 +11,7 @@ import 'package:music_are/features/library/presentation/pages/liked_tracks_page.
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
 
@@ -60,15 +58,7 @@ void main() {
     sl.registerLazySingleton<MetadataPluginEngine>(() => engine);
     sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
   sl.registerLazySingleton<LibraryRepository>(() => LibraryRepository(engine));
-    sl.registerLazySingleton<AccountCubit>(() => buildMockAccountCubit());
-    sl.registerLazySingleton<SavedMediaCubit>(
-      () => SavedMediaCubit(
-        sl<LibraryRepository>(),
-        sl<NoticeBus>(),
-        session: sl<AccountCubit>(),
-      ),
-    );
-    sl.registerLazySingleton<SavedMediaIndex>(() => sl<SavedMediaCubit>());
+    sl.registerLazySingleton<UserCubit>(() => TestUserCubit(testUserState()));
 
     when(() => playerCubit.state).thenReturn(const PlayerState());
     when(() => playerCubit.stream).thenAnswer((_) => const Stream.empty());

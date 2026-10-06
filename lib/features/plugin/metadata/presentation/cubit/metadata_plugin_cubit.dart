@@ -9,7 +9,7 @@ import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dar
 
 /// Manages the metadata plugin lifecycle (install, load, update, version).
 ///
-/// It owns the plugin, not the user: the account identity lives in `AccountCubit`.
+/// It owns the plugin, not the user: the account identity lives in `UserCubit`.
 /// Data access goes through [PluginRepository] (lifecycle only).
 class MetadataPluginCubit extends SafeCubit<MetadataPluginState> {
   final PluginRepository _plugin;

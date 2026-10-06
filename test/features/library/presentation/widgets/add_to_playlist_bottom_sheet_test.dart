@@ -9,8 +9,7 @@ import 'package:music_are/features/library/presentation/widgets/add_to_playlist_
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
@@ -30,7 +29,7 @@ void main() {
   late MockMetadataPlugin metadata;
   late MockUserService user;
   late MockPlaylistService playlistService;
-  late TestSavedMediaIndex savedMedia;
+  late TestUserCubit userCubit;
 
   final owned = Playlist(
     id: 'pl1',
@@ -72,28 +71,21 @@ void main() {
     metadata = MockMetadataPlugin();
     user = MockUserService();
     playlistService = MockPlaylistService();
-    savedMedia = TestSavedMediaIndex();
+    userCubit = TestUserCubit(
+      testUserState(isAuthenticated: true, userId: 'u1'),
+    );
 
     sl.registerLazySingleton<LibraryRepository>(() => LibraryRepository(engine));
     sl.registerLazySingleton<PlaylistRepository>(
       () => PlaylistRepository(engine),
     );
     sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
-    sl.registerLazySingleton<AccountCubit>(
-      () => buildMockAccountCubit(
-        state: testAccountState(isAuthenticated: true, userId: 'u1'),
-      ),
-    );
-    sl.registerLazySingleton<SavedMediaIndex>(() => savedMedia);
+    sl.registerLazySingleton<UserCubit>(() => userCubit);
 
     when(() => engine.hasMetadata).thenReturn(true);
     when(() => engine.metadata).thenReturn(metadata);
     when(() => metadata.user).thenReturn(user);
     when(() => metadata.playlist).thenReturn(playlistService);
-  });
-
-  tearDown(() async {
-    await savedMedia.close();
   });
 
   void stubPlaylists(List<Playlist> playlists) {

@@ -9,8 +9,7 @@ import 'package:music_are/features/player/data/services/audio_player_driver.dart
 import 'package:music_are/features/player/data/services/audio_player_service.dart';
 import 'package:music_are/features/player/data/services/audio_stream_resolver.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/account_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/browse_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
@@ -18,7 +17,6 @@ import 'package:music_are/features/plugin/metadata/data/repositories/media_repos
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/plugin_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/search_repository.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
 import 'package:music_are/features/plugin/audio_source/data/services/audio_source_plugin_engine.dart';
 import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
 import 'package:music_are/features/plugin/discovery/data/services/plugin_discovery_service.dart';
@@ -126,15 +124,16 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<PlayerCubit>(
     () => PlayerCubit(audioService: sl<AudioPlayerService>()),
   );
-  sl.registerLazySingleton<AccountCubit>(
-    () => AccountCubit(sl<AccountRepository>()),
-  );
-  sl.registerLazySingleton<SavedMediaCubit>(
-    () => SavedMediaCubit(
+  sl.registerLazySingleton<UserCubit>(
+    () => UserCubit(
+      sl<AccountRepository>(),
       sl<LibraryRepository>(),
       sl<NoticeBus>(),
-      session: sl<AccountCubit>(),
+      sl<PlaylistRepository>(),
     ),
   );
-  sl.registerLazySingleton<SavedMediaIndex>(() => sl<SavedMediaCubit>());
+  sl.registerLazySingleton<UserSession>(() => sl<UserCubit>());
+  sl.registerLazySingleton<UserFavorites>(() => sl<UserCubit>());
+  sl.registerLazySingleton<UserSavedMediaIndex>(() => sl<UserCubit>());
+  sl.registerLazySingleton<UserPlaylistEdits>(() => sl<UserCubit>());
 }

@@ -15,9 +15,7 @@ import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
 import 'package:music_are/features/details/playlist/presentation/widgets/playlist_visibility_badge.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/library/presentation/utils/track_actions.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
@@ -35,7 +33,7 @@ class PlaylistPage extends StatelessWidget {
         sl<MediaRepository>(),
         sl<PlaylistRepository>(),
         sl<NoticeBus>(),
-        savedMedia: sl<SavedMediaIndex>(),
+        savedMedia: sl<UserCubit>(),
       )..loadPlaylist(playlist),
       child: const _PlaylistView(),
     );
@@ -61,13 +59,13 @@ class _PlaylistView extends StatelessWidget {
         }
         if (state is PlaylistLoadedState) {
           final playlist = state.playlist;
-          final currentUserId = context.select<AccountCubit, String?>(
+          final currentUserId = context.select<UserCubit, String?>(
             (c) => c.state.userId,
           );
           final isOwned = playlist.isOwnedBy(currentUserId);
           final isSaved =
               !isOwned &&
-              context.select<SavedMediaCubit, bool>(
+              context.select<UserCubit, bool>(
                 (c) => c.isPlaylistSaved(playlist.id),
               );
           return SliverMediaScaffold(
@@ -78,15 +76,14 @@ class _PlaylistView extends StatelessWidget {
             isSaved: isSaved,
             onSaveTap: isOwned
                 ? null
-                : () => context.read<SavedMediaCubit>().togglePlaylist(playlist),
+                : () => context.read<UserCubit>().togglePlaylist(playlist),
             onOptionsTap: () => PlaylistOptionsBottomSheet.show(
               context,
               playlist,
               isSaved: isSaved,
               onToggleSave: isOwned
                   ? null
-                  : () =>
-                        context.read<SavedMediaCubit>().togglePlaylist(playlist),
+                  : () => context.read<UserCubit>().togglePlaylist(playlist),
               onDelete: isOwned
                   ? () => _deletePlaylist(context, playlist)
                   : null,

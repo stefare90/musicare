@@ -10,7 +10,7 @@ import 'package:music_are/features/library/presentation/cubit/liked_tracks_cubit
 import 'package:music_are/features/library/presentation/cubit/liked_tracks_state.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 
 class LikedTracksPage extends StatelessWidget {
   const LikedTracksPage({super.key});
@@ -22,7 +22,7 @@ class LikedTracksPage extends StatelessWidget {
           LikedTracksCubit(
             sl<LibraryRepository>(),
             sl<NoticeBus>(),
-            savedMedia: sl<SavedMediaIndex>(),
+            savedMedia: sl<UserCubit>(),
           )..load(),
       child: const _LikedSongsView(),
     );

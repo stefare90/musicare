@@ -3,7 +3,7 @@ import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/features/player/data/services/audio_player_driver.dart';
 import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
 import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_state.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
 
@@ -23,7 +23,7 @@ abstract class AppInitializer {
 
     await metadataCubit.initialize();
     await audioSourceCubit.initialize();
-    await sl<AccountCubit>().initialize();
+    await sl<UserCubit>().initialize();
 
     return _determineInitialLocation(
       metadataState: metadataCubit.state,

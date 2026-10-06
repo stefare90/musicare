@@ -6,10 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
-import 'package:music_are/core/notice/notice_bus.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/player/presentation/cubit/queue_state.dart';
@@ -124,12 +122,8 @@ void main() {
     return MultiBlocProvider(
       providers: [
         BlocProvider<PlayerCubit>.value(value: mockPlayerCubit),
-        BlocProvider<SavedMediaCubit>(
-          create: (_) => SavedMediaCubit(
-            LibraryRepository(engine),
-            NoticeBus(),
-            session: TestAccountSession(),
-          ),
+        BlocProvider<UserCubit>(
+          create: (_) => TestUserCubit(testUserState()),
         ),
       ],
       child: MaterialApp.router(

@@ -16,11 +16,9 @@ import 'package:music_are/features/library/presentation/widgets/library_artists_
 import 'package:music_are/features/library/presentation/widgets/library_playlists_tab.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_state.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
 import 'package:music_are/features/plugin/metadata/presentation/utils/metadata_account_actions.dart';
 
 class LibraryPage extends StatelessWidget {
@@ -39,8 +37,8 @@ class LibraryPage extends StatelessWidget {
             sl<LibraryRepository>(),
             sl<NoticeBus>(),
             playlist: sl<PlaylistRepository>(),
-            session: sl<AccountCubit>(),
-            savedMedia: sl<SavedMediaIndex>(),
+            session: sl<UserCubit>(),
+            savedMedia: sl<UserCubit>(),
           )
             ..updateGridColumns(columns)
             ..loadAll(),
@@ -80,7 +78,7 @@ class _LibraryViewState extends State<_LibraryView>
     super.dispose();
   }
 
-  // The reload after signing in is driven by `AccountCubit` inside LibraryCubit.
+  // The reload after signing in is driven by `UserCubit` inside LibraryCubit.
   Future<void> _signIn(BuildContext context) async {
     await MetadataAccountActions.signIn(context);
   }
@@ -106,7 +104,7 @@ class _LibraryViewState extends State<_LibraryView>
     return BlocBuilder<MetadataPluginCubit, MetadataPluginState>(
       builder: (context, pluginState) {
         final pluginReady = pluginState is MetadataPluginLoadedState;
-        return BlocBuilder<AccountCubit, AccountState>(
+        return BlocBuilder<UserCubit, UserState>(
           builder: (context, auth) {
             return Scaffold(
               appBar: AppBar(

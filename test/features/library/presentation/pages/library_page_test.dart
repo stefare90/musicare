@@ -10,11 +10,9 @@ import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/library/presentation/pages/library_page.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
 
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
 
@@ -30,7 +28,7 @@ void main() {
   late MockPluginEngine engine;
   late MockMetadataPlugin metadata;
   late MockUserService user;
-  late AccountCubit authCubit;
+  late TestUserCubit authCubit;
 
   final playlist = Playlist(
     id: 'pl1',
@@ -52,16 +50,8 @@ void main() {
     sl.registerLazySingleton<PlaylistRepository>(
       () => PlaylistRepository(engine),
     );
-    authCubit = buildMockAccountCubit(state: testAccountState());
-    sl.registerLazySingleton<AccountCubit>(() => authCubit);
-    sl.registerLazySingleton<SavedMediaCubit>(
-      () => SavedMediaCubit(
-        sl<LibraryRepository>(),
-        sl<NoticeBus>(),
-        session: sl<AccountCubit>(),
-      ),
-    );
-    sl.registerLazySingleton<SavedMediaIndex>(() => sl<SavedMediaCubit>());
+    authCubit = TestUserCubit(testUserState());
+    sl.registerLazySingleton<UserCubit>(() => authCubit);
 
     when(() => engine.hasMetadata).thenReturn(true);
     when(() => engine.metadata).thenReturn(metadata);
@@ -91,7 +81,7 @@ void main() {
     return MultiBlocProvider(
       providers: [
         BlocProvider<MetadataPluginCubit>.value(value: cubit),
-        BlocProvider<AccountCubit>.value(value: sl<AccountCubit>()),
+        BlocProvider<UserCubit>.value(value: sl<UserCubit>()),
       ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -116,9 +106,7 @@ void main() {
   testWidgets('signed in shows the pinned liked songs and saved playlists', (
     tester,
   ) async {
-    when(
-      () => authCubit.state,
-    ).thenReturn(testAccountState(isAuthenticated: true, userId: 'me'));
+    authCubit.set(testUserState(isAuthenticated: true, userId: 'me'));
     when(
       () => user.savedPlaylists(
         offset: any(named: 'offset'),
@@ -148,9 +136,7 @@ void main() {
   testWidgets('pull-to-refresh reloads the section and the saved set', (
     tester,
   ) async {
-    when(
-      () => authCubit.state,
-    ).thenReturn(testAccountState(isAuthenticated: true, userId: 'me'));
+    authCubit.set(testUserState(isAuthenticated: true, userId: 'me'));
     when(
       () => user.savedPlaylists(
         offset: any(named: 'offset'),
@@ -174,19 +160,20 @@ void main() {
     await tester.fling(find.byType(GridView), const Offset(0, 300), 1000);
     await tester.pumpAndSettle();
 
-    // One reload of the Playlists section (limit = grid page size) plus the
-    // silent saved-set refresh (the fixed 100-item page).
+    // The Playlists section reloads from the provider (limit = grid page
+    // size); the saved set is refreshed silently through the index, which the
+    // fake records instead of fetching.
     verify(
       () => user.savedPlaylists(offset: 0, limit: any(named: 'limit')),
-    ).called(2);
+    ).called(1);
+    expect(authCubit.refreshed, [MediaItemType.playlist]);
+    expect(authCubit.refreshNotifies, [false]);
   });
 
   testWidgets('the refresh indicator closes even when the refresh fails', (
     tester,
   ) async {
-    when(
-      () => authCubit.state,
-    ).thenReturn(testAccountState(isAuthenticated: true, userId: 'me'));
+    authCubit.set(testUserState(isAuthenticated: true, userId: 'me'));
     when(
       () => user.savedPlaylists(
         offset: any(named: 'offset'),
@@ -222,9 +209,7 @@ void main() {
   testWidgets('signed in shows the new-playlist action on the playlists tab', (
     tester,
   ) async {
-    when(
-      () => authCubit.state,
-    ).thenReturn(testAccountState(isAuthenticated: true, userId: 'me'));
+    authCubit.set(testUserState(isAuthenticated: true, userId: 'me'));
     when(
       () => user.savedPlaylists(
         offset: any(named: 'offset'),
@@ -261,9 +246,7 @@ void main() {
   testWidgets('the new-playlist action opens the create dialog', (
     tester,
   ) async {
-    when(
-      () => authCubit.state,
-    ).thenReturn(testAccountState(isAuthenticated: true, userId: 'me'));
+    authCubit.set(testUserState(isAuthenticated: true, userId: 'me'));
     when(
       () => user.savedPlaylists(
         offset: any(named: 'offset'),

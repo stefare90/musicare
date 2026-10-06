@@ -11,7 +11,7 @@ import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
 import 'package:music_are/core/widgets/media/track_matrix.dart';
 import 'package:music_are/features/details/artist/presentation/cubit/artist_cubit.dart';
 import 'package:music_are/features/details/artist/presentation/cubit/artist_state.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/library/presentation/utils/track_actions.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
@@ -50,14 +50,14 @@ class _ArtistView extends StatelessWidget {
             ),
           );
         }
-        final isSaved = context.select<SavedMediaCubit, bool>(
+        final isSaved = context.select<UserCubit, bool>(
           (c) => c.isArtistSaved(state.artist.id),
         );
         return SliverMediaScaffold(
           metadata: state.metadata,
           isSaved: isSaved,
           onSaveTap: () =>
-              context.read<SavedMediaCubit>().toggleArtist(state.artist),
+              context.read<UserCubit>().toggleArtist(state.artist),
           slivers: [
             SliverToBoxAdapter(
               child: TrackMatrix(

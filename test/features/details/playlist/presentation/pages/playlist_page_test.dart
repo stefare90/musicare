@@ -6,16 +6,13 @@ import 'package:go_router/go_router.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
-import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/details/playlist/presentation/pages/playlist_page.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
@@ -39,7 +36,7 @@ void main() {
   late MockMetadataPlugin mockMetadata;
   late MockPlaylistService mockPlaylist;
   late MockPlayerCubit mockPlayerCubit;
-  late AccountCubit accountCubit;
+  late TestUserCubit userCubit;
 
   final testPlaylist = Playlist(
     id: 'pl1',
@@ -85,9 +82,10 @@ void main() {
     sl.registerLazySingleton<PlaylistRepository>(
       () => PlaylistRepository(mockEngine),
     );
-    accountCubit = buildMockAccountCubit(
-      state: testAccountState(isAuthenticated: true, userId: 'me'),
+    userCubit = TestUserCubit(
+      testUserState(isAuthenticated: true, userId: 'me'),
     );
+    sl.registerLazySingleton<UserCubit>(() => userCubit);
 
     when(() => mockEngine.hasMetadata).thenReturn(true);
     when(() => mockEngine.metadata).thenReturn(mockMetadata);
@@ -96,14 +94,7 @@ void main() {
     final mockAuth = MockAuthService();
     when(() => mockMetadata.auth).thenReturn(mockAuth);
     when(() => mockAuth.isAuthenticated()).thenAnswer((_) async => false);
-    sl.registerLazySingleton<SavedMediaCubit>(
-      () => SavedMediaCubit(
-        LibraryRepository(mockEngine),
-        sl<NoticeBus>(),
-        session: TestAccountSession(),
-      ),
-    );
-    sl.registerLazySingleton<SavedMediaIndex>(() => sl<SavedMediaCubit>());
+
   });
 
   Widget buildTestableWidget({
@@ -137,8 +128,7 @@ void main() {
             BlocProvider<MetadataPluginCubit>.value(
               value: metadataCubit ?? buildMockMetadataPluginCubit(),
             ),
-            BlocProvider<SavedMediaCubit>.value(value: sl<SavedMediaCubit>()),
-            BlocProvider<AccountCubit>.value(value: accountCubit),
+            BlocProvider<UserCubit>.value(value: userCubit),
           ],
           child: child ?? const SizedBox.shrink(),
         ),
@@ -160,9 +150,7 @@ void main() {
     });
 
     testWidgets('shows Public for an owned public playlist', (tester) async {
-      when(
-        () => accountCubit.state,
-      ).thenReturn(testAccountState(isAuthenticated: true, userId: 'u1'));
+      userCubit.set(testUserState(isAuthenticated: true, userId: 'u1'));
       when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
         (_) async => PaginatedResult(items: [], total: 0, offset: 0, limit: 20),
       );
@@ -183,9 +171,7 @@ void main() {
     });
 
     testWidgets('shows Private for an owned private playlist', (tester) async {
-      when(
-        () => accountCubit.state,
-      ).thenReturn(testAccountState(isAuthenticated: true, userId: 'u1'));
+      userCubit.set(testUserState(isAuthenticated: true, userId: 'u1'));
       when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
         (_) async => PaginatedResult(items: [], total: 0, offset: 0, limit: 20),
       );
@@ -233,9 +219,7 @@ void main() {
     testWidgets('swiping a track asks for confirmation and removes it', (
       tester,
     ) async {
-      when(
-        () => accountCubit.state,
-      ).thenReturn(testAccountState(isAuthenticated: true, userId: 'u1'));
+      userCubit.set(testUserState(isAuthenticated: true, userId: 'u1'));
       when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
         (_) async => PaginatedResult<Track>(
           items: [testTrack],
@@ -264,9 +248,7 @@ void main() {
     });
 
     testWidgets('cancelling the removal keeps the track', (tester) async {
-      when(
-        () => accountCubit.state,
-      ).thenReturn(testAccountState(isAuthenticated: true, userId: 'u1'));
+      userCubit.set(testUserState(isAuthenticated: true, userId: 'u1'));
       when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
         (_) async => PaginatedResult<Track>(
           items: [testTrack],
@@ -317,9 +299,7 @@ void main() {
     testWidgets(
       'an owned playlist offers delete, confirms and returns to the library',
       (tester) async {
-        when(
-          () => accountCubit.state,
-        ).thenReturn(testAccountState(isAuthenticated: true, userId: 'u1'));
+        userCubit.set(testUserState(isAuthenticated: true, userId: 'u1'));
         when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
           (_) async => PaginatedResult<Track>(
             items: [testTrack],
@@ -355,9 +335,7 @@ void main() {
     );
 
     testWidgets('cancelling the delete keeps the playlist', (tester) async {
-      when(
-        () => accountCubit.state,
-      ).thenReturn(testAccountState(isAuthenticated: true, userId: 'u1'));
+      userCubit.set(testUserState(isAuthenticated: true, userId: 'u1'));
       when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
         (_) async => PaginatedResult<Track>(
           items: [testTrack],

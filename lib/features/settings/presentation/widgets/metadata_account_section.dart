@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/widgets/monogram.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_state.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
 import 'package:music_are/features/plugin/metadata/presentation/utils/metadata_account_actions.dart';
@@ -23,7 +22,7 @@ class MetadataAccountSection extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-        return BlocBuilder<AccountCubit, AccountState>(
+        return BlocBuilder<UserCubit, UserState>(
           builder: (context, auth) {
             final isAuthenticated = auth.isAuthenticated;
             final userId = auth.userId;

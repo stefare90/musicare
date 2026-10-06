@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_cubit.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
@@ -17,7 +17,7 @@ void main() {
     required PluginType type,
     MetadataPluginCubit? metadataCubit,
     AudioSourcePluginCubit? audioCubit,
-    AccountCubit? authCubit,
+    UserCubit? authCubit,
   }) {
     return MultiBlocProvider(
       providers: [
@@ -27,8 +27,8 @@ void main() {
         BlocProvider<AudioSourcePluginCubit>.value(
           value: audioCubit ?? buildMockAudioSourcePluginCubit(),
         ),
-        BlocProvider<AccountCubit>.value(
-          value: authCubit ?? buildMockAccountCubit(),
+        BlocProvider<UserCubit>.value(
+          value: authCubit ?? TestUserCubit(testUserState()),
         ),
       ],
       child: MaterialApp(
@@ -45,8 +45,8 @@ void main() {
     await tester.pumpWidget(
       buildTestableWidget(
         type: PluginType.metadata,
-        authCubit: buildMockAccountCubit(
-          state: testAccountState(isAuthenticated: true, userId: 'listener'),
+        authCubit: TestUserCubit(
+          testUserState(isAuthenticated: true, userId: 'listener'),
         ),
       ),
     );
@@ -66,12 +66,11 @@ void main() {
     await tester.pumpWidget(
       buildTestableWidget(
         type: PluginType.metadata,
-        authCubit: buildMockAccountCubit(
-          onSignIn: () async {
+        authCubit: TestUserCubit(testUserState())
+          ..onSignIn = () async {
             signInCalls++;
             return AuthResult.authenticated;
           },
-        ),
       ),
     );
     await tester.pumpAndSettle();
