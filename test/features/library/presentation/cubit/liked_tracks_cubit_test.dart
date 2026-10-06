@@ -20,7 +20,7 @@ void main() {
   late MockUserService user;
   late NoticeBus notices;
   late LikedTracksCubit cubit;
-  late TestSavedMediaIndex savedMedia;
+  late TestUserCubit savedMedia;
 
   final track = Track(
     id: 't1',
@@ -44,7 +44,7 @@ void main() {
     metadata = MockMetadataPlugin();
     user = MockUserService();
     notices = NoticeBus();
-    savedMedia = TestSavedMediaIndex();
+    savedMedia = TestUserCubit(testUserState());
     cubit = LikedTracksCubit(
       LibraryRepository(engine),
       notices,
@@ -119,7 +119,7 @@ void main() {
       ),
     );
 
-    savedMedia.emit(MediaItemType.track);
+    savedMedia.pushSavedChange(MediaItemType.track);
     await Future<void>.delayed(Duration.zero);
 
     expect(cubit.state.tracks.data.items.single.id, 't1');

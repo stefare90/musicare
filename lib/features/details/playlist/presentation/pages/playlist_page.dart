@@ -33,7 +33,8 @@ class PlaylistPage extends StatelessWidget {
         sl<MediaRepository>(),
         sl<PlaylistRepository>(),
         sl<NoticeBus>(),
-        savedMedia: sl<UserCubit>(),
+        savedMedia: sl<UserSavedMediaIndex>(),
+        edits: sl<UserPlaylistEdits>(),
       )..loadPlaylist(playlist),
       child: const _PlaylistView(),
     );

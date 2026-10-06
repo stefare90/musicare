@@ -7,8 +7,6 @@ import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/account_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_session.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
 
 part 'user_favorites.dart';
 part 'user_playlist_edits.dart';
@@ -35,9 +33,7 @@ class UserCubit extends SafeCubit<UserState>
         UserSession,
         UserFavorites,
         UserSavedMediaIndex,
-        UserPlaylistEdits,
-        AccountSession,
-        SavedMediaIndex {
+        UserPlaylistEdits {
   UserCubit(this._account, this._library, this._notices, this._playlists)
     : super(const UserState());
 
@@ -77,9 +73,6 @@ class UserCubit extends SafeCubit<UserState>
   /// returning a different set), never for the warm-up or an identical refetch.
   @override
   Stream<MediaItemType> get savedChanges => _savedChanges.stream;
-
-  @override
-  Stream<MediaItemType> get changes => _savedChanges.stream;
 
   @override
   Stream<PlaylistTracksChanged> get playlistEdits => _edits.stream;
@@ -370,13 +363,20 @@ class UserCubit extends SafeCubit<UserState>
 
   /// Adds one track, returning what the provider changed; a failure is
   /// announced on the notice bus and returns null.
+  ///
+  /// Announces the change only when the provider added something: an
+  /// already-present track changes nothing, so there is nothing to announce.
   @override
   Future<AddTracksResult?> addTrackToPlaylist(
     String playlistId,
     String trackId,
   ) async {
     try {
-      return await _playlists.addTracks(playlistId, [trackId]);
+      final result = await _playlists.addTracks(playlistId, [trackId]);
+      if (result.added > 0 && !_edits.isClosed) {
+        _edits.add(PlaylistTracksChanged(playlistId, added: [trackId]));
+      }
+      return result;
     } catch (e) {
       _notices.emit(Notice.error(e));
       return null;
@@ -385,6 +385,9 @@ class UserCubit extends SafeCubit<UserState>
 
   /// Removes one track, returning whether the write landed; a failure is
   /// announced on the notice bus and returns false.
+  ///
+  /// A removal never touches the saved sets (playlist membership is not a
+  /// save), so only the edits channel is announced.
   @override
   Future<bool> removeTrackFromPlaylist(
     String playlistId,
@@ -392,6 +395,9 @@ class UserCubit extends SafeCubit<UserState>
   ) async {
     try {
       await _playlists.removeTracks(playlistId, [trackId]);
+      if (!_edits.isClosed) {
+        _edits.add(PlaylistTracksChanged(playlistId, removed: [trackId]));
+      }
       return true;
     } catch (e) {
       _notices.emit(Notice.error(e));

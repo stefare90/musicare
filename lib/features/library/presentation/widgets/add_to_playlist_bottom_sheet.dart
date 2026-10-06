@@ -41,8 +41,9 @@ class AddToPlaylistBottomSheet extends StatelessWidget {
             sl<LibraryRepository>(),
             sl<PlaylistRepository>(),
             sl<NoticeBus>(),
-            session: sl<UserCubit>(),
-            savedMedia: sl<UserCubit>(),
+            session: sl<UserSession>(),
+            savedMedia: sl<UserSavedMediaIndex>(),
+            edits: sl<UserPlaylistEdits>(),
           )..load(),
       child: _AddToPlaylistBody(track: track),
     );

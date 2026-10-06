@@ -28,7 +28,7 @@ void main() {
   late MockPlaylistService playlists;
   late NoticeBus notices;
   late LibraryCubit cubit;
-  late TestSavedMediaIndex savedMedia;
+  late TestUserCubit index;
 
   final playlist = Playlist(
     id: 'pl1',
@@ -60,20 +60,17 @@ void main() {
 
   tearDown(() async {
     await cubit.close();
-    await savedMedia.close();
+    await index.close();
   });
 
   LibraryCubit buildCubit({bool authenticated = false}) {
-    final authCubit = TestAccountCubit(
-      testAccountState(isAuthenticated: authenticated),
-    );
-    savedMedia = TestSavedMediaIndex();
+    index = TestUserCubit(testUserState(isAuthenticated: authenticated));
     return LibraryCubit(
       LibraryRepository(engine),
       notices,
       playlist: PlaylistRepository(engine),
-      session: authCubit,
-      savedMedia: savedMedia,
+      session: index,
+      savedMedia: index,
     );
   }
 
@@ -203,7 +200,7 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     clearInteractions(user);
 
-    savedMedia.emit(MediaItemType.album);
+    index.pushSavedChange(MediaItemType.album);
     await Future<void>.delayed(Duration.zero);
 
     verify(() => user.savedAlbums(offset: 0, limit: 20)).called(1);
@@ -228,7 +225,7 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     clearInteractions(user);
 
-    savedMedia.emit(MediaItemType.track);
+    index.pushSavedChange(MediaItemType.track);
     await Future<void>.delayed(Duration.zero);
 
     verifyNever(
@@ -323,7 +320,7 @@ void main() {
 
     await cubit.createPlaylist(name: 'My list');
 
-    expect(savedMedia.refreshed, [MediaItemType.playlist]);
+    expect(index.refreshed, [MediaItemType.playlist]);
   });
 
   test('refresh reloads the section and the saved set only once', () async {
@@ -341,9 +338,9 @@ void main() {
     // One reload of the section and one silent refresh of the saved set: the
     // silent refresh must not trigger a second section load through `changes`.
     verify(() => user.savedPlaylists(offset: 0, limit: 20)).called(1);
-    expect(savedMedia.refreshed, [MediaItemType.playlist]);
+    expect(index.refreshed, [MediaItemType.playlist]);
     // Silent: the section was reloaded explicitly above.
-    expect(savedMedia.refreshNotifies, [false]);
+    expect(index.refreshNotifies, [false]);
   });
 
   test('refresh does not duplicate a section load already in flight', () async {

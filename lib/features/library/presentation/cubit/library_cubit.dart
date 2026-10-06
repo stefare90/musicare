@@ -8,8 +8,7 @@ import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/features/library/presentation/cubit/library_state.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_session.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
@@ -23,8 +22,8 @@ class LibraryCubit extends SafeCubit<LibraryState> {
   final LibraryRepository _library;
   final NoticeBus _notices;
   final PlaylistRepository _playlist;
-  final AccountSession _session;
-  final SavedMediaIndex _savedMedia;
+  final UserSession _session;
+  final UserSavedMediaIndex _savedMedia;
   final int pageSize;
   StreamSubscription<bool>? _authSubscription;
   StreamSubscription<MediaItemType>? _savedMediaSubscription;
@@ -48,7 +47,9 @@ class LibraryCubit extends SafeCubit<LibraryState> {
     required this._session,
     required this._savedMedia,
   }) : super(const LibraryState()) {
-    _savedMediaSubscription = _savedMedia.changes.listen(_onSavedMediaChanged);
+    _savedMediaSubscription = _savedMedia.savedChanges.listen(
+      _onSavedMediaChanged,
+    );
     _authSubscription = _session.authenticationChanges.listen((_) {
       if (!isClosed) loadAll();
     });

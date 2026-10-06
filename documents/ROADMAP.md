@@ -78,5 +78,5 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ⬜ Track favorites and a unified saved-content view.
 ✅ Real artist top tracks via ListenBrainz instead of work metadata.
 ⬜ Bluetooth next/prev buttons.
-⬜ Reload the open playlist detail when a track is added from the player or the track sheet.
+✅ Reload the open playlist detail when a track is added from the player or the track sheet.
 ⬜ "Play all" when the playlist is only partially loaded.

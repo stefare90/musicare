@@ -86,6 +86,8 @@ void main() {
       testUserState(isAuthenticated: true, userId: 'me'),
     );
     sl.registerLazySingleton<UserCubit>(() => userCubit);
+    sl.registerLazySingleton<UserSavedMediaIndex>(() => userCubit);
+    sl.registerLazySingleton<UserPlaylistEdits>(() => userCubit);
 
     when(() => mockEngine.hasMetadata).thenReturn(true);
     when(() => mockEngine.metadata).thenReturn(mockMetadata);
@@ -243,7 +245,7 @@ void main() {
       await tester.tap(find.text('Remove'));
       await tester.pumpAndSettle();
 
-      verify(() => mockPlaylist.removeTracks('pl1', ['t1'])).called(1);
+      expect(userCubit.removedTracks, [('pl1', 't1')]);
       expect(find.text('Removed from Top 50 Hits'), findsOneWidget);
     });
 
@@ -381,6 +383,192 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Save Playlist'), findsOneWidget);
       expect(find.text('Delete Playlist'), findsNothing);
+    });
+
+    testWidgets('an external add updates the list without moving it', (
+      tester,
+    ) async {
+      Track song(int i) => Track(
+        id: 't$i',
+        name: 'Song $i',
+        externalUri: '',
+        artists: const [],
+        album: testTrack.album,
+        durationMs: 1000,
+      );
+      final loaded = List.generate(3, song);
+      when(
+        () => mockPlaylist.tracks('pl1', offset: 0, limit: 20),
+      ).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: loaded,
+          total: 3,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+      expect(find.text('Song 2'), findsOneWidget);
+
+      when(
+        () => mockPlaylist.tracks('pl1', offset: 0, limit: 20),
+      ).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: [...loaded, song(3)],
+          total: 4,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+      userCubit.pushEdits(const PlaylistTracksChanged('pl1', added: ['t3']));
+      await tester.pumpAndSettle();
+
+      // The new tail track appears and the order is preserved.
+      expect(find.text('Song 3'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('Song 0')).dy,
+        lessThan(tester.getTopLeft(find.text('Song 3')).dy),
+      );
+    });
+
+    testWidgets('an external add keeps the scroll position', (tester) async {
+      Track song(int i) => Track(
+        id: 't$i',
+        name: 'Song $i',
+        externalUri: '',
+        artists: const [],
+        album: testTrack.album,
+        durationMs: 1000,
+      );
+      final window = List.generate(25, song).sublist(0, 20);
+      when(
+        () => mockPlaylist.tracks('pl1', offset: 0, limit: 20),
+      ).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: window,
+          total: 25,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      // Scroll until the head is off-screen (the header absorbs part of the
+      // gesture, so one drag may not be enough).
+      for (
+        var i = 0;
+        i < 5 && find.text('Song 0').evaluate().isNotEmpty;
+        i++
+      ) {
+        await tester.drag(
+          find.byType(Scrollable).first,
+          const Offset(0, -500),
+        );
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('Song 0'), findsNothing);
+      final scrolled =
+          tester.state<ScrollableState>(find.byType(Scrollable).first);
+      expect(scrolled.position.pixels, greaterThan(0));
+      clearInteractions(mockPlaylist);
+
+      // The provider appends at the tail, outside the loaded window.
+      when(
+        () => mockPlaylist.tracks('pl1', offset: 0, limit: 20),
+      ).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: window,
+          total: 26,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+      userCubit.pushEdits(const PlaylistTracksChanged('pl1', added: ['t99']));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => mockPlaylist.tracks('pl1', offset: 0, limit: 20),
+      ).called(1);
+      final settled =
+          tester.state<ScrollableState>(find.byType(Scrollable).first);
+      expect(settled.position.pixels, scrolled.position.pixels);
+      expect(find.text('Song 0'), findsNothing);
+    });
+
+    testWidgets('an external removal updates the list without moving it', (
+      tester,
+    ) async {
+      Track song(int i) => Track(
+        id: 't$i',
+        name: 'Song $i',
+        externalUri: '',
+        artists: const [],
+        album: testTrack.album,
+        durationMs: 1000,
+      );
+      final window = List.generate(25, song).sublist(0, 20);
+      when(
+        () => mockPlaylist.tracks('pl1', offset: 0, limit: 20),
+      ).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: window,
+          total: 25,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      for (
+        var i = 0;
+        i < 5 && find.text('Song 0').evaluate().isNotEmpty;
+        i++
+      ) {
+        await tester.drag(
+          find.byType(Scrollable).first,
+          const Offset(0, -500),
+        );
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('Song 0'), findsNothing);
+      final scrolled =
+          tester.state<ScrollableState>(find.byType(Scrollable).first);
+      expect(scrolled.position.pixels, greaterThan(0));
+      // Remove a row that is actually built, whatever the viewport shows.
+      String? victim;
+      for (var i = 1; i < 20; i++) {
+        if (find.text('Song $i').evaluate().isNotEmpty) {
+          victim = 't$i';
+          break;
+        }
+      }
+      expect(victim, isNotNull);
+      clearInteractions(mockPlaylist);
+
+      final remaining = window.where((track) => track.id != victim).toList();
+      when(
+        () => mockPlaylist.tracks('pl1', offset: 0, limit: 20),
+      ).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: remaining,
+          total: 24,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+      userCubit.pushEdits(PlaylistTracksChanged('pl1', removed: [victim!]));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Song ${victim.substring(1)}'), findsNothing);
+      final settled =
+          tester.state<ScrollableState>(find.byType(Scrollable).first);
+      expect(settled.position.pixels, scrolled.position.pixels);
     });
   });
 }

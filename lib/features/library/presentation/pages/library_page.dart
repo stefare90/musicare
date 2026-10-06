@@ -37,8 +37,8 @@ class LibraryPage extends StatelessWidget {
             sl<LibraryRepository>(),
             sl<NoticeBus>(),
             playlist: sl<PlaylistRepository>(),
-            session: sl<UserCubit>(),
-            savedMedia: sl<UserCubit>(),
+            session: sl<UserSession>(),
+            savedMedia: sl<UserSavedMediaIndex>(),
           )
             ..updateGridColumns(columns)
             ..loadAll(),

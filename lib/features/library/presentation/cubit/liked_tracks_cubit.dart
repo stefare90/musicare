@@ -6,7 +6,7 @@ import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/library/presentation/cubit/liked_tracks_state.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
@@ -17,7 +17,7 @@ import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart'
 class LikedTracksCubit extends SafeCubit<LikedTracksState> {
   final LibraryRepository _library;
   final NoticeBus _notices;
-  final SavedMediaIndex _savedMedia;
+  final UserSavedMediaIndex _savedMedia;
   StreamSubscription<MediaItemType>? _savedMediaSubscription;
   bool _isLoading = false;
 
@@ -28,7 +28,7 @@ class LikedTracksCubit extends SafeCubit<LikedTracksState> {
     this._notices, {
     required this._savedMedia,
   }) : super(const LikedTracksState()) {
-    _savedMediaSubscription = _savedMedia.changes
+    _savedMediaSubscription = _savedMedia.savedChanges
         .where((type) => type == MediaItemType.track)
         .listen((_) => unawaited(load()));
   }

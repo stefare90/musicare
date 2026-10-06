@@ -6,8 +6,7 @@ import 'package:music_are/core/utils/playlist_ownership.dart';
 import 'package:music_are/features/library/presentation/cubit/add_to_playlist_state.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/account_session.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_index.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 
 /// Result of the create-and-add flow: the created playlist and whether the
@@ -34,8 +33,9 @@ class AddToPlaylistCubit extends SafeCubit<AddToPlaylistState> {
   final LibraryRepository _library;
   final PlaylistRepository _playlist;
   final NoticeBus _notices;
-  final AccountSession _session;
-  final SavedMediaIndex _savedMedia;
+  final UserSession _session;
+  final UserSavedMediaIndex _savedMedia;
+  final UserPlaylistEdits _edits;
 
   static const int _pageSize = 20;
   static const int _fetchSize = 100;
@@ -50,6 +50,7 @@ class AddToPlaylistCubit extends SafeCubit<AddToPlaylistState> {
     this._notices, {
     required this._session,
     required this._savedMedia,
+    required this._edits,
   }) : super(const AddToPlaylistState());
 
   Future<void> load() async {
@@ -129,14 +130,14 @@ class AddToPlaylistCubit extends SafeCubit<AddToPlaylistState> {
 
   /// Adds the track and returns the outcome (`added == 0` when the track was
   /// already there); failures are announced on the bus and return null.
+  ///
+  /// The write belongs to the facet (which announces failures and the change);
+  /// this cubit only guards re-entrancy.
   Future<AddTracksResult?> addTrack(Playlist playlist, Track track) async {
     if (state.isMutating) return null;
     emit(state.copyWith(isMutating: true));
     try {
-      return await _playlist.addTracks(playlist.id, [track.id]);
-    } catch (e) {
-      _notices.emit(Notice.error(e));
-      return null;
+      return await _edits.addTrackToPlaylist(playlist.id, track.id);
     } finally {
       emit(state.copyWith(isMutating: false));
     }

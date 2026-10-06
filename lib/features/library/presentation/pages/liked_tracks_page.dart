@@ -22,7 +22,7 @@ class LikedTracksPage extends StatelessWidget {
           LikedTracksCubit(
             sl<LibraryRepository>(),
             sl<NoticeBus>(),
-            savedMedia: sl<UserCubit>(),
+            savedMedia: sl<UserSavedMediaIndex>(),
           )..load(),
       child: const _LikedSongsView(),
     );

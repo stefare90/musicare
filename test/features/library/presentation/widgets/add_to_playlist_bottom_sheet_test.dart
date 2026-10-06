@@ -81,6 +81,9 @@ void main() {
     );
     sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
     sl.registerLazySingleton<UserCubit>(() => userCubit);
+    sl.registerLazySingleton<UserSession>(() => userCubit);
+    sl.registerLazySingleton<UserSavedMediaIndex>(() => userCubit);
+    sl.registerLazySingleton<UserPlaylistEdits>(() => userCubit);
 
     when(() => engine.hasMetadata).thenReturn(true);
     when(() => engine.metadata).thenReturn(metadata);
@@ -128,8 +131,9 @@ void main() {
 
   testWidgets('tapping a playlist adds the track', (tester) async {
     stubPlaylists([owned]);
-    when(() => playlistService.addTracks('pl1', ['t1'])).thenAnswer(
-      (_) async => const AddTracksResult(added: 1, alreadyPresent: []),
+    userCubit.nextAddResult = const AddTracksResult(
+      added: 1,
+      alreadyPresent: [],
     );
 
     await tester.pumpWidget(buildTestableWidget());
@@ -139,7 +143,7 @@ void main() {
     await tester.tap(find.text('Chill Vibes'));
     await tester.pumpAndSettle();
 
-    verify(() => playlistService.addTracks('pl1', ['t1'])).called(1);
+    expect(userCubit.addedTracks, [('pl1', 't1')]);
     expect(find.text('Added to Chill Vibes'), findsOneWidget);
   });
 
@@ -147,8 +151,9 @@ void main() {
     tester,
   ) async {
     stubPlaylists([owned]);
-    when(() => playlistService.addTracks('pl1', ['t1'])).thenAnswer(
-      (_) async => const AddTracksResult(added: 0, alreadyPresent: ['t1']),
+    userCubit.nextAddResult = const AddTracksResult(
+      added: 0,
+      alreadyPresent: ['t1'],
     );
 
     await tester.pumpWidget(buildTestableWidget());
@@ -158,7 +163,7 @@ void main() {
     await tester.tap(find.text('Chill Vibes'));
     await tester.pumpAndSettle();
 
-    verify(() => playlistService.addTracks('pl1', ['t1'])).called(1);
+    expect(userCubit.addedTracks, [('pl1', 't1')]);
     expect(find.text('Already in Chill Vibes'), findsOneWidget);
     expect(find.text('Added to Chill Vibes'), findsNothing);
   });

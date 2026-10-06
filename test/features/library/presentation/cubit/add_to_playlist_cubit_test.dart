@@ -23,7 +23,7 @@ void main() {
   late MockUserService user;
   late MockPlaylistService playlists;
   late NoticeBus notices;
-  late TestSavedMediaIndex savedMedia;
+  late TestUserCubit savedMedia;
   late AddToPlaylistCubit cubit;
 
   final playlist = Playlist(
@@ -63,7 +63,7 @@ void main() {
     user = MockUserService();
     playlists = MockPlaylistService();
     notices = NoticeBus();
-    savedMedia = TestSavedMediaIndex();
+    savedMedia = TestUserCubit(testUserState());
 
     when(() => engine.hasMetadata).thenReturn(true);
     when(() => engine.metadata).thenReturn(metadata);
@@ -81,8 +81,11 @@ void main() {
       LibraryRepository(engine),
       PlaylistRepository(engine),
       notices,
-      session: TestAccountSession(isAuthenticated: authenticated, userId: userId),
+      session: TestUserCubit(
+        testUserState(isAuthenticated: authenticated, userId: userId),
+      ),
       savedMedia: savedMedia,
+      edits: savedMedia,
     );
   }
 
@@ -145,44 +148,41 @@ void main() {
     );
   });
 
-  test('addTrack reports failure on the bus', () async {
+  test('addTrack delegates the write to the facet', () async {
     cubit = buildCubit();
-    when(
-      () => playlists.addTracks('pl1', ['t1']),
-    ).thenAnswer((_) async => throw const MetadataAuthRequiredException(''));
-
-    final seen = <Object>[];
-    final subscription = notices.notices.listen(seen.add);
-    final result = await cubit.addTrack(playlist, track);
-    await Future<void>.delayed(Duration.zero);
-
-    expect(result, isNull);
-    expect(seen, hasLength(1));
-    await subscription.cancel();
-  });
-
-  test('addTrack returns the outcome when the track is new', () async {
-    cubit = buildCubit();
-    when(() => playlists.addTracks('pl1', ['t1'])).thenAnswer(
-      (_) async => const AddTracksResult(added: 1, alreadyPresent: []),
+    savedMedia.nextAddResult = const AddTracksResult(
+      added: 1,
+      alreadyPresent: [],
     );
 
     final result = await cubit.addTrack(playlist, track);
 
     expect(result?.added, 1);
+    expect(savedMedia.addedTracks, [('pl1', 't1')]);
   });
 
   test('addTrack returns the outcome when the track was already there',
       () async {
     cubit = buildCubit();
-    when(() => playlists.addTracks('pl1', ['t1'])).thenAnswer(
-      (_) async => const AddTracksResult(added: 0, alreadyPresent: ['t1']),
+    savedMedia.nextAddResult = const AddTracksResult(
+      added: 0,
+      alreadyPresent: ['t1'],
     );
 
     final result = await cubit.addTrack(playlist, track);
 
     expect(result?.added, 0);
     expect(result?.alreadyPresent, ['t1']);
+  });
+
+  test('addTrack returns null when the facet reports a failure', () async {
+    cubit = buildCubit();
+    savedMedia.nextAddResult = null;
+
+    final result = await cubit.addTrack(playlist, track);
+
+    expect(result, isNull);
+    expect(savedMedia.addedTracks, [('pl1', 't1')]);
   });
 
   test('createPlaylist resolves the user, adds the track and announces', () async {

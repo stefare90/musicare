@@ -52,6 +52,8 @@ void main() {
     );
     authCubit = TestUserCubit(testUserState());
     sl.registerLazySingleton<UserCubit>(() => authCubit);
+    sl.registerLazySingleton<UserSession>(() => authCubit);
+    sl.registerLazySingleton<UserSavedMediaIndex>(() => authCubit);
 
     when(() => engine.hasMetadata).thenReturn(true);
     when(() => engine.metadata).thenReturn(metadata);

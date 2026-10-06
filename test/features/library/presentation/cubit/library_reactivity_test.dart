@@ -7,7 +7,6 @@ import 'package:music_are/features/library/presentation/cubit/library_cubit.dart
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/saved_media_cubit.dart';
 
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
 
@@ -25,8 +24,7 @@ void main() {
   late MockUserService user;
   late MockPlaylistService playlists;
   late NoticeBus notices;
-  late TestAccountCubit session;
-  late SavedMediaCubit savedMedia;
+  late TestUserCubit userCubit;
   late LibraryCubit library;
   late AddToPlaylistCubit addToPlaylist;
 
@@ -51,8 +49,8 @@ void main() {
     user = MockUserService();
     playlists = MockPlaylistService();
     notices = NoticeBus();
-    session = TestAccountCubit(
-      testAccountState(isAuthenticated: true, userId: 'me'),
+    userCubit = TestUserCubit(
+      testUserState(isAuthenticated: true, userId: 'me'),
     );
 
     when(() => engine.hasMetadata).thenReturn(true);
@@ -113,31 +111,27 @@ void main() {
       ),
     );
 
-    savedMedia = SavedMediaCubit(
-      LibraryRepository(engine),
-      notices,
-      session: session,
-    );
     library = LibraryCubit(
       LibraryRepository(engine),
       notices,
       playlist: PlaylistRepository(engine),
-      session: session,
-      savedMedia: savedMedia,
+      session: userCubit,
+      savedMedia: userCubit,
     );
     addToPlaylist = AddToPlaylistCubit(
       LibraryRepository(engine),
       PlaylistRepository(engine),
       notices,
-      session: session,
-      savedMedia: savedMedia,
+      session: userCubit,
+      savedMedia: userCubit,
+      edits: userCubit,
     );
   });
 
   tearDown(() async {
     await addToPlaylist.close();
     await library.close();
-    await savedMedia.close();
+    await userCubit.close();
   });
 
   test('creating a playlist from the sheet reloads the library tab', () async {
@@ -174,7 +168,10 @@ void main() {
     );
 
     await addToPlaylist.createPlaylist(name: 'Fresh', trackIds: ['t1']);
-    await Future<void>.delayed(Duration.zero);
+    // The fake index records the refresh instead of announcing it: the
+    // announcement itself is covered in `user_cubit_test`.
+    userCubit.pushSavedChange(MediaItemType.playlist);
+    await Future<void>.delayed(const Duration(milliseconds: 1));
 
     expect(
       library.state.playlists.data.items.map((p) => p.id),

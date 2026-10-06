@@ -59,6 +59,9 @@ void main() {
     sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
   sl.registerLazySingleton<LibraryRepository>(() => LibraryRepository(engine));
     sl.registerLazySingleton<UserCubit>(() => TestUserCubit(testUserState()));
+    sl.registerLazySingleton<UserSavedMediaIndex>(
+      () => sl<UserCubit>(),
+    );
 
     when(() => playerCubit.state).thenReturn(const PlayerState());
     when(() => playerCubit.stream).thenAnswer((_) => const Stream.empty());

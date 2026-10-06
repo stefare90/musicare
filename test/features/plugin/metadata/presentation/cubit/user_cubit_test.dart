@@ -686,5 +686,70 @@ void main() {
       expect(seen, hasLength(1));
       await subscription.cancel();
     });
+
+    test('addTrackToPlaylist announces the addition', () async {
+      when(() => playlists.addTracks('pl1', ['t1'])).thenAnswer(
+        (_) async => const AddTracksResult(added: 1, alreadyPresent: []),
+      );
+
+      final seen = <PlaylistTracksChanged>[];
+      final subscription = cubit.playlistEdits.listen(seen.add);
+      await cubit.addTrackToPlaylist('pl1', 't1');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(seen, hasLength(1));
+      expect(seen.single.playlistId, 'pl1');
+      expect(seen.single.added, ['t1']);
+      expect(seen.single.removed, isEmpty);
+      await subscription.cancel();
+    });
+
+    test('addTrackToPlaylist announces nothing when already present', () async {
+      when(() => playlists.addTracks('pl1', ['t1'])).thenAnswer(
+        (_) async => const AddTracksResult(added: 0, alreadyPresent: ['t1']),
+      );
+
+      final seen = <PlaylistTracksChanged>[];
+      final subscription = cubit.playlistEdits.listen(seen.add);
+      final result = await cubit.addTrackToPlaylist('pl1', 't1');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(result?.added, 0);
+      expect(seen, isEmpty);
+      await subscription.cancel();
+    });
+
+    test('addTrackToPlaylist announces nothing on failure', () async {
+      when(
+        () => playlists.addTracks('pl1', ['t1']),
+      ).thenAnswer((_) async => throw const MetadataAuthRequiredException(''));
+
+      final seen = <PlaylistTracksChanged>[];
+      final subscription = cubit.playlistEdits.listen(seen.add);
+      final result = await cubit.addTrackToPlaylist('pl1', 't1');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(result, isNull);
+      expect(seen, isEmpty);
+      await subscription.cancel();
+    });
+
+    test('removeTrackFromPlaylist announces the removal', () async {
+      when(() => playlists.removeTracks('pl1', ['t1'])).thenAnswer(
+        (_) async {},
+      );
+
+      final seen = <PlaylistTracksChanged>[];
+      final subscription = cubit.playlistEdits.listen(seen.add);
+      final removed = await cubit.removeTrackFromPlaylist('pl1', 't1');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(removed, isTrue);
+      expect(seen, hasLength(1));
+      expect(seen.single.playlistId, 'pl1');
+      expect(seen.single.added, isEmpty);
+      expect(seen.single.removed, ['t1']);
+      await subscription.cancel();
+    });
   });
 }

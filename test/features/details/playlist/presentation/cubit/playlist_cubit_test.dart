@@ -7,6 +7,7 @@ import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 
 import '../../../../../helpers/metadata_plugin_test_helpers.dart';
@@ -23,7 +24,7 @@ void main() {
     late MockMetadataPlugin mockMetadataPlugin;
     late MockPlaylistService mockPlaylistService;
     late NoticeBus noticeBus;
-    late TestSavedMediaIndex savedMedia;
+    late TestUserCubit savedMedia;
     late PlaylistCubit cubit;
 
     final testPlaylist = Playlist(
@@ -57,12 +58,13 @@ void main() {
       mockPlaylistService = MockPlaylistService();
 
       noticeBus = NoticeBus();
-      savedMedia = TestSavedMediaIndex();
+      savedMedia = TestUserCubit(testUserState());
       cubit = PlaylistCubit(
         MediaRepository(mockPluginEngine),
         PlaylistRepository(mockPluginEngine),
         noticeBus,
         savedMedia: savedMedia,
+        edits: savedMedia,
       );
     });
 
@@ -241,13 +243,7 @@ void main() {
       await subscription.cancel();
     });
 
-    test('removeTrack drops the track and writes the removal', () async {
-      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
-      when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
-      when(
-        () => mockPlaylistService.removeTracks('pl1', ['t1']),
-      ).thenAnswer((_) async {});
-
+    test('removeTrack drops the track and delegates the removal', () async {
       cubit.emit(
         PlaylistLoadedState(
           playlist: testPlaylist,
@@ -266,44 +262,30 @@ void main() {
       final state = cubit.state as PlaylistLoadedState;
       expect(state.tracks.items, isEmpty);
       expect(state.tracks.total, 0);
-      verify(() => mockPlaylistService.removeTracks('pl1', ['t1'])).called(1);
+      expect(savedMedia.removedTracks, [('pl1', 't1')]);
     });
 
-    test(
-      'removeTrack restores the track and notifies when the write fails',
-      () async {
-        when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
-        when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
-        final error = Exception('write failed');
-        when(
-          () => mockPlaylistService.removeTracks('pl1', ['t1']),
-        ).thenAnswer((_) async => throw error);
-
-        cubit.emit(
-          PlaylistLoadedState(
-            playlist: testPlaylist,
-            tracks: PaginatedResult<Track>(
-              items: [testTrack],
-              total: 1,
-              offset: 0,
-              limit: 20,
-            ),
+    test('removeTrack restores the track when the write fails', () async {
+      savedMedia.nextRemoveResult = false;
+      cubit.emit(
+        PlaylistLoadedState(
+          playlist: testPlaylist,
+          tracks: PaginatedResult<Track>(
+            items: [testTrack],
+            total: 1,
+            offset: 0,
+            limit: 20,
           ),
-        );
+        ),
+      );
 
-        final notices = <Object>[];
-        final subscription = noticeBus.notices.listen(notices.add);
-        final removed = await cubit.removeTrack(testTrack);
-        await Future<void>.delayed(Duration.zero);
+      final removed = await cubit.removeTrack(testTrack);
 
-        expect(removed, isFalse);
-        final state = cubit.state as PlaylistLoadedState;
-        expect(state.tracks.items, hasLength(1));
-        expect(state.tracks.total, 1);
-        expect((notices.single as ErrorNotice).error, same(error));
-        await subscription.cancel();
-      },
-    );
+      expect(removed, isFalse);
+      final state = cubit.state as PlaylistLoadedState;
+      expect(state.tracks.items, hasLength(1));
+      expect(state.tracks.total, 1);
+    });
 
     test('deletePlaylist calls the repository and reports success', () async {
       when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
@@ -358,6 +340,232 @@ void main() {
       expect(deleted, isFalse);
       expect((notices.single as ErrorNotice).error, same(error));
       await subscription.cancel();
+    });
+
+    test('an external add refetches the loaded window', () async {
+      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+      when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
+      cubit.emit(
+        PlaylistLoadedState(
+          playlist: testPlaylist,
+          tracks: PaginatedResult<Track>(
+            items: [testTrack],
+            total: 1,
+            offset: 0,
+            limit: 20,
+          ),
+        ),
+      );
+      final added = Track(
+        id: 't2',
+        name: 'New Song',
+        externalUri: '',
+        artists: const [],
+        album: testTrack.album,
+        durationMs: 120000,
+      );
+      when(
+        () => mockPlaylistService.tracks('pl1', offset: 0, limit: 20),
+      ).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: [testTrack, added],
+          total: 2,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+
+      savedMedia.pushEdits(const PlaylistTracksChanged('pl1', added: ['t2']));
+      await Future<void>.delayed(const Duration(milliseconds: 1));
+
+      final state = cubit.state as PlaylistLoadedState;
+      expect(state.tracks.items.map((track) => track.id), ['t1', 't2']);
+      expect(state.tracks.total, 2);
+      verify(
+        () => mockPlaylistService.tracks('pl1', offset: 0, limit: 20),
+      ).called(1);
+    });
+
+    test('an external removal refetches the loaded window', () async {
+      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+      when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
+      final second = Track(
+        id: 't2',
+        name: 'Second Song',
+        externalUri: '',
+        artists: const [],
+        album: testTrack.album,
+        durationMs: 120000,
+      );
+      cubit.emit(
+        PlaylistLoadedState(
+          playlist: testPlaylist,
+          tracks: PaginatedResult<Track>(
+            items: [testTrack, second],
+            total: 2,
+            offset: 0,
+            limit: 20,
+          ),
+        ),
+      );
+      when(
+        () => mockPlaylistService.tracks('pl1', offset: 0, limit: 20),
+      ).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: [second],
+          total: 1,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+
+      savedMedia.pushEdits(const PlaylistTracksChanged('pl1', removed: ['t1']));
+      await Future<void>.delayed(const Duration(milliseconds: 1));
+
+      final state = cubit.state as PlaylistLoadedState;
+      expect(state.tracks.items.map((track) => track.id), ['t2']);
+      expect(state.tracks.total, 1);
+    });
+
+    test('its own removal event is ignored', () async {
+      cubit.emit(
+        PlaylistLoadedState(
+          playlist: testPlaylist,
+          tracks: PaginatedResult<Track>(
+            items: [testTrack],
+            total: 1,
+            offset: 0,
+            limit: 20,
+          ),
+        ),
+      );
+
+      // The track is already gone locally (the swipe applied it): the own
+      // event must not trigger a refetch.
+      cubit.emit(
+        PlaylistLoadedState(
+          playlist: testPlaylist,
+          tracks: const PaginatedResult<Track>(
+            items: [],
+            total: 0,
+            offset: 0,
+            limit: 20,
+          ),
+        ),
+      );
+      savedMedia.pushEdits(const PlaylistTracksChanged('pl1', removed: ['t1']));
+      await Future<void>.delayed(const Duration(milliseconds: 1));
+
+      verifyNever(
+        () => mockPlaylistService.tracks(
+          any(),
+          offset: any(named: 'offset'),
+          limit: any(named: 'limit'),
+        ),
+      );
+      final state = cubit.state as PlaylistLoadedState;
+      expect(state.tracks.items, isEmpty);
+    });
+
+    test('events for other playlists are ignored', () async {
+      cubit.emit(
+        PlaylistLoadedState(
+          playlist: testPlaylist,
+          tracks: PaginatedResult<Track>(
+            items: [testTrack],
+            total: 1,
+            offset: 0,
+            limit: 20,
+          ),
+        ),
+      );
+
+      savedMedia.pushEdits(
+        const PlaylistTracksChanged('pl-other', added: ['t9']),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 1));
+
+      verifyNever(
+        () => mockPlaylistService.tracks(
+          any(),
+          offset: any(named: 'offset'),
+          limit: any(named: 'limit'),
+        ),
+      );
+      final state = cubit.state as PlaylistLoadedState;
+      expect(state.tracks.items.map((track) => track.id), ['t1']);
+    });
+
+    test('a failed refetch keeps the state', () async {
+      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+      when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
+      cubit.emit(
+        PlaylistLoadedState(
+          playlist: testPlaylist,
+          tracks: PaginatedResult<Track>(
+            items: [testTrack],
+            total: 1,
+            offset: 0,
+            limit: 20,
+          ),
+        ),
+      );
+      when(
+        () => mockPlaylistService.tracks('pl1', offset: 0, limit: 20),
+      ).thenAnswer((_) async => throw Exception('offline'));
+
+      savedMedia.pushEdits(const PlaylistTracksChanged('pl1', added: ['t2']));
+      await Future<void>.delayed(const Duration(milliseconds: 1));
+
+      final state = cubit.state as PlaylistLoadedState;
+      expect(state.tracks.items.map((track) => track.id), ['t1']);
+      expect(state.tracks.total, 1);
+    });
+
+    test('the refetch keeps the loaded window size', () async {
+      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+      when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
+      final loaded = List.generate(
+        25,
+        (i) => Track(
+          id: 't$i',
+          name: 'Song $i',
+          externalUri: '',
+          artists: const [],
+          album: testTrack.album,
+          durationMs: 1000,
+        ),
+      );
+      cubit.emit(
+        PlaylistLoadedState(
+          playlist: testPlaylist,
+          tracks: PaginatedResult<Track>(
+            items: loaded,
+            total: 30,
+            offset: 0,
+            limit: 25,
+          ),
+        ),
+      );
+      when(
+        () => mockPlaylistService.tracks('pl1', offset: 0, limit: 25),
+      ).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: loaded,
+          total: 26,
+          offset: 0,
+          limit: 25,
+        ),
+      );
+
+      savedMedia.pushEdits(const PlaylistTracksChanged('pl1', added: ['t99']));
+      await Future<void>.delayed(const Duration(milliseconds: 1));
+
+      verify(
+        () => mockPlaylistService.tracks('pl1', offset: 0, limit: 25),
+      ).called(1);
+      final state = cubit.state as PlaylistLoadedState;
+      expect(state.tracks.items, hasLength(25));
     });
   });
 }
