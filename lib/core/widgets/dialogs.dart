@@ -185,7 +185,6 @@ abstract class Dialogs {
     context,
     message: message,
     icon: Icons.error_outline_rounded,
-    iconColor: context.colorScheme.error,
     actionLabel: actionLabel,
     onAction: onAction,
     keyboardInset: keyboardInset,
@@ -209,7 +208,6 @@ abstract class Dialogs {
     BuildContext context, {
     required String message,
     IconData? icon,
-    Color? iconColor,
     String? actionLabel,
     VoidCallback? onAction,
     // Non-zero only when the on-screen Scaffold does not lift the snackbar
@@ -227,27 +225,28 @@ abstract class Dialogs {
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.0),
-          side: BorderSide(color: context.colorScheme.primary, width: 1.2),
         ),
-        backgroundColor: context.colorScheme.surfaceContainerHigh,
+        backgroundColor: context.colorScheme.primaryContainer,
         persist: false,
         action: actionLabel != null && onAction != null
             ? SnackBarAction(
                 label: actionLabel,
-                textColor: context.colorScheme.primary,
+                textColor: context.colorScheme.onPrimaryContainer,
                 onPressed: onAction,
               )
             : null,
         content: Row(
           children: [
             if (icon != null) ...[
-              Icon(icon, color: iconColor ?? context.colorScheme.error),
+              Icon(icon, color: context.colorScheme.onPrimaryContainer),
               const SizedBox(width: 12),
             ],
             Expanded(
               child: Text(
                 message,
-                style: TextStyle(color: context.colorScheme.onSurface),
+                style: TextStyle(
+                  color: context.colorScheme.onPrimaryContainer,
+                ),
               ),
             ),
           ],
