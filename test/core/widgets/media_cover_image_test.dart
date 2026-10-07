@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/metadata/models/image.dart' as sdk;
 import 'package:music_are/core/models/media_type.dart';
 import 'package:music_are/core/widgets/media/media_cover_image.dart';
+import 'package:music_are/core/widgets/skeletons/shimmer_box.dart';
 
 void main() {
   Widget buildTestableWidget({required MediaCoverImage child}) {
@@ -161,6 +162,22 @@ void main() {
         expect(imageWidget.imageUrl, equals('https://example.com/first.jpg'));
       },
     );
+
+    testWidgets('shows a shimmer placeholder while the image loads', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          child: MediaCoverImage(
+            images: [sdk.Image(url: 'https://example.com/cover.jpg')],
+            mediaType: MediaType.track,
+          ),
+        ),
+      );
+
+      expect(find.byType(ShimmerBox), findsOneWidget);
+      expect(find.byType(CachedNetworkImage), findsOneWidget);
+    });
 
     testWidgets('wraps image in ClipRRect when borderRadius is provided', (
       tester,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:musicare_metadata_host_sdk/metadata/models/image.dart' as sdk;
 import 'package:music_are/core/models/media_type.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
+import 'package:music_are/core/widgets/skeletons/shimmer_box.dart';
 
 class MediaCoverImage extends StatelessWidget {
   final List<sdk.Image>? images;
@@ -62,7 +63,8 @@ class MediaCoverImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final validUrls = images
+    final validUrls =
+        images
             ?.map((i) => i.url)
             .where((url) => url.trim().isNotEmpty)
             .toList() ??
@@ -133,10 +135,13 @@ class MediaCoverImage extends StatelessWidget {
   }
 
   Widget _buildLoadingPlaceholder(BuildContext context) {
-    return Container(
-      width: width,
-      height: height,
-      color: context.colorScheme.surfaceContainerHigh.withValues(alpha: 0.7),
+    if (width == null || height == null) {
+      return ShimmerBox.expand(borderRadius: borderRadius);
+    }
+    return ShimmerBox(
+      width: width!,
+      height: height!,
+      borderRadius: borderRadius,
     );
   }
 

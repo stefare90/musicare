@@ -13,6 +13,10 @@ class ShimmerBox extends StatefulWidget {
     this.borderRadius,
   });
 
+  const ShimmerBox.expand({super.key, this.borderRadius})
+    : width = double.infinity,
+      height = double.infinity;
+
   @override
   State<ShimmerBox> createState() => _ShimmerBoxState();
 }
