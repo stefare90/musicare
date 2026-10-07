@@ -28,11 +28,21 @@ void main() {
     durationMs: 259000,
   );
 
-  Widget buildTestableWidget({required Widget child}) {
+  Widget buildTestableWidget({
+    required Widget child,
+    double keyboardHeight = 0,
+  }) {
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: child,
+      home: Builder(
+        builder: (context) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            viewInsets: EdgeInsets.only(bottom: keyboardHeight),
+          ),
+          child: child,
+        ),
+      ),
     );
   }
 
@@ -109,6 +119,30 @@ void main() {
       );
 
       expect(find.byType(CustomScrollView), findsOneWidget);
+    });
+
+    testWidgets('keyboard does not shrink the body (no dead band)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          keyboardHeight: 400,
+          child: SliverMediaScaffold(
+            metadata: MediaItemMetadata.from(testAlbum),
+            slivers: [
+              SliverTrackList(tracks: [testTrack], listType: MediaType.album),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final screenHeight =
+          tester.view.physicalSize.height / tester.view.devicePixelRatio;
+      expect(
+        tester.getRect(find.byType(CustomScrollView)).bottom,
+        moreOrLessEquals(screenHeight),
+      );
     });
   });
 }

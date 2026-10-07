@@ -69,6 +69,7 @@ class _SearchViewState extends State<_SearchView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         titleSpacing: 16.0,
         title: Text(context.l10n.searchTab),

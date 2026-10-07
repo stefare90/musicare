@@ -131,6 +131,7 @@ class _ShellPageState extends State<ShellPage>
         return false;
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         body: LayoutBuilder(
           builder: (context, constraints) {
             final screenHeight = constraints.maxHeight;

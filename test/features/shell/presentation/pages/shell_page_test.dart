@@ -49,13 +49,19 @@ void main() {
     when(() => mockPlayerCubit.stream).thenAnswer((_) => const Stream.empty());
   });
 
-  GoRouter createTestRouter() {
+  GoRouter createTestRouter({double keyboardHeight = 0}) {
     return GoRouter(
       initialLocation: '/',
       routes: [
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {
-            return ShellPage(navigationShell: navigationShell);
+            final media = MediaQuery.of(context);
+            return MediaQuery(
+              data: media.copyWith(
+                viewInsets: EdgeInsets.only(bottom: keyboardHeight),
+              ),
+              child: ShellPage(navigationShell: navigationShell),
+            );
           },
           branches: [
             StatefulShellBranch(
@@ -116,7 +122,7 @@ void main() {
     );
   }
 
-  Widget buildTestableWidget() {
+  Widget buildTestableWidget({double keyboardHeight = 0}) {
     final engine = MockPluginEngine();
     when(() => engine.hasMetadata).thenReturn(false);
     return MultiBlocProvider(
@@ -129,7 +135,7 @@ void main() {
       child: MaterialApp.router(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        routerConfig: createTestRouter(),
+        routerConfig: createTestRouter(keyboardHeight: keyboardHeight),
       ),
     );
   }
@@ -343,6 +349,25 @@ void main() {
           find.text('Album Screen Content').hitTestable(),
           findsOneWidget,
         );
+      },
+    );
+
+    testWidgets(
+      'keyboard does not lift the navigation bar or the mini player',
+      (tester) async {
+        when(() => mockPlayerCubit.state).thenReturn(
+          PlayerState(queue: QueueState(tracks: [testTrack])),
+        );
+
+        await tester.pumpWidget(buildTestableWidget(keyboardHeight: 400));
+        await tester.pumpAndSettle();
+
+        final screenHeight = tester.view.physicalSize.height /
+            tester.view.devicePixelRatio;
+        final navRect = tester.getRect(find.byType(NavigationBar));
+        final miniRect = tester.getRect(find.byType(MiniPlayer));
+        expect(navRect.bottom, moreOrLessEquals(screenHeight));
+        expect(miniRect.bottom, moreOrLessEquals(navRect.top));
       },
     );
 

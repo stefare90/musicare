@@ -69,6 +69,7 @@ class _SliverMediaScaffoldState extends State<SliverMediaScaffold> {
   Widget build(BuildContext context) {
     final metadata = widget.metadata;
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: NotificationListener<ScrollNotification>(
         onNotification: (notification) {
           if (notification is ScrollUpdateNotification) {

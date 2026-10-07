@@ -26,6 +26,7 @@ import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_p
 import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 import 'package:music_are/features/search/presentation/cubit/search_cubit.dart';
 import 'package:music_are/features/search/presentation/pages/search_page.dart';
+import 'package:music_are/features/search/presentation/widgets/search_results_body.dart';
 
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
 
@@ -123,6 +124,7 @@ void main() {
   Widget buildTestWidget({
     double textScale = 1.0,
     MetadataPluginCubit? metadataCubit,
+    double keyboardHeight = 0,
   }) {
     return BlocProvider<MetadataPluginCubit>.value(
       value: metadataCubit ?? buildMockMetadataPluginCubit(),
@@ -132,9 +134,10 @@ void main() {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: TextScaler.linear(textScale)),
+            data: MediaQuery.of(context).copyWith(
+              textScaler: TextScaler.linear(textScale),
+              viewInsets: EdgeInsets.only(bottom: keyboardHeight),
+            ),
             child: child!,
           ),
           home: NoticeListener(
@@ -876,6 +879,24 @@ void main() {
           matching: find.text('Metadata sign-in required.'),
         ),
         findsOneWidget,
+      );
+    });
+
+    testWidgets('keyboard does not shrink the results body (no dead band)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildTestWidget(keyboardHeight: 400));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Coldplay');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SearchResultsBody), findsOneWidget);
+      final screenHeight =
+          tester.view.physicalSize.height / tester.view.devicePixelRatio;
+      expect(
+        tester.getRect(find.byType(SearchResultsBody)).bottom,
+        moreOrLessEquals(screenHeight),
       );
     });
 
