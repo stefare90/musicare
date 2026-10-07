@@ -1,9 +1,6 @@
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
-/// Data access for the user's saved library: the paginated listings and the
-/// save/unsave toggles. Cubits depend on this instead of the engine, so they
-/// can only touch the saved content, never e.g. `auth` or `browse`.
 class LibraryRepository {
   LibraryRepository(this._engine);
 

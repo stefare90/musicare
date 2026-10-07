@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 
-/// Circular avatar with the initials of [name], or a person icon when there is
-/// no identity to show.
 class Monogram extends StatelessWidget {
   final String? name;
   final double radius;

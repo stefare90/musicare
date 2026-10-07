@@ -11,11 +11,6 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:pub_semver/pub_semver.dart';
 
-/// App-level audio source plugin service: installs and keeps the current plugin on disk
-/// and exposes it (search/resolve) through [AudioSourcePluginAdapter].
-///
-/// The Python interpreter lifecycle belongs to `musicare_runtime_host`; this class only
-/// owns the plugin directory, the manifest and the SDK adapter built on [AudioSourceClient].
 class AudioSourcePluginEngine {
   final AudioSourceClient _client;
   IAudioSourcePlugin? _audioSourcePlugin;

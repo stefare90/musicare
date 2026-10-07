@@ -179,7 +179,7 @@ void main() {
     );
   }
 
-  /// Signs in against an empty saved library, so the warm-up settles the index.
+  /// Signs in against an empty library, so the warm-up settles the index.
   Future<void> signIn({String userId = 'u1'}) async {
     stubEmptyLibrary();
     when(() => auth.authenticate()).thenAnswer((_) async {});
@@ -339,7 +339,6 @@ void main() {
       when(() => user.me()).thenAnswer((_) async => {'user_id': 'listener'});
       await cubit.initialize();
       await pumpEventQueue();
-      // A different identity but the same sign-in value must not be announced.
       cubit.emit(const UserState(isAuthenticated: true, userId: 'renamed'));
       await Future<void>.delayed(Duration.zero);
 
@@ -425,7 +424,6 @@ void main() {
 
     test('toggleTrack on a saved track calls unsave', () async {
       when(() => tracks.unsave(['t1'])).thenAnswer((_) async {});
-      // Seed the state as already saved.
       cubit.emit(cubit.state.withIds(MediaItemType.track, {'t1'}));
 
       await cubit.toggleTrack(track);
@@ -441,7 +439,6 @@ void main() {
 
       await signIn();
 
-      // The provider saved a copy under a different id.
       const copy = Playlist(
         id: 'pl-copy',
         name: 'Weekly Exploration',
@@ -588,7 +585,6 @@ void main() {
       await signIn();
       await Future<void>.delayed(const Duration(milliseconds: 1));
 
-      // The account changes: the reset drops the in-flight load.
       cubit.reset();
       await Future<void>.delayed(Duration.zero);
 

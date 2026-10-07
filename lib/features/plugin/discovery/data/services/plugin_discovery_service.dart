@@ -88,7 +88,6 @@ class PluginDiscoveryService {
           }
         }
       } catch (_) {
-        // Skip individual repository failures
       }
     }
 

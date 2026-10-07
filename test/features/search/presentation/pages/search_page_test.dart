@@ -421,7 +421,6 @@ void main() {
         () => mockSearch.tracks('Coldplay', offset: 0, limit: 20),
       ).called(1);
 
-      // Tap track tile to play
       final trackTile = find.byType(TrackListTile);
       expect(trackTile, findsOneWidget);
 
@@ -447,12 +446,12 @@ void main() {
 
       final textField = find.byType(TextField);
       await tester.enterText(textField, 'Coldplay');
-      // Advance past debounce timer (350ms)
+      // Advance past the 350ms debounce.
       await tester.pump(const Duration(milliseconds: 360));
 
       expect(find.byType(SkeletonSearchAll), findsOneWidget);
 
-      // Complete future to clean up pending timers
+      // Complete the future to clean up pending timers.
       completer.complete(dummyResponse);
       await tester.pumpAndSettle();
     },
@@ -557,8 +556,7 @@ void main() {
           await tester.pump(const Duration(milliseconds: 400));
           await tester.pumpAndSettle();
 
-          // Select via the cubit: the chip can be off-screen at narrow
-          // widths / large text scales, so tapping it is unreliable.
+          // Via the cubit: the chip can be off-screen, so tapping is unreliable.
           final cubit = BlocProvider.of<SearchCubit>(
             tester.element(find.byType(FilterChip).first),
           );
@@ -585,7 +583,6 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
 
-      // 1. Measure the skeleton cell.
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(body: SkeletonMediaGrid(itemCount: 4)),
@@ -593,7 +590,6 @@ void main() {
       );
       final skeletonSize = tester.getSize(find.byType(ShimmerBox).first);
 
-      // 2. Measure a real MediaCard inside the search grid.
       when(
         () => mockSearch.albums(
           'Coldplay',

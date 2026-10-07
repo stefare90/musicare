@@ -12,12 +12,6 @@ import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
-/// The signed-in user's account collections (playlists, albums, artists).
-///
-/// The three sections load independently so the cheapest one (playlists) can
-/// render while the others are still fetching, and each keeps its own
-/// pagination and error. It only reads from the provider; the local downloads
-/// live in the storage layer.
 class LibraryCubit extends SafeCubit<LibraryState> {
   final LibraryRepository _library;
   final NoticeBus _notices;
@@ -28,15 +22,9 @@ class LibraryCubit extends SafeCubit<LibraryState> {
   StreamSubscription<bool>? _authSubscription;
   StreamSubscription<MediaItemType>? _savedMediaSubscription;
 
-  /// Sections with a reload in flight, so a manual refresh and a reactive one
-  /// never fetch the same section twice at the same time.
+  /// Sections with a reload in flight, to never fetch one twice.
   final Set<LibrarySection> _reloading = {};
 
-  /// Number of grid columns currently used by the library grids.
-  ///
-  /// Defaults to 2 (the narrow-phone layout) and is only updated by the view
-  /// through [updateGridColumns]; it drives the pagination `limit` so grids
-  /// never end with a partially filled row.
   int _gridColumns = 2;
 
   LibraryCubit(
@@ -55,10 +43,6 @@ class LibraryCubit extends SafeCubit<LibraryState> {
     });
   }
 
-  /// Reloads a section when the saved set of its type actually changed.
-  ///
-  /// The stream carries only real changes (never the warm-up), so there is no
-  /// baseline to keep here.
   void _onSavedMediaChanged(MediaItemType type) {
     if (isClosed || !_session.isAuthenticated) return;
     switch (type) {
@@ -73,14 +57,11 @@ class LibraryCubit extends SafeCubit<LibraryState> {
     }
   }
 
-  /// Pagination size rounded up to a whole number of grid rows.
   int get _gridPageSize =>
       MediaCardMetrics.pageSizeForColumns(pageSize, _gridColumns);
 
-  /// Reloads one section from the provider (pull-to-refresh).
-  ///
-  /// Refreshes the corresponding saved set **silently**: the section is
-  /// reloaded explicitly here, so an announced change would reload it again.
+  /// Reloads one section (pull-to-refresh), refreshing the saved set silently:
+  /// an announced change would reload the section again.
   Future<void> refresh(LibrarySection section) async {
     if (!_library.hasMetadata || !_session.isAuthenticated) return;
     await Future.wait([
@@ -99,11 +80,6 @@ class LibraryCubit extends SafeCubit<LibraryState> {
     LibrarySection.artists => MediaItemType.artist,
   };
 
-  /// Records the number of columns of the grids.
-  ///
-  /// Deliberately a pure setter: it never emits, so the view can call it from a
-  /// post-frame callback without triggering a rebuild loop. Loads that happen
-  /// before the first notification use the default of 2.
   void updateGridColumns(int columns) {
     if (columns <= 0 || columns == _gridColumns) return;
     _gridColumns = columns;
@@ -155,10 +131,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
     };
   }
 
-  /// Creates a playlist for the signed-in user.
-  ///
-  /// Returns null on failure; a missing sign-in or a write error is announced
-  /// on the notice bus (never silently swallowed).
+  /// Null on failure (announced on the notice bus).
   Future<Playlist?> createPlaylist({
     required String name,
     String? description,
@@ -171,8 +144,7 @@ class LibraryCubit extends SafeCubit<LibraryState> {
         description: description,
         isPublic: isPublic,
       );
-      // A new playlist lands in the saved set: announce it (through `changes`)
-      // so the Playlists tab reloads instead of staying stale.
+      // Announce it so the Playlists tab reloads instead of staying stale.
       if (playlist != null) {
         await _savedMedia.refresh(MediaItemType.playlist);
       }

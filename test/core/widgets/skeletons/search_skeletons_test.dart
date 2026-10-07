@@ -64,7 +64,6 @@ void main() {
         albumType: AlbumType.album,
       );
 
-      // Real card footprint inside a SectionRow.
       await tester.pumpWidget(
         MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -76,7 +75,6 @@ void main() {
       );
       final realSize = tester.getSize(find.byType(MediaCard).first);
 
-      // Skeleton card footprint.
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(body: SkeletonSectionRow()),

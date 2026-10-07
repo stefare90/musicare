@@ -162,9 +162,8 @@ void main() {
     await tester.fling(find.byType(GridView), const Offset(0, 300), 1000);
     await tester.pumpAndSettle();
 
-    // The Playlists section reloads from the provider (limit = grid page
-    // size); the saved set is refreshed silently through the index, which the
-    // fake records instead of fetching.
+    // The section reloads from the provider; the saved set refreshes silently
+    // through the fake index, which records instead of fetching.
     verify(
       () => user.savedPlaylists(offset: 0, limit: any(named: 'limit')),
     ).called(1);

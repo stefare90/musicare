@@ -1,23 +1,12 @@
 part of 'user_cubit.dart';
 
-/// The global saved-media index as the loading and writing cubits see it: the
-/// [savedChanges] stream they reload from, plus [refresh] for a cubit whose
-/// write changes the saved set.
-///
-/// It deliberately carries only the media type, not the entity: it is a
-/// listing-level "the saved set of this type changed" announcement, consumed by
-/// the library tabs and *Liked Songs*.
-///
-/// Consumers depend on this port, not on the concrete cubit: the data-loading
-/// cubits only need the stream and the ability to re-read the set.
+/// Listing-level announcement: carries only the media type, not the entity.
 abstract interface class UserSavedMediaIndex {
-  /// Emits a type only for a genuine change, never for the warm-up.
+  /// Emits only genuine changes, never the warm-up.
   Stream<MediaItemType> get savedChanges;
 
-  /// Re-reads the saved IDs of [type], announcing on [savedChanges] only when
-  /// [notify] is true and the returned set differs from the last read.
-  ///
-  /// A silent refresh ([notify] false) is used by pull-to-refresh, which
-  /// reloads the listing explicitly and would otherwise trigger it twice.
+  /// Re-reads the saved IDs, announcing only when [notify] is true and the
+  /// set differs (a silent refresh is for pull-to-refresh, which reloads the
+  /// listing explicitly).
   Future<void> refresh(MediaItemType type, {bool notify = true});
 }

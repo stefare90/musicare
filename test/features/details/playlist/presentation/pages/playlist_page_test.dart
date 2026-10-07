@@ -425,7 +425,6 @@ void main() {
       userCubit.pushEdits(const PlaylistTracksChanged('pl1', added: ['t3']));
       await tester.pumpAndSettle();
 
-      // The new tail track appears and the order is preserved.
       expect(find.text('Song 3'), findsOneWidget);
       expect(
         tester.getTopLeft(find.text('Song 0')).dy,
@@ -458,7 +457,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Scroll until the head is off-screen (the header absorbs part of the
-      // gesture, so one drag may not be enough).
+      // gesture).
       for (
         var i = 0;
         i < 5 && find.text('Song 0').evaluate().isNotEmpty;

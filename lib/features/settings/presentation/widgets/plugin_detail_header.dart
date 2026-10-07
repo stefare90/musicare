@@ -5,7 +5,6 @@ import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dar
 import 'package:music_are/features/plugin/shared/presentation/utils/plugin_type_icon.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/plugin_type_localizer.dart';
 
-/// Icon, name, author/type line and description of a plugin.
 class PluginDetailHeader extends StatelessWidget {
   final PluginManifest manifest;
 

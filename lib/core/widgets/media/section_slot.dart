@@ -5,12 +5,8 @@ import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/info_card.dart';
 import 'package:music_are/core/widgets/scrollable_centered.dart';
 
-/// Renders the four states of a paginated section — initial loading, error,
-/// empty, content — so every library-like tab behaves the same way.
-///
-/// The [contentBuilder] receives the full [PaginatedResult] so it can decide
-/// between a grid and a list; [loadingBuilder] typically returns the matching
-/// skeleton. Reused by the user library and the downloads page.
+/// The four states of a paginated section (loading, error, empty, content).
+/// [contentBuilder] gets the full result to choose between grid and list.
 class SectionSlot<T extends Object> extends StatelessWidget {
   final SectionState<PaginatedResult<T>> section;
   final WidgetBuilder loadingBuilder;

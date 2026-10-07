@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:music_are/core/widgets/skeletons/skeleton_section_row.dart';
 import 'package:music_are/core/widgets/skeletons/skeleton_track_matrix.dart';
 
-/// Skeleton widget for the "All" category results in SearchPage.
-/// Matches: Tracks Matrix (3x2) + Albums SectionRow + Artists SectionRow +
-/// Playlists SectionRow.
+/// Mirrors the All view: track matrix + albums/artists/playlists rows.
 class SkeletonSearchAll extends StatelessWidget {
   const SkeletonSearchAll({super.key});
 

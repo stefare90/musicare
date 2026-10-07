@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 
-/// Visibility of a playlist as a compact pill.
-///
-/// A `null` value renders nothing: several playlists carry no meaningful
-/// visibility (browse radios report `is_public: false` even though they are
-/// algorithmic, not private), so the caller decides when the value applies.
+/// A `null` value renders nothing: some playlists carry no meaningful
+/// visibility (browse radios report `is_public: false` although algorithmic),
+/// so the caller decides when the value applies.
 class PlaylistVisibilityBadge extends StatelessWidget {
   final bool? isPublic;
 

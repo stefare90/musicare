@@ -191,7 +191,6 @@ abstract class Dialogs {
     keyboardInset: keyboardInset,
   );
 
-  /// Message-only variant (no error icon), for notices that are not failures.
   static void showMessageSnackBar(
     BuildContext context, {
     required String message,
@@ -213,9 +212,8 @@ abstract class Dialogs {
     Color? iconColor,
     String? actionLabel,
     VoidCallback? onAction,
-    // Non-zero only when the Scaffold on screen does not lift the snackbar for
-    // the keyboard itself (the root notice host keeps the app's MediaQuery
-    // untouched, so it cannot).
+    // Non-zero only when the on-screen Scaffold does not lift the snackbar
+    // for the keyboard itself.
     double keyboardInset = 0.0,
   }) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -232,8 +230,6 @@ abstract class Dialogs {
           side: BorderSide(color: context.colorScheme.primary, width: 1.2),
         ),
         backgroundColor: context.colorScheme.surfaceContainerHigh,
-        // Actionable snackbars persist by default (Flutter 3.44+); keep the
-        // app's transient behaviour so the notice never blocks the bottom bar.
         persist: false,
         action: actionLabel != null && onAction != null
             ? SnackBarAction(

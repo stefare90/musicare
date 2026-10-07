@@ -11,13 +11,10 @@ abstract class AppInitializer {
   static Future<String> initialize() async {
     WidgetsFlutterBinding.ensureInitialized();
 
-    // Initialize native platform audio background services
     await AudioPlayerDriver.initBackground();
 
-    // Initialize Dependency Injection container
     await initDependencies();
 
-    // Initialize plugins
     final metadataCubit = sl<MetadataPluginCubit>();
     final audioSourceCubit = sl<AudioSourcePluginCubit>();
 

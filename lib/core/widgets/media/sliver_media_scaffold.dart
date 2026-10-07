@@ -9,14 +9,13 @@ class SliverMediaScaffold extends StatefulWidget {
   final bool isSaved;
   final bool isLoading;
 
-  /// Shown when there is nothing to display (error, sign-in invitation, empty).
-  /// The caller composes it; this scaffold only places it.
+  /// Shown when there is nothing to display; the caller composes it, this
+  /// scaffold only places it.
   final Widget? statusCard;
 
   final VoidCallback? onSaveTap;
   final VoidCallback? onOptionsTap;
 
-  /// Optional element shown right below the header title.
   final Widget? headerBadge;
   final List<Widget> slivers;
 

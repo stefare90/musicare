@@ -3,8 +3,6 @@ import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dar
 import 'package:music_are/features/settings/presentation/widgets/plugin_detail_header.dart';
 import 'package:music_are/features/settings/presentation/widgets/plugin_version_section.dart';
 
-/// Common content of a plugin detail: the header, the version section, and the
-/// extra sections a plugin type contributes (each with its own section header).
 class PluginDetailBody extends StatelessWidget {
   final PluginManifest manifest;
   final List<Widget> sections;

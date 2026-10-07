@@ -9,11 +9,9 @@ import 'package:musicare_runtime_host/musicare_runtime_host.dart';
 extension ExceptionLocalizer on Object {
   String toLocalizedString(BuildContext context) {
     return switch (this) {
-      // Plugin Audio Source
       StreamResolutionException() => context.l10n.pluginErrorStreamResolution,
       RuntimeBootTimeoutException() => context.l10n.pluginErrorTimeout,
 
-      // Plugin Shared
       IncompatibleSdkVersionException() =>
         context.l10n.pluginErrorIncompatibleSdkVersion,
       PluginNotLoadedException() => context.l10n.pluginErrorNotLoaded,
@@ -23,16 +21,13 @@ extension ExceptionLocalizer on Object {
       PluginDownloadException() => context.l10n.pluginErrorDownloadFailed,
       PluginSearchException() => context.l10n.pluginErrorNetwork,
 
-      // UI Service
       PluginErrorNoContext() => context.l10n.pluginErrorNoContext,
 
-      // Metadata SDK
       MetadataAuthRequiredException() => context.l10n.pluginErrorAuthRequired,
       MetadataNotFoundException() => context.l10n.pluginErrorResourceNotFound,
       MetadataTransportException() => context.l10n.pluginErrorNetwork,
       MetadataRateLimitedException() => context.l10n.pluginErrorRateLimited,
 
-      // Generics & System (Network, Timeout, Fallbacks)
       SocketException() => context.l10n.pluginErrorNetwork,
       TimeoutException() => context.l10n.pluginErrorTimeout,
       _ => context.l10n.pluginErrorUnknown(

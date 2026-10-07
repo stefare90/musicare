@@ -12,8 +12,7 @@ class DynamicPluginFormDialog extends StatefulWidget {
   final String submitLabel;
   final String cancelLabel;
 
-  /// Called when the user taps a field's help link; returns whether the URL was
-  /// opened. The host owns the launch (the dialog has no `url_launcher` dependency).
+  /// The host owns the launch (the dialog has no `url_launcher` dependency).
   final Future<bool> Function(String url)? onHelpTap;
 
   const DynamicPluginFormDialog({

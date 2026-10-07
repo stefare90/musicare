@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/core/widgets/skeletons/shimmer_box.dart';
 
-/// Skeleton matching a horizontal `SectionRow`.
-///
-/// Row height, card width, gap and padding all come from [MediaCardMetrics],
-/// so placeholders are pixel-coherent with the real cards.
+/// Skeleton matching a horizontal `SectionRow` from [MediaCardMetrics].
 class SkeletonSectionRow extends StatelessWidget {
   final bool showTitle;
 

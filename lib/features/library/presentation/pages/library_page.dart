@@ -26,8 +26,6 @@ class LibraryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Read here, not in `create`: reading MediaQuery from a provider's create
-    // callback is an invalid listening lifecycle.
     final columns = MediaCardMetrics.gridColumns(
       MediaQuery.sizeOf(context).width,
     );
@@ -78,7 +76,7 @@ class _LibraryViewState extends State<_LibraryView>
     super.dispose();
   }
 
-  // The reload after signing in is driven by `UserCubit` inside LibraryCubit.
+  // The reload after signing in is driven inside LibraryCubit.
   Future<void> _signIn(BuildContext context) async {
     await MetadataAccountActions.signIn(context);
   }
@@ -94,8 +92,7 @@ class _LibraryViewState extends State<_LibraryView>
     );
     if (created == null || !context.mounted) return;
 
-    // The Playlists tab reloads through `LibraryCubit`'s change stream; the
-    // confirmation is shown by the notice host.
+    // The Playlists tab reloads on its own; the notice host shows this.
     sl<NoticeBus>().emit(Notice.message(context.l10n.playlistCreated));
   }
 

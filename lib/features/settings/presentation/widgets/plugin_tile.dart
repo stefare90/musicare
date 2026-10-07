@@ -6,8 +6,6 @@ import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/plugin_type_icon.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/plugin_type_localizer.dart';
 
-/// Row of a plugin type in the settings hub: the active plugin (name, type and
-/// version) or a "not configured" placeholder. Tapping opens its detail.
 class PluginTile extends StatelessWidget {
   final PluginType type;
   final PluginManifest? manifest;

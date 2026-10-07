@@ -1,14 +1,9 @@
 import 'package:flutter/foundation.dart';
 
-/// Optional action a notice can offer to the user.
 typedef NoticeAction = ({String label, VoidCallback onAction});
 
-/// A transient notice travelling on the `NoticeBus`: either a failure to report
-/// or a message to show.
-///
-/// Closed on purpose: a new kind of notice cannot reach the renderer without it
-/// handling the new case. The optional action lives on the notice itself, not on
-/// the error, so a message can offer one too.
+/// Closed on purpose: a new kind cannot reach the renderer unhandled. The
+/// action lives on the notice, not on the error, so a message can offer one.
 sealed class Notice {
   const Notice();
 
@@ -24,12 +19,8 @@ final class ErrorNotice extends Notice {
   const ErrorNotice(this.error);
 }
 
-/// A message already localized by the emitter (normally a widget, which has a
-/// `BuildContext`).
-///
-/// Unlike [ErrorNotice], whose message and action are derived from the error
-/// when the snackbar is shown, this one carries plain text, so the notice stays
-/// a simple value.
+/// Plain text already localized by the emitter (which has a `BuildContext`),
+/// unlike [ErrorNotice], resolved when shown.
 final class MessageNotice extends Notice {
   final String message;
   final NoticeAction? action;

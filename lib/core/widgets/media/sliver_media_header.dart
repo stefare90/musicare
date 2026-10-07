@@ -8,7 +8,6 @@ class SliverMediaHeader extends StatelessWidget {
   final MediaItemMetadata meta;
   final Key? titleKey;
 
-  /// Optional element shown right below the title (e.g. playlist visibility).
   final Widget? badge;
 
   static const double _coverSize = 160.0;

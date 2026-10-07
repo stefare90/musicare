@@ -40,9 +40,8 @@ class _ShellPageState extends State<ShellPage>
   }
 
   void _expand() {
-    // The search field keeps focus while the player covers it, and a route
-    // opened from the player (its source list) would restore that focus on
-    // pop, re-opening the keyboard over the player.
+    // Unfocus: the search field keeps focus under the player, and a route
+    // opened from it would restore that focus on pop, reopening the keyboard.
     FocusManager.instance.primaryFocus?.unfocus();
     _panelController.animateTo(
       1.0,
@@ -143,7 +142,6 @@ class _ShellPageState extends State<ShellPage>
 
             return Stack(
               children: [
-                // Navigation Shell
                 Positioned.fill(
                   child: Padding(
                     padding: EdgeInsets.only(bottom: contentBottomPadding),
@@ -151,7 +149,6 @@ class _ShellPageState extends State<ShellPage>
                   ),
                 ),
 
-                // Animated NavigationBar and Sliding Player
                 AnimatedBuilder(
                   animation: _panelController,
                   builder: (context, _) {
@@ -166,7 +163,6 @@ class _ShellPageState extends State<ShellPage>
 
                     return Stack(
                       children: [
-                        // Navigation Bar
                         Positioned(
                           left: 0,
                           right: 0,
@@ -202,7 +198,6 @@ class _ShellPageState extends State<ShellPage>
                           ),
                         ),
 
-                        // Sliding Player Panel
                         if (hasTrack)
                           Positioned(
                             left: 0,
@@ -226,7 +221,6 @@ class _ShellPageState extends State<ShellPage>
                                   clipBehavior: Clip.antiAlias,
                                   child: Stack(
                                     children: [
-                                      // Full Player: Static definitive layout anchored to top of expanding panel
                                       if (progress > 0.0)
                                         Positioned(
                                           top: 0,
@@ -241,7 +235,6 @@ class _ShellPageState extends State<ShellPage>
                                           ),
                                         ),
 
-                                      // Mini Player: rapidly fades out when dragging starts
                                       if (progress < 0.08)
                                         Positioned(
                                           top: 0,

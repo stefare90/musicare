@@ -1,9 +1,6 @@
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
-/// Data access for playlist writes: creation (resolving the signed-in user),
-/// adding/removing tracks and deletion. Callers orchestrate the flows and
-/// surface errors.
 class PlaylistRepository {
   PlaylistRepository(this._engine);
 
@@ -11,10 +8,8 @@ class PlaylistRepository {
 
   bool get hasMetadata => _engine.hasMetadata;
 
-  /// Creates a playlist for the signed-in user.
-  ///
-  /// Throws [MetadataAuthRequiredException] when the provider reports no user,
-  /// so callers surface a sign-in prompt instead of a silent no-op.
+  /// Throws [MetadataAuthRequiredException] when the provider reports no
+  /// user, so callers surface a sign-in prompt instead of a silent no-op.
   Future<Playlist?> createPlaylist(
     String name, {
     String? description,

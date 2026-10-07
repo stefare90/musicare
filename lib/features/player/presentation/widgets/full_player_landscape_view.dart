@@ -31,7 +31,6 @@ class FullPlayerLandscapeView extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Left: Cover Art
           Expanded(
             flex: 5,
             child: Center(
@@ -62,7 +61,6 @@ class FullPlayerLandscapeView extends StatelessWidget {
           ),
           const SizedBox(width: 28),
 
-          // Right: Track Info, Controls & Utilities
           Expanded(
             flex: 6,
             child: Column(

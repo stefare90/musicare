@@ -16,11 +16,6 @@ class SearchCubit extends SafeCubit<SearchState> {
   final Duration debounceDuration;
   final int pageSize;
 
-  /// Number of grid columns currently used by the search results grid.
-  ///
-  /// Defaults to 2 (the narrow-phone layout) and is only updated by the view
-  /// through [updateGridColumns]; it drives the pagination `limit` so grids
-  /// never end with a partially filled row.
   int _gridColumns = 2;
 
   SearchCubit(
@@ -37,15 +32,9 @@ class SearchCubit extends SafeCubit<SearchState> {
     playlists: [],
   );
 
-  /// Pagination size rounded up to a whole number of grid rows.
   int get _gridPageSize =>
       MediaCardMetrics.pageSizeForColumns(pageSize, _gridColumns);
 
-  /// Records the number of columns of the results grid.
-  ///
-  /// This is deliberately a pure setter: it never emits a new state, so the
-  /// view can call it from a post-frame callback without triggering a rebuild
-  /// loop. Requests made before the first notification use the default of 2.
   void updateGridColumns(int columns) {
     if (columns <= 0 || columns == _gridColumns) return;
     _gridColumns = columns;
@@ -57,7 +46,6 @@ class SearchCubit extends SafeCubit<SearchState> {
       final chips = await _search.chips();
       if (!isClosed) emit(state.copyWith(chips: chips));
     } catch (_) {
-      // chips() is optional: fall back to every known category.
       if (!isClosed) emit(state.copyWith(chips: SearchCategory.values));
     }
   }
@@ -67,7 +55,7 @@ class SearchCubit extends SafeCubit<SearchState> {
     if (query == state.query) return;
 
     if (query.trim().isEmpty) {
-      // Rebuilding the state resets every section (results and errors).
+      // A fresh state (not copyWith) also clears past results and errors.
       emit(SearchState(query: query, chips: state.chips, filter: state.filter));
       return;
     }

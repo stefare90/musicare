@@ -4,7 +4,6 @@ import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/settings/presentation/widgets/settings_section_header.dart';
 
-/// Installed and SDK versions of a plugin.
 class PluginVersionSection extends StatelessWidget {
   final PluginManifest manifest;
 

@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/core/widgets/skeletons/shimmer_box.dart';
 
-/// Skeleton grid matching `PaginatedMediaGrid` in the search page.
-///
-/// It reuses [MediaCardMetrics.gridDelegate] so each placeholder occupies
-/// exactly the same cell as a real `MediaCard` (same column count, gap and
-/// `TextScaler`-aware height), avoiding any visual jump when data loads.
+/// Skeleton matching `PaginatedMediaGrid` cell-for-cell, so loading never
+/// causes a visual jump.
 class SkeletonMediaGrid extends StatelessWidget {
   final int itemCount;
   final EdgeInsetsGeometry padding;
@@ -32,8 +29,7 @@ class SkeletonMediaGrid extends StatelessWidget {
           columns,
         );
         final cellHeight = cellWidth + textBlockHeight;
-        // Pad the placeholders to a whole number of rows: a partial last row
-        // would look unfinished while loading.
+        // Whole rows only: a partial last row would look unfinished.
         final count = MediaCardMetrics.pageSizeForColumns(itemCount, columns);
 
         return GridView.builder(

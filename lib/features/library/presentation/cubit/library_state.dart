@@ -1,7 +1,6 @@
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/models/section_state.dart';
 
-/// The three account collections shown as library tabs.
 enum LibrarySection { playlists, albums, artists }
 
 class LibraryState {

@@ -10,10 +10,6 @@ import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
-/// The signed-in user's liked tracks, paginated.
-///
-/// Liked tracks are provider feedback, not a playlist, so they get their own
-/// screen reached from the pinned *Liked Songs* entry.
 class LikedTracksCubit extends SafeCubit<LikedTracksState> {
   final LibraryRepository _library;
   final NoticeBus _notices;
@@ -33,9 +29,8 @@ class LikedTracksCubit extends SafeCubit<LikedTracksState> {
         .listen((_) => unawaited(load()));
   }
 
-  /// Manual reload (pull-to-refresh): refetches the list and the saved track
-  /// set. The set is refreshed silently because the list is already reloaded
-  /// here; an announced change would reload it again.
+  /// Manual reload (pull-to-refresh); the saved set refreshes silently to
+  /// avoid reloading the list twice.
   Future<void> refresh() async {
     await Future.wait([
       load(),

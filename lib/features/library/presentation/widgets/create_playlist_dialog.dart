@@ -7,11 +7,8 @@ typedef CreatePlaylistResult = ({
   bool isPublic,
 });
 
-/// Collects the fields needed to create a playlist.
-///
-/// Only what the provider actually supports: name, description and visibility.
-/// `collaborative` is deliberately absent — the contract exposes it but the
-/// MusicBrainz plugin ignores it, so a control here would be a lie.
+/// Only what the provider supports. `collaborative` is absent on purpose:
+/// the plugin ignores it, so a control here would be a lie.
 class CreatePlaylistDialog extends StatefulWidget {
   const CreatePlaylistDialog({super.key});
 

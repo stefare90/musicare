@@ -1,7 +1,6 @@
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/models/section_state.dart';
 
-/// The aggregate view plus the typed search categories.
 enum SearchFilter {
   all,
   tracks,
@@ -75,13 +74,13 @@ class SearchState {
     SearchFilter.playlists => playlists.data.items.length < playlists.data.total,
   };
 
-  /// Initial loading only: the active section has no data yet.
+  /// Initial loading only: no data yet.
   bool get isLoading => _activeIsLoading && !_activeHasData;
 
   /// A further page is being appended to already loaded data.
   bool get isLoadingMore => _activeIsLoading && _activeHasData;
 
-  /// Initial error only; a load-more error leaves the loaded data visible.
+  /// Initial error only; a load-more error keeps the data visible.
   Object? get error => _activeHasData ? null : _activeError;
 
   /// Error while appending a page, with the previous data still on screen.

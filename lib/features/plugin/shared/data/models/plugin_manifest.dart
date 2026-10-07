@@ -1,6 +1,5 @@
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 
-/// Strongly-typed manifest representation of plugin.json
 class PluginManifest {
   final String id;
   final String packageId;

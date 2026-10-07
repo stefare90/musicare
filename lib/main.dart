@@ -43,10 +43,8 @@ class MusicAreApp extends StatelessWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.dark,
-        // A root Scaffold hosts the app so the notice snackbar is painted above
-        // the Navigator and therefore above every route, including modal sheets
-        // and dialogs. `resizeToAvoidBottomInset: false` keeps the app's
-        // MediaQuery (padding and keyboard insets) untouched.
+        // The root Scaffold paints the snackbar above every route; keeping
+        // `resizeToAvoidBottomInset: false` leaves keyboard insets untouched.
         builder: (context, child) => Scaffold(
           resizeToAvoidBottomInset: false,
           body: NoticeListener(

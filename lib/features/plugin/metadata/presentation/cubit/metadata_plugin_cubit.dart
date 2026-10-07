@@ -7,10 +7,7 @@ import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_p
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 
-/// Manages the metadata plugin lifecycle (install, load, update, version).
-///
-/// It owns the plugin, not the user: the account identity lives in `UserCubit`.
-/// Data access goes through [PluginRepository] (lifecycle only).
+/// Owns the plugin, not the user: the account identity lives in `UserCubit`.
 class MetadataPluginCubit extends SafeCubit<MetadataPluginState> {
   final PluginRepository _plugin;
   final PreferencesService _preferences;

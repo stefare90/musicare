@@ -19,8 +19,6 @@ import 'package:music_are/features/plugin/metadata/data/repositories/playlist_re
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/utils/metadata_account_actions.dart';
 
-/// Picker for "Add to playlist": the user's playlists plus a "New playlist"
-/// entry that creates one and adds the track in a single flow.
 class AddToPlaylistBottomSheet extends StatelessWidget {
   final Track track;
 
@@ -82,8 +80,7 @@ class _AddToPlaylistBody extends StatelessWidget {
     );
     if (result == null || !context.mounted) return;
 
-    // `added == 0` means the track was already there: say so instead of a plain
-    // "added" that would be false.
+    // `added == 0` means already there: say so, not a false "added".
     final message = result.added > 0
         ? context.l10n.addedToPlaylist(playlist.name)
         : context.l10n.alreadyInPlaylist(playlist.name);

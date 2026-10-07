@@ -9,8 +9,6 @@ import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit
 import 'package:music_are/features/library/presentation/widgets/add_to_playlist_bottom_sheet.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 
-/// The collection actions offered by the track sheet, wired once for every
-/// call site so the pages stay free of engine/DI details.
 abstract class TrackActions {
   static Future<void> showOptions(
     BuildContext context,

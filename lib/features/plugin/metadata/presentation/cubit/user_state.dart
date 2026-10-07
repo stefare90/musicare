@@ -1,12 +1,7 @@
 part of 'user_cubit.dart';
 
-/// The signed-in user: the account identity plus the global index of their
-/// saved media.
-///
-/// IDs only: the paginated lists live in the page cubits, while this is the
-/// small global state that answers "is this saved?" from any page. [loaded]
-/// tracks which types have been fetched, so [withIds] never conflates "not
-/// saved" with "not loaded yet".
+/// IDs only: the paginated lists live in the page cubits. [loaded] tells
+/// "not saved" apart from "not loaded yet".
 class UserState {
   final bool isAuthenticated;
   final String? userId;

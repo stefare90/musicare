@@ -11,11 +11,6 @@ import 'package:music_are/core/widgets/media/paginated_media_grid.dart';
 import 'package:music_are/features/library/presentation/cubit/library_cubit.dart';
 import 'package:music_are/features/library/presentation/cubit/library_state.dart';
 
-/// Playlists tab of the library.
-///
-/// *Liked Songs* is provider feedback, not a real playlist and with no artwork:
-/// rather than a differently-shaped row it shares the grid as a special first
-/// cell, so the page stays visually uniform.
 class LibraryPlaylistsTab extends StatelessWidget {
   final SectionState<PaginatedResult<Playlist>> section;
 
@@ -53,7 +48,7 @@ class LibraryPlaylistsTab extends StatelessWidget {
         onLoadMore: () =>
             context.read<LibraryCubit>().loadMore(LibrarySection.playlists),
         onItemTap: (item) => AppNavigator.toMediaDetail(context, item),
-        // Extra bottom room so the "New playlist" FAB never covers the last row.
+        // Bottom room so the "New playlist" FAB never covers the last row.
         padding: EdgeInsets.fromLTRB(
           MediaCardMetrics.edgeInset,
           MediaCardMetrics.edgeInset,

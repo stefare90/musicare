@@ -125,7 +125,7 @@ void main() {
     ).thenAnswer((_) async => page<Playlist>([playlist]));
 
     await cubit.loadAll();
-    // The three loads are fire-and-forget; let them settle.
+    // The loads are fire-and-forget; let them settle.
     await Future<void>.delayed(Duration.zero);
 
     expect(cubit.state.playlists.data.items.single.id, 'pl1');
@@ -335,11 +335,10 @@ void main() {
 
     await cubit.refresh(LibrarySection.playlists);
 
-    // One reload of the section and one silent refresh of the saved set: the
-    // silent refresh must not trigger a second section load through `changes`.
+    // One section reload plus one silent saved-set refresh: silence must not
+    // trigger a second section load through `changes`.
     verify(() => user.savedPlaylists(offset: 0, limit: 20)).called(1);
     expect(index.refreshed, [MediaItemType.playlist]);
-    // Silent: the section was reloaded explicitly above.
     expect(index.refreshNotifies, [false]);
   });
 

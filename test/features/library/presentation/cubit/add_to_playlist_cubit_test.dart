@@ -232,14 +232,11 @@ void main() {
 
     expect(outcome?.playlist.id, 'pl1');
     expect(outcome?.trackAdded, isFalse);
-    // The created playlist is still announced so the Library reloads.
     expect(savedMedia.refreshed, [MediaItemType.playlist]);
   });
 
   test('createPlaylist announces when sign-in is required', () async {
     cubit = buildCubit();
-    // The provider reports no user when signed out; the repository turns that
-    // into an auth-required error, which the cubit announces.
     when(() => user.me()).thenAnswer((_) async => const <String, dynamic>{});
 
     final seen = <Object>[];

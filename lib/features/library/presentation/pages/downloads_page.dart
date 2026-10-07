@@ -3,11 +3,6 @@ import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/widgets/info_card.dart';
 import 'package:music_are/core/widgets/scrollable_centered.dart';
 
-/// Entry point of the offline world: downloaded tracks and collections.
-///
-/// The content (browsing by album/playlist, offline playback and management)
-/// belongs to the local storage subsystem; until that lands this page is an
-/// explicit empty state, not a dead end.
 class DownloadsPage extends StatelessWidget {
   const DownloadsPage({super.key});
 

@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/widgets/media/track_list_tile.dart';
 
-/// Scrollable list of [TrackListTile]s with lazy pagination.
-///
-/// Source-agnostic like [PaginatedMediaGrid]: the caller provides the tracks
-/// and reacts to [onLoadMore]. Shared by the liked-songs page and, later, the
-/// downloaded-tracks list.
+/// Source-agnostic list like [PaginatedMediaGrid]: the caller provides the
+/// tracks and reacts to [onLoadMore].
 class PaginatedTrackList extends StatelessWidget {
   final List<Track> tracks;
   final String? activeTrackId;

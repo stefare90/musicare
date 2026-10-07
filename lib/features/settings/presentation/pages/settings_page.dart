@@ -9,8 +9,6 @@ import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/settings/presentation/widgets/plugin_tile.dart';
 import 'package:music_are/features/settings/presentation/widgets/settings_section_header.dart';
 
-/// Configuration hub. It grows one section at a time: today only the active
-/// metadata and audio source plugins (their version and account state).
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 

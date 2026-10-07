@@ -4,11 +4,8 @@ import 'package:music_are/core/notice/notice.dart';
 
 export 'package:music_are/core/notice/notice.dart';
 
-/// App-wide one-shot notice channel.
-///
-/// Any cubit or background service can emit; a single `NoticeListener` at the
-/// app root shows the snackbars, so notices surface regardless of the visible
-/// route. Events emitted before the root subscribes are buffered.
+/// App-wide one-shot channel: one `NoticeListener` at the root shows every
+/// snackbar, on any route. Events emitted before it subscribes are buffered.
 class NoticeBus {
   NoticeBus() {
     _controller.onListen = _flush;

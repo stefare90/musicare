@@ -3,10 +3,6 @@ import 'dart:typed_data';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 
-/// Data access for the plugin lifecycle (install, load, unload, manifest).
-///
-/// Limited scope on purpose: it exposes only the lifecycle methods, never the
-/// loaded `IMetadataPlugin` — that is the job of the other repositories.
 class PluginRepository {
   PluginRepository(this._engine);
 

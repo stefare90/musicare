@@ -11,8 +11,6 @@ import 'package:music_are/features/plugin/shared/presentation/utils/plugin_type_
 import 'package:music_are/features/settings/presentation/widgets/metadata_account_section.dart';
 import 'package:music_are/features/settings/presentation/widgets/plugin_detail_body.dart';
 
-/// Detail of one active plugin: version, and — only when the plugin exposes an
-/// account — its authentication state and the sign in/out actions.
 class PluginDetailPage extends StatelessWidget {
   final PluginType type;
 

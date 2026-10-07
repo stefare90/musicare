@@ -1,7 +1,6 @@
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
-/// Data access for the provider search.
 class SearchRepository {
   SearchRepository(this._engine);
 

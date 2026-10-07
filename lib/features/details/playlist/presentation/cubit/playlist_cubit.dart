@@ -32,9 +32,8 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
         .listen((_) => unawaited(_reloadWindow()));
   }
 
-  /// Whether [event] concerns the open playlist and describes a change the
-  /// loaded window does not reflect yet: own actions are already applied
-  /// locally and need no refetch, anything else does.
+  /// True when [event] describes a change the loaded window does not reflect
+  /// yet; own actions are already applied locally and need no refetch.
   bool _isRelevant(PlaylistTracksChanged event) {
     final current = state;
     if (current is! PlaylistLoadedState) return false;
@@ -45,8 +44,8 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
   }
 
   /// Re-reads the loaded window from the start, keeping its size: the provider
-  /// appends new tracks at the tail, so a local insert would break the offset
-  /// on a partially loaded playlist. A failed reload keeps the current state.
+  /// appends at the tail, so a local insert would break the offset. A failed
+  /// reload keeps the current state.
   Future<void> _reloadWindow() async {
     final current = state;
     if (current is! PlaylistLoadedState) return;
@@ -115,9 +114,8 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
       ),
     );
 
-    // The write and its announcement belong to the facet (which notifies on
-    // failure); the own event it emits finds the track already removed here
-    // and is ignored by the subscription.
+    // The write and its announcement belong to the facet; the own event finds
+    // the track already removed here and is ignored.
     if (await _edits.removeTrackFromPlaylist(current.playlist.id, track.id)) {
       return true;
     }

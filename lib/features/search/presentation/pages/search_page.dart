@@ -44,9 +44,8 @@ class _SearchViewState extends State<_SearchView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // The shell keeps every branch mounted in an IndexedStack and toggles
-    // TickerMode for the visible one, so this fires on each tab switch: focus
-    // the field when Search becomes visible, release it when it is left.
+    // The shell keeps every branch mounted and toggles TickerMode: focus the
+    // field when Search becomes visible, release it when it is left.
     if (TickerMode.valuesOf(context).enabled) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted &&

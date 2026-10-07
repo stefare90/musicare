@@ -10,16 +10,12 @@ class PreferencesService {
 
   PreferencesService(this._prefs);
 
-  // Metadata plugin
   String? getActivePluginId() => _prefs.getString(_activeMetadataPluginIdKey);
   Future<bool> setActivePluginId(String pluginId) =>
       _prefs.setString(_activeMetadataPluginIdKey, pluginId);
   Future<bool> removeActivePluginId() =>
       _prefs.remove(_activeMetadataPluginIdKey);
 
-  // Metadata account identity, cached per plugin so an offline boot still knows
-  // the owner of the saved content (the provider id otherwise needs a network
-  // round-trip that can fail).
   String? getMetadataUserId() {
     final pluginId = getActivePluginId();
     if (pluginId == null) return null;
@@ -38,7 +34,6 @@ class PreferencesService {
     return _prefs.remove('$_metadataUserIdPrefix$pluginId');
   }
 
-  // Audio source plugin
   String? getActiveAudioSourcePluginId() =>
       _prefs.getString(_activeAudioSourcePluginIdKey);
   Future<bool> setActiveAudioSourcePluginId(String pluginId) =>

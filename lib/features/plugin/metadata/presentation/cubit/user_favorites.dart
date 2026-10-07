@@ -1,9 +1,5 @@
 part of 'user_cubit.dart';
 
-/// The saved-membership facts and the save toggles (the hearts), as the pages
-/// see them: any page needs to know "is this saved?" and to toggle it, because
-/// the actions live in the search, the detail pages, the player and the track
-/// sheet.
 abstract interface class UserFavorites {
   bool isTrackSaved(String id);
   bool isAlbumSaved(String id);

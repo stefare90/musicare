@@ -7,11 +7,7 @@ import 'package:music_are/core/widgets/dialogs.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/exception_localizer.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
-/// Shows a snackbar for every notice pushed by [notices].
-///
-/// The only place that builds snackbars: everything else emits on the bus. A
-/// failure gets the error styling, a message the neutral one; the action is
-/// optional on both.
+/// The only place that builds snackbars: everything else emits on the bus.
 class NoticeListener extends StatefulWidget {
   final Stream<Notice> notices;
 
@@ -51,8 +47,8 @@ class _NoticeListenerState extends State<NoticeListener> {
     super.dispose();
   }
 
-  /// The host Scaffold keeps the app's MediaQuery untouched, so it does not
-  /// lift the snackbar for the keyboard itself: do it here from the same data.
+  /// The host Scaffold does not lift the snackbar for the keyboard: do it
+  /// here from the same data.
   double _keyboardInset() {
     final media = MediaQuery.of(context);
     return math.max(

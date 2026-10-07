@@ -25,9 +25,8 @@ PluginManifest testPluginManifest({String name = 'Test Provider'}) =>
 MetadataPluginLoadedState testLoadedState({String pluginName = 'Test Provider'}) =>
     MetadataPluginLoadedState(manifest: testPluginManifest(name: pluginName));
 
-/// Controllable user cubit: tests push [UserState]s and drive the facet
-/// streams without an engine, and record the writes instead of performing
-/// them.
+/// Controllable user cubit for tests: states are pushed and writes recorded,
+/// with no engine behind the facets.
 class TestUserCubit extends Cubit<UserState> implements UserCubit {
   TestUserCubit(super.state);
 

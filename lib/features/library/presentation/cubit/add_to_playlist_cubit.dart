@@ -9,9 +9,8 @@ import 'package:music_are/features/plugin/metadata/data/repositories/playlist_re
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 
-/// Result of the create-and-add flow: the created playlist and whether the
-/// track made it in. A created playlist with `trackAdded == false` is a partial
-/// success, never a failure.
+/// A created playlist with `trackAdded == false` is a partial success,
+/// never a failure.
 class CreatePlaylistOutcome {
   final Playlist playlist;
   final bool trackAdded;
@@ -22,13 +21,9 @@ class CreatePlaylistOutcome {
   });
 }
 
-/// Backs the "Add to playlist" sheet: lists the playlists the signed-in user can
-/// write to and performs the add / create-and-add writes, reporting failures on
-/// the notice bus.
-///
-/// Only owned playlists are listed: with the plugin saving other people's
-/// playlists by reference, `savedPlaylists` also returns those, but adding a
-/// track to them cannot work, so they are filtered out before being shown.
+/// Backs the "Add to playlist" sheet. Only owned playlists are listed: the
+/// provider also returns other people's saved playlists by reference, and
+/// adding a track to those cannot work.
 class AddToPlaylistCubit extends SafeCubit<AddToPlaylistState> {
   final LibraryRepository _library;
   final PlaylistRepository _playlist;
@@ -40,8 +35,8 @@ class AddToPlaylistCubit extends SafeCubit<AddToPlaylistState> {
   static const int _pageSize = 20;
   static const int _fetchSize = 100;
 
-  /// The full filtered list, paginated locally so a page full of other people's
-  /// playlists can never hide the owned ones.
+  /// Full filtered list, paginated locally so owned playlists are never
+  /// hidden behind other people's.
   List<Playlist> _owned = const [];
 
   AddToPlaylistCubit(
@@ -128,11 +123,7 @@ class AddToPlaylistCubit extends SafeCubit<AddToPlaylistState> {
     );
   }
 
-  /// Adds the track and returns the outcome (`added == 0` when the track was
-  /// already there); failures are announced on the bus and return null.
-  ///
-  /// The write belongs to the facet (which announces failures and the change);
-  /// this cubit only guards re-entrancy.
+  /// Null when already mutating or on failure (announced on the bus).
   Future<AddTracksResult?> addTrack(Playlist playlist, Track track) async {
     if (state.isMutating) return null;
     emit(state.copyWith(isMutating: true));
@@ -143,9 +134,8 @@ class AddToPlaylistCubit extends SafeCubit<AddToPlaylistState> {
     }
   }
 
-  /// Creates a playlist (and adds [trackIds] when given). Returns null on
-  /// failure (announced on the bus); a partial success (created but tracks not
-  /// added) is a non-null outcome with `trackAdded == false`.
+  /// Null on failure (announced on the bus); a partial success is non-null
+  /// with `trackAdded == false`.
   Future<CreatePlaylistOutcome?> createPlaylist({
     required String name,
     String? description,
@@ -166,17 +156,14 @@ class AddToPlaylistCubit extends SafeCubit<AddToPlaylistState> {
       if (trackIds.isNotEmpty) {
         try {
           final result = await _playlist.addTracks(playlist.id, trackIds);
-          // A brand new playlist cannot already hold them, but a duplicate in
-          // the batch is still reported as not added.
+          // A duplicate in the batch is still reported as not added.
           trackAdded = result.added > 0;
         } catch (_) {
-          // The playlist exists but is empty: surfaced as a partial success by
-          // the caller, never left silent.
+          // The playlist exists but is empty: partial success, never silent.
           trackAdded = false;
         }
       }
-      // A new playlist lands in the saved set: announce it through `changes` so
-      // the Library's Playlists tab reloads on its own.
+      // Announce it so the Playlists tab reloads on its own.
       await _savedMedia.refresh(MediaItemType.playlist);
       return CreatePlaylistOutcome(playlist: playlist, trackAdded: trackAdded);
     } catch (e) {

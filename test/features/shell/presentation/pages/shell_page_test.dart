@@ -195,7 +195,6 @@ void main() {
 
         expect(find.byType(FullPlayerPage), findsNothing);
 
-        // Tap on MiniPlayer
         await tester.tap(find.byType(MiniPlayer));
         await tester.pumpAndSettle();
 
@@ -215,7 +214,6 @@ void main() {
 
         expect(find.text('Come Together'), findsOneWidget);
 
-        // Swipe up gesture
         await tester.fling(
           find.byType(MiniPlayer),
           const Offset(0, -600),
@@ -225,7 +223,6 @@ void main() {
 
         expect(find.byType(FullPlayerPage), findsOneWidget);
 
-        // Tap collapse button (down arrow)
         await tester.tap(find.byIcon(Icons.keyboard_arrow_down_rounded));
         await tester.pumpAndSettle();
 
@@ -244,12 +241,10 @@ void main() {
         await tester.pumpWidget(buildTestableWidget());
         await tester.pumpAndSettle();
 
-        // Expand first
         await tester.tap(find.byType(MiniPlayer));
         await tester.pumpAndSettle();
         expect(find.byType(FullPlayerPage), findsOneWidget);
 
-        // Drag down on FullPlayerPage
         await tester.fling(
           find.byType(FullPlayerPage),
           const Offset(0, 600),
@@ -272,17 +267,14 @@ void main() {
         await tester.pumpWidget(buildTestableWidget());
         await tester.pumpAndSettle();
 
-        // Expand to FullPlayerPage
         await tester.tap(find.byType(MiniPlayer));
         await tester.pumpAndSettle();
         expect(find.byType(FullPlayerPage), findsOneWidget);
 
-        // Trigger system back button (e.g. Android back gesture)
         final backHandled = await tester.binding.handlePopRoute();
         expect(backHandled, isTrue);
         await tester.pumpAndSettle();
 
-        // FullPlayerPage is collapsed and Home screen remains intact
         expect(find.byType(FullPlayerPage), findsNothing);
         expect(find.text('Home Screen Content'), findsOneWidget);
       },
@@ -298,20 +290,17 @@ void main() {
         await tester.pumpWidget(buildTestableWidget());
         await tester.pumpAndSettle();
 
-        // Switch to Search and focus its field.
         await tester.tap(find.text('Search'));
         await tester.pumpAndSettle();
         await tester.tap(find.byType(TextField));
         await tester.pumpAndSettle();
         expect(tester.testTextInput.isVisible, isTrue);
 
-        // Expanding the player releases the search field focus.
         await tester.tap(find.byType(MiniPlayer));
         await tester.pumpAndSettle();
         expect(find.byType(FullPlayerPage), findsOneWidget);
         expect(tester.testTextInput.isVisible, isFalse);
 
-        // A modal opened from the player (its source list) must not restore it.
         final playerContext = tester.element(find.byType(FullPlayerPage));
         unawaited(
           showModalBottomSheet<void>(

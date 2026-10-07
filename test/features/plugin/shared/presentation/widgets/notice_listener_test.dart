@@ -21,8 +21,7 @@ void main() {
     await controller.close();
   });
 
-  /// Mirrors `main.dart`: the listener wraps the Navigator inside a root
-  /// Scaffold, so the snackbar is painted above every route.
+  /// Mirrors `main.dart`: listener inside a root Scaffold, above the Navigator.
   Widget buildTestableWidget({UserCubit? cubit, Widget? home}) {
     return BlocProvider<UserCubit>.value(
       value: cubit ?? TestUserCubit(testUserState()),
@@ -114,9 +113,8 @@ void main() {
     expect(signInCalls, 1);
   });
 
-  // Regression: the snackbar used to be rendered by the page Scaffold, which
-  // sits *under* a modal route, so it was invisible (hitTestable == 0) while a
-  // sheet or dialog was open.
+  // Regression: the snackbar was rendered under modal routes (invisible
+  // while a sheet or dialog was open).
   testWidgets('stays visible above an open modal route', (tester) async {
     await tester.pumpWidget(
       buildTestableWidget(

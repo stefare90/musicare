@@ -136,7 +136,6 @@ void main() {
       expect(find.text('Select Metadata Provider'), findsOneWidget);
       expect(find.byType(OnboardingDotsIndicator), findsOneWidget);
 
-      // Tap CTA to advance to Page 1
       await tester.tap(find.text('Select Metadata Provider'));
       await tester.pumpAndSettle();
 
@@ -154,12 +153,10 @@ void main() {
       await tester.pumpWidget(buildTestableWidget(router: router));
       await tester.pumpAndSettle();
 
-      // Go to Page 1
       await tester.tap(find.text('Select Metadata Provider'));
       await tester.pumpAndSettle();
       expect(find.text('Metadata Provider'), findsOneWidget);
 
-      // Tap back button in top bar
       await tester.tap(find.byIcon(Icons.arrow_back_rounded));
       await tester.pumpAndSettle();
 
@@ -184,11 +181,9 @@ void main() {
       await tester.pumpWidget(buildTestableWidget(router: router));
       await tester.pumpAndSettle();
 
-      // Go to Page 1
       await tester.tap(find.text('Select Metadata Provider'));
       await tester.pumpAndSettle();
 
-      // Emit Metadata Loaded
       when(() => mockMetadataCubit.state).thenReturn(
         MetadataPluginLoadedState(
           manifest: metadataManifest,
@@ -203,7 +198,6 @@ void main() {
 
       expect(find.text('Continue to Audio Source'), findsOneWidget);
 
-      // Tap continue button to advance to Page 2
       await tester.tap(find.text('Continue to Audio Source'));
       await tester.pumpAndSettle();
 
@@ -243,7 +237,6 @@ void main() {
         await tester.pumpWidget(buildTestableWidget(router: router));
         await tester.pumpAndSettle();
 
-        // Go to Page 1 -> then Page 2
         await tester.tap(find.text('Select Metadata Provider'));
         await tester.pumpAndSettle();
 
@@ -252,7 +245,6 @@ void main() {
 
         expect(find.text('Finish Setup'), findsOneWidget);
 
-        // Tap finish setup button
         await tester.tap(find.text('Finish Setup'));
         await tester.pumpAndSettle();
 

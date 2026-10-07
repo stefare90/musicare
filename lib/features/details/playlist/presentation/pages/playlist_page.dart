@@ -143,8 +143,7 @@ class _PlaylistView extends StatelessWidget {
     if (!confirmed || !context.mounted) return;
 
     final cubit = context.read<PlaylistCubit>();
-    // `PlaylistCubit.deletePlaylist` announces the change, so the library
-    // reloads through the change stream.
+    // The library reloads through the change stream.
     final deleted = await cubit.deletePlaylist();
     if (!deleted || !context.mounted) return;
 

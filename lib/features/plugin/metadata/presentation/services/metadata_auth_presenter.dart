@@ -5,9 +5,6 @@ import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptio
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Host half of the metadata plugin auth flow: renders the provider form (with the
-/// optional plugin-provided title, message and per-field help link) and opens URLs
-/// in the system browser.
 class MetadataAuthPresenterImpl implements MetadataAuthPresenter {
   MetadataAuthPresenterImpl({required this._navigatorKey});
 

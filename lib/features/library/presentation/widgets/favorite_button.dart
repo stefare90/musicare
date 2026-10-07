@@ -5,10 +5,6 @@ import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 
-/// Save/unsave toggle for a track.
-///
-/// A pure consumer of [UserCubit]: the index is warmed by the cubit itself on
-/// sign-in, so this only observes the state and toggles it.
 class FavoriteButton extends StatelessWidget {
   final Track track;
 

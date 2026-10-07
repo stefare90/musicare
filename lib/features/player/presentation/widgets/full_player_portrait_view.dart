@@ -31,7 +31,6 @@ class FullPlayerPortraitView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // 1. Cover Art
           Expanded(
             child: Center(
               child: Padding(
@@ -61,7 +60,6 @@ class FullPlayerPortraitView extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // 2. Track Title & Artists
           PlayerTrackInfo(
             track: track,
             onCollapse: onCollapse,
@@ -69,7 +67,6 @@ class FullPlayerPortraitView extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // 3. Action Row: Download & Favorite
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -85,15 +82,12 @@ class FullPlayerPortraitView extends StatelessWidget {
           ),
           const SizedBox(height: 18),
 
-          // 4. Scrubber Slider
           PlayerScrubber(state: state),
           const SizedBox(height: 20),
 
-          // 5. Playback Controls
           PlayerPlaybackControls(state: state),
           const SizedBox(height: 24),
 
-          // 6. Secondary Utilities
           Padding(
             padding: const EdgeInsets.only(bottom: 28.0),
             child: PlayerSecondaryActions(track: track),

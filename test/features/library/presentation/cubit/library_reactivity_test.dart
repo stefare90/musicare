@@ -136,11 +136,10 @@ void main() {
 
   test('creating a playlist from the sheet reloads the library tab', () async {
     await library.loadAll();
-    // Let the library load and the saved index warm-up settle.
+    // Let the loads and the warm-up settle.
     await Future<void>.delayed(const Duration(milliseconds: 10));
     expect(library.state.playlists.data.items.map((p) => p.id), ['pl1']);
 
-    // The provider now returns the new playlist as well.
     when(
       () => user.savedPlaylists(
         offset: any(named: 'offset'),
@@ -168,8 +167,8 @@ void main() {
     );
 
     await addToPlaylist.createPlaylist(name: 'Fresh', trackIds: ['t1']);
-    // The fake index records the refresh instead of announcing it: the
-    // announcement itself is covered in `user_cubit_test`.
+    // The fake records the refresh instead of announcing it (covered in
+    // `user_cubit_test`).
     userCubit.pushSavedChange(MediaItemType.playlist);
     await Future<void>.delayed(const Duration(milliseconds: 1));
 

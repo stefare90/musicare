@@ -8,7 +8,6 @@ import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_p
 import 'package:music_are/features/plugin/metadata/presentation/utils/metadata_account_actions.dart';
 import 'package:music_are/features/settings/presentation/widgets/settings_section_header.dart';
 
-/// Account section of the metadata plugin: identity and the sign in/out action.
 class MetadataAccountSection extends StatelessWidget {
   const MetadataAccountSection({super.key});
 

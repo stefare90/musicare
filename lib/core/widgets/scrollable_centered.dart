@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// Keeps its [child] vertically centered when there is room, and lets it
-/// scroll when the viewport is too short (e.g. landscape or keyboard open),
-/// so non-list states can never trigger a `RenderFlex` overflow.
+/// Centers [child] when there is room, scrolls when the viewport is short
+/// (landscape, open keyboard): non-list states can never overflow.
 class ScrollableCentered extends StatelessWidget {
   final Widget child;
 

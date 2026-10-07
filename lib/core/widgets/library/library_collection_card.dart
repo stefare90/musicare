@@ -2,13 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 
-/// A library "collection" card that has no remote artwork of its own, such as
-/// *Liked Songs* (provider feedback) or a downloaded-tracks list.
-///
-/// It mirrors [MediaCard]'s cell geometry — square cover plus the exact text
-/// block — so it can sit in the same grid as playlist/album/artist cards,
-/// with a gradient and an icon standing in for the cover. Keeping it in the
-/// grid (not as a separate row) is what makes the library visually uniform.
+/// Artwork-less collection card (*Liked Songs*, downloads) mirroring
+/// [MediaCard] geometry, for the same grid as real cards.
 class LibraryCollectionCard extends StatelessWidget {
   final IconData icon;
   final String title;

@@ -10,11 +10,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:pub_semver/pub_semver.dart';
 
-/// App-level metadata plugin service: installs and keeps the current plugin on disk and
-/// exposes it as an [IMetadataPlugin] backed by the wire protocol.
-///
-/// The Python interpreter lifecycle belongs to `musicare_runtime_host`; this class only
-/// owns the plugin directory, the manifest and the SDK adapter built on [MetadataClient].
+/// Keeps the current plugin on disk and exposes it as an [IMetadataPlugin].
+/// The Python interpreter lifecycle belongs to `musicare_runtime_host`.
 class MetadataPluginEngine {
   final MetadataClient _client;
   final MetadataAuthPresenter? _authPresenter;
@@ -80,8 +77,8 @@ class MetadataPluginEngine {
     throw InvalidPluginArchiveException();
   }
 
-  /// The host and the plugin SDK share one version number; a major mismatch rejects the
-  /// plugin before it is loaded, so the user sees the update page instead of a crash.
+  /// A major mismatch rejects the plugin before load, so the user sees the
+  /// update page instead of a crash.
   void _checkVersion(PluginManifest manifest) {
     final hostVersion = Version.parse(packageVersion);
     final pluginVersion = Version.parse(manifest.pluginSdkVersion);
