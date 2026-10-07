@@ -1,19 +1,33 @@
 import 'dart:async';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/player/data/services/audio_player_service.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 
 class PlayerCubit extends SafeCubit<PlayerState> {
   final AudioPlayerService _service;
+  final NoticeBus _notices;
   StreamSubscription<PlayerState>? _stateSub;
+  Object? _lastNotifiedError;
 
-  PlayerCubit({required AudioPlayerService audioService})
+  PlayerCubit(AudioPlayerService audioService, this._notices)
     : _service = audioService,
       super(PlayerState.fromPlaybackData(audioService.playbackData)) {
     _stateSub = audioService.playbackDataStream
         .map(PlayerState.fromPlaybackData)
-        .listen(emit);
+        .listen(_onPlaybackData);
+  }
+
+  void _onPlaybackData(PlayerState state) {
+    final error = state.error;
+    if (error != null && !identical(error, _lastNotifiedError)) {
+      _lastNotifiedError = error;
+      _notices.emit(Notice.error(error));
+    } else if (error == null) {
+      _lastNotifiedError = null;
+    }
+    emit(state);
   }
 
   Future<void> playTrack(Track track) => _service.playTrack(track);

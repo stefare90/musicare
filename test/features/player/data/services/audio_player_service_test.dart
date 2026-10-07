@@ -8,6 +8,7 @@ import 'package:music_are/features/player/data/models/playback_repeat_mode.dart'
 import 'package:music_are/features/player/data/services/audio_player_driver.dart';
 import 'package:music_are/features/player/data/services/audio_player_service.dart';
 import 'package:music_are/features/player/data/services/audio_stream_resolver.dart';
+import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
 
 class MockAudioPlayerDriver extends Mock implements AudioPlayerDriver {}
@@ -243,6 +244,114 @@ void main() {
 
       expect(service.playbackData.currentTrack, equals(track2));
       expect(service.playbackData.queue.currentIndex, equals(1));
+      verify(() => mockDriver.play()).called(2);
+    });
+
+    test(
+      'failed search clears stale candidates from the previous track',
+      () async {
+        await service.playTrack(track2);
+        expect(service.playbackData.candidates.isNotEmpty, isTrue);
+
+        when(() => mockResolver.resolveTrack(track1)).thenAnswer(
+          (_) async => throw const StreamResolutionException(
+            'No playable stream candidates',
+          ),
+        );
+        await service.playTrack(track1);
+
+        expect(service.playbackData.candidates.isEmpty, isTrue);
+        expect(service.playbackData.error, isNotNull);
+      },
+    );
+
+    test(
+      'failed track ends in a terminal state instead of loading forever',
+      () async {
+        when(() => mockResolver.resolveTrack(track1)).thenAnswer(
+          (_) async => throw const StreamResolutionException(
+            'No playable stream candidates',
+          ),
+        );
+
+        await service.playTrack(track1);
+
+        expect(
+          service.playbackData.processingState,
+          equals(PlaybackProcessingState.idle),
+        );
+        expect(service.playbackData.error, isNotNull);
+      },
+    );
+
+    test(
+      'after a failed track the next track plays without restarting',
+      () async {
+        when(() => mockResolver.resolveTrack(track1)).thenAnswer(
+          (_) async => throw const StreamResolutionException(
+            'No playable stream candidates',
+          ),
+        );
+
+        await service.playTrack(track1);
+        expect(service.playbackData.error, isNotNull);
+
+        await service.playTrack(track2);
+
+        verify(() => mockResolver.resolveTrack(track2)).called(1);
+        verify(() => mockDriver.play()).called(1);
+        expect(service.playbackData.currentTrack, equals(track2));
+        expect(service.playbackData.error, isNull);
+      },
+    );
+
+    test('failed candidate switch ends in a terminal state', () async {
+      when(() => mockResolver.resolveTrack(track1)).thenAnswer(
+        (_) async => const PlaybackCandidates(
+          candidates: [candidateTrack1, candidateTrack2],
+          activeStream: candidate1,
+          activeCandidateId: 'c1',
+        ),
+      );
+      when(
+        () => mockResolver.resolveCandidateStream(
+          'c2',
+          quality: any(named: 'quality'),
+        ),
+      ).thenAnswer((_) async => throw Exception('CDN 403 Forbidden'));
+
+      await service.playTrack(track1);
+      await service.selectStreamCandidate(1);
+
+      expect(
+        service.playbackData.processingState,
+        equals(PlaybackProcessingState.idle),
+      );
+      expect(service.playbackData.error, isNotNull);
+    });
+
+    test(
+      'play after a failed track retries it instead of resuming stale audio',
+      () async {
+        when(() => mockResolver.resolveTrack(track1)).thenAnswer(
+          (_) async => throw const StreamResolutionException(
+            'No playable stream candidates',
+          ),
+        );
+
+        await service.playTrack(track2);
+        await service.playTrack(track1);
+        await service.play();
+
+        verify(() => mockResolver.resolveTrack(track1)).called(2);
+        verify(() => mockDriver.play()).called(1);
+      },
+    );
+
+    test('play resumes the driver when the current track is loaded', () async {
+      await service.playTrack(track1);
+      await service.play();
+
       verify(() => mockDriver.play()).called(2);
     });
 

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/player/data/models/playback_data.dart';
 import 'package:music_are/features/player/data/models/playback_processing_state.dart';
 import 'package:music_are/features/player/data/models/playback_queue.dart';
@@ -36,6 +37,7 @@ void main() {
 
   group('PlayerCubit Pure Service Delegate Tests', () {
     late MockAudioPlayerService mockAudioService;
+    late NoticeBus notices;
     late PlayerCubit cubit;
 
     late StreamController<PlaybackData> snapshotController;
@@ -43,6 +45,7 @@ void main() {
 
     setUp(() {
       mockAudioService = MockAudioPlayerService();
+      notices = NoticeBus();
       snapshotController = StreamController<PlaybackData>.broadcast();
 
       when(
@@ -66,7 +69,51 @@ void main() {
       when(() => mockAudioService.toggleShuffle()).thenReturn(null);
       when(() => mockAudioService.dispose()).thenAnswer((_) async {});
 
-      cubit = PlayerCubit(audioService: mockAudioService);
+      cubit = PlayerCubit(mockAudioService, notices);
+    });
+
+    test(
+      'emits a notice when the service reports a new playback error',
+      () async {
+        final seen = <Notice>[];
+        final subscription = notices.notices.listen(seen.add);
+        addTearDown(subscription.cancel);
+
+        snapshotController.add(PlaybackData(error: Exception('boom')));
+        await Future.delayed(const Duration(milliseconds: 10));
+
+        expect(seen, hasLength(1));
+        expect(seen.single, isA<ErrorNotice>());
+      },
+    );
+
+    test('does not repeat the notice for the same error instance', () async {
+      final seen = <Notice>[];
+      final subscription = notices.notices.listen(seen.add);
+      addTearDown(subscription.cancel);
+
+      final failed = PlaybackData(error: Exception('boom'));
+      snapshotController.add(failed);
+      await Future.delayed(const Duration(milliseconds: 10));
+      snapshotController.add(failed);
+      await Future.delayed(const Duration(milliseconds: 10));
+
+      expect(seen, hasLength(1));
+    });
+
+    test('notifies again after the error clears and a new one arrives', () async {
+      final seen = <Notice>[];
+      final subscription = notices.notices.listen(seen.add);
+      addTearDown(subscription.cancel);
+
+      snapshotController.add(PlaybackData(error: Exception('first')));
+      await Future.delayed(const Duration(milliseconds: 10));
+      snapshotController.add(const PlaybackData());
+      await Future.delayed(const Duration(milliseconds: 10));
+      snapshotController.add(PlaybackData(error: Exception('second')));
+      await Future.delayed(const Duration(milliseconds: 10));
+
+      expect(seen, hasLength(2));
     });
 
     tearDown(() async {

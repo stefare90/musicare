@@ -148,6 +148,24 @@ void main() {
       expect(find.byIcon(Icons.play_arrow_rounded), findsNothing);
     });
 
+    testWidgets('shows controls without spinner after a failed load', (
+      tester,
+    ) async {
+      when(() => mockPlayerCubit.state).thenReturn(
+        PlayerState(
+          processingState: PlaybackProcessingState.idle,
+          queue: QueueState(tracks: [testTrack]),
+          error: Exception('No playable stream candidates'),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pump();
+
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
+    });
+
     testWidgets('tapping play/pause button triggers cubit togglePlayPause', (
       tester,
     ) async {

@@ -28,6 +28,29 @@ class PlaybackData {
   Track? get currentTrack => queue.currentTrack;
   AudioStreamResponse? get currentStream => candidates.activeStream;
 
+  factory PlaybackData.loading(PlaybackData current) {
+    return PlaybackData(
+      queue: current.queue,
+      candidates: current.candidates,
+      isPlaying: current.isPlaying,
+      processingState: PlaybackProcessingState.loading,
+      position: Duration.zero,
+      duration: Duration.zero,
+    );
+  }
+
+  factory PlaybackData.failure(PlaybackData current, Object error) {
+    return PlaybackData(
+      queue: current.queue,
+      candidates: current.candidates,
+      isPlaying: current.isPlaying,
+      processingState: PlaybackProcessingState.idle,
+      position: current.position,
+      duration: current.duration,
+      error: error,
+    );
+  }
+
   PlaybackData copyWith({
     PlaybackQueue? queue,
     PlaybackCandidates? candidates,
@@ -35,7 +58,6 @@ class PlaybackData {
     PlaybackProcessingState? processingState,
     Duration? position,
     Duration? duration,
-    Object? error,
   }) {
     return PlaybackData(
       queue: queue ?? this.queue,
@@ -44,7 +66,7 @@ class PlaybackData {
       processingState: processingState ?? this.processingState,
       position: position ?? this.position,
       duration: duration ?? this.duration,
-      error: error ?? this.error,
+      error: error,
     );
   }
 }

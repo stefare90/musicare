@@ -53,24 +53,4 @@ class PlayerState {
     final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$minutes:$seconds';
   }
-
-  PlayerState copyWith({
-    QueueState? queue,
-    CandidatesState? candidates,
-    bool? isPlaying,
-    PlaybackProcessingState? processingState,
-    Duration? position,
-    Duration? duration,
-    Object? error,
-  }) {
-    return PlayerState(
-      queue: queue ?? this.queue,
-      candidates: candidates ?? this.candidates,
-      isPlaying: isPlaying ?? this.isPlaying,
-      processingState: processingState ?? this.processingState,
-      position: position ?? this.position,
-      duration: duration ?? this.duration,
-      error: error ?? this.error,
-    );
-  }
 }

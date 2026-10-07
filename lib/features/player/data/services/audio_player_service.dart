@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
+import 'package:music_are/features/player/data/models/playback_candidates.dart';
 import 'package:music_are/features/player/data/models/playback_data.dart';
 import 'package:music_are/features/player/data/models/playback_processing_state.dart';
 import 'package:music_are/features/player/data/services/audio_player_driver.dart';
@@ -20,6 +21,7 @@ class AudioPlayerService {
   StreamSubscription<Duration?>? _driverDurationSub;
 
   int _sessionCounter = 0;
+  String? _loadedTrackId;
   DateTime _lastPositionUpdate = DateTime.fromMillisecondsSinceEpoch(0);
 
   AudioPlayerService({required this._driver, required this._resolver}) {
@@ -130,9 +132,8 @@ class AudioPlayerService {
 
     var updatedCandidates = candidates.select(candidateIndex);
     _updateData(
-      _playbackData.copyWith(
-        candidates: updatedCandidates,
-        processingState: PlaybackProcessingState.loading,
+      PlaybackData.loading(
+        _playbackData.copyWith(candidates: updatedCandidates),
       ),
     );
 
@@ -145,6 +146,7 @@ class AudioPlayerService {
       _updateData(_playbackData.copyWith(candidates: updatedCandidates));
 
       await _driver.loadStream(track: track, stream: stream);
+      _loadedTrackId = track.id;
 
       if (currentPos > Duration.zero) {
         await _driver.seek(currentPos);
@@ -153,7 +155,7 @@ class AudioPlayerService {
         await _driver.play();
       }
     } catch (e) {
-      _updateData(_playbackData.copyWith(error: e));
+      _updateData(PlaybackData.failure(_playbackData, e));
     }
   }
 
@@ -166,21 +168,26 @@ class AudioPlayerService {
     if (_playbackData.processingState != PlaybackProcessingState.completed) {
       await _driver.pause();
     }
-    _updateData(
-      _playbackData.copyWith(
-        processingState: PlaybackProcessingState.loading,
-        position: Duration.zero,
-        duration: Duration.zero,
-        error: null,
-      ),
-    );
+    _updateData(PlaybackData.loading(_playbackData));
+
+    PlaybackCandidates resolvedCandidates;
+    try {
+      resolvedCandidates = await _resolver.resolveTrack(track);
+    } catch (e) {
+      if (sessionId != _sessionCounter) return;
+      _updateData(
+        PlaybackData.failure(
+          _playbackData.copyWith(candidates: const PlaybackCandidates()),
+          e,
+        ),
+      );
+      return;
+    }
+    if (sessionId != _sessionCounter) return;
+
+    _updateData(_playbackData.copyWith(candidates: resolvedCandidates));
 
     try {
-      var resolvedCandidates = await _resolver.resolveTrack(track);
-      if (sessionId != _sessionCounter) return;
-
-      _updateData(_playbackData.copyWith(candidates: resolvedCandidates));
-
       bool isLoaded = false;
       while (!isLoaded) {
         try {
@@ -197,6 +204,7 @@ class AudioPlayerService {
             throw const StreamResolutionException('No stream available');
           }
           await _driver.loadStream(track: track, stream: stream);
+          _loadedTrackId = track.id;
           isLoaded = true;
         } catch (e) {
           if (sessionId != _sessionCounter) return;
@@ -214,7 +222,7 @@ class AudioPlayerService {
       await _driver.play();
     } catch (e) {
       if (sessionId != _sessionCounter) return;
-      _updateData(_playbackData.copyWith(error: e));
+      _updateData(PlaybackData.failure(_playbackData, e));
     }
   }
 
@@ -226,7 +234,14 @@ class AudioPlayerService {
     }
   }
 
-  Future<void> play() => _driver.play();
+  Future<void> play() async {
+    final track = _playbackData.currentTrack;
+    if (track != null && _loadedTrackId != track.id) {
+      await _playCurrentQueueTrack();
+    } else {
+      await _driver.play();
+    }
+  }
   Future<void> pause() => _driver.pause();
   Future<void> stop() => _driver.stop();
   Future<void> seek(Duration position) => _driver.seek(position);

@@ -71,7 +71,8 @@ Future<void> initDependencies() async {
     ),
   );
   sl.registerLazySingleton<AccountRepository>(
-    () => AccountRepository(sl<MetadataPluginEngine>(), sl<PreferencesService>()),
+    () =>
+        AccountRepository(sl<MetadataPluginEngine>(), sl<PreferencesService>()),
   );
   sl.registerLazySingleton<PluginRepository>(
     () => PluginRepository(sl<MetadataPluginEngine>()),
@@ -122,7 +123,7 @@ Future<void> initDependencies() async {
     ),
   );
   sl.registerLazySingleton<PlayerCubit>(
-    () => PlayerCubit(audioService: sl<AudioPlayerService>()),
+    () => PlayerCubit(sl<AudioPlayerService>(), sl<NoticeBus>()),
   );
   sl.registerLazySingleton<UserCubit>(
     () => UserCubit(
