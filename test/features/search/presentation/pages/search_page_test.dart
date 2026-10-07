@@ -841,10 +841,15 @@ void main() {
       expect(find.byType(TextField), findsOneWidget);
     });
 
-    testWidgets('focuses the search field when the branch is visible', (
+    testWidgets('keeps the keyboard closed until the field is tapped', (
       tester,
     ) async {
       await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(tester.testTextInput.isVisible, isFalse);
+
+      await tester.tap(find.byType(TextField));
       await tester.pumpAndSettle();
 
       expect(tester.testTextInput.isVisible, isTrue);
@@ -900,9 +905,15 @@ void main() {
       );
     });
 
-    testWidgets('focuses the field again when the branch becomes visible', (
+    testWidgets('returning to the branch does not reopen the keyboard', (
       tester,
     ) async {
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(TextField));
+      await tester.pumpAndSettle();
+      expect(tester.testTextInput.isVisible, isTrue);
+
       await tester.pumpWidget(
         TickerMode(enabled: false, child: buildTestWidget()),
       );
@@ -913,7 +924,7 @@ void main() {
         TickerMode(enabled: true, child: buildTestWidget()),
       );
       await tester.pumpAndSettle();
-      expect(tester.testTextInput.isVisible, isTrue);
+      expect(tester.testTextInput.isVisible, isFalse);
     });
   });
 }

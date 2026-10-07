@@ -28,6 +28,7 @@ class BaseModalBottomSheet extends StatelessWidget {
     required BuildContext context,
     required Widget child,
   }) {
+    FocusManager.instance.primaryFocus?.unfocus();
     return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: true,

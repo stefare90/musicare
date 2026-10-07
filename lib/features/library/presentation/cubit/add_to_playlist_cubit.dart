@@ -143,6 +143,8 @@ class AddToPlaylistCubit extends SafeCubit<AddToPlaylistState> {
     List<String> trackIds = const [],
   }) async {
     if (!_library.hasMetadata) return null;
+    if (state.isMutating) return null;
+    emit(state.copyWith(isMutating: true));
 
     try {
       final playlist = await _playlist.createPlaylist(
@@ -169,6 +171,8 @@ class AddToPlaylistCubit extends SafeCubit<AddToPlaylistState> {
     } catch (e) {
       _notices.emit(Notice.error(e));
       return null;
+    } finally {
+      emit(state.copyWith(isMutating: false));
     }
   }
 }

@@ -44,17 +44,9 @@ class _SearchViewState extends State<_SearchView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // The shell keeps every branch mounted and toggles TickerMode: focus the
-    // field when Search becomes visible, release it when it is left.
-    if (TickerMode.valuesOf(context).enabled) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted &&
-            TickerMode.valuesOf(context).enabled &&
-            !_focusNode.hasFocus) {
-          _focusNode.requestFocus();
-        }
-      });
-    } else if (_focusNode.hasFocus) {
+    // The shell keeps every branch mounted and toggles TickerMode: release
+    // the field when Search is left, never grab it when it returns.
+    if (!TickerMode.valuesOf(context).enabled && _focusNode.hasFocus) {
       _focusNode.unfocus();
     }
   }

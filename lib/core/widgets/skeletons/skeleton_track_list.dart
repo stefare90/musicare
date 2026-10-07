@@ -23,26 +23,28 @@ class SkeletonTrackList extends StatelessWidget {
           ),
         ...List.generate(
           count,
-          (_) => const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Row(
+          (_) => const ListTile(
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 2.0,
+            ),
+            leading: ShimmerBox(
+              width: 44.0,
+              height: 44.0,
+              borderRadius: BorderRadius.all(Radius.circular(8.0)),
+            ),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                ShimmerBox(
-                  width: 44.0,
-                  height: 44.0,
-                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                ),
-                SizedBox(width: 12.0),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ShimmerBox(width: 150.0, height: 14.0),
-                      SizedBox(height: 6.0),
-                      ShimmerBox(width: 90.0, height: 10.0),
-                    ],
-                  ),
-                ),
+                ShimmerBox(width: 150.0, height: 14.0),
+                SizedBox(height: 6.0),
+                ShimmerBox(width: 90.0, height: 10.0),
+              ],
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 ShimmerBox(width: 20.0, height: 10.0),
                 SizedBox(width: 20.0),
                 ShimmerBox(width: 10.0, height: 30.0),

@@ -13,6 +13,7 @@ class CreatePlaylistDialog extends StatefulWidget {
   const CreatePlaylistDialog({super.key});
 
   static Future<CreatePlaylistResult?> show(BuildContext context) {
+    FocusManager.instance.primaryFocus?.unfocus();
     return showDialog<CreatePlaylistResult>(
       context: context,
       builder: (_) => const CreatePlaylistDialog(),

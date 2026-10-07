@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
@@ -5,6 +7,7 @@ import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
+import 'package:music_are/core/widgets/skeletons/skeleton_playlist_list.dart';
 import 'package:music_are/features/library/presentation/widgets/add_to_playlist_bottom_sheet.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
@@ -120,9 +123,16 @@ void main() {
       ),
       home: Scaffold(
         body: Builder(
-          builder: (context) => ElevatedButton(
-            onPressed: () => AddToPlaylistBottomSheet.show(context, track),
-            child: const Text('Open'),
+          builder: (context) => Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const TextField(),
+              ElevatedButton(
+                onPressed: () =>
+                    AddToPlaylistBottomSheet.show(context, track),
+                child: const Text('Open'),
+              ),
+            ],
           ),
         ),
       ),
@@ -166,6 +176,53 @@ void main() {
     expect(userCubit.addedTracks, [('pl1', 't1')]);
     expect(find.text('Already in Chill Vibes'), findsOneWidget);
     expect(find.text('Added to Chill Vibes'), findsNothing);
+  });
+
+  testWidgets('loading shows playlist skeleton rows, not a spinner', (
+    tester,
+  ) async {
+    final pending = Completer<PaginatedResult<Playlist>>();
+    when(
+      () => user.savedPlaylists(
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer((_) => pending.future);
+
+    await tester.pumpWidget(buildTestableWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pump();
+
+    expect(find.byType(SkeletonPlaylistList), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+
+    pending.complete(
+      PaginatedResult<Playlist>(
+        items: [owned],
+        total: 1,
+        offset: 0,
+        limit: 100,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Chill Vibes'), findsOneWidget);
+    expect(find.byType(SkeletonPlaylistList), findsNothing);
+  });
+
+  testWidgets('opening the sheet dismisses the keyboard', (tester) async {
+    stubPlaylists([owned]);
+
+    await tester.pumpWidget(buildTestableWidget());
+    await tester.tap(find.byType(TextField));
+    await tester.pumpAndSettle();
+    expect(tester.testTextInput.isVisible, isTrue);
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(tester.testTextInput.isVisible, isFalse);
+    expect(find.text('Chill Vibes'), findsOneWidget);
   });
 
   testWidgets('lists only the playlists the user can write to', (tester) async {

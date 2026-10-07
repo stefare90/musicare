@@ -30,8 +30,8 @@ class _ShimmerBoxState extends State<ShimmerBox>
       vsync: this,
     )..repeat(reverse: true);
     _animation = Tween<double>(
-      begin: 0.25,
-      end: 0.65,
+      begin: 0.0,
+      end: 1.0,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
@@ -43,11 +43,11 @@ class _ShimmerBoxState extends State<ShimmerBox>
 
   @override
   Widget build(BuildContext context) {
-    final baseColor = context.colorScheme.surfaceContainerHigh;
-    final highlightColor = context.colorScheme.surfaceContainerHighest;
+    final shimmer = context.colorScheme.onSurface;
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
+        final pulse = 0.03 + 0.05 * _animation.value;
         return Container(
           width: widget.width,
           height: widget.height,
@@ -55,9 +55,9 @@ class _ShimmerBoxState extends State<ShimmerBox>
             borderRadius: widget.borderRadius ?? BorderRadius.circular(8.0),
             gradient: LinearGradient(
               colors: [
-                baseColor.withValues(alpha: _animation.value),
-                highlightColor.withValues(alpha: _animation.value + 0.2),
-                baseColor.withValues(alpha: _animation.value),
+                shimmer.withValues(alpha: pulse),
+                shimmer.withValues(alpha: pulse + 0.04),
+                shimmer.withValues(alpha: pulse),
               ],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,

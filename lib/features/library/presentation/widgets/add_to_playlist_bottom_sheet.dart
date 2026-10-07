@@ -11,6 +11,7 @@ import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/info_card.dart';
 import 'package:music_are/core/widgets/media/media_cover_image.dart';
 import 'package:music_are/core/widgets/scrollable_centered.dart';
+import 'package:music_are/core/widgets/skeletons/skeleton_playlist_list.dart';
 import 'package:music_are/features/library/presentation/cubit/add_to_playlist_cubit.dart';
 import 'package:music_are/features/library/presentation/cubit/add_to_playlist_state.dart';
 import 'package:music_are/features/library/presentation/widgets/create_playlist_dialog.dart';
@@ -120,11 +121,10 @@ class _AddToPlaylistBody extends StatelessWidget {
               );
             }
             if (section.isLoading && section.data.items.isEmpty) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24.0),
-                  child: CircularProgressIndicator(),
-                ),
+              return ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                children: const [SkeletonPlaylistList(count: 3)],
               );
             }
 
@@ -145,7 +145,8 @@ class _AddToPlaylistBody extends StatelessWidget {
                 controller: scrollController,
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 itemCount:
-                    1 + (playlists.isEmpty ? 1 : playlists.length) +
+                    1 +
+                    (playlists.isEmpty ? 1 : playlists.length) +
                     (showProgress ? 1 : 0),
                 itemBuilder: (context, index) {
                   if (index == 0) {
@@ -171,6 +172,7 @@ class _AddToPlaylistBody extends StatelessWidget {
                       onTap: () => _createPlaylist(context),
                     );
                   }
+                  final item = index - 1;
                   if (playlists.isEmpty) {
                     return Padding(
                       padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 0.0),
@@ -182,15 +184,10 @@ class _AddToPlaylistBody extends StatelessWidget {
                       ),
                     );
                   }
-                  if (index > playlists.length) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
+                  if (item >= playlists.length) {
+                    return const SkeletonPlaylistList(count: 1);
                   }
-                  final playlist = playlists[index - 1];
+                  final playlist = playlists[item];
                   return ListTile(
                     leading: MediaCoverImage(
                       images: playlist.images,
