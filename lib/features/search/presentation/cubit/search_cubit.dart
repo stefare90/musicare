@@ -13,6 +13,7 @@ class SearchCubit extends SafeCubit<SearchState> {
   final SearchRepository _search;
   final NoticeBus _notices;
   Timer? _debounceTimer;
+  int _requestSeq = 0;
   final Duration debounceDuration;
   final int pageSize;
 
@@ -35,6 +36,14 @@ class SearchCubit extends SafeCubit<SearchState> {
   int get _gridPageSize =>
       MediaCardMetrics.pageSizeForColumns(pageSize, _gridColumns);
 
+  bool _isCurrent(int seq) => seq == _requestSeq && !isClosed;
+
+  bool _emitIfCurrent(int seq, SearchState next) {
+    if (!_isCurrent(seq)) return false;
+    emit(next);
+    return true;
+  }
+
   void updateGridColumns(int columns) {
     if (columns <= 0 || columns == _gridColumns) return;
     _gridColumns = columns;
@@ -53,6 +62,7 @@ class SearchCubit extends SafeCubit<SearchState> {
   void onQueryChanged(String query) {
     _debounceTimer?.cancel();
     if (query == state.query) return;
+    ++_requestSeq;
 
     if (query.trim().isEmpty) {
       // A fresh state (not copyWith) also clears past results and errors.
@@ -84,6 +94,7 @@ class SearchCubit extends SafeCubit<SearchState> {
 
   Future<void> search(String query) async {
     _debounceTimer?.cancel();
+    final seq = ++_requestSeq;
     final cleanQuery = query.trim();
     if (cleanQuery.isEmpty) return;
 
@@ -104,7 +115,10 @@ class SearchCubit extends SafeCubit<SearchState> {
             offset: 0,
             limit: pageSize,
           );
-          emit(state.copyWith(tracks: SectionState.success(res)));
+          _emitIfCurrent(
+            seq,
+            state.copyWith(tracks: SectionState.success(res)),
+          );
           break;
         case SearchFilter.albums:
           final res = await _search.albums(
@@ -112,7 +126,10 @@ class SearchCubit extends SafeCubit<SearchState> {
             offset: 0,
             limit: _gridPageSize,
           );
-          emit(state.copyWith(albums: SectionState.success(res)));
+          _emitIfCurrent(
+            seq,
+            state.copyWith(albums: SectionState.success(res)),
+          );
           break;
         case SearchFilter.artists:
           final res = await _search.artists(
@@ -120,7 +137,10 @@ class SearchCubit extends SafeCubit<SearchState> {
             offset: 0,
             limit: _gridPageSize,
           );
-          emit(state.copyWith(artists: SectionState.success(res)));
+          _emitIfCurrent(
+            seq,
+            state.copyWith(artists: SectionState.success(res)),
+          );
           break;
         case SearchFilter.playlists:
           final res = await _search.playlists(
@@ -128,15 +148,24 @@ class SearchCubit extends SafeCubit<SearchState> {
             offset: 0,
             limit: _gridPageSize,
           );
-          emit(state.copyWith(playlists: SectionState.success(res)));
+          _emitIfCurrent(
+            seq,
+            state.copyWith(playlists: SectionState.success(res)),
+          );
           break;
         case SearchFilter.all:
           final results = await _search.all(cleanQuery);
-          emit(state.copyWith(all: SectionState.success(results)));
+          _emitIfCurrent(
+            seq,
+            state.copyWith(all: SectionState.success(results)),
+          );
       }
     } catch (e) {
-      emit(_activeError(state, e, keepData: false));
-      if (e.needsNotice) _notices.emit(Notice.error(e));
+      final emitted = _emitIfCurrent(
+        seq,
+        _activeError(state, e, keepData: false),
+      );
+      if (emitted && e.needsNotice) _notices.emit(Notice.error(e));
     }
   }
 
@@ -151,6 +180,7 @@ class SearchCubit extends SafeCubit<SearchState> {
 
     if (!_search.hasMetadata) return;
 
+    final seq = ++_requestSeq;
     emit(_activeLoading(state, keepData: true));
 
     try {
@@ -170,7 +200,10 @@ class SearchCubit extends SafeCubit<SearchState> {
             offset: res.offset,
             limit: res.limit,
           );
-          emit(state.copyWith(tracks: SectionState.success(updated)));
+          _emitIfCurrent(
+            seq,
+            state.copyWith(tracks: SectionState.success(updated)),
+          );
           break;
         case SearchFilter.albums:
           final current = state.albums.data;
@@ -185,7 +218,10 @@ class SearchCubit extends SafeCubit<SearchState> {
             offset: res.offset,
             limit: res.limit,
           );
-          emit(state.copyWith(albums: SectionState.success(updated)));
+          _emitIfCurrent(
+            seq,
+            state.copyWith(albums: SectionState.success(updated)),
+          );
           break;
         case SearchFilter.artists:
           final current = state.artists.data;
@@ -200,7 +236,10 @@ class SearchCubit extends SafeCubit<SearchState> {
             offset: res.offset,
             limit: res.limit,
           );
-          emit(state.copyWith(artists: SectionState.success(updated)));
+          _emitIfCurrent(
+            seq,
+            state.copyWith(artists: SectionState.success(updated)),
+          );
           break;
         case SearchFilter.playlists:
           final current = state.playlists.data;
@@ -215,14 +254,20 @@ class SearchCubit extends SafeCubit<SearchState> {
             offset: res.offset,
             limit: res.limit,
           );
-          emit(state.copyWith(playlists: SectionState.success(updated)));
+          _emitIfCurrent(
+            seq,
+            state.copyWith(playlists: SectionState.success(updated)),
+          );
           break;
         case SearchFilter.all:
           break;
       }
     } catch (e) {
-      emit(_activeError(state, e, keepData: true));
-      if (e.needsNotice) _notices.emit(Notice.error(e));
+      final emitted = _emitIfCurrent(
+        seq,
+        _activeError(state, e, keepData: true),
+      );
+      if (emitted && e.needsNotice) _notices.emit(Notice.error(e));
     }
   }
 

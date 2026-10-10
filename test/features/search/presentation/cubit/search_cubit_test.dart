@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
@@ -277,6 +279,199 @@ void main() {
       expect(pagedCubit.state.hasResults, isTrue);
 
       pagedCubit.close();
+    });
+
+    group('stale response guards', () {
+      Track buildTrack(String id, String name) => Track(
+        id: id,
+        name: name,
+        externalUri: '',
+        artists: [],
+        album: Album(
+          id: 'al-$id',
+          name: 'Album $id',
+          artists: [],
+          releaseDate: '',
+          externalUri: '',
+          totalTracks: 1,
+          albumType: AlbumType.album,
+        ),
+        durationMs: 120000,
+      );
+
+      SearchResponse buildResponse(String id, String name) => SearchResponse(
+        tracks: [buildTrack(id, name)],
+        albums: [],
+        artists: [],
+        playlists: [],
+      );
+
+      test('out-of-order responses: the latest query wins', () async {
+        final responseB = buildResponse('b1', 'New');
+        final slowA = Completer<SearchResponse>();
+        final fastB = Completer<SearchResponse>();
+        when(
+          () => mockSearch.all('ab'),
+        ).thenAnswer((_) => slowA.future);
+        when(
+          () => mockSearch.all('abcd'),
+        ).thenAnswer((_) => fastB.future);
+
+        final flightA = cubit.search('ab');
+        final flightB = cubit.search('abcd');
+
+        fastB.complete(responseB);
+        await flightB;
+        slowA.complete(buildResponse('a1', 'Old'));
+        await flightA;
+
+        expect(cubit.state.query, equals('abcd'));
+        expect(
+          cubit.state.allResults?.tracks.map((t) => t.id),
+          equals(['b1']),
+        );
+      });
+
+      test('clearing the query discards the in-flight response', () async {
+        final slow = Completer<SearchResponse>();
+        when(
+          () => mockSearch.all('rock'),
+        ).thenAnswer((_) => slow.future);
+
+        final flight = cubit.search('rock');
+        cubit.onQueryChanged('   ');
+        slow.complete(dummyResponse);
+        await flight;
+
+        expect(cubit.state.isEmptyQuery, isTrue);
+        expect(cubit.state.hasResults, isFalse);
+        expect(cubit.state.isLoading, isFalse);
+      });
+
+      test('changing chip during a flight discards the stale section',
+          () async {
+        final staleTracks = Completer<PaginatedResult<Track>>();
+        when(
+          () => mockSearch.tracks(
+            'rock',
+            offset: 0,
+            limit: any(named: 'limit'),
+          ),
+        ).thenAnswer((_) => staleTracks.future);
+        when(
+          () => mockSearch.albums(
+            'rock',
+            offset: 0,
+            limit: any(named: 'limit'),
+          ),
+        ).thenAnswer(
+          (_) async => const PaginatedResult<Album>(
+            items: [],
+            total: 0,
+            offset: 0,
+            limit: 0,
+          ),
+        );
+
+        await cubit.selectChip(SearchCategory.tracks);
+        final flight = cubit.search('rock');
+        await cubit.selectChip(SearchCategory.albums);
+        staleTracks.complete(
+          PaginatedResult<Track>(
+            items: [dummyTrack],
+            total: 1,
+            offset: 0,
+            limit: 20,
+          ),
+        );
+        await flight;
+
+        expect(cubit.state.filter, equals(SearchFilter.albums));
+        expect(cubit.state.tracks.data.items, isEmpty);
+      });
+
+      test('a load-more overtaken by a new search is discarded', () async {
+        final page1 = PaginatedResult<Track>(
+          items: [dummyTrack],
+          total: 2,
+          offset: 0,
+          limit: 1,
+        );
+        final page2 = PaginatedResult<Track>(
+          items: [buildTrack('t2', 'Track 2')],
+          total: 2,
+          offset: 1,
+          limit: 1,
+        );
+        final fresh = PaginatedResult<Track>(
+          items: [buildTrack('n1', 'New')],
+          total: 1,
+          offset: 0,
+          limit: 1,
+        );
+        final slowPage2 = Completer<PaginatedResult<Track>>();
+        when(
+          () => mockSearch.tracks(
+            'rock',
+            offset: 0,
+            limit: any(named: 'limit'),
+          ),
+        ).thenAnswer((_) async => page1);
+        when(
+          () => mockSearch.tracks(
+            'rock',
+            offset: 1,
+            limit: any(named: 'limit'),
+          ),
+        ).thenAnswer((_) => slowPage2.future);
+        when(
+          () => mockSearch.tracks(
+            'rocky',
+            offset: 0,
+            limit: any(named: 'limit'),
+          ),
+        ).thenAnswer((_) async => fresh);
+
+        final pagedCubit = SearchCubit(
+          SearchRepository(mockEngine),
+          noticeBus,
+          pageSize: 1,
+        );
+        await pagedCubit.selectChip(SearchCategory.tracks);
+        await pagedCubit.search('rock');
+        final more = pagedCubit.loadMore();
+        await pagedCubit.search('rocky');
+        slowPage2.complete(page2);
+        await more;
+
+        expect(
+          pagedCubit.state.trackResults?.items.map((t) => t.id),
+          equals(['n1']),
+        );
+        await pagedCubit.close();
+      });
+
+      test('a stale failure does not overwrite fresh results', () async {
+        final fresh = buildResponse('b1', 'New');
+        final slowFail = Completer<SearchResponse>();
+        when(
+          () => mockSearch.all('ab'),
+        ).thenAnswer((_) => slowFail.future);
+        when(
+          () => mockSearch.all('abcd'),
+        ).thenAnswer((_) async => fresh);
+
+        final flightA = cubit.search('ab');
+        await cubit.search('abcd');
+        slowFail.completeError(Exception('stale boom'));
+        await flightA;
+
+        expect(
+          cubit.state.allResults?.tracks.map((t) => t.id),
+          equals(['b1']),
+        );
+        expect(cubit.state.error, isNull);
+      });
     });
 
     group('grid column pagination', () {
