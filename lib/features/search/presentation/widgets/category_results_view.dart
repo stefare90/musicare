@@ -55,7 +55,7 @@ class CategoryResultsView extends StatelessWidget {
                 track: track,
                 isPlaying: track.id == activeTrackId,
                 onTap: () {
-                  context.read<PlayerCubit>().playQueue(items, index: index);
+                  context.read<PlayerCubit>().playTrack(track);
                 },
                 onOptionsTap: () {
                   TrackActions.showOptions(context, track);

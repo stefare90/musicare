@@ -364,6 +364,18 @@ abstract class AppLocalizations {
   /// **'Add to Queue'**
   String get addToQueue;
 
+  /// No description provided for @playNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Play Next'**
+  String get playNext;
+
+  /// No description provided for @addedToPlayNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Will play next'**
+  String get addedToPlayNext;
+
   /// No description provided for @saveToFavorites.
   ///
   /// In en, this message translates to:

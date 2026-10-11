@@ -38,7 +38,7 @@ class MediaOptionsBottomSheet extends StatelessWidget {
         height: 48,
         borderRadius: BorderRadius.circular(8),
       ),
-      initialChildSize: 0.6,
+      initialChildSize: 0.7,
       minChildSize: 0.35,
       maxChildSize: 0.8,
       builder: (context, scrollController) {

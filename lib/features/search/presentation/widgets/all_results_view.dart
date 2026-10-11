@@ -33,11 +33,7 @@ class AllResultsView extends StatelessWidget {
             tracks: tracks,
             activeTrackId: activeTrackId,
             onTrackTap: (track) {
-              final index = tracks.indexOf(track);
-              context.read<PlayerCubit>().playQueue(
-                tracks,
-                index: index >= 0 ? index : 0,
-              );
+              context.read<PlayerCubit>().playTrack(track);
             },
             onTrackOptionsTap: (track) {
               TrackActions.showOptions(context, track);

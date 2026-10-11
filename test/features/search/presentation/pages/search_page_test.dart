@@ -428,13 +428,59 @@ void main() {
       expect(trackTile, findsOneWidget);
 
       when(
-        () => mockPlayerCubit.playQueue(any(), index: any(named: 'index')),
+        () => mockPlayerCubit.playTrack(dummyTrack),
       ).thenAnswer((_) async {});
 
       await tester.tap(trackTile);
       await tester.pump();
 
-      verify(() => mockPlayerCubit.playQueue([dummyTrack], index: 0)).called(1);
+      verify(() => mockPlayerCubit.playTrack(dummyTrack)).called(1);
+      verifyNever(
+        () => mockPlayerCubit.playQueue(any(), index: any(named: 'index')),
+      );
+    },
+  );
+
+  testWidgets(
+    'SearchPage aggregated view plays only the tapped track',
+    (tester) async {
+      final secondTrack = Track(
+        id: 't2',
+        name: 'Fix You',
+        externalUri: '',
+        artists: [Artist(id: 'a1', name: 'Coldplay', externalUri: '')],
+        album: dummyTrack.album,
+        durationMs: 294000,
+      );
+      when(() => mockSearch.all(any())).thenAnswer(
+        (_) async => SearchResponse(
+          tracks: [dummyTrack, secondTrack],
+          albums: [],
+          artists: [],
+          playlists: [],
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'Coldplay');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TrackListTile), findsNWidgets(2));
+
+      when(
+        () => mockPlayerCubit.playTrack(secondTrack),
+      ).thenAnswer((_) async {});
+
+      await tester.tap(find.byType(TrackListTile).at(1));
+      await tester.pump();
+
+      verify(() => mockPlayerCubit.playTrack(secondTrack)).called(1);
+      verifyNever(
+        () => mockPlayerCubit.playQueue(any(), index: any(named: 'index')),
+      );
     },
   );
 

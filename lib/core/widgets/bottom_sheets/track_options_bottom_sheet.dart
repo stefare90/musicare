@@ -10,6 +10,7 @@ abstract class TrackOptionsBottomSheet {
     BuildContext context,
     Track track, {
     bool isSaved = false,
+    VoidCallback? onPlayNext,
     VoidCallback? onAddToQueue,
     VoidCallback? onToggleFavorite,
     VoidCallback? onAddToPlaylist,
@@ -20,6 +21,14 @@ abstract class TrackOptionsBottomSheet {
       context: context,
       item: track,
       options: [
+        ListTile(
+          leading: const Icon(Icons.playlist_play_rounded),
+          title: Text(l10n.playNext),
+          onTap: () {
+            Navigator.of(context).pop();
+            onPlayNext?.call();
+          },
+        ),
         ListTile(
           leading: const Icon(Icons.queue_music_rounded),
           title: Text(l10n.addToQueue),

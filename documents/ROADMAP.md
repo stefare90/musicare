@@ -18,7 +18,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ## 🔍 Search (`lib/features/search/`)
 ✅ Debounced global search with typed filter chips, aggregated and per-category views.
 ✅ Playlist results: dynamic Playlists chip from the plugin's `chips()`, per-category grid and a Playlists carousel in the aggregated view.
-✅ Column-aligned pagination, contextual skeletons, scrollable empty/error states, tap on a result → playback or detail.
+✅ Column-aligned pagination, contextual skeletons, scrollable empty/error states, tap on a track result plays only that track, other results → detail.
 
 ## 📚 Details (`lib/features/details/{album,artist,playlist}`)
 ✅ Album, artist and playlist pages with cover header, track list, discography, "Fans Also Like" and pagination.
@@ -34,7 +34,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ✅ Multi-candidate stream resolution with automatic fallback on expired streams or 403 responses.
 ✅ Mini-player, full player, reorderable queue sheet and live candidate switching.
 ⬜ Download and lyrics.
-✅ "Add to queue" and "Save to favorites" wired in the track options bottom sheet (with the real saved state and optimistic rollback).
+✅ "Play Next", "Add to queue" and "Save to favorites" wired in the track options bottom sheet (with the real saved state and optimistic rollback).
 
 ## 📚 Library (`lib/features/library/`)
 ✅ Sign-in invitation when signed out, with the account entry point in the page header.

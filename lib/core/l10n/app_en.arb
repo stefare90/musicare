@@ -45,6 +45,8 @@
   "saveAlbum": "Save Album",
   "shareAlbum": "Share Album",
   "addToQueue": "Add to Queue",
+  "playNext": "Play Next",
+  "addedToPlayNext": "Will play next",
   "saveToFavorites": "Save to Favorites",
   "goToAlbum": "Go to Album",
   "goToArtist": "Go to Artist",

@@ -21,11 +21,17 @@ abstract class TrackActions {
       context,
       track,
       isSaved: saved.isTrackSaved(track.id),
+      onPlayNext: () => _playNext(context, track),
       onAddToQueue: () => _addToQueue(context, track),
       onToggleFavorite: () => saved.toggleTrack(track),
       onAddToPlaylist: () => AddToPlaylistBottomSheet.show(context, track),
       onBeforeNavigate: onBeforeNavigate,
     );
+  }
+
+  static void _playNext(BuildContext context, Track track) {
+    context.read<PlayerCubit>().insertNext(track);
+    sl<NoticeBus>().emit(Notice.message(context.l10n.addedToPlayNext));
   }
 
   static void _addToQueue(BuildContext context, Track track) {

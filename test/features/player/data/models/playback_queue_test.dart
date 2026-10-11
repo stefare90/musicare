@@ -168,6 +168,19 @@ void main() {
       expect(updated.currentIndex, equals(0));
     });
 
+    test('two insertNext calls queue in call order after current', () {
+      final initial = queue.setQueue(tracks, startIndex: 0);
+
+      final updated = initial
+          .insertNext(createTestTrack('4', 'First'))
+          .insertNext(createTestTrack('5', 'Second'));
+
+      expect(updated.length, equals(5));
+      expect(updated.tracks[1].name, equals('Second'));
+      expect(updated.tracks[2].name, equals('First'));
+      expect(updated.currentIndex, equals(0));
+    });
+
     test('reorder correctly repositions track and updates current pointer', () {
       final initial = queue.setQueue(
         tracks,

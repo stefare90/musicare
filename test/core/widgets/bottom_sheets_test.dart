@@ -109,6 +109,39 @@ void main() {
       expect(queueTapped, isTrue);
     });
 
+    testWidgets('TrackOptionsBottomSheet renders Play Next first and runs it', (
+      tester,
+    ) async {
+      bool playNextTapped = false;
+
+      await tester.pumpWidget(
+        buildTestableWidget(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () {
+                TrackOptionsBottomSheet.show(
+                  context,
+                  testTrack,
+                  onPlayNext: () => playNextTapped = true,
+                );
+              },
+              child: const Text('Show Track Options'),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Show Track Options'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Play Next'), findsOneWidget);
+
+      await tester.tap(find.text('Play Next'));
+      await tester.pumpAndSettle();
+
+      expect(playNextTapped, isTrue);
+    });
+
     testWidgets(
       'TrackOptionsBottomSheet shows remove + add to playlist when saved',
       (tester) async {
