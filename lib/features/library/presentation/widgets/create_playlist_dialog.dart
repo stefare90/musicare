@@ -7,8 +7,6 @@ typedef CreatePlaylistResult = ({
   bool isPublic,
 });
 
-/// Only what the provider supports. `collaborative` is absent on purpose:
-/// the plugin ignores it, so a control here would be a lie.
 class CreatePlaylistDialog extends StatefulWidget {
   const CreatePlaylistDialog({super.key});
 
