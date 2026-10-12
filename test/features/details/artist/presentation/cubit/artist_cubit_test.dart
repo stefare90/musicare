@@ -229,5 +229,72 @@ void main() {
       expect(notices, isEmpty);
       await subscription.cancel();
     });
+
+    group('pendingTopTracksSource', () {
+      test('returns null when nothing is loaded', () {
+        expect(cubit.pendingTopTracksSource(), isNull);
+      });
+
+      test('returns a source bound to the loaded window', () async {
+        when(() => mockPluginEngine.hasMetadata).thenReturn(true);
+        when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+        when(() => mockMetadataPlugin.artist).thenReturn(mockArtistService);
+        final first = createTrack('t1', 'Hey Jude');
+        final second = createTrack('t2', 'Let It Be');
+        when(
+          () => mockArtistService.topTracks('a1', offset: 0, limit: 6),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [first],
+            total: 2,
+            offset: 0,
+            limit: 6,
+          ),
+        );
+        when(
+          () => mockArtistService.topTracks('a1', offset: 1, limit: 20),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [second],
+            total: 2,
+            offset: 1,
+            limit: 20,
+          ),
+        );
+
+        cubit.fetchTopTracks();
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+
+        final source = cubit.pendingTopTracksSource();
+        expect(source, isNotNull);
+        final pending = source!;
+        expect(pending.nextOffset, equals(1));
+        expect(pending.total, equals(2));
+
+        final page = await pending.loader(pending.nextOffset);
+        expect(page.items.single.id, equals('t2'));
+      });
+
+      test('returns null when the list is complete', () async {
+        when(() => mockPluginEngine.hasMetadata).thenReturn(true);
+        when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+        when(() => mockMetadataPlugin.artist).thenReturn(mockArtistService);
+        when(
+          () => mockArtistService.topTracks('a1', offset: 0, limit: 6),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [createTrack('t1', 'Hey Jude')],
+            total: 1,
+            offset: 0,
+            limit: 6,
+          ),
+        );
+
+        cubit.fetchTopTracks();
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+
+        expect(cubit.pendingTopTracksSource(), isNull);
+      });
+    });
   });
 }

@@ -4,8 +4,11 @@ import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/core/widgets/bottom_sheets/base_modal_bottom_sheet.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
+import 'package:music_are/features/player/presentation/cubit/pending_state.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/player/presentation/widgets/queue_track_tile.dart';
+import 'package:music_are/features/plugin/shared/presentation/utils/exception_localizer.dart';
+import 'package:music_are/core/widgets/skeletons/skeleton_track_list.dart';
 
 class QueueBottomSheet extends StatelessWidget {
   const QueueBottomSheet({super.key});
@@ -53,14 +56,22 @@ class QueueBottomSheet extends StatelessWidget {
               );
             }
 
-            return ReorderableListView.builder(
+            final pending = state.pending;
+            final hasFooter =
+                pending.error != null ||
+                (pending.isLoading && pending.remaining > 0);
+            final list = ReorderableListView.builder(
               scrollController: scrollController,
               padding: const EdgeInsets.symmetric(vertical: 8.0),
-              itemCount: tracks.length,
+              itemCount: tracks.length + (hasFooter ? 1 : 0),
+              buildDefaultDragHandles: false,
               onReorderItem: (oldIndex, newIndex) {
                 player.reorderQueue(oldIndex, newIndex);
               },
               itemBuilder: (context, index) {
+                if (index == tracks.length) {
+                  return _pendingFooter(context, player, pending);
+                }
                 final track = tracks[index];
                 final isPlaying = index == queue.currentIndex;
 
@@ -74,9 +85,38 @@ class QueueBottomSheet extends StatelessWidget {
                 );
               },
             );
+            return list;
           },
         );
       },
     );
   }
+}
+
+Widget _pendingFooter(
+  BuildContext context,
+  PlayerCubit player,
+  PendingState pending,
+) {
+  final error = pending.error;
+  if (error != null) {
+    return Padding(
+      key: const ValueKey('queue_pending_error'),
+      padding: const EdgeInsets.fromLTRB(16.0, 4.0, 8.0, 12.0),
+      child: Row(
+        children: [
+          Expanded(child: Text(error.toLocalizedString(context))),
+          TextButton(
+            onPressed: () => player.retryPendingLoad(),
+            child: Text(context.l10n.retry),
+          ),
+        ],
+      ),
+    );
+  }
+  return const Padding(
+    key: ValueKey('queue_pending_loading'),
+    padding: EdgeInsets.only(top: 4.0, bottom: 12.0),
+    child: SkeletonTrackList(count: 1, showDuration: false),
+  );
 }

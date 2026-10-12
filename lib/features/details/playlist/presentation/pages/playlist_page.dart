@@ -107,6 +107,7 @@ class _PlaylistView extends StatelessWidget {
                   context.read<PlayerCubit>().playQueue(
                     state.tracks.items,
                     index: index >= 0 ? index : 0,
+                    pending: context.read<PlaylistCubit>().pendingSource(),
                   );
                 },
                 onTrackOptionsTap: (track) =>

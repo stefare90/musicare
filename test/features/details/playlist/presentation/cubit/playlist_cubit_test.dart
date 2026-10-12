@@ -567,5 +567,75 @@ void main() {
       final state = cubit.state as PlaylistLoadedState;
       expect(state.tracks.items, hasLength(25));
     });
+
+    group('pendingSource', () {
+      test('returns null when nothing is loaded', () {
+        expect(cubit.pendingSource(), isNull);
+      });
+
+      test('returns a source bound to the loaded window', () async {
+        when(() => mockPluginEngine.hasMetadata).thenReturn(true);
+        when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+        when(
+          () => mockMetadataPlugin.playlist,
+        ).thenReturn(mockPlaylistService);
+        when(
+          () => mockPlaylistService.tracks('pl1', offset: 0, limit: 20),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [testTrack],
+            total: 3,
+            offset: 0,
+            limit: 20,
+          ),
+        );
+        when(
+          () => mockPlaylistService.tracks('pl1', offset: 1, limit: 20),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [testTrack],
+            total: 3,
+            offset: 1,
+            limit: 20,
+          ),
+        );
+
+        await cubit.loadPlaylist(testPlaylist);
+
+        final source = cubit.pendingSource();
+        expect(source, isNotNull);
+        final pending = source!;
+        expect(pending.nextOffset, equals(1));
+        expect(pending.total, equals(3));
+
+        final page = await pending.loader(pending.nextOffset);
+        expect(page.items, hasLength(1));
+        verify(
+          () => mockPlaylistService.tracks('pl1', offset: 1, limit: 20),
+        ).called(1);
+      });
+
+      test('returns null when the list is complete', () async {
+        when(() => mockPluginEngine.hasMetadata).thenReturn(true);
+        when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+        when(
+          () => mockMetadataPlugin.playlist,
+        ).thenReturn(mockPlaylistService);
+        when(
+          () => mockPlaylistService.tracks('pl1', offset: 0, limit: 20),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [testTrack],
+            total: 1,
+            offset: 0,
+            limit: 20,
+          ),
+        );
+
+        await cubit.loadPlaylist(testPlaylist);
+
+        expect(cubit.pendingSource(), isNull);
+      });
+    });
   });
 }

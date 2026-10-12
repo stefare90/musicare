@@ -2,12 +2,14 @@ import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/features/player/data/models/playback_data.dart';
 import 'package:music_are/features/player/data/models/playback_processing_state.dart';
 import 'package:music_are/features/player/presentation/cubit/candidates_state.dart';
+import 'package:music_are/features/player/presentation/cubit/pending_state.dart';
 import 'package:music_are/features/player/presentation/cubit/queue_state.dart';
 import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
 
 class PlayerState {
   final QueueState queue;
   final CandidatesState candidates;
+  final PendingState pending;
   final bool isPlaying;
   final PlaybackProcessingState processingState;
   final Duration position;
@@ -17,6 +19,7 @@ class PlayerState {
   const PlayerState({
     this.queue = const QueueState(),
     this.candidates = const CandidatesState(),
+    this.pending = const PendingState(),
     this.isPlaying = false,
     this.processingState = PlaybackProcessingState.idle,
     this.position = Duration.zero,
@@ -28,6 +31,7 @@ class PlayerState {
     return PlayerState(
       queue: QueueState.fromPlaybackQueue(data.queue),
       candidates: CandidatesState.fromPlaybackCandidates(data.candidates),
+      pending: PendingState.fromPlaybackPending(data.pending),
       isPlaying: data.isPlaying,
       processingState: data.processingState,
       position: data.position,

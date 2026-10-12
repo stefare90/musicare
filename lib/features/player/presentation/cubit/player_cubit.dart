@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
+import 'package:music_are/features/player/data/models/pending_source.dart';
 import 'package:music_are/features/player/data/services/audio_player_service.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 
@@ -10,6 +11,7 @@ class PlayerCubit extends SafeCubit<PlayerState> {
   final NoticeBus _notices;
   StreamSubscription<PlayerState>? _stateSub;
   Object? _lastNotifiedError;
+  Object? _lastPendingError;
 
   PlayerCubit(AudioPlayerService audioService, this._notices)
     : _service = audioService,
@@ -27,12 +29,26 @@ class PlayerCubit extends SafeCubit<PlayerState> {
     } else if (error == null) {
       _lastNotifiedError = null;
     }
+    final pendingError = state.pending.error;
+    if (pendingError != null) {
+      if (_lastPendingError == null) {
+        _lastPendingError = pendingError;
+        _notices.emit(Notice.error(pendingError));
+      }
+    } else {
+      _lastPendingError = null;
+    }
     emit(state);
   }
 
   Future<void> playTrack(Track track) => _service.playTrack(track);
-  Future<void> playQueue(List<Track> queue, {int index = 0}) =>
-      _service.playQueue(queue, index: index);
+  Future<void> playQueue(
+    List<Track> queue, {
+    int index = 0,
+    PendingSource? pending,
+  }) =>
+      _service.playQueue(queue, index: index, pending: pending);
+  Future<void> retryPendingLoad() => _service.retryPendingLoad();
 
   Future<void> next() => _service.next();
   Future<void> previous() => _service.previous();

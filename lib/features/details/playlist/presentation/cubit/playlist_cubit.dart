@@ -5,6 +5,7 @@ import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
+import 'package:music_are/features/player/data/models/pending_source.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
@@ -181,6 +182,18 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
     } finally {
       _isFetchingMoreTracks = false;
     }
+  }
+
+  PendingSource? pendingSource() {
+    final current = state;
+    if (current is! PlaylistLoadedState) return null;
+    if (!current.hasMoreTracks) return null;
+    final id = current.playlist.id;
+    return PendingSource(
+      loader: (offset) => _media.playlistTracks(id, offset: offset),
+      nextOffset: current.tracks.items.length,
+      total: current.tracks.total,
+    );
   }
 
   @override

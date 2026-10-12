@@ -27,6 +27,7 @@ extension ExceptionLocalizer on Object {
       MetadataNotFoundException() => context.l10n.pluginErrorResourceNotFound,
       MetadataTransportException() => context.l10n.pluginErrorNetwork,
       MetadataRateLimitedException() => context.l10n.pluginErrorRateLimited,
+      PendingLoadException(:final cause) => cause.toLocalizedString(context),
 
       SocketException() => context.l10n.pluginErrorNetwork,
       TimeoutException() => context.l10n.pluginErrorTimeout,

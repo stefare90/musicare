@@ -3,6 +3,7 @@ import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/features/details/artist/presentation/cubit/artist_state.dart';
+import 'package:music_are/features/player/data/models/pending_source.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
@@ -194,5 +195,16 @@ class ArtistCubit extends SafeCubit<ArtistState> {
           );
           if (e.needsNotice) _notices.emit(Notice.error(e));
         });
+  }
+
+  PendingSource? pendingTopTracksSource() {
+    final data = state.topTracks.data;
+    if (data.items.length >= data.total) return null;
+    final id = state.artist.id;
+    return PendingSource(
+      loader: (offset) => _media.artistTopTracks(id, offset: offset),
+      nextOffset: data.items.length,
+      total: data.total,
+    );
   }
 }

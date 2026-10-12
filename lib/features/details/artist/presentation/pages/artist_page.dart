@@ -71,6 +71,9 @@ class _ArtistView extends StatelessWidget {
                   context.read<PlayerCubit>().playQueue(
                     state.topTracks.data.items,
                     index: index >= 0 ? index : 0,
+                    pending: context
+                        .read<ArtistCubit>()
+                        .pendingTopTracksSource(),
                   );
                 },
                 isLoading:

@@ -4,8 +4,16 @@ import 'package:music_are/core/widgets/skeletons/shimmer_box.dart';
 class SkeletonTrackList extends StatelessWidget {
   final bool showTitle;
   final int count;
+  final bool showDuration;
+  final bool showOptions;
 
-  const SkeletonTrackList({super.key, this.showTitle = false, this.count = 5});
+  const SkeletonTrackList({
+    super.key,
+    this.showTitle = false,
+    this.count = 5,
+    this.showDuration = true,
+    this.showOptions = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +31,7 @@ class SkeletonTrackList extends StatelessWidget {
           ),
         ...List.generate(
           count,
-          (_) => const ListTile(
+          (_) => ListTile(
             contentPadding: EdgeInsets.symmetric(
               horizontal: 16.0,
               vertical: 2.0,
@@ -45,10 +53,11 @@ class SkeletonTrackList extends StatelessWidget {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ShimmerBox(width: 20.0, height: 10.0),
-                SizedBox(width: 20.0),
-                ShimmerBox(width: 10.0, height: 30.0),
-                SizedBox(width: 20.0),
+                if (showDuration) const ShimmerBox(width: 20.0, height: 10.0),
+                if (showDuration && showOptions) const SizedBox(width: 20.0),
+                if (showOptions)
+                  const ShimmerBox(width: 10.0, height: 30.0),
+                if (showOptions) const SizedBox(width: 20.0),
               ],
             ),
           ),

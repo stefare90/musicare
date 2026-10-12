@@ -60,6 +60,8 @@ class _LikedSongsView extends StatelessWidget {
                   context.read<PlayerCubit>().playQueue(
                     result.items,
                     index: index >= 0 ? index : 0,
+                    pending:
+                        context.read<LikedTracksCubit>().pendingSource(),
                   );
                 },
               ),

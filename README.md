@@ -17,7 +17,7 @@ The application supports two distinct plugins:
 
 * **Dynamic Onboarding Wizard**: Effortlessly discover, download, and configure your preferred Metadata and Audio Source plugins straight from GitHub releases.
 * **Universal Media Player**: Native background playback support (`just_audio_background`) with lock-screen controls, gapless transitions, and hardware media key bindings.
-* **Smart Queue Management**: Advanced immutable queue system supporting shuffle (preserving history), repeat modes (One, All, Off), and dynamic inserts.
+* **Smart Queue Management**: Advanced immutable queue system supporting shuffle (preserving history), repeat modes (One, All, Off), and dynamic inserts. Playing from a partially loaded list keeps loading the rest in the background, with loading and retry states in the queue sheet.
 * **Fault-Tolerant Streaming**: Automatic candidate resolution—if a stream URL expires or returns a 403 Forbidden, the player automatically falls back to the next available stream.
 * **Global Search & Filter Chips**: Integrated with the active Metadata plugin (`ISearch`), supporting debounced queries, aggregated search views, category pagination, and instant track playback.
 * **Settings & Plugin Accounts**: A settings hub (gear on the three root screens) with a Plugins section listing the active metadata and audio-source plugins, their versions and, when a plugin exposes authentication, its account (sign in/sign out). Contextual sign-in prompts appear when content or an action requires authentication, as a single message plus a "Sign in" snackbar action; browsing and playback stay anonymous.

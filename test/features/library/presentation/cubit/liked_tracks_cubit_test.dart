@@ -143,4 +143,77 @@ void main() {
     verify(() => user.savedTracks(offset: 0, limit: 20)).called(1);
     expect(savedMedia.refreshed, [MediaItemType.track]);
   });
+
+  group('pendingSource', () {
+    test('returns null when nothing is loaded', () {
+      expect(cubit.pendingSource(), isNull);
+    });
+
+    test('returns a source bound to the loaded window', () async {
+      final second = Track(
+        id: 't2',
+        name: 'Song 2',
+        externalUri: '',
+        artists: [Artist(id: 'a1', name: 'Artist', externalUri: '')],
+        album: const Album(
+          id: 'al1',
+          name: 'Album',
+          artists: [],
+          releaseDate: '',
+          externalUri: '',
+          totalTracks: 1,
+          albumType: AlbumType.album,
+        ),
+        durationMs: 1000,
+      );
+      when(
+        () => user.savedTracks(offset: 0, limit: 20),
+      ).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: [track],
+          total: 2,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+      when(
+        () => user.savedTracks(offset: 1, limit: 20),
+      ).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: [second],
+          total: 2,
+          offset: 1,
+          limit: 20,
+        ),
+      );
+
+      await cubit.load();
+
+      final source = cubit.pendingSource();
+      expect(source, isNotNull);
+      final pending = source!;
+      expect(pending.nextOffset, equals(1));
+      expect(pending.total, equals(2));
+
+      final page = await pending.loader(pending.nextOffset);
+      expect(page.items.single.id, equals('t2'));
+    });
+
+    test('returns null when the list is complete', () async {
+      when(
+        () => user.savedTracks(offset: 0, limit: 20),
+      ).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: [track],
+          total: 1,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+
+      await cubit.load();
+
+      expect(cubit.pendingSource(), isNull);
+    });
+  });
 }

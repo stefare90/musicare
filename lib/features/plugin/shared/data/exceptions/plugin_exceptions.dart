@@ -50,3 +50,9 @@ class StreamResolutionException extends PluginException {
 
   const StreamResolutionException(this.message);
 }
+
+class PendingLoadException extends PluginException {
+  final Object cause;
+
+  const PendingLoadException(this.cause);
+}

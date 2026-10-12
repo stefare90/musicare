@@ -1,6 +1,10 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
+import 'package:music_are/features/player/data/models/pending_source.dart';
+import 'package:music_are/features/player/data/models/playback_pending.dart';
+import 'package:music_are/features/player/data/models/playback_queue.dart';
 import 'package:music_are/features/player/data/models/playback_candidates.dart';
 import 'package:music_are/features/player/data/models/playback_data.dart';
 import 'package:music_are/features/player/data/models/playback_processing_state.dart';
@@ -23,6 +27,13 @@ class AudioPlayerService {
   int _sessionCounter = 0;
   String? _loadedTrackId;
   DateTime _lastPositionUpdate = DateTime.fromMillisecondsSinceEpoch(0);
+
+  static const int _maxFetchAttempts = 4;
+
+  PendingLoader? _pendingLoader;
+  Future<bool>? _activeFetch;
+  bool _pullRunning = false;
+  int _pendingGeneration = 0;
 
   AudioPlayerService({required this._driver, required this._resolver}) {
     _initDriverListeners();
@@ -70,20 +81,36 @@ class AudioPlayerService {
 
   Future<void> playTrack(Track track) => playQueue([track], index: 0);
 
-  Future<void> playQueue(List<Track> queue, {int index = 0}) async {
+  Future<void> playQueue(
+    List<Track> queue, {
+    int index = 0,
+    PendingSource? pending,
+  }) async {
     if (queue.isEmpty) return;
 
     final validIndex = (index >= 0 && index < queue.length) ? index : 0;
+    _pendingGeneration++;
+    final source = (pending != null && !pending.isComplete) ? pending : null;
+    _pendingLoader = source?.loader;
     _updateData(
       _playbackData.copyWith(
         queue: _playbackData.queue.setQueue(queue, startIndex: validIndex),
+        pending: source == null
+            ? const PlaybackPending.empty()
+            : PlaybackPending.fromSource(source),
       ),
     );
 
+    _pull();
     await _playCurrentQueueTrack();
   }
 
   Future<void> next() async {
+    final nextFlight = _activeFetch;
+    if (nextFlight != null &&
+        _playbackData.queue.currentIndex + 1 >= _playbackData.queue.length) {
+      await nextFlight;
+    }
     final nextQueue = _playbackData.queue.next();
     if (nextQueue != null) {
       _updateData(_playbackData.copyWith(queue: nextQueue));
@@ -114,6 +141,126 @@ class AudioPlayerService {
       _updateData(_playbackData.copyWith(queue: jumped));
       await _playCurrentQueueTrack();
     }
+  }
+
+  void _pull() {
+    unawaited(_pullLoop());
+  }
+
+  Future<void> _pullLoop() async {
+    if (_pullRunning) {
+      return;
+    }
+    _pullRunning = true;
+    try {
+      while (!_playbackData.pending.isEmpty) {
+        if (!await _fetchOnePage()) {
+          break;
+        }
+      }
+    } finally {
+      _pullRunning = false;
+    }
+  }
+
+  Future<bool> _fetchOnePage() {
+    final running = _activeFetch;
+    if (running != null) {
+      return running;
+    }
+    final loader = _pendingLoader;
+    final live = _playbackData.pending;
+    if (loader == null || live.isEmpty) return Future.value(false);
+    final generation = _pendingGeneration;
+    final offset = live.nextOffset;
+    _updateData(_playbackData.copyWith(pending: live.started()));
+    final flight = _runFetch(loader, offset, generation);
+    _activeFetch = flight;
+    flight.whenComplete(() {
+      if (identical(_activeFetch, flight)) _activeFetch = null;
+    });
+    return flight;
+  }
+
+  Future<bool> _runFetch(
+    PendingLoader loader,
+    int offset,
+    int generation,
+  ) async {
+    for (var i = 0; i < _maxFetchAttempts; i++) {
+      late final PaginatedResult<Track> page;
+      try {
+        page = await loader(offset);
+      } catch (e) {
+        if (generation != _pendingGeneration) {
+          return true;
+        }
+        if (i == _maxFetchAttempts - 1) {
+          _updateData(
+            _playbackData.copyWith(
+              pending: _playbackData.pending.failed(
+                PendingLoadException(e),
+              ),
+            ),
+          );
+          return false;
+        }
+        continue;
+      }
+      if (generation != _pendingGeneration) {
+        return true;
+      }
+      if (page.items.isEmpty) {
+        _pendingLoader = null;
+        _updateData(
+          _playbackData.copyWith(pending: const PlaybackPending.empty()),
+        );
+        return true;
+      }
+      _updateData(
+        _playbackData.copyWith(
+          queue: _queueWithArrivals(_playbackData.queue, page.items),
+          pending: _playbackData.pending.advancedBy(
+            loaded: page.items.length,
+            total: page.total,
+          ),
+        ),
+      );
+      return true;
+    }
+    return false;
+  }
+
+  PlaybackQueue _queueWithArrivals(
+    PlaybackQueue queue,
+    List<Track> arrivals,
+  ) {
+    if (arrivals.isEmpty) return queue;
+    final original = List<Track>.from(queue.originalTracks)..addAll(arrivals);
+    final List<Track> tracks;
+    if (!queue.isShuffled) {
+      tracks = List<Track>.from(queue.tracks)..addAll(arrivals);
+    } else {
+      final grown = List<Track>.from(queue.tracks);
+      final random = Random();
+      for (final track in arrivals) {
+        final slot =
+            queue.currentIndex +
+            1 +
+            random.nextInt(grown.length - queue.currentIndex);
+        grown.insert(slot, track);
+      }
+      tracks = grown;
+    }
+    return queue.copyWith(
+      tracks: List.unmodifiable(tracks),
+      originalTracks: List.unmodifiable(original),
+    );
+  }
+
+  Future<void> retryPendingLoad() async {
+    if (_pendingLoader == null) return;
+    _pull();
   }
 
   Future<void> selectStreamCandidate(int candidateIndex) async {
@@ -242,6 +389,7 @@ class AudioPlayerService {
       await _driver.play();
     }
   }
+
   Future<void> pause() => _driver.pause();
   Future<void> stop() => _driver.stop();
   Future<void> seek(Duration position) => _driver.seek(position);

@@ -35,6 +35,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ✅ Mini-player, full player, reorderable queue sheet and live candidate switching.
 ⬜ Download and lyrics.
 ✅ "Play Next", "Add to queue" and "Save to favorites" wired in the track options bottom sheet (with the real saved state and optimistic rollback).
+✅ Queue auto-extends from partially loaded lists (playlist, album, artist top tracks, liked): background fill with loading/error states in the queue sheet.
 
 ## 📚 Library (`lib/features/library/`)
 ✅ Sign-in invitation when signed out, with the account entry point in the page header.
@@ -79,4 +80,4 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ✅ Real artist top tracks via ListenBrainz instead of work metadata.
 ⬜ Bluetooth next/prev buttons.
 ✅ Reload the open playlist detail when a track is added from the player or the track sheet.
-⬜ "Play all" when the playlist is only partially loaded.
+✅ "Play all" when the playlist is only partially loaded.

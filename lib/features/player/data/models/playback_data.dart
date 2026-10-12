@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/features/player/data/models/playback_candidates.dart';
+import 'package:music_are/features/player/data/models/playback_pending.dart';
 import 'package:music_are/features/player/data/models/playback_processing_state.dart';
 import 'package:music_are/features/player/data/models/playback_queue.dart';
 import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
@@ -14,6 +15,7 @@ class PlaybackData {
   final Duration position;
   final Duration duration;
   final Object? error;
+  final PlaybackPending pending;
 
   const PlaybackData({
     this.queue = const PlaybackQueue(),
@@ -23,6 +25,7 @@ class PlaybackData {
     this.position = Duration.zero,
     this.duration = Duration.zero,
     this.error,
+    this.pending = const PlaybackPending.empty(),
   });
 
   Track? get currentTrack => queue.currentTrack;
@@ -36,6 +39,7 @@ class PlaybackData {
       processingState: PlaybackProcessingState.loading,
       position: Duration.zero,
       duration: Duration.zero,
+      pending: current.pending,
     );
   }
 
@@ -48,6 +52,7 @@ class PlaybackData {
       position: current.position,
       duration: current.duration,
       error: error,
+      pending: current.pending,
     );
   }
 
@@ -58,6 +63,7 @@ class PlaybackData {
     PlaybackProcessingState? processingState,
     Duration? position,
     Duration? duration,
+    PlaybackPending? pending,
   }) {
     return PlaybackData(
       queue: queue ?? this.queue,
@@ -67,6 +73,7 @@ class PlaybackData {
       position: position ?? this.position,
       duration: duration ?? this.duration,
       error: error,
+      pending: pending ?? this.pending,
     );
   }
 }

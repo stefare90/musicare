@@ -5,6 +5,7 @@ import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/library/presentation/cubit/liked_tracks_state.dart';
+import 'package:music_are/features/player/data/models/pending_source.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
@@ -91,6 +92,17 @@ class LikedTracksCubit extends SafeCubit<LikedTracksState> {
       emit(state.copyWith(tracks: SectionState.error(e, current.data)));
       if (e.needsNotice) _notices.emit(Notice.error(e));
     }
+  }
+
+  PendingSource? pendingSource() {
+    final data = state.tracks.data;
+    if (data.items.length >= data.total) return null;
+    return PendingSource(
+      loader: (offset) =>
+          _library.savedTracks(offset: offset, limit: _pageSize),
+      nextOffset: data.items.length,
+      total: data.total,
+    );
   }
 
   @override

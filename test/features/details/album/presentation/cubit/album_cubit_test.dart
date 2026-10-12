@@ -198,5 +198,70 @@ void main() {
       expect(notices, isEmpty);
       await subscription.cancel();
     });
+
+    group('pendingSource', () {
+      test('returns null when nothing is loaded', () {
+        expect(cubit.pendingSource(), isNull);
+      });
+
+      test('returns a source bound to the loaded window', () async {
+        when(() => mockPluginEngine.hasMetadata).thenReturn(true);
+        when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+        when(() => mockMetadataPlugin.album).thenReturn(mockAlbumService);
+        final first = createTrack('t1', 'Come Together');
+        final second = createTrack('t2', 'Something');
+        when(
+          () => mockAlbumService.tracks('al1', offset: 0, limit: 20),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [first],
+            total: 2,
+            offset: 0,
+            limit: 20,
+          ),
+        );
+        when(
+          () => mockAlbumService.tracks('al1', offset: 1, limit: 20),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [second],
+            total: 2,
+            offset: 1,
+            limit: 20,
+          ),
+        );
+
+        await cubit.loadAlbum(testAlbum);
+
+        final source = cubit.pendingSource();
+        expect(source, isNotNull);
+        final pending = source!;
+        expect(pending.nextOffset, equals(1));
+        expect(pending.total, equals(2));
+
+        final page = await pending.loader(pending.nextOffset);
+        expect(page.items.single.id, equals('t2'));
+      });
+
+      test('returns null when the list is complete', () async {
+        when(() => mockPluginEngine.hasMetadata).thenReturn(true);
+        when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+        when(() => mockMetadataPlugin.album).thenReturn(mockAlbumService);
+        when(
+          () => mockAlbumService.tracks('al1', offset: 0, limit: 20),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [createTrack('t1', 'Come Together')],
+            total: 1,
+            offset: 0,
+            limit: 20,
+          ),
+        );
+
+        await cubit.loadAlbum(testAlbum);
+
+        expect(cubit.pendingSource(), isNull);
+      });
+    });
   });
 }

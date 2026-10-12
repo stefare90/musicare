@@ -7,7 +7,10 @@ import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/widgets/bottom_sheets/queue_bottom_sheet.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
+import 'package:music_are/features/player/presentation/cubit/pending_state.dart';
 import 'package:music_are/features/player/presentation/cubit/queue_state.dart';
+import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
+import 'package:music_are/core/widgets/skeletons/skeleton_track_list.dart';
 
 class MockPlayerCubit extends Mock implements PlayerCubit {}
 
@@ -42,6 +45,9 @@ void main() {
       when(() => mockPlayerCubit.skipToIndex(any())).thenAnswer((_) async {});
       when(() => mockPlayerCubit.removeFromQueue(any())).thenReturn(null);
       when(() => mockPlayerCubit.reorderQueue(any(), any())).thenReturn(null);
+      when(
+        () => mockPlayerCubit.retryPendingLoad(),
+      ).thenAnswer((_) async {});
     });
 
     Widget buildTestableWidget() {
@@ -108,6 +114,94 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => mockPlayerCubit.skipToIndex(1)).called(1);
+    });
+
+    PlayerState queueStateWithPending(PendingState pending) {
+      return PlayerState(
+        queue: QueueState(
+          tracks: [track1, track2],
+          currentIndex: 0,
+          hasNext: true,
+        ),
+        pending: pending,
+      );
+    }
+
+    testWidgets('hides the pending footer when nothing is loading', (
+      tester,
+    ) async {
+      when(() => mockPlayerCubit.state).thenReturn(
+        PlayerState(
+          queue: QueueState(
+            tracks: [track1, track2],
+            currentIndex: 0,
+            hasNext: true,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SkeletonTrackList), findsNothing);
+      expect(find.text('Retry'), findsNothing);
+      expect(find.text('Come Together'), findsOneWidget);
+    });
+
+    testWidgets('shows a skeleton row at the end while loading', (
+      tester,
+    ) async {
+      when(() => mockPlayerCubit.state).thenReturn(
+        queueStateWithPending(
+          const PendingState(remaining: 80, isLoading: true),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pump();
+
+      expect(find.byType(SkeletonTrackList), findsOneWidget);
+      expect(find.text('Come Together'), findsOneWidget);
+      expect(find.text('Something'), findsOneWidget);
+      final footerPadding = tester.widget<Padding>(
+        find.byKey(const ValueKey('queue_pending_loading')),
+      );
+      expect(
+        footerPadding.padding,
+        equals(const EdgeInsets.only(top: 4.0, bottom: 12.0)),
+      );
+    });
+
+    testWidgets('shows no footer when idle with remaining', (tester) async {
+      when(() => mockPlayerCubit.state).thenReturn(
+        queueStateWithPending(const PendingState(remaining: 80)),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SkeletonTrackList), findsNothing);
+      expect(find.text('Retry'), findsNothing);
+    });
+
+    testWidgets('shows retry on pending error and retries on tap', (
+      tester,
+    ) async {
+      when(() => mockPlayerCubit.state).thenReturn(
+        queueStateWithPending(
+          PendingState(error: PendingLoadException(Exception('down'))),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Retry'), findsOneWidget);
+
+      await tester.tap(find.text('Retry'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockPlayerCubit.retryPendingLoad()).called(1);
     });
   });
 }

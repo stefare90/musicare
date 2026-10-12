@@ -78,6 +78,7 @@ class _AlbumView extends StatelessWidget {
                   context.read<PlayerCubit>().playQueue(
                     state.tracks.items,
                     index: index >= 0 ? index : 0,
+                    pending: context.read<AlbumCubit>().pendingSource(),
                   );
                 },
                 onTrackOptionsTap: (track) =>
