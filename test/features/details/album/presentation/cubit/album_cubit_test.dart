@@ -263,5 +263,80 @@ void main() {
         expect(cubit.pendingSource(), isNull);
       });
     });
+    group('loadAllTracks', () {
+      Future<void> wireEngine() async {
+        when(() => mockPluginEngine.hasMetadata).thenReturn(true);
+        when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+        when(() => mockMetadataPlugin.album).thenReturn(mockAlbumService);
+        when(
+          () => mockAlbumService.getAlbum('al1'),
+        ).thenAnswer((_) async => testAlbum);
+      }
+
+      test('reads every page in order', () async {
+        await wireEngine();
+        when(
+          () => mockAlbumService.tracks('al1', offset: 0, limit: 20),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [createTrack('t1', 'Song 1')],
+            total: 3,
+            offset: 0,
+            limit: 20,
+          ),
+        );
+        when(
+          () => mockAlbumService.tracks('al1', offset: 1, limit: 20),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [createTrack('t2', 'Song 2'), createTrack('t3', 'Song 3')],
+            total: 3,
+            offset: 1,
+            limit: 20,
+          ),
+        );
+
+        await cubit.loadAlbum(testAlbum);
+        final all = await cubit.loadAllTracks();
+
+        expect(all?.map((t) => t.id), ['t1', 't2', 't3']);
+      });
+
+      test('rethrows a page failure without notifying', () async {
+        await wireEngine();
+        when(
+          () => mockAlbumService.tracks('al1', offset: 0, limit: 20),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [createTrack('t1', 'Song 1')],
+            total: 2,
+            offset: 0,
+            limit: 20,
+          ),
+        );
+        when(
+          () => mockAlbumService.tracks('al1', offset: 1, limit: 20),
+        ).thenThrow(const PendingLoadException('boom'));
+
+        await cubit.loadAlbum(testAlbum);
+        final notices = <Object>[];
+        final subscription = noticeBus.notices.listen(notices.add);
+        Object? caught;
+        try {
+          await cubit.loadAllTracks();
+        } catch (e) {
+          caught = e;
+        }
+        await Future<void>.delayed(Duration.zero);
+        await subscription.cancel();
+
+        expect(caught, isA<PendingLoadException>());
+        expect(notices, isEmpty);
+      });
+
+      test('returns null when nothing is loaded', () async {
+        expect(await cubit.loadAllTracks(), isNull);
+      });
+    });
   });
 }

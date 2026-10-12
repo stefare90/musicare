@@ -182,6 +182,35 @@ class PlaybackQueue {
     );
   }
 
+  PlaybackQueue addAll(List<Track> newOnes) {
+    final newOriginal = List<Track>.from(originalTracks)..addAll(newOnes);
+    final newTracks = List<Track>.from(tracks)..addAll(newOnes);
+    return PlaybackQueue(
+      tracks: List.unmodifiable(newTracks),
+      originalTracks: List.unmodifiable(newOriginal),
+      currentIndex: currentIndex,
+      isShuffled: isShuffled,
+      repeatMode: repeatMode,
+    );
+  }
+
+  PlaybackQueue insertAllNext(List<Track> newOnes) {
+    final newOriginal = List<Track>.from(originalTracks)..addAll(newOnes);
+    final newTracks = List<Track>.from(tracks);
+    if (isEmpty) {
+      newTracks.addAll(newOnes);
+    } else {
+      newTracks.insertAll(currentIndex + 1, newOnes);
+    }
+    return PlaybackQueue(
+      tracks: List.unmodifiable(newTracks),
+      originalTracks: List.unmodifiable(newOriginal),
+      currentIndex: currentIndex,
+      isShuffled: isShuffled,
+      repeatMode: repeatMode,
+    );
+  }
+
   PlaybackQueue removeAt(int index) {
     if (index < 0 || index >= tracks.length) return this;
 

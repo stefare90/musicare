@@ -1,4 +1,5 @@
 export 'album_options_bottom_sheet.dart';
+export 'artist_options_bottom_sheet.dart';
 export 'artist_selection_bottom_sheet.dart';
 export 'audio_source_bottom_sheet.dart';
 export 'base_modal_bottom_sheet.dart';

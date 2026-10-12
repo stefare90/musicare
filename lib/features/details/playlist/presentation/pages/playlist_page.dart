@@ -17,6 +17,7 @@ import 'package:music_are/features/details/playlist/presentation/cubit/playlist_
 import 'package:music_are/features/details/playlist/presentation/widgets/playlist_visibility_badge.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/library/presentation/utils/track_actions.dart';
+import 'package:music_are/features/library/presentation/utils/collection_actions.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
@@ -69,6 +70,8 @@ class _PlaylistView extends StatelessWidget {
               context.select<UserCubit, bool>(
                 (c) => c.isPlaylistSaved(playlist.id),
               );
+          final hasBulkTracks =
+              state.tracks.items.isNotEmpty || state.hasMoreTracks;
           return SliverMediaScaffold(
             metadata: state.metadata,
             headerBadge: PlaylistVisibilityBadge(
@@ -82,6 +85,20 @@ class _PlaylistView extends StatelessWidget {
               context,
               playlist,
               isSaved: isSaved,
+              onPlayNext: hasBulkTracks
+                  ? () => CollectionActions.playAllNext(
+                      context,
+                      loadAll: context.read<PlaylistCubit>().loadAllTracks,
+                      total: state.tracks.total,
+                    )
+                  : null,
+              onAddToQueue: hasBulkTracks
+                  ? () => CollectionActions.addAllToQueue(
+                      context,
+                      loadAll: context.read<PlaylistCubit>().loadAllTracks,
+                      total: state.tracks.total,
+                    )
+                  : null,
               onToggleSave: isOwned
                   ? null
                   : () => context.read<UserCubit>().togglePlaylist(playlist),

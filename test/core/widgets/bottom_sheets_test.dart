@@ -187,6 +187,7 @@ void main() {
                 context,
                 testTrack.album,
                 isSaved: true,
+                onToggleSave: () {},
               ),
               child: const Text('Show Album'),
             ),
@@ -416,5 +417,152 @@ void main() {
       await tester.pumpAndSettle();
       expect(saveTapped, isTrue);
     });
+
+  group('Bulk queue options', () {
+    final bulkArtist = Artist(id: 'a1', name: 'The Beatles', externalUri: '');
+    final bulkAlbum = Album(
+      id: 'al1',
+      name: 'Abbey Road',
+      artists: [bulkArtist],
+      releaseDate: '1969',
+      externalUri: '',
+      totalTracks: 2,
+      albumType: AlbumType.album,
+    );
+
+    testWidgets('Playlist sheet runs bulk callbacks and hides them when absent',
+        (tester) async {
+      var playNextTapped = false;
+      var addTapped = false;
+
+      await tester.pumpWidget(
+        buildTestableWidget(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => PlaylistOptionsBottomSheet.show(
+                context,
+                testPlaylist,
+                onPlayNext: () => playNextTapped = true,
+                onAddToQueue: () => addTapped = true,
+              ),
+              child: const Text('Show Playlist'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Show Playlist'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Play Next'), findsOneWidget);
+      expect(find.text('Add to Queue'), findsOneWidget);
+
+      await tester.tap(find.text('Play Next'));
+      await tester.pumpAndSettle();
+      expect(playNextTapped, isTrue);
+
+      await tester.tap(find.text('Show Playlist'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add to Queue'));
+      await tester.pumpAndSettle();
+      expect(addTapped, isTrue);
+    });
+
+    testWidgets('Playlist sheet hides bulk rows without callbacks',
+        (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => PlaylistOptionsBottomSheet.show(
+                context,
+                testPlaylist,
+              ),
+              child: const Text('Show Playlist'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Show Playlist'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Play Next'), findsNothing);
+      expect(find.text('Add to Queue'), findsNothing);
+      expect(find.text('Share Playlist'), findsOneWidget);
+    });
+
+    testWidgets('Album sheet runs bulk callbacks', (tester) async {
+      var playNextTapped = false;
+      var addTapped = false;
+
+      await tester.pumpWidget(
+        buildTestableWidget(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => AlbumOptionsBottomSheet.show(
+                context,
+                bulkAlbum,
+                onPlayNext: () => playNextTapped = true,
+                onAddToQueue: () => addTapped = true,
+              ),
+              child: const Text('Show Album'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Show Album'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Play Next'), findsOneWidget);
+      expect(find.text('Add to Queue'), findsOneWidget);
+
+      await tester.tap(find.text('Add to Queue'));
+      await tester.pumpAndSettle();
+      expect(addTapped, isTrue);
+      expect(playNextTapped, isFalse);
+    });
+
+    testWidgets('Artist sheet runs save, share and bulk callbacks', (tester) async {
+      var saveTapped = false;
+      var playNextTapped = false;
+      var addTapped = false;
+
+      await tester.pumpWidget(
+        buildTestableWidget(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => ArtistOptionsBottomSheet.show(
+                context,
+                bulkArtist,
+                onToggleSave: () => saveTapped = true,
+                onPlayNext: () => playNextTapped = true,
+                onAddToQueue: () => addTapped = true,
+              ),
+              child: const Text('Show Artist'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Show Artist'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('The Beatles'), findsOneWidget);
+      expect(find.text('Save Artist'), findsOneWidget);
+      expect(find.text('Play Next'), findsOneWidget);
+      expect(find.text('Add to Queue'), findsOneWidget);
+      expect(find.text('Share Artist'), findsOneWidget);
+
+      await tester.tap(find.text('Save Artist'));
+      await tester.pumpAndSettle();
+      expect(saveTapped, isTrue);
+      expect(playNextTapped, isFalse);
+
+      await tester.tap(find.text('Show Artist'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Play Next'));
+      await tester.pumpAndSettle();
+      expect(playNextTapped, isTrue);
+      expect(addTapped, isFalse);
+    });
+  });
   });
 }

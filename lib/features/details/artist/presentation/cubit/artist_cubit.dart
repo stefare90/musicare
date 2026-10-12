@@ -1,6 +1,7 @@
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
+import 'package:music_are/core/utils/fetch_all_pages.dart';
 import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/features/details/artist/presentation/cubit/artist_state.dart';
 import 'package:music_are/features/player/data/models/pending_source.dart';
@@ -205,6 +206,13 @@ class ArtistCubit extends SafeCubit<ArtistState> {
       loader: (offset) => _media.artistTopTracks(id, offset: offset),
       nextOffset: data.items.length,
       total: data.total,
+    );
+  }
+
+  Future<List<Track>?> loadAllTopTracks() {
+    return fetchAllPages(
+      (offset, limit) =>
+          _media.artistTopTracks(state.artist.id, offset: offset, limit: limit),
     );
   }
 }

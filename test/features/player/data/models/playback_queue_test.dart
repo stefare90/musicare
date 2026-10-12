@@ -181,6 +181,50 @@ void main() {
       expect(updated.currentIndex, equals(0));
     });
 
+    test('addAll appends the block in order to both lists', () {
+      final initial = queue.setQueue(tracks, startIndex: 0);
+
+      final updated = initial.addAll([
+        createTestTrack('4', 'Song 4'),
+        createTestTrack('5', 'Song 5'),
+      ]);
+
+      expect(updated.length, equals(5));
+      expect(updated.tracks[3].name, equals('Song 4'));
+      expect(updated.tracks[4].name, equals('Song 5'));
+      expect(updated.originalTracks[3].name, equals('Song 4'));
+      expect(updated.originalTracks[4].name, equals('Song 5'));
+      expect(updated.currentIndex, equals(0));
+    });
+
+    test('insertAllNext places the block right after current, in order',
+        () {
+      final initial = queue.setQueue(tracks, startIndex: 0);
+
+      final updated = initial.insertAllNext([
+        createTestTrack('4', 'First'),
+        createTestTrack('5', 'Second'),
+      ]);
+
+      expect(updated.length, equals(5));
+      expect(updated.tracks[1].name, equals('First'));
+      expect(updated.tracks[2].name, equals('Second'));
+      expect(updated.originalTracks[3].name, equals('First'));
+      expect(updated.originalTracks[4].name, equals('Second'));
+      expect(updated.currentIndex, equals(0));
+    });
+
+    test('insertAllNext on an empty queue appends', () {
+      final updated = queue.insertAllNext([
+        createTestTrack('4', 'First'),
+        createTestTrack('5', 'Second'),
+      ]);
+
+      expect(updated.length, equals(2));
+      expect(updated.tracks[0].name, equals('First'));
+      expect(updated.tracks[1].name, equals('Second'));
+    });
+
     test('reorder correctly repositions track and updates current pointer', () {
       final initial = queue.setQueue(
         tracks,

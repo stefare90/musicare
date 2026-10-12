@@ -64,6 +64,8 @@ class PlayerCubit extends SafeCubit<PlayerState> {
   void cycleRepeatMode() => _service.cycleRepeatMode();
   void addToQueue(Track track) => _service.addToQueue(track);
   void insertNext(Track track) => _service.insertNext(track);
+  void addAllToQueue(List<Track> tracks) => _service.addAllToQueue(tracks);
+  void insertAllNext(List<Track> tracks) => _service.insertAllNext(tracks);
   void removeFromQueue(int index) => _service.removeFromQueue(index);
   void reorderQueue(int oldIndex, int newIndex) =>
       _service.reorderQueue(oldIndex, newIndex);

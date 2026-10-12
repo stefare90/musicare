@@ -12,6 +12,7 @@ import 'package:music_are/features/details/album/presentation/cubit/album_cubit.
 import 'package:music_are/features/details/album/presentation/cubit/album_state.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/library/presentation/utils/track_actions.dart';
+import 'package:music_are/features/library/presentation/utils/collection_actions.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 
@@ -50,6 +51,8 @@ class _AlbumView extends StatelessWidget {
           final isSaved = context.select<UserCubit, bool>(
             (c) => c.isAlbumSaved(state.album.id),
           );
+          final hasBulkTracks =
+              state.tracks.items.isNotEmpty || state.hasMoreTracks;
           return SliverMediaScaffold(
             metadata: state.metadata,
             isSaved: isSaved,
@@ -58,6 +61,20 @@ class _AlbumView extends StatelessWidget {
               context,
               state.album,
               isSaved: isSaved,
+              onPlayNext: hasBulkTracks
+                  ? () => CollectionActions.playAllNext(
+                      context,
+                      loadAll: context.read<AlbumCubit>().loadAllTracks,
+                      total: state.tracks.total,
+                    )
+                  : null,
+              onAddToQueue: hasBulkTracks
+                  ? () => CollectionActions.addAllToQueue(
+                      context,
+                      loadAll: context.read<AlbumCubit>().loadAllTracks,
+                      total: state.tracks.total,
+                    )
+                  : null,
               onToggleSave: () =>
                   context.read<UserCubit>().toggleAlbum(state.album),
             ),

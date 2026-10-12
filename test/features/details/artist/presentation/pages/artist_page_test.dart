@@ -175,5 +175,67 @@ void main() {
         findsOneWidget,
       );
     });
+
+    testWidgets('header options queue all top tracks', (tester) async {
+      final second = Track(
+        id: 't2',
+        name: 'Come Together',
+        externalUri: '',
+        artists: testTrack.artists,
+        album: testTrack.album,
+        durationMs: 259000,
+      );
+      when(
+        () => mockArtist.getArtist('a1'),
+      ).thenAnswer((_) async => testArtist);
+      when(() => mockArtist.topTracks('a1', offset: 0, limit: 6)).thenAnswer(
+        (_) async => PaginatedResult(
+          items: [testTrack],
+          total: 1,
+          offset: 0,
+          limit: 6,
+        ),
+      );
+      when(() => mockArtist.topTracks('a1', offset: 0, limit: 20)).thenAnswer(
+        (_) async => PaginatedResult(
+          items: [testTrack, second],
+          total: 2,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+      when(() => mockArtist.albums('a1', offset: 0, limit: 6)).thenAnswer(
+        (_) async => PaginatedResult(
+          items: const [],
+          total: 0,
+          offset: 0,
+          limit: 6,
+        ),
+      );
+      when(() => mockArtist.related('a1', offset: 0, limit: 6)).thenAnswer(
+        (_) async => PaginatedResult(
+          items: const [],
+          total: 0,
+          offset: 0,
+          limit: 6,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.more_vert_rounded), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.more_vert_rounded));
+      await tester.pumpAndSettle();
+      expect(find.text('Play Next'), findsOneWidget);
+      expect(find.text('Add to Queue'), findsOneWidget);
+
+      await tester.tap(find.text('Add to Queue'));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => mockPlayerCubit.addAllToQueue([testTrack, second]),
+      ).called(1);
+    });
   });
 }

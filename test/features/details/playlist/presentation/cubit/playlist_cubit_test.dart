@@ -312,35 +312,38 @@ void main() {
       verify(() => mockPlaylistService.deletePlaylist('pl1')).called(1);
     });
 
-    test('deletePlaylist notifies and reports failure when the write fails', () async {
-      when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
-      when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
-      final error = Exception('delete failed');
-      when(
-        () => mockPlaylistService.deletePlaylist('pl1'),
-      ).thenAnswer((_) async => throw error);
+    test(
+      'deletePlaylist notifies and reports failure when the write fails',
+      () async {
+        when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+        when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
+        final error = Exception('delete failed');
+        when(
+          () => mockPlaylistService.deletePlaylist('pl1'),
+        ).thenAnswer((_) async => throw error);
 
-      cubit.emit(
-        PlaylistLoadedState(
-          playlist: testPlaylist,
-          tracks: PaginatedResult<Track>(
-            items: [testTrack],
-            total: 1,
-            offset: 0,
-            limit: 20,
+        cubit.emit(
+          PlaylistLoadedState(
+            playlist: testPlaylist,
+            tracks: PaginatedResult<Track>(
+              items: [testTrack],
+              total: 1,
+              offset: 0,
+              limit: 20,
+            ),
           ),
-        ),
-      );
+        );
 
-      final notices = <Object>[];
-      final subscription = noticeBus.notices.listen(notices.add);
-      final deleted = await cubit.deletePlaylist();
-      await Future<void>.delayed(Duration.zero);
+        final notices = <Object>[];
+        final subscription = noticeBus.notices.listen(notices.add);
+        final deleted = await cubit.deletePlaylist();
+        await Future<void>.delayed(Duration.zero);
 
-      expect(deleted, isFalse);
-      expect((notices.single as ErrorNotice).error, same(error));
-      await subscription.cancel();
-    });
+        expect(deleted, isFalse);
+        expect((notices.single as ErrorNotice).error, same(error));
+        await subscription.cancel();
+      },
+    );
 
     test('an external add refetches the loaded window', () async {
       when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
@@ -576,9 +579,7 @@ void main() {
       test('returns a source bound to the loaded window', () async {
         when(() => mockPluginEngine.hasMetadata).thenReturn(true);
         when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
-        when(
-          () => mockMetadataPlugin.playlist,
-        ).thenReturn(mockPlaylistService);
+        when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
         when(
           () => mockPlaylistService.tracks('pl1', offset: 0, limit: 20),
         ).thenAnswer(
@@ -618,9 +619,7 @@ void main() {
       test('returns null when the list is complete', () async {
         when(() => mockPluginEngine.hasMetadata).thenReturn(true);
         when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
-        when(
-          () => mockMetadataPlugin.playlist,
-        ).thenReturn(mockPlaylistService);
+        when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
         when(
           () => mockPlaylistService.tracks('pl1', offset: 0, limit: 20),
         ).thenAnswer(
@@ -635,6 +634,87 @@ void main() {
         await cubit.loadPlaylist(testPlaylist);
 
         expect(cubit.pendingSource(), isNull);
+      });
+    });
+    group('loadAllTracks', () {
+      Track song(String id, String name) => Track(
+        id: id,
+        name: name,
+        externalUri: '',
+        artists: testTrack.artists,
+        album: testTrack.album,
+        durationMs: 1000,
+      );
+
+      Future<void> wireEngine() async {
+        when(() => mockPluginEngine.hasMetadata).thenReturn(true);
+        when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+        when(() => mockMetadataPlugin.playlist).thenReturn(mockPlaylistService);
+      }
+
+      test('reads every page in order', () async {
+        await wireEngine();
+        when(
+          () => mockPlaylistService.tracks('pl1', offset: 0, limit: 20),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [song('t1', 'Song 1')],
+            total: 3,
+            offset: 0,
+            limit: 20,
+          ),
+        );
+        when(
+          () => mockPlaylistService.tracks('pl1', offset: 1, limit: 20),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [song('t2', 'Song 2'), song('t3', 'Song 3')],
+            total: 3,
+            offset: 1,
+            limit: 20,
+          ),
+        );
+
+        await cubit.loadPlaylist(testPlaylist);
+        final all = await cubit.loadAllTracks();
+
+        expect(all?.map((t) => t.id), ['t1', 't2', 't3']);
+      });
+
+      test('rethrows a page failure without notifying', () async {
+        await wireEngine();
+        when(
+          () => mockPlaylistService.tracks('pl1', offset: 0, limit: 20),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [song('t1', 'Song 1')],
+            total: 2,
+            offset: 0,
+            limit: 20,
+          ),
+        );
+        when(
+          () => mockPlaylistService.tracks('pl1', offset: 1, limit: 20),
+        ).thenThrow(const PendingLoadException('boom'));
+
+        await cubit.loadPlaylist(testPlaylist);
+        final notices = <Object>[];
+        final subscription = noticeBus.notices.listen(notices.add);
+        Object? caught;
+        try {
+          await cubit.loadAllTracks();
+        } catch (e) {
+          caught = e;
+        }
+        await Future<void>.delayed(Duration.zero);
+        await subscription.cancel();
+
+        expect(caught, isA<PendingLoadException>());
+        expect(notices, isEmpty);
+      });
+
+      test('returns null when nothing is loaded', () async {
+        expect(await cubit.loadAllTracks(), isNull);
       });
     });
   });

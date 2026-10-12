@@ -358,6 +358,12 @@ abstract class AppLocalizations {
   /// **'Share Album'**
   String get shareAlbum;
 
+  /// No description provided for @shareArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Artist'**
+  String get shareArtist;
+
   /// No description provided for @addToQueue.
   ///
   /// In en, this message translates to:
@@ -946,6 +952,12 @@ abstract class AppLocalizations {
   /// **'Remove Artist'**
   String get removeArtist;
 
+  /// No description provided for @saveArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Artist'**
+  String get saveArtist;
+
   /// No description provided for @removeFromFavorites.
   ///
   /// In en, this message translates to:
@@ -1035,6 +1047,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Added to queue'**
   String get addedToQueue;
+
+  /// No description provided for @addingTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding {count} tracks…'**
+  String addingTracks(Object count);
+
+  /// No description provided for @failedToQueueTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load all the tracks. Nothing was added.'**
+  String get failedToQueueTracks;
+
+  /// No description provided for @addedTracksToQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {count} tracks to queue'**
+  String addedTracksToQueue(Object count);
+
+  /// No description provided for @addedTracksToPlayNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Will play {count} tracks next'**
+  String addedTracksToPlayNext(Object count);
 
   /// No description provided for @remove.
   ///

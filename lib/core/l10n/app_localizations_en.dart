@@ -144,6 +144,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareAlbum => 'Share Album';
 
   @override
+  String get shareArtist => 'Share Artist';
+
+  @override
   String get addToQueue => 'Add to Queue';
 
   @override
@@ -472,6 +475,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removeArtist => 'Remove Artist';
 
   @override
+  String get saveArtist => 'Save Artist';
+
+  @override
   String get removeFromFavorites => 'Remove from Favorites';
 
   @override
@@ -522,6 +528,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addedToQueue => 'Added to queue';
+
+  @override
+  String addingTracks(Object count) {
+    return 'Adding $count tracks…';
+  }
+
+  @override
+  String get failedToQueueTracks =>
+      'Couldn\'t load all the tracks. Nothing was added.';
+
+  @override
+  String addedTracksToQueue(Object count) {
+    return 'Added $count tracks to queue';
+  }
+
+  @override
+  String addedTracksToPlayNext(Object count) {
+    return 'Will play $count tracks next';
+  }
 
   @override
   String get remove => 'Remove';

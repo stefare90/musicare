@@ -406,6 +406,12 @@ class AudioPlayerService {
   void insertNext(Track track) => _updateData(
     _playbackData.copyWith(queue: _playbackData.queue.insertNext(track)),
   );
+  void addAllToQueue(List<Track> tracks) => _updateData(
+    _playbackData.copyWith(queue: _playbackData.queue.addAll(tracks)),
+  );
+  void insertAllNext(List<Track> tracks) => _updateData(
+    _playbackData.copyWith(queue: _playbackData.queue.insertAllNext(tracks)),
+  );
   void removeFromQueue(int index) => _updateData(
     _playbackData.copyWith(queue: _playbackData.queue.removeAt(index)),
   );

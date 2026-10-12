@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
+import 'package:music_are/core/utils/fetch_all_pages.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
 import 'package:music_are/features/player/data/models/pending_source.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
@@ -193,6 +194,18 @@ class PlaylistCubit extends SafeCubit<PlaylistState> {
       loader: (offset) => _media.playlistTracks(id, offset: offset),
       nextOffset: current.tracks.items.length,
       total: current.tracks.total,
+    );
+  }
+
+  Future<List<Track>?> loadAllTracks() async {
+    final current = state;
+    if (current is! PlaylistLoadedState) return null;
+    return fetchAllPages(
+      (offset, limit) => _media.playlistTracks(
+        current.playlist.id,
+        offset: offset,
+        limit: limit,
+      ),
     );
   }
 

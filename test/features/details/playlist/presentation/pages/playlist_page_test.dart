@@ -569,5 +569,79 @@ void main() {
           tester.state<ScrollableState>(find.byType(Scrollable).first);
       expect(settled.position.pixels, scrolled.position.pixels);
     });
+
+    testWidgets('header sheet adds the whole playlist to the queue', (
+      tester,
+    ) async {
+      final second = Track(
+        id: 't2',
+        name: 'Song B',
+        externalUri: '',
+        artists: testTrack.artists,
+        album: testTrack.album,
+        durationMs: 200000,
+      );
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: [testTrack],
+          total: 2,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+      when(() => mockPlaylist.tracks('pl1', offset: 1, limit: 20)).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: [second],
+          total: 2,
+          offset: 1,
+          limit: 20,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.more_vert_rounded));
+      await tester.pumpAndSettle();
+      expect(find.text('Add to Queue'), findsOneWidget);
+
+      await tester.tap(find.text('Add to Queue'));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => mockPlayerCubit.addAllToQueue([testTrack, second]),
+      ).called(1);
+    });
+
+    testWidgets('a failed bulk fetch shows an error and enqueues nothing', (
+      tester,
+    ) async {
+      registerFallbackValue(<Track>[]);
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
+        (_) async => PaginatedResult<Track>(
+          items: [testTrack],
+          total: 2,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+      when(
+        () => mockPlaylist.tracks('pl1', offset: 1, limit: 20),
+      ).thenThrow(Exception('boom'));
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.more_vert_rounded));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add to Queue'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text("Couldn't load all the tracks. Nothing was added."),
+        findsOneWidget,
+      );
+      verifyNever(() => mockPlayerCubit.addAllToQueue(any()));
+    });
   });
 }

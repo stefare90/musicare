@@ -5,6 +5,7 @@ import 'package:music_are/features/plugin/metadata/data/repositories/media_repos
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/details/artist/presentation/cubit/artist_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
@@ -68,7 +69,11 @@ void main() {
       mockArtistService = MockArtistService();
 
       noticeBus = NoticeBus();
-      cubit = ArtistCubit(MediaRepository(mockPluginEngine), noticeBus, initialArtist);
+      cubit = ArtistCubit(
+        MediaRepository(mockPluginEngine),
+        noticeBus,
+        initialArtist,
+      );
     });
 
     tearDown(() {
@@ -294,6 +299,72 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 20));
 
         expect(cubit.pendingTopTracksSource(), isNull);
+      });
+    });
+    group('loadAllTopTracks', () {
+      Future<void> wireEngine() async {
+        when(() => mockPluginEngine.hasMetadata).thenReturn(true);
+        when(() => mockPluginEngine.metadata).thenReturn(mockMetadataPlugin);
+        when(() => mockMetadataPlugin.artist).thenReturn(mockArtistService);
+      }
+
+      test('reads every page in order', () async {
+        await wireEngine();
+        when(
+          () => mockArtistService.topTracks('a1', offset: 0, limit: 20),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [createTrack('t1', 'Song 1')],
+            total: 3,
+            offset: 0,
+            limit: 20,
+          ),
+        );
+        when(
+          () => mockArtistService.topTracks('a1', offset: 1, limit: 20),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [createTrack('t2', 'Song 2'), createTrack('t3', 'Song 3')],
+            total: 3,
+            offset: 1,
+            limit: 20,
+          ),
+        );
+
+        final all = await cubit.loadAllTopTracks();
+
+        expect(all?.map((t) => t.id), ['t1', 't2', 't3']);
+      });
+
+      test('rethrows a page failure without notifying', () async {
+        await wireEngine();
+        when(
+          () => mockArtistService.topTracks('a1', offset: 0, limit: 20),
+        ).thenAnswer(
+          (_) async => PaginatedResult<Track>(
+            items: [createTrack('t1', 'Song 1')],
+            total: 2,
+            offset: 0,
+            limit: 20,
+          ),
+        );
+        when(
+          () => mockArtistService.topTracks('a1', offset: 1, limit: 20),
+        ).thenThrow(const PendingLoadException('boom'));
+
+        final notices = <Object>[];
+        final subscription = noticeBus.notices.listen(notices.add);
+        Object? caught;
+        try {
+          await cubit.loadAllTopTracks();
+        } catch (e) {
+          caught = e;
+        }
+        await Future<void>.delayed(Duration.zero);
+        await subscription.cancel();
+
+        expect(caught, isA<PendingLoadException>());
+        expect(notices, isEmpty);
       });
     });
   });

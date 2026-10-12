@@ -8,6 +8,8 @@ abstract class PlaylistOptionsBottomSheet {
     BuildContext context,
     Playlist playlist, {
     bool isSaved = false,
+    VoidCallback? onPlayNext,
+    VoidCallback? onAddToQueue,
     VoidCallback? onToggleSave,
     VoidCallback? onDelete,
     VoidCallback? onShare,
@@ -17,6 +19,24 @@ abstract class PlaylistOptionsBottomSheet {
       context: context,
       item: playlist,
       options: [
+        if (onPlayNext != null)
+          ListTile(
+            leading: const Icon(Icons.playlist_play_rounded),
+            title: Text(l10n.playNext),
+            onTap: () {
+              Navigator.of(context).pop();
+              onPlayNext.call();
+            },
+          ),
+        if (onAddToQueue != null)
+          ListTile(
+            leading: const Icon(Icons.queue_music_rounded),
+            title: Text(l10n.addToQueue),
+            onTap: () {
+              Navigator.of(context).pop();
+              onAddToQueue.call();
+            },
+          ),
         if (onToggleSave != null)
           ListTile(
             leading: Icon(

@@ -1,6 +1,7 @@
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
+import 'package:music_are/core/utils/fetch_all_pages.dart';
 import 'package:music_are/features/details/album/presentation/cubit/album_state.dart';
 import 'package:music_are/features/player/data/models/pending_source.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
@@ -25,11 +26,7 @@ class AlbumCubit extends SafeCubit<AlbumState> {
     }
 
     try {
-      final result = await _media.albumTracks(
-        album.id,
-        offset: 0,
-        limit: 20,
-      );
+      final result = await _media.albumTracks(album.id, offset: 0, limit: 20);
 
       final Album fullAlbum = result.items.isNotEmpty
           ? result.items.first.album
@@ -98,6 +95,15 @@ class AlbumCubit extends SafeCubit<AlbumState> {
       loader: (offset) => _media.albumTracks(id, offset: offset),
       nextOffset: current.tracks.items.length,
       total: current.tracks.total,
+    );
+  }
+
+  Future<List<Track>?> loadAllTracks() async {
+    final current = state;
+    if (current is! AlbumLoadedState) return null;
+    return fetchAllPages(
+      (offset, limit) =>
+          _media.albumTracks(current.album.id, offset: offset, limit: limit),
     );
   }
 }

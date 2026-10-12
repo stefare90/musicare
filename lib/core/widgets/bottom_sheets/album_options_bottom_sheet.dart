@@ -9,6 +9,8 @@ abstract class AlbumOptionsBottomSheet {
     BuildContext context,
     Album album, {
     bool isSaved = false,
+    VoidCallback? onPlayNext,
+    VoidCallback? onAddToQueue,
     VoidCallback? onToggleSave,
     VoidCallback? onShare,
   }) {
@@ -17,16 +19,35 @@ abstract class AlbumOptionsBottomSheet {
       context: context,
       item: album,
       options: [
-        ListTile(
-          leading: Icon(
-            isSaved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+        if (onPlayNext != null)
+          ListTile(
+            leading: const Icon(Icons.playlist_play_rounded),
+            title: Text(l10n.playNext),
+            onTap: () {
+              Navigator.of(context).pop();
+              onPlayNext.call();
+            },
           ),
-          title: Text(isSaved ? l10n.removeAlbum : l10n.saveAlbum),
-          onTap: () {
-            Navigator.of(context).pop();
-            onToggleSave?.call();
-          },
-        ),
+        if (onAddToQueue != null)
+          ListTile(
+            leading: const Icon(Icons.queue_music_rounded),
+            title: Text(l10n.addToQueue),
+            onTap: () {
+              Navigator.of(context).pop();
+              onAddToQueue.call();
+            },
+          ),
+        if (onToggleSave != null)
+          ListTile(
+            leading: Icon(
+              isSaved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+            ),
+            title: Text(isSaved ? l10n.removeAlbum : l10n.saveAlbum),
+            onTap: () {
+              Navigator.of(context).pop();
+              onToggleSave.call();
+            },
+          ),
         if (album.artists.isNotEmpty)
           ListTile(
             leading: const Icon(Icons.person_rounded),
