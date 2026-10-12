@@ -8,6 +8,7 @@ import 'package:music_are/core/widgets/media/section_slot.dart';
 import 'package:music_are/core/widgets/skeletons/skeleton_track_list.dart';
 import 'package:music_are/features/library/presentation/cubit/liked_tracks_cubit.dart';
 import 'package:music_are/features/library/presentation/cubit/liked_tracks_state.dart';
+import 'package:music_are/features/library/presentation/utils/track_actions.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
@@ -64,6 +65,8 @@ class _LikedSongsView extends StatelessWidget {
                         context.read<LikedTracksCubit>().pendingSource(),
                   );
                 },
+                onTrackOptionsTap: (track) =>
+                    TrackActions.showOptions(context, track),
               ),
             ),
           );

@@ -30,6 +30,7 @@ void main() {
   late MockMetadataPlugin metadata;
   late MockUserService user;
   late MockPlayerCubit playerCubit;
+  late TestUserCubit userCubit;
 
   final track = Track(
     id: 't1',
@@ -47,6 +48,7 @@ void main() {
     ),
     durationMs: 1000,
   );
+  registerFallbackValue(track);
 
   setUp(() async {
     await sl.reset();
@@ -58,7 +60,8 @@ void main() {
     sl.registerLazySingleton<MetadataPluginEngine>(() => engine);
     sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
   sl.registerLazySingleton<LibraryRepository>(() => LibraryRepository(engine));
-    sl.registerLazySingleton<UserCubit>(() => TestUserCubit(testUserState()));
+    userCubit = TestUserCubit(testUserState());
+    sl.registerLazySingleton<UserCubit>(() => userCubit);
     sl.registerLazySingleton<UserSavedMediaIndex>(
       () => sl<UserCubit>(),
     );
@@ -72,8 +75,11 @@ void main() {
   });
 
   Widget buildTestableWidget() {
-    return BlocProvider<PlayerCubit>.value(
-      value: playerCubit,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<PlayerCubit>.value(value: playerCubit),
+        BlocProvider<UserCubit>.value(value: userCubit),
+      ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -125,6 +131,46 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('No liked songs yet'), findsOneWidget);
+  });
+
+  testWidgets('track options offer Play Next and Add to Queue', (
+    tester,
+  ) async {
+    when(
+      () => user.savedTracks(
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer(
+      (_) async => PaginatedResult<Track>(
+        items: [track],
+        total: 1,
+        offset: 0,
+        limit: 20,
+      ),
+    );
+    when(() => playerCubit.insertNext(any())).thenAnswer((_) {});
+    when(() => playerCubit.addToQueue(any())).thenAnswer((_) {});
+
+    await tester.pumpWidget(buildTestableWidget());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Play Next'), findsOneWidget);
+    expect(find.text('Add to Queue'), findsOneWidget);
+
+    await tester.tap(find.text('Play Next'));
+    await tester.pumpAndSettle();
+    verify(() => playerCubit.insertNext(track)).called(1);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Add to Queue'));
+    await tester.pumpAndSettle();
+    verify(() => playerCubit.addToQueue(track)).called(1);
   });
 
   testWidgets('pull-to-refresh reloads the list and the saved set', (
