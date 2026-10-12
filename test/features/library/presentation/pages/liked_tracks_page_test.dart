@@ -65,6 +65,7 @@ void main() {
     sl.registerLazySingleton<UserSavedMediaIndex>(
       () => sl<UserCubit>(),
     );
+    sl.registerLazySingleton<UserFavorites>(() => sl<UserCubit>());
 
     when(() => playerCubit.state).thenReturn(const PlayerState());
     when(() => playerCubit.stream).thenAnswer((_) => const Stream.empty());
@@ -173,9 +174,7 @@ void main() {
     verify(() => playerCubit.addToQueue(track)).called(1);
   });
 
-  testWidgets('pull-to-refresh reloads the list and the saved set', (
-    tester,
-  ) async {
+  testWidgets('swiping a track asks for confirmation first', (tester) async {
     when(
       () => user.savedTracks(
         offset: any(named: 'offset'),
@@ -192,11 +191,78 @@ void main() {
 
     await tester.pumpWidget(buildTestableWidget());
     await tester.pumpAndSettle();
-    clearInteractions(user);
 
-    await tester.fling(find.text('Come Together'), const Offset(0, 300), 1000);
+    await tester.fling(
+      find.text('Come Together'),
+      const Offset(-500, 0),
+      1000,
+    );
     await tester.pumpAndSettle();
 
-    verify(() => user.savedTracks(offset: 0, limit: 20)).called(1);
+    expect(find.text('Remove from favorites?'), findsOneWidget);
+    expect(find.text('Come Together'), findsOneWidget);
+    expect(userCubit.toggledTracks, isEmpty);
+  });
+
+  testWidgets('cancelling the swipe keeps the track', (tester) async {
+    when(
+      () => user.savedTracks(
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer(
+      (_) async => PaginatedResult<Track>(
+        items: [track],
+        total: 1,
+        offset: 0,
+        limit: 20,
+      ),
+    );
+
+    await tester.pumpWidget(buildTestableWidget());
+    await tester.pumpAndSettle();
+
+    await tester.fling(
+      find.text('Come Together'),
+      const Offset(-500, 0),
+      1000,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Come Together'), findsOneWidget);
+    expect(userCubit.toggledTracks, isEmpty);
+  });
+
+  testWidgets('confirming the swipe removes the track', (tester) async {
+    when(
+      () => user.savedTracks(
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer(
+      (_) async => PaginatedResult<Track>(
+        items: [track],
+        total: 1,
+        offset: 0,
+        limit: 20,
+      ),
+    );
+
+    await tester.pumpWidget(buildTestableWidget());
+    await tester.pumpAndSettle();
+
+    await tester.fling(
+      find.text('Come Together'),
+      const Offset(-500, 0),
+      1000,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Remove'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Come Together'), findsNothing);
+    expect(userCubit.toggledTracks, ['t1']);
   });
 }

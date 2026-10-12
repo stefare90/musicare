@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
+import 'package:music_are/core/widgets/dialogs.dart';
 import 'package:music_are/core/widgets/media/paginated_track_list.dart';
 import 'package:music_are/core/widgets/media/section_slot.dart';
 import 'package:music_are/core/widgets/skeletons/skeleton_track_list.dart';
@@ -24,6 +26,7 @@ class LikedTracksPage extends StatelessWidget {
             sl<LibraryRepository>(),
             sl<NoticeBus>(),
             savedMedia: sl<UserSavedMediaIndex>(),
+            favorites: sl<UserFavorites>(),
           )..load(),
       child: const _LikedSongsView(),
     );
@@ -39,9 +42,7 @@ class _LikedSongsView extends StatelessWidget {
       appBar: AppBar(title: Text(context.l10n.likedSongs)),
       body: BlocBuilder<LikedTracksCubit, LikedTracksState>(
         builder: (context, state) {
-          return RefreshIndicator(
-            onRefresh: () => context.read<LikedTracksCubit>().refresh(),
-            child: SectionSlot(
+          return SectionSlot(
               section: state.tracks,
               loadingBuilder: (_) => const SkeletonTrackList(count: 8),
               emptyTitle: context.l10n.likedSongsEmptyTitle,
@@ -67,11 +68,21 @@ class _LikedSongsView extends StatelessWidget {
                 },
                 onTrackOptionsTap: (track) =>
                     TrackActions.showOptions(context, track),
+                confirmTrackDismiss: (track) => Dialogs.confirm(
+                  context,
+                  title: context.l10n.removeFromFavoritesTitle,
+                  message: context.l10n.removeFromFavoritesMessage(track.name),
+                  confirmLabel: context.l10n.remove,
+                ),
+                onTrackDismissed: (track) => _removeTrack(context, track),
               ),
-            ),
-          );
+            );
         },
       ),
     );
+  }
+
+  Future<void> _removeTrack(BuildContext context, Track track) async {
+    await context.read<LikedTracksCubit>().removeTrack(track);
   }
 }

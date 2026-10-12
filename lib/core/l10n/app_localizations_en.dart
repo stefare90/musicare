@@ -535,6 +535,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get removeFromFavoritesTitle => 'Remove from favorites?';
+
+  @override
+  String removeFromFavoritesMessage(Object track) {
+    return 'Remove \"$track\" from your favorites?';
+  }
+
+  @override
   String get deletePlaylistTitle => 'Delete playlist?';
 
   @override

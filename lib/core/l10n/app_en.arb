@@ -160,6 +160,8 @@
   "remove": "Remove",
   "removeFromPlaylistTitle": "Remove from playlist?",
   "removeFromPlaylistMessage": "Remove \"{track}\" from this playlist?",
+  "removeFromFavoritesTitle": "Remove from favorites?",
+  "removeFromFavoritesMessage": "Remove \"{track}\" from your favorites?",
   "deletePlaylistTitle": "Delete playlist?",
   "deletePlaylistMessage": "Delete \"{playlist}\"? This can't be undone.",
   "noPlaylistsYet": "No playlists yet",

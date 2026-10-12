@@ -15,8 +15,10 @@ class LikedTracksCubit extends SafeCubit<LikedTracksState> {
   final LibraryRepository _library;
   final NoticeBus _notices;
   final UserSavedMediaIndex _savedMedia;
+  final UserFavorites _favorites;
   StreamSubscription<MediaItemType>? _savedMediaSubscription;
   bool _isLoading = false;
+  bool _skipNextTrackEvent = false;
 
   static const int _pageSize = 20;
 
@@ -24,19 +26,17 @@ class LikedTracksCubit extends SafeCubit<LikedTracksState> {
     this._library,
     this._notices, {
     required this._savedMedia,
+    required this._favorites,
   }) : super(const LikedTracksState()) {
     _savedMediaSubscription = _savedMedia.savedChanges
         .where((type) => type == MediaItemType.track)
-        .listen((_) => unawaited(load()));
-  }
-
-  /// Manual reload (pull-to-refresh); the saved set refreshes silently to
-  /// avoid reloading the list twice.
-  Future<void> refresh() async {
-    await Future.wait([
-      load(),
-      _savedMedia.refresh(MediaItemType.track, notify: false),
-    ]);
+        .listen((_) {
+          if (_skipNextTrackEvent) {
+            _skipNextTrackEvent = false;
+            return;
+          }
+          unawaited(load());
+        });
   }
 
   Future<void> load() async {
@@ -56,10 +56,7 @@ class LikedTracksCubit extends SafeCubit<LikedTracksState> {
     _isLoading = true;
     emit(state.copyWith(tracks: SectionState.loading(state.tracks.data)));
     try {
-      final result = await _library.savedTracks(
-        offset: 0,
-        limit: _pageSize,
-      );
+      final result = await _library.savedTracks(offset: 0, limit: _pageSize);
       emit(state.copyWith(tracks: SectionState.success(result)));
     } catch (e) {
       emit(state.copyWith(tracks: SectionState.error(e, state.tracks.data)));
@@ -77,10 +74,7 @@ class LikedTracksCubit extends SafeCubit<LikedTracksState> {
     emit(state.copyWith(tracks: SectionState.loading(current.data)));
     final offset = current.data.items.length;
     try {
-      final next = await _library.savedTracks(
-        offset: offset,
-        limit: _pageSize,
-      );
+      final next = await _library.savedTracks(offset: offset, limit: _pageSize);
       final combined = PaginatedResult<Track>(
         items: [...current.data.items, ...next.items],
         total: next.total,
@@ -92,6 +86,34 @@ class LikedTracksCubit extends SafeCubit<LikedTracksState> {
       emit(state.copyWith(tracks: SectionState.error(e, current.data)));
       if (e.needsNotice) _notices.emit(Notice.error(e));
     }
+  }
+
+  Future<bool> removeTrack(Track track) async {
+    final current = state.tracks.data;
+    if (!current.items.any((item) => item.id == track.id)) return false;
+    final remaining = current.items
+        .where((item) => item.id != track.id)
+        .toList();
+    emit(
+      state.copyWith(
+        tracks: SectionState.success(
+          PaginatedResult<Track>(
+            items: remaining,
+            total: current.total - 1,
+            offset: current.offset,
+            limit: current.limit,
+          ),
+        ),
+      ),
+    );
+    _skipNextTrackEvent = true;
+    await _favorites.toggleTrack(track);
+    if (_favorites.isTrackSaved(track.id)) {
+      _skipNextTrackEvent = false;
+      emit(state.copyWith(tracks: SectionState.success(current)));
+      return false;
+    }
+    return true;
   }
 
   PendingSource? pendingSource() {

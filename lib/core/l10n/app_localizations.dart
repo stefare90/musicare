@@ -1054,6 +1054,18 @@ abstract class AppLocalizations {
   /// **'Remove \"{track}\" from this playlist?'**
   String removeFromPlaylistMessage(Object track);
 
+  /// No description provided for @removeFromFavoritesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favorites?'**
+  String get removeFromFavoritesTitle;
+
+  /// No description provided for @removeFromFavoritesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{track}\" from your favorites?'**
+  String removeFromFavoritesMessage(Object track);
+
   /// No description provided for @deletePlaylistTitle.
   ///
   /// In en, this message translates to:
