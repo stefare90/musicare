@@ -364,6 +364,12 @@ abstract class AppLocalizations {
   /// **'Share Artist'**
   String get shareArtist;
 
+  /// No description provided for @shareTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Track'**
+  String get shareTrack;
+
   /// No description provided for @addToQueue.
   ///
   /// In en, this message translates to:

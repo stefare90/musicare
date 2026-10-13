@@ -387,6 +387,8 @@ void main() {
 
         await tester.tap(find.byIcon(Icons.more_vert_rounded));
         await tester.pumpAndSettle();
+        await tester.drag(find.text('Share Track'), const Offset(0, -300));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Go to Artist'));
         await tester.pumpAndSettle();
 

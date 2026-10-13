@@ -13,6 +13,7 @@ import 'package:music_are/features/details/album/presentation/cubit/album_state.
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/library/presentation/utils/track_actions.dart';
 import 'package:music_are/features/library/presentation/utils/collection_actions.dart';
+import 'package:music_are/features/library/presentation/utils/share_actions.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 
@@ -77,8 +78,8 @@ class _AlbumView extends StatelessWidget {
                   : null,
               onToggleSave: () =>
                   context.read<UserCubit>().toggleAlbum(state.album),
-            ),
-            slivers: [
+              onShare: () => ShareActions.shareAlbum(state.album),
+            ),            slivers: [
               SliverTrackList(
                 tracks: state.tracks.items,
                 listType: MediaType.album,

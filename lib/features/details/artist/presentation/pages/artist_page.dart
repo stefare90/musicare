@@ -15,6 +15,7 @@ import 'package:music_are/features/details/artist/presentation/cubit/artist_stat
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/library/presentation/utils/track_actions.dart';
 import 'package:music_are/features/library/presentation/utils/collection_actions.dart';
+import 'package:music_are/features/library/presentation/utils/share_actions.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 
@@ -69,6 +70,7 @@ class _ArtistView extends StatelessWidget {
                   isSaved: isSaved,
                   onToggleSave: () =>
                       context.read<UserCubit>().toggleArtist(state.artist),
+                  onShare: () => ShareActions.shareArtist(state.artist),
                   onPlayNext: hasBulkTracks
                       ? () => CollectionActions.playAllNext(
                           context,

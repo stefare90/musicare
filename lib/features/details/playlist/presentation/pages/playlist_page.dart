@@ -18,6 +18,7 @@ import 'package:music_are/features/details/playlist/presentation/widgets/playlis
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/library/presentation/utils/track_actions.dart';
 import 'package:music_are/features/library/presentation/utils/collection_actions.dart';
+import 'package:music_are/features/library/presentation/utils/share_actions.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
@@ -105,6 +106,7 @@ class _PlaylistView extends StatelessWidget {
               onDelete: isOwned
                   ? () => _deletePlaylist(context, playlist)
                   : null,
+              onShare: () => ShareActions.sharePlaylist(playlist),
             ),
             slivers: [
               SliverTrackList(

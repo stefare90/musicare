@@ -6,6 +6,7 @@ import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/widgets/bottom_sheets/track_options_bottom_sheet.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
+import 'package:music_are/features/library/presentation/utils/share_actions.dart';
 import 'package:music_are/features/library/presentation/widgets/add_to_playlist_bottom_sheet.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 
@@ -25,6 +26,7 @@ abstract class TrackActions {
       onAddToQueue: () => _addToQueue(context, track),
       onToggleFavorite: () => saved.toggleTrack(track),
       onAddToPlaylist: () => AddToPlaylistBottomSheet.show(context, track),
+      onShare: () => ShareActions.shareTrack(track),
       onBeforeNavigate: onBeforeNavigate,
     );
   }

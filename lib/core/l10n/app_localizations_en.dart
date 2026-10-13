@@ -147,6 +147,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareArtist => 'Share Artist';
 
   @override
+  String get shareTrack => 'Share Track';
+
+  @override
   String get addToQueue => 'Add to Queue';
 
   @override

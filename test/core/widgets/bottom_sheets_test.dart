@@ -358,6 +358,8 @@ void main() {
         await tester.tap(find.text('Show Track Options'));
         await tester.pumpAndSettle();
 
+        await tester.scrollUntilVisible(find.text('Go to Artist'), 200);
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Go to Artist'));
         await tester.pumpAndSettle();
 
@@ -562,6 +564,106 @@ void main() {
       await tester.pumpAndSettle();
       expect(playNextTapped, isTrue);
       expect(addTapped, isFalse);
+    });
+  });
+
+  group('Share options', () {
+    final shareArtist = Artist(id: 'a1', name: 'The Beatles', externalUri: '');
+    final shareAlbum = Album(
+      id: 'al1',
+      name: 'Abbey Road',
+      artists: [shareArtist],
+      releaseDate: '1969',
+      externalUri: '',
+      totalTracks: 2,
+      albumType: AlbumType.album,
+    );
+
+    Future<void> openSheet(
+      WidgetTester tester,
+      String buttonLabel,
+      void Function(BuildContext context) show,
+    ) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => show(context),
+              child: Text(buttonLabel),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text(buttonLabel));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('Album sheet triggers share callback', (tester) async {
+      var shared = false;
+      await openSheet(
+        tester,
+        'Show Album Share',
+        (context) => AlbumOptionsBottomSheet.show(
+          context,
+          shareAlbum,
+          onShare: () => shared = true,
+        ),
+      );
+      expect(find.text('Share Album'), findsOneWidget);
+      await tester.tap(find.text('Share Album'));
+      await tester.pumpAndSettle();
+      expect(shared, isTrue);
+    });
+
+    testWidgets('Playlist sheet triggers share callback', (tester) async {
+      var shared = false;
+      await openSheet(
+        tester,
+        'Show Playlist Share',
+        (context) => PlaylistOptionsBottomSheet.show(
+          context,
+          testPlaylist,
+          onShare: () => shared = true,
+        ),
+      );
+      expect(find.text('Share Playlist'), findsOneWidget);
+      await tester.tap(find.text('Share Playlist'));
+      await tester.pumpAndSettle();
+      expect(shared, isTrue);
+    });
+
+    testWidgets('Artist sheet triggers share callback', (tester) async {
+      var shared = false;
+      await openSheet(
+        tester,
+        'Show Artist Share',
+        (context) => ArtistOptionsBottomSheet.show(
+          context,
+          shareArtist,
+          onShare: () => shared = true,
+        ),
+      );
+      expect(find.text('Share Artist'), findsOneWidget);
+      await tester.tap(find.text('Share Artist'));
+      await tester.pumpAndSettle();
+      expect(shared, isTrue);
+    });
+
+    testWidgets('Track sheet triggers share callback', (tester) async {
+      var shared = false;
+      await openSheet(
+        tester,
+        'Show Track Share',
+        (context) => TrackOptionsBottomSheet.show(
+          context,
+          testTrack,
+          onShare: () => shared = true,
+        ),
+      );
+      expect(find.text('Share Track'), findsOneWidget);
+      await tester.tap(find.text('Share Track'));
+      await tester.pumpAndSettle();
+      expect(shared, isTrue);
     });
   });
   });

@@ -14,6 +14,7 @@ abstract class TrackOptionsBottomSheet {
     VoidCallback? onAddToQueue,
     VoidCallback? onToggleFavorite,
     VoidCallback? onAddToPlaylist,
+    VoidCallback? onShare,
     VoidCallback? onBeforeNavigate,
   }) {
     final l10n = context.l10n;
@@ -55,6 +56,14 @@ abstract class TrackOptionsBottomSheet {
           onTap: () {
             Navigator.of(context).pop();
             onAddToPlaylist?.call();
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.share_rounded),
+          title: Text(l10n.shareTrack),
+          onTap: () {
+            Navigator.of(context).pop();
+            onShare?.call();
           },
         ),
         if (track.album.id.isNotEmpty)

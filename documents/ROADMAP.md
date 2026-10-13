@@ -24,6 +24,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ✅ Album, artist and playlist pages with cover header, track list, discography, "Fans Also Like" and pagination.
 ✅ Contextual queue playback from any track list and save toggle in the header.
 ✅ Queue a whole album, playlist or artist top tracks with Play Next / Add to Queue from the header options.
+✅ Share album, artist, playlist and track as text + link through the system share sheet.
 ✅ Initial "saved" state read from the provider on detail pages, so the toggle reflects the real library.
 ✅ Remove tracks from a playlist you own by swiping the row, behind a confirmation dialog.
 ✅ Playlist actions reflect ownership: "Delete playlist" (confirmation) for playlists you own, save/remove for the others.
@@ -35,7 +36,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ✅ Multi-candidate stream resolution with automatic fallback on expired streams or 403 responses.
 ✅ Mini-player, full player, reorderable queue sheet and live candidate switching.
 ⬜ Download and lyrics.
-✅ "Play Next", "Add to queue" and "Save to favorites" wired in the track options bottom sheet (with the real saved state and optimistic rollback).
+✅ "Play Next", "Add to queue", "Save to favorites" and "Share" wired in the track options bottom sheet (with the real saved state and optimistic rollback).
 ✅ Queue auto-extends from partially loaded lists (playlist, album, artist top tracks, liked): background fill with loading/error states in the queue sheet.
 
 ## 📚 Library (`lib/features/library/`)
