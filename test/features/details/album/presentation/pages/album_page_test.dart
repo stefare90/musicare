@@ -91,6 +91,18 @@ void main() {
     );
   }
 
+  void stubAlbumSections() {
+    when(() => mockAlbum.getAlbum('al1')).thenAnswer((_) async => testAlbum);
+    when(() => mockAlbum.tracks('al1', offset: 0, limit: 20)).thenAnswer(
+      (_) async => PaginatedResult<Track>(
+        items: [testTrack],
+        total: 17,
+        offset: 0,
+        limit: 20,
+      ),
+    );
+  }
+
   group('AlbumPage Widget Tests', () {
     testWidgets('renders album header and track list', (tester) async {
       when(() => mockAlbum.getAlbum('al1')).thenAnswer((_) async => testAlbum);
@@ -113,6 +125,54 @@ void main() {
         findsNWidgets(2),
       ); // Header Subtitle + Track Tile Subtitle
       expect(find.text('Come Together'), findsOneWidget);
+    });
+
+    testWidgets('hides the heart while the saved index is unknown',
+        (tester) async {
+      stubAlbumSections();
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byIcon(Icons.favorite_rounded), findsNothing);
+      expect(find.byIcon(Icons.favorite_border_rounded), findsNothing);
+      expect(
+        (sl<UserCubit>() as TestUserCubit).refreshed,
+        [MediaItemType.album],
+      );
+    });
+
+    testWidgets('shows the heart without reloading when the index is known',
+        (tester) async {
+      stubAlbumSections();
+      (sl<UserCubit>() as TestUserCubit).set(
+        testUserState(loaded: {MediaItemType.album}),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byIcon(Icons.favorite_border_rounded), findsOneWidget);
+      expect((sl<UserCubit>() as TestUserCubit).refreshed, isEmpty);
+    });
+
+    testWidgets('shows a full heart for a saved album', (tester) async {
+      stubAlbumSections();
+      (sl<UserCubit>() as TestUserCubit).set(
+        testUserState(
+          loaded: {MediaItemType.album},
+          albumIds: {'al1'},
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byIcon(Icons.favorite_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.favorite_border_rounded), findsNothing);
     });
   });
 }

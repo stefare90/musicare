@@ -66,8 +66,7 @@ class UserCubit extends SafeCubit<UserState>
     var isAuthenticated = false;
     try {
       isAuthenticated = await _account.isAuthenticated();
-    } catch (_) {
-    }
+    } catch (_) {}
     if (isClosed) return;
     emit(
       UserState(
@@ -87,8 +86,7 @@ class UserCubit extends SafeCubit<UserState>
       final userId = await _account.resolveUserId();
       if (isClosed || userId == null || userId == state.userId) return;
       emit(state.copyWith(userId: userId));
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   Future<AuthResult> signIn() async {
@@ -120,8 +118,7 @@ class UserCubit extends SafeCubit<UserState>
   Future<void> signOut() async {
     try {
       await _account.logout();
-    } catch (_) {
-    }
+    } catch (_) {}
     _resetIndex();
     emit(const UserState());
   }
@@ -248,6 +245,9 @@ class UserCubit extends SafeCubit<UserState>
     required Future<void> Function() save,
     required Future<void> Function() unsave,
   }) async {
+    // An empty id carries no identity (e.g. a playlist credit without MBID):
+    // refusing it keeps "" out of the saved set.
+    if (id.isEmpty) return;
     final wasSaved = state.isSaved(type, id);
     final previous = state.idsOf(type).toSet();
     final optimistic = _flip(previous, id, !wasSaved);

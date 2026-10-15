@@ -77,7 +77,7 @@ void main() {
 
       expect(
         PluginSearchException().toLocalizedString(buildContext),
-        equals('Network error occurred. Please check your connection.'),
+        equals('Network error occurred'),
       );
 
       expect(
@@ -96,7 +96,17 @@ void main() {
         const SocketException(
           'Failed host lookup',
         ).toLocalizedString(buildContext),
-        equals('Network error occurred. Please check your connection.'),
+        equals('Network error occurred: Failed host lookup'),
+      );
+
+      expect(
+        const MetadataTransportException(
+          'Call "user.saved_artists" timed out after 30s',
+        ).toLocalizedString(buildContext),
+        equals(
+          'Network error occurred: '
+          'Call "user.saved_artists" timed out after 30s',
+        ),
       );
 
       expect(

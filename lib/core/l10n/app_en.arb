@@ -61,7 +61,7 @@
   "pluginErrorResourceNotFound": "The requested item was not found.",
   "pluginErrorNotLoaded": "No active metadata plugin is loaded.",
   "pluginErrorDownloadFailed": "Failed to download the plugin file.",
-  "pluginErrorNetwork": "Network error occurred. Please check your connection.",
+  "pluginErrorNetwork": "Network error occurred",
   "pluginErrorTimeout": "Connection timed out. Please try again.",
   "pluginErrorNoContext": "Navigation context is unavailable.",
   "pluginErrorUnknown": "An unexpected error occurred: {details}",

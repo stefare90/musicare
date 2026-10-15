@@ -83,7 +83,11 @@ void main() {
       () => PlaylistRepository(mockEngine),
     );
     userCubit = TestUserCubit(
-      testUserState(isAuthenticated: true, userId: 'me'),
+      testUserState(
+        isAuthenticated: true,
+        userId: 'me',
+        loaded: {MediaItemType.playlist},
+      ),
     );
     sl.registerLazySingleton<UserCubit>(() => userCubit);
     sl.registerLazySingleton<UserSavedMediaIndex>(() => userCubit);
@@ -642,6 +646,66 @@ void main() {
         findsOneWidget,
       );
       verifyNever(() => mockPlayerCubit.addAllToQueue(any()));
+    });
+
+    testWidgets('reloads the index once when it is unknown', (tester) async {
+      userCubit.set(testUserState(isAuthenticated: true, userId: 'me'));
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
+        (_) async => PaginatedResult(
+          items: [testTrack],
+          total: 1,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.favorite_border_rounded), findsNothing);
+      expect(userCubit.refreshed, [MediaItemType.playlist]);
+    });
+
+    testWidgets('does not reload the index when it is known', (tester) async {
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
+        (_) async => PaginatedResult(
+          items: [testTrack],
+          total: 1,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.favorite_border_rounded), findsOneWidget);
+      expect(userCubit.refreshed, isEmpty);
+    });
+
+    testWidgets('shows a full heart for a saved playlist', (tester) async {
+      userCubit.set(
+        testUserState(
+          isAuthenticated: true,
+          userId: 'me',
+          loaded: {MediaItemType.playlist},
+          playlistIds: {'pl1'},
+        ),
+      );
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
+        (_) async => PaginatedResult(
+          items: [testTrack],
+          total: 1,
+          offset: 0,
+          limit: 20,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.favorite_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.favorite_border_rounded), findsNothing);
     });
   });
 }

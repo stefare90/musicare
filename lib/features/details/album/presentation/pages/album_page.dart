@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
@@ -32,8 +34,22 @@ class AlbumPage extends StatelessWidget {
   }
 }
 
-class _AlbumView extends StatelessWidget {
+class _AlbumView extends StatefulWidget {
   const _AlbumView();
+
+  @override
+  State<_AlbumView> createState() => _AlbumViewState();
+}
+
+class _AlbumViewState extends State<_AlbumView> {
+  @override
+  void initState() {
+    super.initState();
+    final users = context.read<UserCubit>();
+    if (!users.state.loaded.contains(MediaItemType.album)) {
+      unawaited(users.refresh(MediaItemType.album, notify: false));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,12 +68,17 @@ class _AlbumView extends StatelessWidget {
           final isSaved = context.select<UserCubit, bool>(
             (c) => c.isAlbumSaved(state.album.id),
           );
+          final isIndexLoaded = context.select<UserCubit, bool>(
+            (c) => c.state.loaded.contains(MediaItemType.album),
+          );
           final hasBulkTracks =
               state.tracks.items.isNotEmpty || state.hasMoreTracks;
           return SliverMediaScaffold(
             metadata: state.metadata,
             isSaved: isSaved,
-            onSaveTap: () => context.read<UserCubit>().toggleAlbum(state.album),
+            onSaveTap: isIndexLoaded
+                ? () => context.read<UserCubit>().toggleAlbum(state.album)
+                : null,
             onOptionsTap: () => AlbumOptionsBottomSheet.show(
               context,
               state.album,
@@ -76,8 +97,9 @@ class _AlbumView extends StatelessWidget {
                       total: state.tracks.total,
                     )
                   : null,
-              onToggleSave: () =>
-                  context.read<UserCubit>().toggleAlbum(state.album),
+              onToggleSave: isIndexLoaded
+                  ? () => context.read<UserCubit>().toggleAlbum(state.album)
+                  : null,
               onShare: () => ShareActions.shareAlbum(state.album),
             ),            slivers: [
               SliverTrackList(

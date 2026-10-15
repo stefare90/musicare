@@ -463,7 +463,7 @@ abstract class AppLocalizations {
   /// No description provided for @pluginErrorNetwork.
   ///
   /// In en, this message translates to:
-  /// **'Network error occurred. Please check your connection.'**
+  /// **'Network error occurred'**
   String get pluginErrorNetwork;
 
   /// No description provided for @pluginErrorTimeout.

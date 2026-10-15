@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
@@ -35,8 +37,22 @@ class ArtistPage extends StatelessWidget {
   }
 }
 
-class _ArtistView extends StatelessWidget {
+class _ArtistView extends StatefulWidget {
   const _ArtistView();
+
+  @override
+  State<_ArtistView> createState() => _ArtistViewState();
+}
+
+class _ArtistViewState extends State<_ArtistView> {
+  @override
+  void initState() {
+    super.initState();
+    final users = context.read<UserCubit>();
+    if (!users.state.loaded.contains(MediaItemType.artist)) {
+      unawaited(users.refresh(MediaItemType.artist, notify: false));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,20 +72,26 @@ class _ArtistView extends StatelessWidget {
         final isSaved = context.select<UserCubit, bool>(
           (c) => c.isArtistSaved(state.artist.id),
         );
+        final isIndexLoaded = context.select<UserCubit, bool>(
+          (c) => c.state.loaded.contains(MediaItemType.artist),
+        );
         final topTracks = state.topTracks.data;
         final hasBulkTracks =
             topTracks.items.isNotEmpty || topTracks.items.length < topTracks.total;
         return SliverMediaScaffold(
           metadata: state.metadata,
           isSaved: isSaved,
-          onSaveTap: () =>
-              context.read<UserCubit>().toggleArtist(state.artist),
+          onSaveTap: isIndexLoaded
+              ? () => context.read<UserCubit>().toggleArtist(state.artist)
+              : null,
           onOptionsTap: () => ArtistOptionsBottomSheet.show(
                   context,
                   state.artist,
                   isSaved: isSaved,
-                  onToggleSave: () =>
-                      context.read<UserCubit>().toggleArtist(state.artist),
+                  onToggleSave: isIndexLoaded
+                      ? () =>
+                            context.read<UserCubit>().toggleArtist(state.artist)
+                      : null,
                   onShare: () => ShareActions.shareArtist(state.artist),
                   onPlayNext: hasBulkTracks
                       ? () => CollectionActions.playAllNext(

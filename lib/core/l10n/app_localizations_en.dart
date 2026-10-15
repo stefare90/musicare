@@ -200,8 +200,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginErrorDownloadFailed => 'Failed to download the plugin file.';
 
   @override
-  String get pluginErrorNetwork =>
-      'Network error occurred. Please check your connection.';
+  String get pluginErrorNetwork => 'Network error occurred';
 
   @override
   String get pluginErrorTimeout => 'Connection timed out. Please try again.';

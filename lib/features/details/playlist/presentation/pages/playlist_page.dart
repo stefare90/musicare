@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
@@ -43,8 +45,22 @@ class PlaylistPage extends StatelessWidget {
   }
 }
 
-class _PlaylistView extends StatelessWidget {
+class _PlaylistView extends StatefulWidget {
   const _PlaylistView();
+
+  @override
+  State<_PlaylistView> createState() => _PlaylistViewState();
+}
+
+class _PlaylistViewState extends State<_PlaylistView> {
+  @override
+  void initState() {
+    super.initState();
+    final users = context.read<UserCubit>();
+    if (!users.state.loaded.contains(MediaItemType.playlist)) {
+      unawaited(users.refresh(MediaItemType.playlist, notify: false));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,8 +82,12 @@ class _PlaylistView extends StatelessWidget {
             (c) => c.state.userId,
           );
           final isOwned = playlist.isOwnedBy(currentUserId);
+          final isIndexLoaded = context.select<UserCubit, bool>(
+            (c) => c.state.loaded.contains(MediaItemType.playlist),
+          );
           final isSaved =
               !isOwned &&
+              isIndexLoaded &&
               context.select<UserCubit, bool>(
                 (c) => c.isPlaylistSaved(playlist.id),
               );
@@ -79,7 +99,7 @@ class _PlaylistView extends StatelessWidget {
               isPublic: isOwned ? playlist.isPublic : null,
             ),
             isSaved: isSaved,
-            onSaveTap: isOwned
+            onSaveTap: isOwned || !isIndexLoaded
                 ? null
                 : () => context.read<UserCubit>().togglePlaylist(playlist),
             onOptionsTap: () => PlaylistOptionsBottomSheet.show(
@@ -100,7 +120,7 @@ class _PlaylistView extends StatelessWidget {
                       total: state.tracks.total,
                     )
                   : null,
-              onToggleSave: isOwned
+              onToggleSave: isOwned || !isIndexLoaded
                   ? null
                   : () => context.read<UserCubit>().togglePlaylist(playlist),
               onDelete: isOwned

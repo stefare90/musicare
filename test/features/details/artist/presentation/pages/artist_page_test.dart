@@ -87,7 +87,7 @@ void main() {
     sl.registerLazySingleton<UserCubit>(() => TestUserCubit(testUserState()));
   });
 
-  Widget buildTestableWidget() {
+  Widget buildTestableWidget({Artist? artist}) {
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -96,7 +96,37 @@ void main() {
           BlocProvider<PlayerCubit>.value(value: mockPlayerCubit),
           BlocProvider<UserCubit>.value(value: sl<UserCubit>()),
         ],
-        child: ArtistPage(artist: testArtist),
+        child: ArtistPage(artist: artist ?? testArtist),
+      ),
+    );
+  }
+
+  void stubArtistSections() {
+    when(
+      () => mockArtist.getArtist('a1'),
+    ).thenAnswer((_) async => testArtist);
+    when(() => mockArtist.topTracks('a1', offset: 0, limit: 6)).thenAnswer(
+      (_) async => PaginatedResult(
+        items: [testTrack],
+        total: 1,
+        offset: 0,
+        limit: 6,
+      ),
+    );
+    when(() => mockArtist.albums('a1', offset: 0, limit: 6)).thenAnswer(
+      (_) async => PaginatedResult(
+        items: [testAlbum],
+        total: 1,
+        offset: 0,
+        limit: 6,
+      ),
+    );
+    when(() => mockArtist.related('a1', offset: 0, limit: 6)).thenAnswer(
+      (_) async => PaginatedResult(
+        items: [testArtist],
+        total: 1,
+        offset: 0,
+        limit: 6,
       ),
     );
   }
@@ -236,6 +266,112 @@ void main() {
       verify(
         () => mockPlayerCubit.addAllToQueue([testTrack, second]),
       ).called(1);
+    });
+
+    testWidgets('hides the heart while the saved index is unknown',
+        (tester) async {
+      stubArtistSections();
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.favorite_rounded), findsNothing);
+      expect(find.byIcon(Icons.favorite_border_rounded), findsNothing);
+    });
+
+    testWidgets('shows an empty heart for a loaded but unsaved artist',
+        (tester) async {
+      stubArtistSections();
+      (sl<UserCubit>() as TestUserCubit).set(
+        testUserState(loaded: {MediaItemType.artist}),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.favorite_border_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.favorite_rounded), findsNothing);
+    });
+
+    testWidgets('shows a full heart for a saved artist', (tester) async {
+      stubArtistSections();
+      (sl<UserCubit>() as TestUserCubit).set(
+        testUserState(
+          loaded: {MediaItemType.artist},
+          artistIds: {'a1'},
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.favorite_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.favorite_border_rounded), findsNothing);
+    });
+
+    testWidgets('reloads the index once when it is unknown', (tester) async {
+      stubArtistSections();
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(
+        (sl<UserCubit>() as TestUserCubit).refreshed,
+        [MediaItemType.artist],
+      );
+    });
+
+    testWidgets('does not reload the index when it is known', (tester) async {
+      stubArtistSections();
+      (sl<UserCubit>() as TestUserCubit).set(
+        testUserState(loaded: {MediaItemType.artist}),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect((sl<UserCubit>() as TestUserCubit).refreshed, isEmpty);
+    });
+
+    testWidgets('a credit without MBID shows an empty heart it cannot save',
+        (tester) async {
+      const ghost = Artist(id: '', name: 'Ghost Singer', externalUri: '');
+      when(
+        () => mockArtist.getArtist(''),
+      ).thenAnswer((_) async => throw Exception('API error'));
+      when(() => mockArtist.topTracks('', offset: 0, limit: 6)).thenAnswer(
+        (_) async => const PaginatedResult<Track>(
+          items: [],
+          total: 0,
+          offset: 0,
+          limit: 6,
+        ),
+      );
+      when(() => mockArtist.albums('', offset: 0, limit: 6)).thenAnswer(
+        (_) async => const PaginatedResult<Album>(
+          items: [],
+          total: 0,
+          offset: 0,
+          limit: 6,
+        ),
+      );
+      when(() => mockArtist.related('', offset: 0, limit: 6)).thenAnswer(
+        (_) async => const PaginatedResult<Artist>(
+          items: [],
+          total: 0,
+          offset: 0,
+          limit: 6,
+        ),
+      );
+      (sl<UserCubit>() as TestUserCubit).set(
+        testUserState(loaded: {MediaItemType.artist}),
+      );
+
+      await tester.pumpWidget(buildTestableWidget(artist: ghost));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.favorite_border_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.favorite_rounded), findsNothing);
     });
   });
 }

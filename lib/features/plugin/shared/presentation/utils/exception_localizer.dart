@@ -25,11 +25,13 @@ extension ExceptionLocalizer on Object {
 
       MetadataAuthRequiredException() => context.l10n.pluginErrorAuthRequired,
       MetadataNotFoundException() => context.l10n.pluginErrorResourceNotFound,
-      MetadataTransportException() => context.l10n.pluginErrorNetwork,
+      MetadataTransportException(:final message) =>
+        '${context.l10n.pluginErrorNetwork}: $message',
       MetadataRateLimitedException() => context.l10n.pluginErrorRateLimited,
       PendingLoadException(:final cause) => cause.toLocalizedString(context),
 
-      SocketException() => context.l10n.pluginErrorNetwork,
+      SocketException(:final message) =>
+        '${context.l10n.pluginErrorNetwork}: $message',
       TimeoutException() => context.l10n.pluginErrorTimeout,
       _ => context.l10n.pluginErrorUnknown(
         toString().replaceAll('Exception: ', ''),

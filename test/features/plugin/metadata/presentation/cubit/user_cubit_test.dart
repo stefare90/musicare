@@ -189,6 +189,87 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 1));
   }
 
+  group('saved index', () {
+    void stubLoadFailure(MediaItemType type) {
+      switch (type) {
+        case MediaItemType.track:
+          when(
+            () => user.savedTracks(
+              offset: any(named: 'offset'),
+              limit: any(named: 'limit'),
+            ),
+          ).thenAnswer((_) async => throw Exception('timeout'));
+        case MediaItemType.album:
+          when(
+            () => user.savedAlbums(
+              offset: any(named: 'offset'),
+              limit: any(named: 'limit'),
+            ),
+          ).thenAnswer((_) async => throw Exception('timeout'));
+        case MediaItemType.artist:
+          when(
+            () => user.savedArtists(
+              offset: any(named: 'offset'),
+              limit: any(named: 'limit'),
+            ),
+          ).thenAnswer((_) async => throw Exception('timeout'));
+        case MediaItemType.playlist:
+          when(
+            () => user.savedPlaylists(
+              offset: any(named: 'offset'),
+              limit: any(named: 'limit'),
+            ),
+          ).thenAnswer((_) async => throw Exception('timeout'));
+      }
+    }
+
+    for (final type in MediaItemType.values) {
+      test('a failed $type load stays silent and leaves it unmarked', () async {
+        stubEmptyLibrary();
+        stubLoadFailure(type);
+        when(() => auth.authenticate()).thenAnswer((_) async {});
+        when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
+        when(() => user.me()).thenAnswer((_) async => {'user_id': 'u1'});
+
+        final seen = <Object>[];
+        final subscription = notices.notices.listen(seen.add);
+
+        await cubit.signIn();
+        await pumpEventQueue();
+
+        expect(seen, isEmpty);
+        expect(cubit.state.loaded.contains(type), isFalse);
+        await subscription.cancel();
+      });
+    }
+
+    test('a loaded index marks every type without notifying', () async {
+      final seen = <Object>[];
+      final subscription = notices.notices.listen(seen.add);
+
+      await signIn();
+      await pumpEventQueue();
+
+      expect(seen, isEmpty);
+      expect(cubit.state.loaded, MediaItemType.values.toSet());
+      await subscription.cancel();
+    });
+
+    test('toggling an empty id saves nothing and stays silent', () async {
+      const ghost = Artist(id: '', name: 'No MBID', externalUri: '');
+      final seen = <Object>[];
+      final subscription = notices.notices.listen(seen.add);
+
+      await cubit.toggleArtist(ghost);
+      await pumpEventQueue();
+
+      expect(cubit.isArtistSaved(''), isFalse);
+      expect(cubit.state.artistIds, isEmpty);
+      expect(seen, isEmpty);
+      await subscription.cancel();
+    });
+  });
+
   group('account', () {
     test('initialize emits the authenticated identity', () async {
       stubEmptyLibrary();
