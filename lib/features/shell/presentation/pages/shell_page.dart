@@ -213,12 +213,12 @@ class _ShellPageState extends State<ShellPage>
                               onVerticalDragEnd: _handleDragEnd,
                               onVerticalDragCancel: _handleDragCancel,
                               child: ClipRRect(
-                                borderRadius: BorderRadius.vertical(
-                                  top: Radius.circular(16.0 * progress),
+                                borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(16.0),
                                 ),
                                 child: Material(
                                   color: context.colorScheme.surface,
-                                  elevation: progress > 0 ? 8 : 2,
+                                  elevation: progress > 0 ? 8 : 0,
                                   clipBehavior: Clip.antiAlias,
                                   child: Stack(
                                     children: [
@@ -228,14 +228,10 @@ class _ShellPageState extends State<ShellPage>
                                           left: 0,
                                           right: 0,
                                           height: screenHeight,
-                                          child: Opacity(
-                                            opacity: progress.clamp(0.0, 1.0),
-                                            child: FullPlayerPage(
-                                              onCollapse: _collapse,
-                                            ),
+                                          child: FullPlayerPage(
+                                            onCollapse: _collapse,
                                           ),
                                         ),
-
                                       if (progress < 0.08)
                                         Positioned(
                                           top: 0,

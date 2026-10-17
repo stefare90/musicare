@@ -31,13 +31,11 @@ class MiniPlayer extends StatelessWidget {
 
         return Container(
           width: double.infinity,
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: context.colorScheme.surfaceContainerHigh,
-            border: Border(
-              bottom: BorderSide(
-                color: context.colorScheme.primary.withValues(alpha: 0.1),
-                width: 0.8,
-              ),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(16.0),
             ),
           ),
           child: Material(
@@ -47,7 +45,6 @@ class MiniPlayer extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const PlaybackProgressBar(),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12.0,
@@ -85,7 +82,10 @@ class MiniPlayer extends StatelessWidget {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.skip_previous_rounded, size: 28),
+                          icon: const Icon(
+                            Icons.skip_previous_rounded,
+                            size: 28,
+                          ),
                           onPressed: state.queue.hasPrevious
                               ? () => context.read<PlayerCubit>().previous()
                               : null,
@@ -121,6 +121,7 @@ class MiniPlayer extends StatelessWidget {
                       ],
                     ),
                   ),
+                  const PlaybackProgressBar(),
                 ],
               ),
             ),
