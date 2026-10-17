@@ -47,22 +47,26 @@ class _ShimmerBoxState extends State<ShimmerBox>
 
   @override
   Widget build(BuildContext context) {
-    final shimmer = context.colorScheme.onSurface;
+    final base = context.colorScheme.surface;
+    final target = Theme.of(context).brightness == Brightness.dark
+        ? Colors.white
+        : Colors.black;
+
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
-        final pulse = 0.03 + 0.05 * _animation.value;
+        // One tone above the current background (below it in light mode):
+        // visible without jumping to white.
+        final pulse = 0.05 + 0.05 * _animation.value;
+        final start = Color.lerp(base, target, pulse)!;
+        final middle = Color.lerp(base, target, pulse + 0.03)!;
         return Container(
           width: widget.width,
           height: widget.height,
           decoration: BoxDecoration(
             borderRadius: widget.borderRadius ?? BorderRadius.circular(8.0),
             gradient: LinearGradient(
-              colors: [
-                shimmer.withValues(alpha: pulse),
-                shimmer.withValues(alpha: pulse + 0.04),
-                shimmer.withValues(alpha: pulse),
-              ],
+              colors: [start, middle, start],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
