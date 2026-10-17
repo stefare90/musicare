@@ -22,4 +22,6 @@ abstract class AppRoutes {
   static const String pluginTypeParam = 'type';
   static const String settingsPluginSegment = 'plugin/:$pluginTypeParam';
   static const String settingsPlugin = '$settings/plugin';
+  static const String settingsAboutSegment = 'about';
+  static const String settingsAbout = '$settings/$settingsAboutSegment';
 }

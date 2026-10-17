@@ -50,7 +50,10 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 
 ## ⚙️ Settings (`lib/features/settings/`)
 ✅ Settings hub with a Plugins section: the active metadata and audio-source plugins with their versions, and a per-plugin detail page (version and, when the plugin exposes authentication, the account).
-⬜ Remaining sections: audio quality, playback, downloads and cache, appearance (theme/language), listening history, diagnostics, about.
+✅ Appearance: theme (system/light/dark), accent color, absolute-black (AMOLED) toggle, persisted across launches.
+✅ Language: application language selector (English only for now), persisted.
+✅ About: app version and host SDK versions.
+⬜ Remaining sections: audio quality, playback, downloads and cache, listening history, diagnostics.
 ⬜ Per-plugin actions: update, reinstall, uninstall, change plugin.
 
 ## 🧙 Onboarding (`lib/features/onboarding/`)

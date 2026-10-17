@@ -68,6 +68,7 @@ dependencies:
   just_audio_background: ^0.0.1-beta.17
   url_launcher: ^6.3.2
   share_plus: ^11.0.0
+  package_info_plus: ^9.0.0
 
 dev_dependencies:
   flutter_test:

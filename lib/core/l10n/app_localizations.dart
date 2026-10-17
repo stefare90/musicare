@@ -1143,6 +1143,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The provider is limiting requests. Please try again shortly.'**
   String get pluginErrorRateLimited;
+
+  /// No description provided for @settingsAppearanceSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get settingsAppearanceSection;
+
+  /// No description provided for @settingsThemeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get settingsThemeLabel;
+
+  /// No description provided for @settingsThemeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get settingsThemeSystem;
+
+  /// No description provided for @settingsThemeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get settingsThemeLight;
+
+  /// No description provided for @settingsThemeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get settingsThemeDark;
+
+  /// No description provided for @settingsAccentColorLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Accent color'**
+  String get settingsAccentColorLabel;
+
+  /// No description provided for @settingsAmoledLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Absolute black'**
+  String get settingsAmoledLabel;
+
+  /// No description provided for @settingsAmoledSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use true black backgrounds in the dark theme'**
+  String get settingsAmoledSubtitle;
+
+  /// No description provided for @settingsLanguageSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsLanguageSection;
+
+  /// No description provided for @settingsLanguageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'App language'**
+  String get settingsLanguageLabel;
+
+  /// No description provided for @settingsLanguageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get settingsLanguageEnglish;
+
+  /// No description provided for @settingsAboutSection.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAboutSection;
+
+  /// No description provided for @settingsAboutTile.
+  ///
+  /// In en, this message translates to:
+  /// **'About MusicAre'**
+  String get settingsAboutTile;
+
+  /// No description provided for @settingsAboutAppVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get settingsAboutAppVersion;
+
+  /// No description provided for @settingsAboutHostSdksSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Host SDKs'**
+  String get settingsAboutHostSdksSection;
+
+  /// No description provided for @settingsAboutMetadataSdk.
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata plugin SDK'**
+  String get settingsAboutMetadataSdk;
+
+  /// No description provided for @settingsAboutAudioSdk.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio source plugin SDK'**
+  String get settingsAboutAudioSdk;
+
+  /// No description provided for @settingsAccentViolet.
+  ///
+  /// In en, this message translates to:
+  /// **'Violet'**
+  String get settingsAccentViolet;
+
+  /// No description provided for @settingsAccentBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue'**
+  String get settingsAccentBlue;
+
+  /// No description provided for @settingsAccentCyan.
+  ///
+  /// In en, this message translates to:
+  /// **'Cyan'**
+  String get settingsAccentCyan;
+
+  /// No description provided for @settingsAccentTeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Teal'**
+  String get settingsAccentTeal;
+
+  /// No description provided for @settingsAccentGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Green'**
+  String get settingsAccentGreen;
+
+  /// No description provided for @settingsAccentAmber.
+  ///
+  /// In en, this message translates to:
+  /// **'Amber'**
+  String get settingsAccentAmber;
+
+  /// No description provided for @settingsAccentOrange.
+  ///
+  /// In en, this message translates to:
+  /// **'Orange'**
+  String get settingsAccentOrange;
+
+  /// No description provided for @settingsAccentPink.
+  ///
+  /// In en, this message translates to:
+  /// **'Pink'**
+  String get settingsAccentPink;
 }
 
 class _AppLocalizationsDelegate

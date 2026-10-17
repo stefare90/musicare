@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_are/core/services/preferences_service.dart';
+import 'package:music_are/core/theme/app_accent.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -63,6 +65,42 @@ void main() {
       await service.removeMetadataUserId();
 
       expect(service.getMetadataUserId(), isNull);
+    });
+
+    test('theme mode defaults to null and round-trips', () async {
+      expect(service.getThemeMode(), isNull);
+
+      await service.setThemeMode(ThemeMode.light);
+
+      expect(service.getThemeMode(), ThemeMode.light);
+      expect(prefs.getString('theme_mode'), 'light');
+    });
+
+    test('accent defaults to null and round-trips', () async {
+      expect(service.getAccent(), isNull);
+
+      await service.setAccent(AppAccent.blue);
+
+      expect(service.getAccent(), AppAccent.blue);
+      expect(prefs.getString('accent_color'), 'blue');
+    });
+
+    test('amoled black is tri-state and round-trips', () async {
+      expect(service.getAmoledBlack(), isNull);
+
+      await service.setAmoledBlack(false);
+
+      expect(service.getAmoledBlack(), isFalse);
+      expect(prefs.getBool('amoled_black'), isFalse);
+    });
+
+    test('language code defaults to null and round-trips', () async {
+      expect(service.getLanguageCode(), isNull);
+
+      await service.setLanguageCode('en');
+
+      expect(service.getLanguageCode(), 'en');
+      expect(prefs.getString('language_code'), 'en');
     });
   });
 }

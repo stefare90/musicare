@@ -62,6 +62,10 @@ abstract class AppNavigator {
     context.push('${AppRoutes.settingsPlugin}/${type.name}');
   }
 
+  static void toAbout(BuildContext context) {
+    context.push(AppRoutes.settingsAbout);
+  }
+
   static void pop(BuildContext context) {
     if (context.canPop()) {
       context.pop();

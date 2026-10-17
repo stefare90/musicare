@@ -5,6 +5,7 @@ import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/router/app_router.dart';
 import 'package:music_are/core/services/network_service.dart';
 import 'package:music_are/core/services/preferences_service.dart';
+import 'package:music_are/core/theme/presentation/cubit/theme_cubit.dart';
 import 'package:music_are/features/player/data/services/audio_player_driver.dart';
 import 'package:music_are/features/player/data/services/audio_player_service.dart';
 import 'package:music_are/features/player/data/services/audio_stream_resolver.dart';
@@ -37,6 +38,9 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<NetworkService>(() => NetworkService());
   sl.registerLazySingleton<PreferencesService>(
     () => PreferencesService(sl<SharedPreferences>()),
+  );
+  sl.registerLazySingleton<ThemeCubit>(
+    () => ThemeCubit(sl<PreferencesService>()),
   );
   sl.registerLazySingleton<GlobalKey<NavigatorState>>(() => rootNavigatorKey);
 

@@ -590,4 +590,80 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pluginErrorRateLimited =>
       'The provider is limiting requests. Please try again shortly.';
+
+  @override
+  String get settingsAppearanceSection => 'Appearance';
+
+  @override
+  String get settingsThemeLabel => 'Theme';
+
+  @override
+  String get settingsThemeSystem => 'System';
+
+  @override
+  String get settingsThemeLight => 'Light';
+
+  @override
+  String get settingsThemeDark => 'Dark';
+
+  @override
+  String get settingsAccentColorLabel => 'Accent color';
+
+  @override
+  String get settingsAmoledLabel => 'Absolute black';
+
+  @override
+  String get settingsAmoledSubtitle =>
+      'Use true black backgrounds in the dark theme';
+
+  @override
+  String get settingsLanguageSection => 'Language';
+
+  @override
+  String get settingsLanguageLabel => 'App language';
+
+  @override
+  String get settingsLanguageEnglish => 'English';
+
+  @override
+  String get settingsAboutSection => 'About';
+
+  @override
+  String get settingsAboutTile => 'About MusicAre';
+
+  @override
+  String get settingsAboutAppVersion => 'Version';
+
+  @override
+  String get settingsAboutHostSdksSection => 'Host SDKs';
+
+  @override
+  String get settingsAboutMetadataSdk => 'Metadata plugin SDK';
+
+  @override
+  String get settingsAboutAudioSdk => 'Audio source plugin SDK';
+
+  @override
+  String get settingsAccentViolet => 'Violet';
+
+  @override
+  String get settingsAccentBlue => 'Blue';
+
+  @override
+  String get settingsAccentCyan => 'Cyan';
+
+  @override
+  String get settingsAccentTeal => 'Teal';
+
+  @override
+  String get settingsAccentGreen => 'Green';
+
+  @override
+  String get settingsAccentAmber => 'Amber';
+
+  @override
+  String get settingsAccentOrange => 'Orange';
+
+  @override
+  String get settingsAccentPink => 'Pink';
 }

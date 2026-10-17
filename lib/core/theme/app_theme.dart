@@ -1,45 +1,83 @@
 import 'package:flutter/material.dart';
+import 'package:music_are/core/theme/app_accent.dart';
 import 'package:music_are/core/theme/app_colors.dart';
 import 'package:music_are/core/theme/app_typography.dart';
 
 abstract class AppTheme {
-  static ThemeData get darkTheme {
-    final colorScheme = const ColorScheme.dark(
-      primary: AppColors.primary,
-      secondary: AppColors.primaryVariant,
-      surface: AppColors.darkSurface,
+  static ThemeData get darkTheme => darkThemeOf(AppAccent.violet);
+  static ThemeData get lightTheme => lightThemeOf(AppAccent.violet);
+
+  static ThemeData darkThemeOf(AppAccent accent, {bool amoled = true}) =>
+      _themeFrom(
+        brightness: Brightness.dark,
+        primary: accent.color,
+        palette: amoled ? AppColors.amoled : AppColors.dark,
+      );
+
+  static ThemeData lightThemeOf(AppAccent accent) => _themeFrom(
+    brightness: Brightness.light,
+    primary: _readableOnLight(accent.color),
+    palette: AppColors.light,
+  );
+
+  static ThemeData _themeFrom({
+    required Brightness brightness,
+    required Color primary,
+    required AppSurfacePalette palette,
+  }) {
+    final base = brightness == Brightness.dark
+        ? const ColorScheme.dark()
+        : const ColorScheme.light();
+    final lighter = _lighter(primary);
+    final onLighter = _onColor(lighter);
+    final colorScheme = base.copyWith(
+      primary: primary,
+      onPrimary: _onColor(primary),
+      primaryContainer: primary,
+      onPrimaryContainer: _onColor(primary),
+      secondary: lighter,
+      onSecondary: onLighter,
+      secondaryContainer: Color.lerp(palette.surface, primary, 0.35),
+      onSecondaryContainer: palette.textPrimary,
+      tertiary: lighter,
+      onTertiary: onLighter,
+      tertiaryContainer: Color.lerp(palette.surface, primary, 0.25),
+      onTertiaryContainer: palette.textPrimary,
+      surface: palette.surface,
+      surfaceContainerLow: palette.surfaceContainerLow,
+      surfaceContainer: palette.surfaceContainer,
+      surfaceContainerHigh: palette.surfaceContainerHigh,
+      surfaceContainerHighest: palette.surfaceContainerHighest,
+      onSurfaceVariant: palette.textSecondary,
+      outlineVariant: palette.outlineVariant,
       error: AppColors.error,
       onError: AppColors.onError,
-      onPrimary: Colors.black,
-      onSurface: AppColors.darkTextPrimary,
+      onSurface: palette.textPrimary,
     );
 
     return _buildTheme(
       colorScheme: colorScheme,
-      backgroundColor: AppColors.darkBackground,
-      cardColor: AppColors.darkSurfaceCard,
-      highlightColor: AppColors.darkSurfaceHighlight,
+      backgroundColor: palette.background,
+      cardColor: palette.surfaceCard,
+      highlightColor: palette.surfaceHighlight,
     );
   }
 
-  static ThemeData get lightTheme {
-    final colorScheme = const ColorScheme.light(
-      primary: AppColors.primary,
-      secondary: AppColors.primaryVariant,
-      surface: AppColors.lightSurface,
-      error: AppColors.error,
-      onError: AppColors.onError,
-      onPrimary: Colors.white,
-      onSurface: AppColors.lightTextPrimary,
-    );
+  static Color _onColor(Color color) =>
+      color.computeLuminance() > 0.179 ? Colors.black : Colors.white;
 
-    return _buildTheme(
-      colorScheme: colorScheme,
-      backgroundColor: AppColors.lightBackground,
-      cardColor: AppColors.lightSurfaceCard,
-      highlightColor: AppColors.lightSurfaceHighlight,
-    );
+  static Color _readableOnLight(Color color) {
+    var hsl = HSLColor.fromColor(color);
+    var result = color;
+    while (result.computeLuminance() > 0.15 && hsl.lightness > 0.05) {
+      hsl = hsl.withLightness(hsl.lightness - 0.02);
+      result = hsl.toColor();
+    }
+    return result;
   }
+
+  static Color _lighter(Color color) =>
+      Color.lerp(color, Colors.white, 0.4) ?? color;
 
   static ThemeData _buildTheme({
     required ColorScheme colorScheme,
