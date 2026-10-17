@@ -74,16 +74,14 @@ class MediaCard extends StatelessWidget {
                         context.textTheme,
                       ).copyWith(color: context.colorScheme.primary),
                     ),
-                    const SizedBox(
-                      height: MediaCardMetrics.titleSubtitleGap,
-                    ),
+                    const SizedBox(height: MediaCardMetrics.titleSubtitleGap),
                     Text(
                       subtitle,
                       maxLines: MediaCardMetrics.subtitleMaxLines,
                       overflow: TextOverflow.ellipsis,
                       style: MediaCardMetrics.subtitleStyle(
                         context.textTheme,
-                      ),
+                      ).copyWith(color: context.colorScheme.onSurfaceVariant),
                     ),
                   ],
                 ),

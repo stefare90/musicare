@@ -135,6 +135,10 @@ void main() {
     testWidgets(
       'renders artist header, TrackMatrix popular tracks, discography and related sections',
       (tester) async {
+        tester.view.physicalSize = const Size(1200, 2000);
+        tester.view.devicePixelRatio = 2.0;
+        addTearDown(tester.view.reset);
+
         when(
           () => mockArtist.getArtist('a1'),
         ).thenAnswer((_) async => testArtist);
@@ -184,6 +188,10 @@ void main() {
     );
 
     testWidgets('renders ErrorCard when all sections fail', (tester) async {
+      tester.view.physicalSize = const Size(1200, 2000);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(tester.view.reset);
+
       when(
         () => mockArtist.getArtist('a1'),
       ).thenAnswer((_) async => throw Exception('API error'));

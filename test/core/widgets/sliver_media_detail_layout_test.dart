@@ -79,6 +79,12 @@ void main() {
     });
 
     testWidgets('renders ErrorCard when error is provided', (tester) async {
+      // Phone-like surface: the taller cover header leaves little room on the
+      // default 800x600 test surface.
+      tester.view.physicalSize = const Size(1200, 2000);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(tester.view.reset);
+
       bool retryTapped = false;
 
       await tester.pumpWidget(

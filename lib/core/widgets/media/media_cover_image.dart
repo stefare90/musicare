@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:musicare_metadata_host_sdk/metadata/models/image.dart' as sdk;
 import 'package:music_are/core/models/media_type.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
+import 'package:music_are/core/widgets/media/cover_fallback.dart';
 import 'package:music_are/core/widgets/skeletons/shimmer_box.dart';
 
 class MediaCoverImage extends StatelessWidget {
@@ -12,6 +13,7 @@ class MediaCoverImage extends StatelessWidget {
   final double? height;
   final BorderRadius? borderRadius;
   final BoxFit fit;
+  final bool showLoadingPlaceholder;
 
   const MediaCoverImage({
     super.key,
@@ -21,9 +23,8 @@ class MediaCoverImage extends StatelessWidget {
     this.height,
     this.borderRadius,
     this.fit = BoxFit.cover,
+    this.showLoadingPlaceholder = true,
   });
-
-  IconData get _effectiveFallbackIcon => mediaType.defaultIcon;
 
   String? _getBestImageUrl(BuildContext context, List<sdk.Image>? images) {
     if (images == null || images.isEmpty) return null;
@@ -82,10 +83,15 @@ class MediaCoverImage extends StatelessWidget {
           fit: fit,
           fadeInDuration: const Duration(milliseconds: 180),
           placeholder: (context, url) => _buildLoadingPlaceholder(context),
-          errorWidget: (context, url, error) => _buildFallbackIcon(context),
+          errorWidget: (context, url, error) =>
+              CoverFallback(mediaType: mediaType, width: width, height: height),
         );
       } else {
-        imageWidget = _buildFallbackIcon(context);
+        imageWidget = CoverFallback(
+          mediaType: mediaType,
+          width: width,
+          height: height,
+        );
       }
     }
     if (borderRadius != null) {
@@ -130,11 +136,12 @@ class MediaCoverImage extends StatelessWidget {
       fadeInDuration: const Duration(milliseconds: 180),
       placeholder: (_, _) => _buildLoadingPlaceholder(context),
       errorWidget: (_, _, _) =>
-          Container(color: context.colorScheme.surfaceContainerHigh),
+          Container(color: context.colorScheme.surfaceContainerHighest),
     );
   }
 
   Widget _buildLoadingPlaceholder(BuildContext context) {
+    if (!showLoadingPlaceholder) return const SizedBox.shrink();
     if (width == null || height == null) {
       return ShimmerBox.expand(borderRadius: borderRadius);
     }
@@ -142,21 +149,6 @@ class MediaCoverImage extends StatelessWidget {
       width: width!,
       height: height!,
       borderRadius: borderRadius,
-    );
-  }
-
-  Widget _buildFallbackIcon(BuildContext context) {
-    return Container(
-      width: width,
-      height: height,
-      color: context.colorScheme.surfaceContainerHigh,
-      child: Center(
-        child: Icon(
-          _effectiveFallbackIcon,
-          size: (width != null && width! < 60) ? 24 : 40,
-          color: context.colorScheme.primary.withValues(alpha: 0.5),
-        ),
-      ),
     );
   }
 }

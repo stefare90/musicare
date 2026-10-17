@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:music_are/core/models/media_type.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
+import 'package:music_are/core/widgets/media/cover_backdrop.dart';
 import 'package:music_are/features/library/presentation/utils/track_actions.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
@@ -57,26 +59,39 @@ class FullPlayerPage extends StatelessWidget {
               ),
             ],
           ),
-          body: SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isLandscape = constraints.maxWidth > constraints.maxHeight;
-
-                if (isLandscape) {
-                  return FullPlayerLandscapeView(
-                    track: track,
-                    state: state,
-                    onCollapse: onCollapse,
-                  );
-                }
-
-                return FullPlayerPortraitView(
-                  track: track,
-                  state: state,
-                  onCollapse: onCollapse,
-                );
-              },
-            ),
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              final isLandscape = constraints.maxWidth > constraints.maxHeight;
+              return Stack(
+                children: [
+                  Positioned.fill(
+                    child: CoverBackdrop(
+                      images: track.album.images,
+                      mediaType: MediaType.track,
+                      background: context.colorScheme.surface,
+                      haloCenter: isLandscape
+                          ? const Alignment(-0.3, 0.0)
+                          : const Alignment(0.0, -0.3),
+                      haloRadius: 0.85,
+                      haloScaleY: 0.9,
+                    ),
+                  ),
+                  SafeArea(
+                    child: isLandscape
+                        ? FullPlayerLandscapeView(
+                            track: track,
+                            state: state,
+                            onCollapse: onCollapse,
+                          )
+                        : FullPlayerPortraitView(
+                            track: track,
+                            state: state,
+                            onCollapse: onCollapse,
+                          ),
+                  ),
+                ],
+              );
+            },
           ),
         );
       },
