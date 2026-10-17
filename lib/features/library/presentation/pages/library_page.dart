@@ -115,10 +115,10 @@ class _LibraryViewState extends State<_LibraryView>
               ),
               floatingActionButton:
                   pluginReady && auth.isAuthenticated && _tabIndex == 0
-                  ? FloatingActionButton.extended(
+                  ? FloatingActionButton(
+                      tooltip: context.l10n.newPlaylist,
                       onPressed: () => _createPlaylist(context),
-                      icon: const Icon(Icons.playlist_add_rounded),
-                      label: Text(context.l10n.newPlaylist),
+                      child: const Icon(Icons.add_rounded),
                     )
                   : null,
               body: !pluginReady

@@ -230,18 +230,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(
-      find.widgetWithText(FloatingActionButton, 'New playlist'),
-      findsOneWidget,
-    );
+    expect(find.byTooltip('New playlist'), findsOneWidget);
 
     await tester.tap(find.text('Albums'));
     await tester.pumpAndSettle();
 
-    expect(
-      find.widgetWithText(FloatingActionButton, 'New playlist'),
-      findsNothing,
-    );
+    expect(find.byTooltip('New playlist'), findsNothing);
   });
 
   testWidgets('the new-playlist action opens the create dialog', (
@@ -267,7 +261,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(FloatingActionButton, 'New playlist'));
+    await tester.tap(find.byTooltip('New playlist'));
     await tester.pumpAndSettle();
 
     expect(find.text('Name'), findsOneWidget);
