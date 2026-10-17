@@ -392,6 +392,10 @@ void main() {
     testWidgets('an external add updates the list without moving it', (
       tester,
     ) async {
+      tester.view.physicalSize = const Size(1200, 2000);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(tester.view.reset);
+
       Track song(int i) => Track(
         id: 't$i',
         name: 'Song $i',

@@ -16,6 +16,7 @@ import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
 import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
+import 'package:music_are/core/widgets/skeletons/skeleton_playlist_badge.dart';
 import 'package:music_are/features/details/playlist/presentation/widgets/playlist_visibility_badge.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/library/presentation/utils/track_actions.dart';
@@ -66,6 +67,9 @@ class _PlaylistViewState extends State<_PlaylistView> {
   Widget build(BuildContext context) {
     return BlocBuilder<PlaylistCubit, PlaylistState>(
       builder: (context, state) {
+        final currentUserId = context.select<UserCubit, String?>(
+          (c) => c.state.userId,
+        );
         if (state is PlaylistErrorState) {
           return SliverMediaScaffold(
             metadata: state.metadata,
@@ -78,9 +82,6 @@ class _PlaylistViewState extends State<_PlaylistView> {
         }
         if (state is PlaylistLoadedState) {
           final playlist = state.playlist;
-          final currentUserId = context.select<UserCubit, String?>(
-            (c) => c.state.userId,
-          );
           final isOwned = playlist.isOwnedBy(currentUserId);
           final isIndexLoaded = context.select<UserCubit, bool>(
             (c) => c.state.loaded.contains(MediaItemType.playlist),
@@ -95,9 +96,9 @@ class _PlaylistViewState extends State<_PlaylistView> {
               state.tracks.items.isNotEmpty || state.hasMoreTracks;
           return SliverMediaScaffold(
             metadata: state.metadata,
-            headerBadge: PlaylistVisibilityBadge(
-              isPublic: isOwned ? playlist.isPublic : null,
-            ),
+            headerBadge: isOwned
+                ? PlaylistVisibilityBadge(isPublic: playlist.isPublic)
+                : null,
             isSaved: isSaved,
             onSaveTap: isOwned || !isIndexLoaded
                 ? null
@@ -168,7 +169,16 @@ class _PlaylistViewState extends State<_PlaylistView> {
             ],
           );
         }
-        return SliverMediaScaffold(metadata: state.metadata, isLoading: true);
+        final loadingPlaylist = state is PlaylistLoadingState
+            ? state.playlist
+            : null;
+        return SliverMediaScaffold(
+          metadata: state.metadata,
+          isLoading: true,
+          headerBadge: (loadingPlaylist?.isOwnedBy(currentUserId) ?? false)
+              ? const SkeletonPlaylistBadge()
+              : null,
+        );
       },
     );
   }
@@ -183,7 +193,6 @@ class _PlaylistViewState extends State<_PlaylistView> {
     if (!confirmed || !context.mounted) return;
 
     final cubit = context.read<PlaylistCubit>();
-    // The library reloads through the change stream.
     final deleted = await cubit.deletePlaylist();
     if (!deleted || !context.mounted) return;
 
