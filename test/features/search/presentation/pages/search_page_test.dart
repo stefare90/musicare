@@ -8,6 +8,8 @@ import 'package:music_are/features/plugin/metadata/data/repositories/search_repo
 import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
+import 'package:music_are/core/theme/app_accent.dart';
+import 'package:music_are/core/theme/app_theme.dart';
 import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/info_card.dart';
 import 'package:music_are/core/widgets/media/media_card.dart';
@@ -125,12 +127,14 @@ void main() {
     double textScale = 1.0,
     MetadataPluginCubit? metadataCubit,
     double keyboardHeight = 0,
+    ThemeData? theme,
   }) {
     return BlocProvider<MetadataPluginCubit>.value(
       value: metadataCubit ?? buildMockMetadataPluginCubit(),
       child: BlocProvider<PlayerCubit>.value(
         value: mockPlayerCubit,
         child: MaterialApp(
+          theme: theme,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           builder: (context, child) => MediaQuery(
@@ -172,6 +176,33 @@ void main() {
     expect(find.text('All'), findsOneWidget);
     expect(find.text('Songs'), findsOneWidget);
     expect(find.text('Albums'), findsOneWidget);
+  });
+
+  testWidgets('chips follow a theme change without a chip selection', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildTestWidget(theme: AppTheme.darkThemeOf(AppAccent.violet)),
+    );
+    await tester.pumpAndSettle();
+    Color? unselectedLabelColor() => tester
+        .widgetList<FilterChip>(find.byType(FilterChip))
+        .firstWhere((chip) => !chip.selected)
+        .labelStyle
+        ?.color;
+    final dark = unselectedLabelColor();
+
+    await tester.pumpWidget(
+      buildTestWidget(theme: AppTheme.lightThemeOf(AppAccent.violet)),
+    );
+    await tester.pumpAndSettle();
+    final light = unselectedLabelColor();
+
+    expect(dark, isNot(light));
+    expect(
+      light,
+      AppTheme.lightThemeOf(AppAccent.violet).colorScheme.onSurface,
+    );
   });
 
   group('typed chip subsets', () {

@@ -11,6 +11,8 @@ class SearchChipsBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+
     return BlocBuilder<SearchCubit, SearchState>(
       buildWhen: (prev, curr) =>
           prev.chips != curr.chips || prev.selectedChip != curr.selectedChip,
@@ -35,11 +37,11 @@ class SearchChipsBar extends StatelessWidget {
                 label: Text(_categoryLabel(context, category)),
                 selected: isSelected,
                 showCheckmark: false,
-                selectedColor: context.colorScheme.primary,
+                side: BorderSide.none,
+                backgroundColor: scheme.primary.withValues(alpha: 0.15),
+                selectedColor: scheme.primary,
                 labelStyle: TextStyle(
-                  color: isSelected
-                      ? context.colorScheme.onPrimary
-                      : context.colorScheme.onSurface,
+                  color: isSelected ? scheme.onPrimary : scheme.onSurface,
                 ),
                 onSelected: (_) =>
                     context.read<SearchCubit>().selectChip(category),
