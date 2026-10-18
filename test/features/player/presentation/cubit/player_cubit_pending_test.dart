@@ -3,14 +3,23 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
+import 'package:music_are/core/services/preferences_service.dart';
 import 'package:music_are/features/player/data/models/pending_source.dart';
 import 'package:music_are/features/player/data/models/playback_pending.dart';
 import 'package:music_are/features/player/data/models/playback_data.dart';
 import 'package:music_are/features/player/data/services/audio_player_service.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 
 class MockAudioPlayerService extends Mock implements AudioPlayerService {}
+
+class MockMediaRepository extends Mock implements MediaRepository {}
+
+class MockUserSession extends Mock implements UserSession {}
+
+class MockPreferencesService extends Mock implements PreferencesService {}
 
 Track createPendingCubitTrack(String id, String name) {
   return Track(
@@ -68,7 +77,19 @@ void main() {
         () => mockService.playbackData,
       ).thenReturn(const PlaybackData());
 
-      cubit = PlayerCubit(mockService, notices);
+      final media = MockMediaRepository();
+      final user = MockUserSession();
+      final preferences = MockPreferencesService();
+      when(() => user.isAuthenticated).thenReturn(false);
+      when(() => preferences.getInfiniteMusic()).thenReturn(false);
+
+      cubit = PlayerCubit(
+        mockService,
+        notices,
+        media: media,
+        user: user,
+        preferences: preferences,
+      );
     });
 
     tearDown(() async {

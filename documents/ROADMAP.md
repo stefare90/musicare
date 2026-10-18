@@ -37,6 +37,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ✅ Mini-player, full player, reorderable queue sheet and live candidate switching.
 ⬜ Download and lyrics.
 ✅ "Play Next", "Add to queue", "Save to favorites" and "Share" wired in the track options bottom sheet (with the real saved state and optimistic rollback).
+✅ "Start radio" from the track sheet replaces the queue with the seed plus its provider batch, and the queue keeps extending from the last played track when it ends ("Infinite music", chained and de-duplicated, switch on by default, signed-in only).
 ✅ Queue auto-extends from partially loaded lists (playlist, album, artist top tracks, liked): background fill with loading/error states in the queue sheet.
 
 ## 📚 Library (`lib/features/library/`)
@@ -51,9 +52,10 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ## ⚙️ Settings (`lib/features/settings/`)
 ✅ Settings hub with a Plugins section: the active metadata and audio-source plugins with their versions, and a per-plugin detail page (version and, when the plugin exposes authentication, the account).
 ✅ Appearance: theme (system/light/dark), accent color, absolute-black (AMOLED) toggle, persisted across launches.
+✅ Playback: infinite music switch (on by default, persisted).
 ✅ Language: application language selector (English only for now), persisted.
 ✅ About: app version and host SDK versions.
-⬜ Remaining sections: audio quality, playback, downloads and cache, listening history, diagnostics.
+⬜ Remaining sections: audio quality, downloads and cache, listening history, diagnostics.
 ⬜ Per-plugin actions: update, reinstall, uninstall, change plugin.
 
 ## 🧙 Onboarding (`lib/features/onboarding/`)

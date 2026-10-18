@@ -142,6 +142,39 @@ void main() {
       expect(playNextTapped, isTrue);
     });
 
+    testWidgets('TrackOptionsBottomSheet starts the radio for the track', (
+      tester,
+    ) async {
+      bool radioTapped = false;
+
+      await tester.pumpWidget(
+        buildTestableWidget(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () {
+                TrackOptionsBottomSheet.show(
+                  context,
+                  testTrack,
+                  onStartRadio: () => radioTapped = true,
+                );
+              },
+              child: const Text('Show Track Options'),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Show Track Options'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Start radio'), findsOneWidget);
+
+      await tester.tap(find.text('Start radio'));
+      await tester.pumpAndSettle();
+
+      expect(radioTapped, isTrue);
+    });
+
     testWidgets(
       'TrackOptionsBottomSheet shows remove + add to playlist when saved',
       (tester) async {
@@ -298,6 +331,7 @@ void main() {
         await tester.tap(find.text('Show Track Options'));
         await tester.pumpAndSettle();
 
+        await tester.scrollUntilVisible(find.text('Go to Album'), 200);
         await tester.tap(find.text('Go to Album'));
         await tester.pumpAndSettle();
 

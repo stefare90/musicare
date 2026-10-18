@@ -12,8 +12,7 @@ class MediaRepository {
     String id, {
     int offset = 0,
     int limit = 20,
-  }) =>
-      _engine.metadata.album.tracks(id, offset: offset, limit: limit);
+  }) => _engine.metadata.album.tracks(id, offset: offset, limit: limit);
 
   Future<Artist> artist(String id) => _engine.metadata.artist.getArtist(id);
 
@@ -21,27 +20,25 @@ class MediaRepository {
     String id, {
     int offset = 0,
     int limit = 20,
-  }) =>
-      _engine.metadata.artist.topTracks(id, offset: offset, limit: limit);
+  }) => _engine.metadata.artist.topTracks(id, offset: offset, limit: limit);
 
   Future<PaginatedResult<Album>> artistAlbums(
     String id, {
     int offset = 0,
     int limit = 20,
-  }) =>
-      _engine.metadata.artist.albums(id, offset: offset, limit: limit);
+  }) => _engine.metadata.artist.albums(id, offset: offset, limit: limit);
 
   Future<PaginatedResult<Artist>> artistRelated(
     String id, {
     int offset = 0,
     int limit = 20,
-  }) =>
-      _engine.metadata.artist.related(id, offset: offset, limit: limit);
+  }) => _engine.metadata.artist.related(id, offset: offset, limit: limit);
 
   Future<PaginatedResult<Track>> playlistTracks(
     String id, {
     int offset = 0,
     int limit = 20,
-  }) =>
-      _engine.metadata.playlist.tracks(id, offset: offset, limit: limit);
+  }) => _engine.metadata.playlist.tracks(id, offset: offset, limit: limit);
+
+  Future<List<Track>> radio(String id) => _engine.metadata.track.radio(id);
 }

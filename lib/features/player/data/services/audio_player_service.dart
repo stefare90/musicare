@@ -57,8 +57,8 @@ class AudioPlayerService {
     _driverProcessingSub = _driver.processingStateStream.listen((procState) {
       _updateData(_playbackData.copyWith(processingState: procState));
       if (procState == PlaybackProcessingState.completed &&
-          _driver.isPlaying &&
-          _playbackData.queue.hasNext) {
+          _playbackData.queue.hasNext &&
+          _driver.isPlaying) {
         next();
       }
     });
@@ -198,9 +198,7 @@ class AudioPlayerService {
         if (i == _maxFetchAttempts - 1) {
           _updateData(
             _playbackData.copyWith(
-              pending: _playbackData.pending.failed(
-                PendingLoadException(e),
-              ),
+              pending: _playbackData.pending.failed(PendingLoadException(e)),
             ),
           );
           return false;
@@ -231,10 +229,7 @@ class AudioPlayerService {
     return false;
   }
 
-  PlaybackQueue _queueWithArrivals(
-    PlaybackQueue queue,
-    List<Track> arrivals,
-  ) {
+  PlaybackQueue _queueWithArrivals(PlaybackQueue queue, List<Track> arrivals) {
     if (arrivals.isEmpty) return queue;
     final original = List<Track>.from(queue.originalTracks)..addAll(arrivals);
     final List<Track> tracks;
@@ -261,6 +256,11 @@ class AudioPlayerService {
   Future<void> retryPendingLoad() async {
     if (_pendingLoader == null) return;
     _pull();
+  }
+
+  Future<void> rewindAndPause() async {
+    await _driver.seek(Duration.zero);
+    await _driver.pause();
   }
 
   Future<void> selectStreamCandidate(int candidateIndex) async {

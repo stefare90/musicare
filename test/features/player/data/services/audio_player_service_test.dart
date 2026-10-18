@@ -256,6 +256,42 @@ void main() {
       verify(() => mockDriver.stop()).called(1);
     });
 
+    test('end of the queue pauses where it is, on demand', () async {
+      await service.playQueue([track1], index: 0);
+      clearInteractions(mockDriver);
+
+      await service.rewindAndPause();
+
+      verify(() => mockDriver.seek(Duration.zero)).called(1);
+      verify(() => mockDriver.pause()).called(1);
+    });
+
+    test('end of the queue is left to the caller', () async {
+      when(() => mockDriver.isPlaying).thenReturn(true);
+      await service.playQueue([track1], index: 0);
+      clearInteractions(mockDriver);
+
+      processingController.add(PlaybackProcessingState.completed);
+      await Future<void>.delayed(Duration.zero);
+
+      // The cubit may still append a radio batch: no pause here.
+      verifyNever(() => mockDriver.seek(any()));
+      verifyNever(() => mockDriver.pause());
+    });
+
+    test('end of the queue does not touch playback when a next exists', () async {
+      when(() => mockDriver.isPlaying).thenReturn(true);
+      await service.playQueue([track1, track2], index: 0);
+      clearInteractions(mockDriver);
+
+      processingController.add(PlaybackProcessingState.completed);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(service.playbackData.currentTrack, equals(track2));
+      verifyNever(() => mockDriver.pause());
+      verifyNever(() => mockDriver.seek(any()));
+    });
+
     test(
       'failed search clears stale candidates from the previous track',
       () async {

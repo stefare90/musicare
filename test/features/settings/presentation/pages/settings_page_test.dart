@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/services/preferences_service.dart';
 import 'package:music_are/core/theme/app_accent.dart';
@@ -17,6 +18,7 @@ import '../../../../helpers/metadata_plugin_test_helpers.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  final sl = GetIt.instance;
   late ThemeCubit themeCubit;
   late PreferencesService preferences;
 
@@ -24,7 +26,14 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     preferences = PreferencesService(await SharedPreferences.getInstance());
     themeCubit = ThemeCubit(preferences);
+    // SettingsPage builds its own PlaybackSettingsCubit from the service.
+    if (sl.isRegistered<PreferencesService>()) {
+      sl.unregister<PreferencesService>();
+    }
+    sl.registerSingleton<PreferencesService>(preferences);
   });
+
+  tearDown(() => sl.reset());
 
   Widget buildTestableWidget({
     MetadataPluginCubit? metadataCubit,
@@ -140,7 +149,7 @@ void main() {
     await tester.pumpWidget(buildTestableWidget());
     await tester.pumpAndSettle();
 
-    final switchFinder = find.byType(SwitchListTile);
+    final switchFinder = find.widgetWithText(SwitchListTile, 'Absolute black');
     expect(tester.widget<SwitchListTile>(switchFinder).value, isTrue);
 
     await tester.tap(switchFinder);
@@ -148,5 +157,22 @@ void main() {
 
     expect(themeCubit.state.amoledBlack, isFalse);
     expect(preferences.getAmoledBlack(), isFalse);
+  });
+
+  testWidgets('shows infinite music on by default and persists it', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildTestableWidget());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Playback'), findsOneWidget);
+    final switchFinder = find.widgetWithText(SwitchListTile, 'Infinite music');
+    expect(tester.widget<SwitchListTile>(switchFinder).value, isTrue);
+
+    await tester.tap(switchFinder);
+    await tester.pumpAndSettle();
+
+    expect(preferences.getInfiniteMusic(), isFalse);
+    expect(tester.widget<SwitchListTile>(switchFinder).value, isFalse);
   });
 }

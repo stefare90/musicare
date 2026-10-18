@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
+import 'package:music_are/core/widgets/bottom_sheets/media_options_bottom_sheet.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
@@ -340,6 +341,16 @@ void main() {
 
         await tester.tap(find.byIcon(Icons.more_vert_rounded));
         await tester.pumpAndSettle();
+        await tester.scrollUntilVisible(
+          find.text('Go to Album'),
+          200,
+          scrollable: find.descendant(
+            of: find.byType(MediaOptionsBottomSheet),
+            matching: find.byType(Scrollable),
+          ),
+        );
+        await tester.ensureVisible(find.text('Go to Album'));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Go to Album'));
         await tester.pumpAndSettle();
 
@@ -387,7 +398,15 @@ void main() {
 
         await tester.tap(find.byIcon(Icons.more_vert_rounded));
         await tester.pumpAndSettle();
-        await tester.drag(find.text('Share Track'), const Offset(0, -300));
+        await tester.scrollUntilVisible(
+          find.text('Go to Artist'),
+          200,
+          scrollable: find.descendant(
+            of: find.byType(MediaOptionsBottomSheet),
+            matching: find.byType(Scrollable),
+          ),
+        );
+        await tester.ensureVisible(find.text('Go to Artist'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Go to Artist'));
         await tester.pumpAndSettle();

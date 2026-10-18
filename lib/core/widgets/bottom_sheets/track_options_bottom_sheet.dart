@@ -12,6 +12,7 @@ abstract class TrackOptionsBottomSheet {
     bool isSaved = false,
     VoidCallback? onPlayNext,
     VoidCallback? onAddToQueue,
+    VoidCallback? onStartRadio,
     VoidCallback? onToggleFavorite,
     VoidCallback? onAddToPlaylist,
     VoidCallback? onShare,
@@ -36,6 +37,14 @@ abstract class TrackOptionsBottomSheet {
           onTap: () {
             Navigator.of(context).pop();
             onAddToQueue?.call();
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.radio_rounded),
+          title: Text(l10n.startRadio),
+          onTap: () {
+            Navigator.of(context).pop();
+            onStartRadio?.call();
           },
         ),
         ListTile(

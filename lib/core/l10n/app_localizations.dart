@@ -376,6 +376,12 @@ abstract class AppLocalizations {
   /// **'Add to Queue'**
   String get addToQueue;
 
+  /// No description provided for @startRadio.
+  ///
+  /// In en, this message translates to:
+  /// **'Start radio'**
+  String get startRadio;
+
   /// No description provided for @playNext.
   ///
   /// In en, this message translates to:
@@ -1191,6 +1197,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use true black backgrounds in the dark theme'**
   String get settingsAmoledSubtitle;
+
+  /// No description provided for @settingsPlaybackSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback'**
+  String get settingsPlaybackSection;
+
+  /// No description provided for @settingsInfiniteMusicLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Infinite music'**
+  String get settingsInfiniteMusicLabel;
+
+  /// No description provided for @settingsInfiniteMusicSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep playing similar tracks when the queue ends'**
+  String get settingsInfiniteMusicSubtitle;
 
   /// No description provided for @settingsLanguageSection.
   ///

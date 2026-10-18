@@ -2,20 +2,35 @@ import 'dart:async';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
+import 'package:music_are/core/services/preferences_service.dart';
 import 'package:music_are/features/player/data/models/pending_source.dart';
+import 'package:music_are/features/player/data/models/playback_processing_state.dart';
 import 'package:music_are/features/player/data/services/audio_player_service.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 
 class PlayerCubit extends SafeCubit<PlayerState> {
   final AudioPlayerService _service;
   final NoticeBus _notices;
+  final MediaRepository _media;
+  final UserSession _user;
+  final PreferencesService _preferences;
   StreamSubscription<PlayerState>? _stateSub;
   Object? _lastNotifiedError;
   Object? _lastPendingError;
 
-  PlayerCubit(AudioPlayerService audioService, this._notices)
-    : _service = audioService,
-      super(PlayerState.fromPlaybackData(audioService.playbackData)) {
+  PlaybackProcessingState _lastProcessingState = PlaybackProcessingState.idle;
+  bool _radioInFlight = false;
+
+  PlayerCubit(
+    AudioPlayerService audioService,
+    this._notices, {
+    required this._media,
+    required this._user,
+    required this._preferences,
+  }) : _service = audioService,
+       super(PlayerState.fromPlaybackData(audioService.playbackData)) {
     _stateSub = audioService.playbackDataStream
         .map(PlayerState.fromPlaybackData)
         .listen(_onPlaybackData);
@@ -39,18 +54,86 @@ class PlayerCubit extends SafeCubit<PlayerState> {
       _lastPendingError = null;
     }
     emit(state);
+    _maybeContinueRadio(state);
   }
 
   Future<void> playTrack(Track track) => _service.playTrack(track);
+
   Future<void> playQueue(
     List<Track> queue, {
     int index = 0,
     PendingSource? pending,
-  }) =>
-      _service.playQueue(queue, index: index, pending: pending);
+  }) => _service.playQueue(queue, index: index, pending: pending);
+
   Future<void> retryPendingLoad() => _service.retryPendingLoad();
 
+  Future<void> startRadio(Track seed) async {
+    if (!_user.isAuthenticated) {
+      _notices.emit(Notice.error(const MetadataAuthRequiredException('')));
+      return;
+    }
+    try {
+      final batch = await _media.radio(seed.id);
+      final queue = <Track>[
+        seed,
+        ..._unseen(batch, {seed.id}),
+      ];
+      await playQueue(queue);
+    } catch (error) {
+      _notices.emit(Notice.error(error));
+    }
+  }
+
   Future<void> next() => _service.next();
+
+  void _maybeContinueRadio(PlayerState state) {
+    final previous = _lastProcessingState;
+    _lastProcessingState = state.processingState;
+    if (state.processingState != PlaybackProcessingState.completed) return;
+    if (previous == PlaybackProcessingState.completed) return;
+    final track = state.currentTrack;
+    if (track == null || state.queue.hasNext) return;
+    unawaited(_continueRadio(track));
+  }
+
+  Future<void> _continueRadio(Track seed) async {
+    if (await _extendWithRadio(seed)) {
+      await _service.next();
+    } else {
+      await _service.rewindAndPause();
+    }
+  }
+
+  Future<bool> _extendWithRadio(Track seed) async {
+    if (!_user.isAuthenticated) return false;
+    if (!(_preferences.getInfiniteMusic() ?? true)) return false;
+    if (_radioInFlight) return false;
+
+    _radioInFlight = true;
+    try {
+      final batch = await _media.radio(seed.id);
+      if (isClosed) return false;
+      final queue = _service.playbackData.queue;
+      if (queue.currentTrack?.id != seed.id) return false;
+      final fresh = _unseen(batch, queue.tracks.map((t) => t.id).toSet());
+      if (fresh.isEmpty) return false;
+      _service.addAllToQueue(fresh);
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      _radioInFlight = false;
+    }
+  }
+
+  static List<Track> _unseen(List<Track> candidates, Set<String> seen) {
+    final fresh = <Track>[];
+    for (final track in candidates) {
+      if (seen.add(track.id)) fresh.add(track);
+    }
+    return fresh;
+  }
+
   Future<void> previous() => _service.previous();
   Future<void> skipToIndex(int index) => _service.skipToIndex(index);
   Future<void> selectStreamCandidate(int candidateIndex) =>

@@ -153,6 +153,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addToQueue => 'Add to Queue';
 
   @override
+  String get startRadio => 'Start radio';
+
+  @override
   String get playNext => 'Play Next';
 
   @override
@@ -615,6 +618,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsAmoledSubtitle =>
       'Use true black backgrounds in the dark theme';
+
+  @override
+  String get settingsPlaybackSection => 'Playback';
+
+  @override
+  String get settingsInfiniteMusicLabel => 'Infinite music';
+
+  @override
+  String get settingsInfiniteMusicSubtitle =>
+      'Keep playing similar tracks when the queue ends';
 
   @override
   String get settingsLanguageSection => 'Language';

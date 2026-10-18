@@ -24,6 +24,7 @@ abstract class TrackActions {
       isSaved: saved.isTrackSaved(track.id),
       onPlayNext: () => _playNext(context, track),
       onAddToQueue: () => _addToQueue(context, track),
+      onStartRadio: () => context.read<PlayerCubit>().startRadio(track),
       onToggleFavorite: () => saved.toggleTrack(track),
       onAddToPlaylist: () => AddToPlaylistBottomSheet.show(context, track),
       onShare: () => ShareActions.shareTrack(track),

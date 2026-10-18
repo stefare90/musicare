@@ -127,7 +127,13 @@ Future<void> initDependencies() async {
     ),
   );
   sl.registerLazySingleton<PlayerCubit>(
-    () => PlayerCubit(sl<AudioPlayerService>(), sl<NoticeBus>()),
+    () => PlayerCubit(
+      sl<AudioPlayerService>(),
+      sl<NoticeBus>(),
+      media: sl<MediaRepository>(),
+      user: sl<UserSession>(),
+      preferences: sl<PreferencesService>(),
+    ),
   );
   sl.registerLazySingleton<UserCubit>(
     () => UserCubit(

@@ -3,13 +3,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
+import 'package:music_are/core/services/preferences_service.dart';
 import 'package:music_are/features/player/data/models/playback_data.dart';
 import 'package:music_are/features/player/data/models/playback_processing_state.dart';
 import 'package:music_are/features/player/data/models/playback_queue.dart';
 import 'package:music_are/features/player/data/services/audio_player_service.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
+import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
+import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 
 class MockAudioPlayerService extends Mock implements AudioPlayerService {}
+
+class MockMediaRepository extends Mock implements MediaRepository {}
+
+class MockUserSession extends Mock implements UserSession {}
+
+class MockPreferencesService extends Mock implements PreferencesService {}
 
 Track createTestTrack(String id, String name) {
   return Track(
@@ -69,7 +78,19 @@ void main() {
       when(() => mockAudioService.toggleShuffle()).thenReturn(null);
       when(() => mockAudioService.dispose()).thenAnswer((_) async {});
 
-      cubit = PlayerCubit(mockAudioService, notices);
+      final media = MockMediaRepository();
+      final user = MockUserSession();
+      final preferences = MockPreferencesService();
+      when(() => user.isAuthenticated).thenReturn(false);
+      when(() => preferences.getInfiniteMusic()).thenReturn(false);
+
+      cubit = PlayerCubit(
+        mockAudioService,
+        notices,
+        media: media,
+        user: user,
+        preferences: preferences,
+      );
     });
 
     test(
