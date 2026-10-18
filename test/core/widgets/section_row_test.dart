@@ -55,6 +55,22 @@ void main() {
       expect(find.text('Abbey Road'), findsOneWidget);
     });
 
+    testWidgets('leaves room below the card for its shadow', (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          child: SectionRow(title: 'Rock Classics', items: [testAlbum]),
+        ),
+      );
+
+      final cardRect = tester.getRect(find.byType(MediaCard));
+      final rowRect = tester.getRect(find.byType(ListView));
+
+      expect(
+        rowRect.bottom - cardRect.bottom,
+        greaterThanOrEqualTo(MediaCardMetrics.cardShadowInset),
+      );
+    });
+
     testWidgets('renders SizedBox.shrink when items list is empty', (
       tester,
     ) async {

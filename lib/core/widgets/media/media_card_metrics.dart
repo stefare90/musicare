@@ -8,6 +8,8 @@ abstract final class MediaCardMetrics {
 
   static const double gap = 12.0;
 
+  static const double cardShadowInset = 4.0;
+
   static const double minCardWidth = 130.0;
 
   static const double maxCardWidth = 180.0;

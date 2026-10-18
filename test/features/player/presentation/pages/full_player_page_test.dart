@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
+import 'package:music_are/core/theme/app_accent.dart';
+import 'package:music_are/core/theme/app_theme.dart';
 import 'package:music_are/core/widgets/bottom_sheets/audio_source_bottom_sheet.dart';
 import 'package:music_are/core/widgets/bottom_sheets/queue_bottom_sheet.dart';
 import 'package:music_are/features/player/data/models/playback_repeat_mode.dart';
@@ -79,10 +82,12 @@ void main() {
     Widget buildTestableWidget({
       VoidCallback? onCollapse,
       Size size = const Size(400, 800),
+      ThemeData? theme,
     }) {
       final engine = MockPluginEngine();
       when(() => engine.hasMetadata).thenReturn(false);
       return MaterialApp(
+        theme: theme,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: MediaQuery(
@@ -188,6 +193,42 @@ void main() {
       expect(find.byIcon(Icons.queue_music_rounded), findsOneWidget);
       expect(find.byIcon(Icons.download_rounded), findsOneWidget);
       expect(find.byIcon(Icons.favorite_border_rounded), findsOneWidget);
+    });
+
+    testWidgets('status bar icons are dark in the light theme', (tester) async {
+      when(() => mockPlayerCubit.state).thenReturn(const PlayerState());
+
+      await tester.pumpWidget(
+        buildTestableWidget(theme: AppTheme.lightThemeOf(AppAccent.violet)),
+      );
+      await tester.pumpAndSettle();
+
+      final region = tester.widget<AnnotatedRegion<SystemUiOverlayStyle>>(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.byType(AnnotatedRegion<SystemUiOverlayStyle>),
+        ),
+      );
+      expect(region.value.statusBarIconBrightness, Brightness.dark);
+    });
+
+    testWidgets('status bar icons are light in the dark theme', (
+      tester,
+    ) async {
+      when(() => mockPlayerCubit.state).thenReturn(const PlayerState());
+
+      await tester.pumpWidget(
+        buildTestableWidget(theme: AppTheme.darkThemeOf(AppAccent.violet)),
+      );
+      await tester.pumpAndSettle();
+
+      final region = tester.widget<AnnotatedRegion<SystemUiOverlayStyle>>(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.byType(AnnotatedRegion<SystemUiOverlayStyle>),
+        ),
+      );
+      expect(region.value.statusBarIconBrightness, Brightness.light);
     });
 
     testWidgets('tapping play/pause calls togglePlayPause', (tester) async {

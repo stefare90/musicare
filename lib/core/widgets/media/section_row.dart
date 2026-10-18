@@ -69,7 +69,7 @@ class SectionRow extends StatelessWidget {
           ),
         ),
         SizedBox(
-          height: rowHeight,
+          height: rowHeight + MediaCardMetrics.cardShadowInset,
           child: NotificationListener<ScrollNotification>(
             onNotification: (ScrollNotification scrollInfo) {
               if (hasMore &&
@@ -122,6 +122,7 @@ class SectionRow extends StatelessWidget {
                 return Padding(
                   padding: EdgeInsets.only(
                     right: isLast ? 0 : MediaCardMetrics.gap,
+                    bottom: MediaCardMetrics.cardShadowInset,
                   ),
                   child: child,
                 );

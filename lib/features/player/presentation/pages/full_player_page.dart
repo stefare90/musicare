@@ -28,7 +28,7 @@ class FullPlayerPage extends StatelessWidget {
           return Scaffold(
             backgroundColor: context.colorScheme.surface,
             appBar: AppBar(
-              backgroundColor: Colors.transparent,
+              backgroundColor: context.colorScheme.surface,
               elevation: 0,
               leading: IconButton(
                 icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 32),
@@ -42,7 +42,7 @@ class FullPlayerPage extends StatelessWidget {
         return Scaffold(
           backgroundColor: context.colorScheme.surface,
           appBar: AppBar(
-            backgroundColor: Colors.transparent,
+            backgroundColor: context.colorScheme.surface,
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 32),
