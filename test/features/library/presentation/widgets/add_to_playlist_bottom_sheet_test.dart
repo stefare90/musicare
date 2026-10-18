@@ -235,4 +235,27 @@ void main() {
     expect(find.text('Chill Vibes'), findsOneWidget);
     expect(find.text('Someone else'), findsNothing);
   });
+
+  testWidgets('creating a playlist fits in landscape with the keyboard open', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(960, 432);
+    addTearDown(tester.view.reset);
+    stubPlaylists([owned]);
+
+    await tester.pumpWidget(buildTestableWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('New playlist'));
+    await tester.pumpAndSettle();
+
+    // The dialog autofocuses its name field, so the system keyboard opens.
+    tester.view.viewInsets = const FakeViewPadding(bottom: 180);
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Name'), findsOneWidget);
+  });
 }
