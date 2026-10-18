@@ -28,7 +28,7 @@ The application supports two distinct plugins:
 
 ## 🛠️ Tech Stack
 
-* **Framework**: Flutter 3.12+ (Material 3 Design System)
+* **Framework**: Flutter 3.44+ (Material 3 Design System)
 * **State Management**: `flutter_bloc` (Cubits)
 * **Routing & DI**: `go_router` (Stateful Shell Routes) & `get_it`
 * **Audio Engine**: `just_audio` & `audio_service`
@@ -123,7 +123,7 @@ lib/
 ## 🚀 Quickstart & Setup
 
 ### 1. Prerequisites
-* **Flutter SDK**: `v3.12.0` or higher
+* **Flutter SDK**: `v3.44.0` or higher (Dart 3.12+)
 * **Python**: `3.10+` (used by SeriousPython's standalone packaging tool)
 * **Android Target**: Android SDK / NDK configured (for mobile deployments)
 
