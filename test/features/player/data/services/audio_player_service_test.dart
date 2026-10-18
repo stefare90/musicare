@@ -247,6 +247,15 @@ void main() {
       verify(() => mockDriver.play()).called(2);
     });
 
+    test('next at the end of the queue stops playback', () async {
+      await service.playQueue([track1], index: 0);
+      await service.next();
+
+      expect(service.playbackData.currentTrack, equals(track1));
+      expect(service.playbackData.queue.currentIndex, equals(0));
+      verify(() => mockDriver.stop()).called(1);
+    });
+
     test(
       'failed search clears stale candidates from the previous track',
       () async {

@@ -16,7 +16,7 @@ The application supports two distinct plugins:
 ## ✨ Current Features
 
 * **Dynamic Onboarding Wizard**: Effortlessly discover, download, and configure your preferred Metadata and Audio Source plugins straight from GitHub releases.
-* **Universal Media Player**: Native background playback support (`just_audio_background`) with lock-screen controls, gapless transitions, and hardware media key bindings.
+* **Universal Media Player**: Native background playback support (`audio_service`) with lock-screen controls, gapless transitions, and hardware media key bindings.
 * **Smart Queue Management**: Advanced immutable queue system supporting shuffle (preserving history), repeat modes (One, All, Off), and dynamic inserts. Playing from a partially loaded list keeps loading the rest in the background, with loading and retry states in the queue sheet.
 * **Fault-Tolerant Streaming**: Automatic candidate resolution—if a stream URL expires or returns a 403 Forbidden, the player automatically falls back to the next available stream.
 * **Global Search & Filter Chips**: Integrated with the active Metadata plugin (`ISearch`), supporting debounced queries, aggregated search views, category pagination, and instant track playback.
@@ -31,7 +31,7 @@ The application supports two distinct plugins:
 * **Framework**: Flutter 3.12+ (Material 3 Design System)
 * **State Management**: `flutter_bloc` (Cubits)
 * **Routing & DI**: `go_router` (Stateful Shell Routes) & `get_it`
-* **Audio Engine**: `just_audio` & `just_audio_background`
+* **Audio Engine**: `just_audio` & `audio_service`
 * **Plugin Subsystem**:
   * `musicare_plugin_sdk` (Pure-Python plugin SDKs, shared host runtime and Dart host SDKs)
   * `serious_python` (Embedded CPython 3.10+ host daemon)

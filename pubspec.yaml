@@ -65,7 +65,7 @@ dependencies:
   cached_network_image: ^3.4.1
   serious_python: ^4.5.1
   just_audio: ^0.10.6
-  just_audio_background: ^0.0.1-beta.17
+  audio_service: ^0.18.19
   url_launcher: ^6.3.2
   share_plus: ^11.0.0
   package_info_plus: ^9.0.0

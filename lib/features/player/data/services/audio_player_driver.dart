@@ -1,6 +1,6 @@
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart' hide MediaItem;
 import 'package:just_audio/just_audio.dart' as ja;
-import 'package:just_audio_background/just_audio_background.dart';
+import 'package:audio_service/audio_service.dart' show MediaItem;
 import 'package:music_are/features/player/data/models/playback_processing_state.dart';
 import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
 
@@ -10,12 +10,18 @@ class AudioPlayerDriver {
   AudioPlayerDriver({ja.AudioPlayer? player})
     : _player = player ?? ja.AudioPlayer();
 
-  static Future<void> initBackground() async {
-    await JustAudioBackground.init(
-      androidNotificationChannelId: 'com.musicare.audio',
-      androidNotificationChannelName: 'MusicAre Playback',
-      androidNotificationOngoing: false,
-      androidStopForegroundOnPause: false,
+  static MediaItem mediaItemFor(Track track) {
+    return MediaItem(
+      id: track.id,
+      album: track.album.name,
+      title: track.name,
+      artist: track.artists.map((a) => a.name).join(', '),
+      duration: track.durationMs > 0
+          ? Duration(milliseconds: track.durationMs)
+          : null,
+      artUri: track.album.images.isNotEmpty
+          ? Uri.tryParse(track.album.images.first.url)
+          : null,
     );
   }
 
@@ -52,23 +58,10 @@ class AudioPlayerDriver {
     required Track track,
     required AudioStreamResponse stream,
   }) async {
-    final mediaItem = MediaItem(
-      id: track.id,
-      album: track.album.name,
-      title: track.name,
-      artist: track.artists.map((a) => a.name).join(', '),
-      duration: track.durationMs > 0
-          ? Duration(milliseconds: track.durationMs)
-          : null,
-      artUri: track.album.images.isNotEmpty
-          ? Uri.tryParse(track.album.images.first.url)
-          : null,
-    );
-
     final audioSource = ja.AudioSource.uri(
       Uri.parse(stream.url),
       headers: stream.headers.isNotEmpty ? stream.headers : null,
-      tag: mediaItem,
+      tag: mediaItemFor(track),
     );
 
     await _player.setAudioSource(audioSource);
