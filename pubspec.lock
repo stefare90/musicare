@@ -508,7 +508,7 @@ packages:
     description:
       path: "dart/runtime_host"
       ref: main
-      resolved-ref: "4ce2a8f297e7bbbbcb4694046cdc4f202f1bb2f2"
+      resolved-ref: c60f01cc69bab0a5ece338c02b712c065caa6e64
       url: "https://github.com/stefare90/musicare_plugin_sdk.git"
     source: git
     version: "0.0.1"
@@ -684,50 +684,50 @@ packages:
     dependency: "direct main"
     description:
       name: serious_python
-      sha256: ad32f9eafc9a120b50b1b36bec9e239730f49bf9469d1e096c73cd6866087006
+      sha256: "79843ee277d8fda3a941111ef37831efde24f8c02c66616e70b538a6206a0e2b"
       url: "https://pub.dev"
     source: hosted
-    version: "4.7.2"
+    version: "6.0.0"
   serious_python_android:
     dependency: transitive
     description:
       name: serious_python_android
-      sha256: a83ced6712e0315076cd2cfc67eecee33439e9302de5dace12d0a4a3d0826daf
+      sha256: "35e0f4256a62931fad53e98f82e3fbc3ec0715384ca375ee4eff4498539b71c8"
       url: "https://pub.dev"
     source: hosted
-    version: "4.7.2"
+    version: "6.0.0"
   serious_python_darwin:
     dependency: transitive
     description:
       name: serious_python_darwin
-      sha256: aa6e842ad129b612a28397bc37c2c2a258d312114a18765462816b1bd015cfc6
+      sha256: "07c4a5fb6a3b2a059a7c3723a80712117e08390895cf7121a2f41d58bd44b7f2"
       url: "https://pub.dev"
     source: hosted
-    version: "4.7.2"
+    version: "6.0.0"
   serious_python_linux:
     dependency: transitive
     description:
       name: serious_python_linux
-      sha256: a582f210dc1acd85615a3df8f019f585906eef468023e5689a42dbb8a48a7aa9
+      sha256: "41d921c67641fa62e677f8e33dbfce5e6ad41754fcf8ea17856f56e2cc1e67f6"
       url: "https://pub.dev"
     source: hosted
-    version: "4.7.2"
+    version: "6.0.0"
   serious_python_platform_interface:
     dependency: transitive
     description:
       name: serious_python_platform_interface
-      sha256: "1d436ab77f7f472f5e4dc783ed677efc196e3c60059c07321331d5aa8d260987"
+      sha256: bc2be6ae4e5d9b2ac3cbd158524aba17ba06a8add0d84503666a9bc7cade7514
       url: "https://pub.dev"
     source: hosted
-    version: "4.7.2"
+    version: "6.0.0"
   serious_python_windows:
     dependency: transitive
     description:
       name: serious_python_windows
-      sha256: "482ed3705f0f3348857bc5ad343593cf1ceee29eaf58a2e03b2bbcbfda9f3e63"
+      sha256: "958e8b2d339ae564876784f5db2b9d9a79eb201a8f2921e300111b1bc0dcf54e"
       url: "https://pub.dev"
     source: hosted
-    version: "4.7.2"
+    version: "6.0.0"
   share_plus:
     dependency: "direct main"
     description:

@@ -152,7 +152,7 @@ Then run the staging script for your target platform:
 Gradle consumes the staging through **two** environment variables when `flutter build apk` runs:
 
 - `SERIOUS_PYTHON_APP` — staging dir of the unpacked app, source of `assets/app.zip`. It has **no default**: when unset, the packaging is **silently skipped**, the build still succeeds and the APK contains no Python runtime at all (`serious_python` prints `Error: …` but exits `0`, and its Gradle task returns early).
-- `SERIOUS_PYTHON_SITE_PACKAGES` — PIP dependencies, source of `assets/sitepackages.zip`. Defaults to `<cwd>/build/site-packages` when unset.
+- `SERIOUS_PYTHON_SITE_PACKAGES` — PIP dependencies, source of `assets/sitepackages.zip`. **Required by the Android build**: since `serious_python` 6.0.0 the Gradle plugin fails with `SERIOUS_PYTHON_SITE_PACKAGES environment variable is not set.` when it is missing (4.x silently defaulted to `<cwd>/build/site-packages`).
 
 **VS Code** sets both of them for debug/run sessions via `.vscode/launch.json`, so no action is needed there. From a **terminal** both must be exported in the same shell that runs the build, which is what this single command does:
 ```bash
