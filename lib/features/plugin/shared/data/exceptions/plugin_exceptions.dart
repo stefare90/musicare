@@ -51,6 +51,10 @@ class StreamResolutionException extends PluginException {
   const StreamResolutionException(this.message);
 }
 
+class MetadataRadioEmptyException extends PluginException {
+  const MetadataRadioEmptyException();
+}
+
 class PendingLoadException extends PluginException {
   final Object cause;
 

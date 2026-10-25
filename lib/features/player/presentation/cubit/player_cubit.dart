@@ -9,6 +9,7 @@ import 'package:music_are/features/player/data/services/audio_player_service.dar
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
+import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 
 class PlayerCubit extends SafeCubit<PlayerState> {
   final AudioPlayerService _service;
@@ -74,11 +75,12 @@ class PlayerCubit extends SafeCubit<PlayerState> {
     }
     try {
       final batch = await _media.radio(seed.id);
-      final queue = <Track>[
-        seed,
-        ..._unseen(batch, {seed.id}),
-      ];
-      await playQueue(queue);
+      final fresh = _unseen(batch, {seed.id});
+      if (fresh.isEmpty) {
+        _notices.emit(Notice.error(const MetadataRadioEmptyException()));
+        return;
+      }
+      await playQueue([seed, ...fresh]);
     } catch (error) {
       _notices.emit(Notice.error(error));
     }

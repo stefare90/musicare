@@ -93,6 +93,11 @@ void main() {
       );
 
       expect(
+        MetadataRadioEmptyException().toLocalizedString(buildContext),
+        equals('No similar tracks for this song.'),
+      );
+
+      expect(
         const SocketException(
           'Failed host lookup',
         ).toLocalizedString(buildContext),

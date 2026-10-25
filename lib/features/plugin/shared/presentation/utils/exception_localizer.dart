@@ -25,6 +25,7 @@ extension ExceptionLocalizer on Object {
 
       MetadataAuthRequiredException() => context.l10n.pluginErrorAuthRequired,
       MetadataNotFoundException() => context.l10n.pluginErrorResourceNotFound,
+      MetadataRadioEmptyException() => context.l10n.radioNoMatches,
       MetadataTransportException(:final message) =>
         '${context.l10n.pluginErrorNetwork}: $message',
       MetadataRateLimitedException() => context.l10n.pluginErrorRateLimited,

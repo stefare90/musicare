@@ -9,6 +9,7 @@ import 'package:music_are/features/player/data/models/playback_processing_state.
 import 'package:music_are/features/player/data/models/playback_queue.dart';
 import 'package:music_are/features/player/data/services/audio_player_service.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
+import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 
@@ -138,6 +139,33 @@ void main() {
                 ).captured.single
                 as List<Track>;
         expect(queued.map((track) => track.id), ['seed', 'other', 'third']);
+      });
+
+      test('reports an empty batch without touching the queue', () async {
+        when(() => media.radio(seed.id)).thenAnswer((_) async => []);
+
+        await cubit.startRadio(seed);
+        await settle();
+
+        expect(notices.single, isA<ErrorNotice>());
+        expect(
+          (notices.single as ErrorNotice).error,
+          isA<MetadataRadioEmptyException>(),
+        );
+        verifyNever(() => service.playQueue(any(), index: any(named: 'index')));
+      });
+
+      test('ignores a batch whose only tracks are the seed', () async {
+        when(() => media.radio(seed.id)).thenAnswer((_) async => [seed]);
+
+        await cubit.startRadio(seed);
+        await settle();
+
+        expect(
+          (notices.single as ErrorNotice).error,
+          isA<MetadataRadioEmptyException>(),
+        );
+        verifyNever(() => service.playQueue(any(), index: any(named: 'index')));
       });
 
       test('asks to sign in instead of starting when signed out', () async {

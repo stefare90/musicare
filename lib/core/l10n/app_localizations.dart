@@ -382,6 +382,12 @@ abstract class AppLocalizations {
   /// **'Start radio'**
   String get startRadio;
 
+  /// No description provided for @radioNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No similar tracks for this song.'**
+  String get radioNoMatches;
+
   /// No description provided for @playNext.
   ///
   /// In en, this message translates to:
