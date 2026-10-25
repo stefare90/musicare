@@ -10,6 +10,7 @@ import 'package:music_are/features/player/data/models/playback_data.dart';
 import 'package:music_are/features/player/data/models/playback_processing_state.dart';
 import 'package:music_are/features/player/data/services/audio_player_driver.dart';
 import 'package:music_are/features/player/data/services/audio_stream_resolver.dart';
+import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
 
 class AudioPlayerService {
   final AudioPlayerDriver _driver;
@@ -26,6 +27,7 @@ class AudioPlayerService {
 
   int _sessionCounter = 0;
   String? _loadedTrackId;
+  int _consecutiveFailures = 0;
   DateTime _lastPositionUpdate = DateTime.fromMillisecondsSinceEpoch(0);
 
   static const int _maxFetchAttempts = 4;
@@ -88,6 +90,7 @@ class AudioPlayerService {
   }) async {
     if (queue.isEmpty) return;
 
+    _consecutiveFailures = 0;
     final validIndex = (index >= 0 && index < queue.length) ? index : 0;
     _pendingGeneration++;
     final source = (pending != null && !pending.isComplete) ? pending : null;
@@ -106,18 +109,24 @@ class AudioPlayerService {
   }
 
   Future<void> next() async {
+    if (await _advanceQueue()) {
+      await _playCurrentQueueTrack();
+    }
+  }
+
+  Future<bool> _advanceQueue() async {
     final nextFlight = _activeFetch;
     if (nextFlight != null &&
         _playbackData.queue.currentIndex + 1 >= _playbackData.queue.length) {
       await nextFlight;
     }
     final nextQueue = _playbackData.queue.next();
-    if (nextQueue != null) {
-      _updateData(_playbackData.copyWith(queue: nextQueue));
-      await _playCurrentQueueTrack();
-    } else {
+    if (nextQueue == null) {
       await stop();
+      return false;
     }
+    _updateData(_playbackData.copyWith(queue: nextQueue));
+    return true;
   }
 
   Future<void> previous() async {
@@ -294,6 +303,7 @@ class AudioPlayerService {
 
       await _driver.loadStream(track: track, stream: stream);
       _loadedTrackId = track.id;
+      _consecutiveFailures = 0;
 
       if (currentPos > Duration.zero) {
         await _driver.seek(currentPos);
@@ -307,8 +317,22 @@ class AudioPlayerService {
   }
 
   Future<void> _playCurrentQueueTrack() async {
+    while (true) {
+      final failure = await _attemptCurrentQueueTrack();
+      if (failure == null || !_isDefinitiveFailure(failure)) return;
+
+      _consecutiveFailures++;
+      if (_consecutiveFailures >= _playbackData.queue.length) return;
+      if (!await _advanceQueue()) return;
+    }
+  }
+
+  static bool _isDefinitiveFailure(Object error) =>
+      error is StreamResolutionException || error is AudioNotFoundException;
+
+  Future<Object?> _attemptCurrentQueueTrack() async {
     final track = _playbackData.currentTrack;
-    if (track == null) return;
+    if (track == null) return null;
 
     final sessionId = ++_sessionCounter;
 
@@ -321,16 +345,16 @@ class AudioPlayerService {
     try {
       resolvedCandidates = await _resolver.resolveTrack(track);
     } catch (e) {
-      if (sessionId != _sessionCounter) return;
+      if (sessionId != _sessionCounter) return null;
       _updateData(
         PlaybackData.failure(
           _playbackData.copyWith(candidates: const PlaybackCandidates()),
           e,
         ),
       );
-      return;
+      return e;
     }
-    if (sessionId != _sessionCounter) return;
+    if (sessionId != _sessionCounter) return null;
 
     _updateData(_playbackData.copyWith(candidates: resolvedCandidates));
 
@@ -352,9 +376,10 @@ class AudioPlayerService {
           }
           await _driver.loadStream(track: track, stream: stream);
           _loadedTrackId = track.id;
+          _consecutiveFailures = 0;
           isLoaded = true;
         } catch (e) {
-          if (sessionId != _sessionCounter) return;
+          if (sessionId != _sessionCounter) return null;
           if (resolvedCandidates.hasNext) {
             resolvedCandidates = resolvedCandidates.next();
             _updateData(_playbackData.copyWith(candidates: resolvedCandidates));
@@ -364,12 +389,14 @@ class AudioPlayerService {
         }
       }
 
-      if (sessionId != _sessionCounter) return;
+      if (sessionId != _sessionCounter) return null;
 
       await _driver.play();
+      return null;
     } catch (e) {
-      if (sessionId != _sessionCounter) return;
+      if (sessionId != _sessionCounter) return null;
       _updateData(PlaybackData.failure(_playbackData, e));
+      return e;
     }
   }
 

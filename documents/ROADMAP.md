@@ -34,6 +34,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ✅ Native background playback with notification, lock-screen controls and media buttons.
 ✅ Immutable queue with shuffle and repeat.
 ✅ Multi-candidate stream resolution with automatic fallback on expired streams or 403 responses.
+✅ Skips to the next track when a track cannot be resolved (definitive errors only), still reporting the failure; transient errors keep the current track.
 ✅ Mini-player, full player, reorderable queue sheet and live candidate switching.
 ⬜ Download and lyrics.
 ✅ "Play Next", "Add to queue", "Save to favorites" and "Share" wired in the track options bottom sheet (with the real saved state and optimistic rollback).

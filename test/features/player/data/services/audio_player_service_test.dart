@@ -422,5 +422,151 @@ void main() {
         expect(service.playbackData.queue.length, equals(1));
       },
     );
+
+    test(
+      'a track that cannot be resolved skips to the next one after failing once',
+      () async {
+        final broken = createTestTrack('broken', 'Broken');
+        final good = createTestTrack('good', 'Good');
+        when(() => mockResolver.resolveTrack(broken)).thenAnswer(
+          (_) async => throw const StreamResolutionException(
+            'No playable stream candidates',
+          ),
+        );
+
+        final failures = <Object>[];
+        Object? lastError;
+        final subscription = service.playbackDataStream.listen((data) {
+          final error = data.error;
+          if (error != null && !identical(error, lastError)) {
+            failures.add(error);
+          }
+          lastError = error;
+        });
+
+        await service.playQueue([broken, good]);
+        await Future<void>.delayed(Duration.zero);
+        await subscription.cancel();
+
+        expect(service.playbackData.currentTrack, equals(good));
+        expect(service.playbackData.queue.currentIndex, equals(1));
+        expect(service.playbackData.error, isNull);
+        expect(failures, hasLength(1));
+        expect(failures.single, isA<StreamResolutionException>());
+        verify(() => mockResolver.resolveTrack(broken)).called(1);
+        verify(() => mockResolver.resolveTrack(good)).called(1);
+        verify(() => mockDriver.play()).called(1);
+      },
+    );
+
+    test('a missing stream on the last candidate also skips', () async {
+      when(() => mockResolver.resolveTrack(track1)).thenAnswer(
+        (_) async => const PlaybackCandidates(
+          candidates: [candidateTrack1],
+          activeCandidateId: 'c1',
+        ),
+      );
+      when(
+        () => mockResolver.resolveCandidateStream(
+          'c1',
+          quality: any(named: 'quality'),
+        ),
+      ).thenAnswer(
+        (_) async => throw const AudioNotFoundException('gone'),
+      );
+
+      await service.playQueue([track1, track2]);
+
+      expect(service.playbackData.currentTrack, equals(track2));
+      expect(service.playbackData.error, isNull);
+      verify(() => mockDriver.play()).called(1);
+    });
+
+    test('all tracks failing stops the chain even with repeat-all', () async {
+      final first = createTestTrack('first', 'First');
+      final second = createTestTrack('second', 'Second');
+      when(() => mockResolver.resolveTrack(any())).thenAnswer(
+        (_) async => throw const StreamResolutionException(
+          'No playable stream candidates',
+        ),
+      );
+
+      service.cycleRepeatMode();
+      await service.playQueue([first, second]);
+
+      expect(
+        service.playbackData.queue.repeatMode,
+        equals(PlaybackRepeatMode.all),
+      );
+      expect(service.playbackData.error, isA<StreamResolutionException>());
+      verify(() => mockResolver.resolveTrack(any())).called(2);
+      verifyNever(() => mockDriver.play());
+    });
+
+    test('rate-limited resolutions do not skip to the next track', () async {
+      final good = createTestTrack('good', 'Good');
+      when(() => mockResolver.resolveTrack(track1)).thenAnswer(
+        (_) async => throw const AudioRateLimitedException('slow down'),
+      );
+
+      await service.playQueue([track1, good]);
+
+      expect(service.playbackData.currentTrack, equals(track1));
+      expect(service.playbackData.error, isA<AudioRateLimitedException>());
+      verifyNever(() => mockResolver.resolveTrack(good));
+      verifyNever(() => mockDriver.play());
+    });
+
+    test('transport errors do not skip to the next track', () async {
+      final good = createTestTrack('good', 'Good');
+      when(() => mockResolver.resolveTrack(track1)).thenAnswer(
+        (_) async => throw const AudioTransportException('offline'),
+      );
+
+      await service.playQueue([track1, good]);
+
+      expect(service.playbackData.currentTrack, equals(track1));
+      expect(service.playbackData.error, isA<AudioTransportException>());
+      verifyNever(() => mockResolver.resolveTrack(good));
+      verifyNever(() => mockDriver.play());
+    });
+
+    test('a successful load resets the consecutive failure counter', () async {
+      final broken = createTestTrack('broken', 'Broken');
+      final good = createTestTrack('good', 'Good');
+      when(() => mockResolver.resolveTrack(broken)).thenAnswer(
+        (_) async => throw const StreamResolutionException(
+          'No playable stream candidates',
+        ),
+      );
+
+      service.cycleRepeatMode();
+      await service.playQueue([broken, good]);
+      expect(service.playbackData.currentTrack, equals(good));
+
+      await service.next();
+
+      expect(service.playbackData.currentTrack, equals(good));
+      expect(service.playbackData.error, isNull);
+      verify(() => mockResolver.resolveTrack(good)).called(2);
+    });
+
+    test('skipping the last broken track stops at the end of the queue', () async {
+      final broken = createTestTrack('broken', 'Broken');
+      final good = createTestTrack('good', 'Good');
+      when(() => mockResolver.resolveTrack(broken)).thenAnswer(
+        (_) async => throw const StreamResolutionException(
+          'No playable stream candidates',
+        ),
+      );
+
+      await service.playQueue([broken, good]);
+      expect(service.playbackData.currentTrack, equals(good));
+      clearInteractions(mockDriver);
+
+      await service.next();
+
+      verify(() => mockDriver.stop()).called(1);
+    });
   });
 }
