@@ -160,7 +160,7 @@ Then run the staging script for your target platform:
 ```bash
 ./tool/build_python.sh Linux
 ```
-*This script bundles Flask, the host runtime and the PIP dependencies into `build/python-app` and `build/site-packages`, exporting both variables for you. It then verifies the produced artifacts and exits with a non-zero code if any of them is missing or empty.*
+*This script bundles Flask, the host runtime (including the shared `plugin_runtime` package), the plugin SDKs and the PIP dependencies into `build/python-app` and `build/site-packages`, exporting both variables for you. It then verifies the produced artifacts and exits with a non-zero code if any of them is missing or empty.*
 
 #### Environment Variables
 Gradle consumes the staging through **two** environment variables when `flutter build apk` runs:

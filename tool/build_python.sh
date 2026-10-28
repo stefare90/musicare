@@ -1,7 +1,7 @@
 #!/bin/bash
-# Stages the flat Python app (both engines + both plugin SDKs + the unified main.py) from
-# the musicare_plugin_sdk repository and packages it into the Flutter asset that
-# serious_python runs on the device.
+# Stages the flat Python app (both engines + the shared plugin_runtime package + both
+# plugin SDKs + the unified main.py) from the musicare_plugin_sdk repository and packages
+# it into the Flutter asset that serious_python runs on the device.
 #
 # Usage: ./tool/build_python.sh [Android | Linux] [apk]
 set -e
@@ -46,6 +46,7 @@ rm -rf build/python-app build/site-packages build/host_staging
 mkdir -p build/python-app build/site-packages build/host_staging
 
 cp "$PLATFORM_DIR/python/main.py" build/host_staging/main.py
+cp -r "$PLATFORM_DIR/python/plugin_runtime" build/host_staging/plugin_runtime
 cp "$PLATFORM_DIR/python/audio/host_runtime/audio_engine.py" \
   build/host_staging/audio_engine.py
 cp "$PLATFORM_DIR/python/metadata/host_runtime/metadata_engine.py" \
@@ -87,6 +88,13 @@ for SDK in "${SDK_DIRS[@]}"; do
   if [ ! -d "build/python-app/$SDK" ] \
     || [ -z "$(ls -A "build/python-app/$SDK" 2>/dev/null)" ]; then
     STAGING_ERRORS+=("build/python-app/$SDK/ is missing or empty")
+  fi
+done
+
+RUNTIME_FILES=(plugin_runtime/__init__.py plugin_runtime/loader.py plugin_runtime/http.py)
+for FILE in "${RUNTIME_FILES[@]}"; do
+  if [ ! -s "build/python-app/$FILE" ]; then
+    STAGING_ERRORS+=("build/python-app/$FILE is missing or empty")
   fi
 done
 
