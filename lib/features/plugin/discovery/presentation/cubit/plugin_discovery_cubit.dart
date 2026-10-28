@@ -1,17 +1,15 @@
-import 'dart:typed_data';
 import 'package:music_are/core/cubit/safe_cubit.dart';
-import 'package:music_are/features/plugin/discovery/data/services/plugin_discovery_service.dart';
 import 'package:music_are/features/plugin/discovery/presentation/cubit/plugin_discovery_state.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
+import 'package:music_are/features/plugin/shared/data/services/plugin_catalog.dart';
 
 class PluginDiscoveryCubit extends SafeCubit<PluginDiscoveryState> {
-  final PluginDiscoveryService _discoveryService;
+  final PluginCatalog _catalog;
 
-  PluginDiscoveryCubit(this._discoveryService)
-    : super(PluginDiscoveryInitialState());
+  PluginDiscoveryCubit(this._catalog) : super(PluginDiscoveryInitialState());
 
-  Future<void> fetchCommunityPlugins({
+  Future<void> fetchPlugins({
     PluginType? type,
     bool forceRefresh = false,
   }) async {
@@ -19,17 +17,12 @@ class PluginDiscoveryCubit extends SafeCubit<PluginDiscoveryState> {
       emit(PluginDiscoveryLoadingState());
     }
     try {
-      final plugins = await _discoveryService.fetchCommunityPlugins(
-        type: type,
-        forceRefresh: forceRefresh,
-      );
-      emit(PluginDiscoveryLoadedState(plugins));
+      final manifests = type == null
+          ? <String, PluginManifest>{}
+          : await _catalog.latest(type, forceRefresh: forceRefresh);
+      emit(PluginDiscoveryLoadedState(manifests));
     } catch (e) {
       emit(PluginDiscoveryErrorState(e));
     }
-  }
-
-  Uint8List? getZipBytesForPlugin(PluginManifest manifest) {
-    return _discoveryService.getZipBytesForPlugin(manifest);
   }
 }

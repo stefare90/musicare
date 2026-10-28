@@ -1,42 +1,36 @@
-import 'dart:typed_data';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:music_are/features/plugin/discovery/data/services/plugin_discovery_service.dart';
 import 'package:music_are/features/plugin/discovery/presentation/cubit/plugin_discovery_cubit.dart';
 import 'package:music_are/features/plugin/discovery/presentation/cubit/plugin_discovery_state.dart';
+import 'package:music_are/features/plugin/shared/data/services/plugin_catalog.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 
-class MockPluginDiscoveryService extends Mock
-    implements PluginDiscoveryService {}
-
-class FakePluginManifest extends Fake implements PluginManifest {}
+class MockPluginCatalog extends Mock implements PluginCatalog {}
 
 void main() {
   setUpAll(() {
-    registerFallbackValue(FakePluginManifest());
     registerFallbackValue(PluginType.metadata);
   });
 
   group('PluginDiscoveryCubit Unit Tests', () {
-    late MockPluginDiscoveryService mockDiscoveryService;
+    late MockPluginCatalog catalog;
     late PluginDiscoveryCubit cubit;
 
-    final testManifest = PluginManifest(
-      id: 'org.gyawun.musicbrainz',
-      packageId: 'gyawun_metadata_plugin',
+    final manifest = PluginManifest(
+      id: 'org.musicare.metadata.test',
+      packageId: 'test_plugin',
       type: 'metadata',
-      name: 'MusicBrainz & ListenBrainz',
+      name: 'Test Plugin',
       version: '1.0.0',
       pluginSdkVersion: '1.0.0',
-      author: 'MusicAre Team',
-      description: 'Test description',
+      author: 'Tester',
+      description: 'Test plugin',
     );
 
     setUp(() {
-      mockDiscoveryService = MockPluginDiscoveryService();
-      cubit = PluginDiscoveryCubit(mockDiscoveryService);
+      catalog = MockPluginCatalog();
+      cubit = PluginDiscoveryCubit(catalog);
     });
 
     tearDown(() {
@@ -47,45 +41,36 @@ void main() {
       expect(cubit.state, isA<PluginDiscoveryInitialState>());
     });
 
-    test(
-      'fetchCommunityPlugins emits Loading and Loaded states with type filtering',
-      () async {
-        when(
-          () => mockDiscoveryService.fetchCommunityPlugins(
-            type: any(named: 'type'),
-          ),
-        ).thenAnswer((_) async => [testManifest]);
-
-        expectLater(
-          cubit.stream,
-          emitsInOrder([
-            isA<PluginDiscoveryLoadingState>(),
-            isA<PluginDiscoveryLoadedState>()
-                .having((s) => s.plugins.length, 'length', 1)
-                .having(
-                  (s) => s.plugins.first.id,
-                  'id',
-                  'org.gyawun.musicbrainz',
-                ),
-          ]),
-        );
-
-        await cubit.fetchCommunityPlugins(type: PluginType.metadata);
-      },
-    );
-
-    test('getZipBytesForPlugin delegates call to PluginDiscoveryService', () {
-      final expectedBytes = Uint8List.fromList([1, 2, 3]);
+    test('fetchPlugins emits Loading and Loaded with a map by id', () async {
       when(
-        () => mockDiscoveryService.getZipBytesForPlugin(testManifest),
-      ).thenReturn(expectedBytes);
+        () => catalog.latest(
+          PluginType.metadata,
+          forceRefresh: false,
+        ),
+      ).thenAnswer((_) async => {manifest.id: manifest});
 
-      final result = cubit.getZipBytesForPlugin(testManifest);
+      expectLater(
+        cubit.stream,
+        emitsInOrder([
+          isA<PluginDiscoveryLoadingState>(),
+          isA<PluginDiscoveryLoadedState>()
+              .having((s) => s.plugins.length, 'length', 1)
+              .having((s) => s.plugins[manifest.id]?.name, 'name', 'Test Plugin'),
+        ]),
+      );
 
-      expect(result, equals(expectedBytes));
-      verify(
-        () => mockDiscoveryService.getZipBytesForPlugin(testManifest),
-      ).called(1);
+      await cubit.fetchPlugins(type: PluginType.metadata);
     });
+
+    test('a network error becomes PluginDiscoveryErrorState', () async {
+      when(
+        () => catalog.latest(any(), forceRefresh: any(named: 'forceRefresh')),
+      ).thenThrow(Exception('offline'));
+
+      await cubit.fetchPlugins(type: PluginType.metadata);
+
+      expect(cubit.state, isA<PluginDiscoveryErrorState>());
+    });
+
   });
 }

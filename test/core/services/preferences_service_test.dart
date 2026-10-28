@@ -2,69 +2,101 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_are/core/services/preferences_service.dart';
 import 'package:music_are/core/theme/app_accent.dart';
+import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('PreferencesService Unit Tests', () {
-    late PreferencesService service;
     late SharedPreferences prefs;
+    late PreferencesService service;
 
     setUp(() async {
-      SharedPreferences.setMockInitialValues({
-        'active_metadata_plugin_id': 'org.gyawun.musicbrainz',
-      });
+      SharedPreferences.setMockInitialValues({});
       prefs = await SharedPreferences.getInstance();
       service = PreferencesService(prefs);
     });
 
-    test('getActivePluginId returns saved plugin id', () {
-      final pluginId = service.getActivePluginId();
-      expect(pluginId, equals('org.gyawun.musicbrainz'));
-    });
+    test('active plugin ids use one generic key per type', () async {
+      expect(service.activePluginId(PluginType.metadata), isNull);
+      expect(service.activePluginId(PluginType.audioSource), isNull);
 
-    test('setActivePluginId persists new plugin id', () async {
-      final success = await service.setActivePluginId('org.gyawun.spotify');
+      await service.setActivePluginId(
+        PluginType.metadata,
+        'org.musicare.metadata.musicbrainz',
+      );
+      await service.setActivePluginId(
+        PluginType.audioSource,
+        'org.musicare.audiosource.youtube',
+      );
 
-      expect(success, isTrue);
-      expect(service.getActivePluginId(), equals('org.gyawun.spotify'));
       expect(
-        prefs.getString('active_metadata_plugin_id'),
-        equals('org.gyawun.spotify'),
+        service.activePluginId(PluginType.metadata),
+        'org.musicare.metadata.musicbrainz',
+      );
+      expect(
+        service.activePluginId(PluginType.audioSource),
+        'org.musicare.audiosource.youtube',
+      );
+      expect(
+        prefs.getString('metadata_active_plugin_id'),
+        'org.musicare.metadata.musicbrainz',
+      );
+      expect(
+        prefs.getString('audiosource_active_plugin_id'),
+        'org.musicare.audiosource.youtube',
       );
     });
 
-    test('removeActivePluginId removes plugin id key', () async {
-      final success = await service.removeActivePluginId();
+    test('clearActivePluginId removes only the requested type', () async {
+      await service.setActivePluginId(PluginType.metadata, 'metadata.plugin');
+      await service.setActivePluginId(PluginType.audioSource, 'audio.plugin');
 
-      expect(success, isTrue);
-      expect(service.getActivePluginId(), isNull);
-      expect(prefs.getString('active_metadata_plugin_id'), isNull);
+      await service.clearActivePluginId(PluginType.metadata);
+
+      expect(service.activePluginId(PluginType.metadata), isNull);
+      expect(service.activePluginId(PluginType.audioSource), 'audio.plugin');
     });
 
-    test('metadata user id is cached per active plugin', () async {
-      await service.setMetadataUserId('listener');
-      expect(service.getMetadataUserId(), 'listener');
-      expect(
-        prefs.getString('metadata_user_id_org.gyawun.musicbrainz'),
-        'listener',
-      );
+    test('plugin account ids are scoped per plugin', () async {
+      await service.setPluginAccountId('first.plugin', 'listener');
 
-      await service.setActivePluginId('org.gyawun.spotify');
-      expect(service.getMetadataUserId(), isNull);
-
-      await service.setMetadataUserId('other');
-      await service.setActivePluginId('org.gyawun.musicbrainz');
-      expect(service.getMetadataUserId(), 'listener');
+      expect(service.pluginAccountId('first.plugin'), 'listener');
+      expect(prefs.getString('plugin_account_id_first.plugin'), 'listener');
+      expect(service.pluginAccountId('second.plugin'), isNull);
     });
 
-    test('removeMetadataUserId clears the cached identity', () async {
-      await service.setMetadataUserId('listener');
+    test('removePluginAccountId clears both generic and legacy keys', () async {
+      await service.setPluginAccountId('first.plugin', 'listener');
+      prefs.setString('metadata_user_id_first.plugin', 'listener');
 
-      await service.removeMetadataUserId();
+      await service.removePluginAccountId('first.plugin');
 
-      expect(service.getMetadataUserId(), isNull);
+      expect(service.pluginAccountId('first.plugin'), isNull);
+      expect(prefs.getString('metadata_user_id_first.plugin'), isNull);
+    });
+
+    test('legacy metadata account id is read and migrated', () async {
+      prefs.setString('metadata_user_id_old.plugin', 'listener');
+
+      expect(service.pluginAccountId('old.plugin'), 'listener');
+
+      await service.migratePluginAccountId('old.plugin');
+
+      expect(prefs.getString('metadata_user_id_old.plugin'), isNull);
+      expect(prefs.getString('plugin_account_id_old.plugin'), 'listener');
+    });
+
+    test('removePluginScopedKeys clears keys of a non-active plugin', () async {
+      prefs.setString('metadata_user_id_old.plugin', 'listener');
+      prefs.setString('metadata_user_id_new.plugin', 'other');
+      await service.setActivePluginId(PluginType.metadata, 'new.plugin');
+
+      await service.removePluginScopedKeys('old.plugin');
+
+      expect(prefs.getString('metadata_user_id_old.plugin'), isNull);
+      expect(prefs.getString('metadata_user_id_new.plugin'), 'other');
     });
 
     test('theme mode defaults to null and round-trips', () async {

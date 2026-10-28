@@ -6,14 +6,16 @@ import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/services/preferences_service.dart';
 import 'package:music_are/core/theme/app_accent.dart';
 import 'package:music_are/core/theme/presentation/cubit/theme_cubit.dart';
-import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
+import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
+import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
+import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/settings/presentation/pages/settings_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../helpers/audio_source_test_helpers.dart';
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
+import '../../../../helpers/plugin_session_cubit_test_helpers.dart';
+import '../../../../helpers/plugin_manager_test_helpers.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -36,17 +38,29 @@ void main() {
   tearDown(() => sl.reset());
 
   Widget buildTestableWidget({
-    MetadataPluginCubit? metadataCubit,
-    AudioSourcePluginCubit? audioCubit,
+    PluginManagerCubit? managementCubit,
+    PluginSessionCubit? pluginCubit,
   }) {
     return MultiBlocProvider(
       providers: [
         BlocProvider<ThemeCubit>.value(value: themeCubit),
-        BlocProvider<MetadataPluginCubit>.value(
-          value: metadataCubit ?? buildMockMetadataPluginCubit(),
+        BlocProvider<PluginManagerCubit>.value(
+          value:
+              managementCubit ??
+              buildMockPluginManagerCubit(
+                state: testManagerState(
+                  metadata: testPluginManifest(),
+                  audioSource: testAudioSourceManifest(),
+                ),
+              ),
         ),
-        BlocProvider<AudioSourcePluginCubit>.value(
-          value: audioCubit ?? buildMockAudioSourcePluginCubit(),
+        BlocProvider<PluginSessionCubit>.value(
+          value:
+              pluginCubit ??
+              buildTestPluginSessionCubit(
+                metadata: testRuntimeLoaded(testPluginManifest()),
+                audioSource: testRuntimeLoaded(testAudioSourceManifest()),
+              ),
         ),
       ],
       child: MaterialApp(
@@ -71,13 +85,72 @@ void main() {
     expect(find.text('Audio source · v1.0.0'), findsOneWidget);
   });
 
+  testWidgets('shows the available update in the plugin subtitle', (
+    tester,
+  ) async {
+    final installed = testPluginManifest();
+    await tester.pumpWidget(
+      buildTestableWidget(
+        managementCubit: buildMockPluginManagerCubit(
+          state: testManagerState(
+            metadataSlot: testPluginSlot(
+              installed: installed,
+              remote: PluginManifest(
+                id: installed.id,
+                packageId: installed.packageId,
+                type: installed.type,
+                name: installed.name,
+                version: '2.0.0',
+                pluginSdkVersion: installed.pluginSdkVersion,
+                author: installed.author,
+                description: installed.description,
+              ),
+              updateAvailable: true,
+            ),
+            audioSource: testAudioSourceManifest(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Update available · v1.0.0 → v2.0.0'), findsOneWidget);
+  });
+
+  testWidgets('shows the incompatible status in the plugin subtitle', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildTestableWidget(
+        managementCubit: buildMockPluginManagerCubit(
+          state: testManagerState(
+            metadataSlot: testPluginSlot(
+              installed: testPluginManifest(),
+              incompatible: true,
+            ),
+            audioSource: testAudioSourceManifest(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Incompatible with this version of the app'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('shows a type placeholder when a plugin is not configured', (
     tester,
   ) async {
     await tester.pumpWidget(
       buildTestableWidget(
-        metadataCubit: buildMockMetadataPluginCubit(
-          state: MetadataPluginNotConfiguredState(),
+        managementCubit: buildMockPluginManagerCubit(
+          state: testManagerState(audioSource: testAudioSourceManifest()),
+        ),
+        pluginCubit: buildTestPluginSessionCubit(
+          audioSource: testRuntimeLoaded(testAudioSourceManifest()),
         ),
       ),
     );

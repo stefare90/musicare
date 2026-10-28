@@ -1,14 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:archive/archive.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:pub_semver/pub_semver.dart';
 
 class AudioSourcePluginEngine {
@@ -33,67 +30,28 @@ class AudioSourcePluginEngine {
   String? get activePluginDir => _activePluginDir;
   bool get isRunning => _audioSourcePlugin != null;
 
-  Future<bool> isPluginInstalledOnDisk(String pluginId) async {
-    final pluginDir = await _pluginDirPath(pluginId);
-    return File(p.join(pluginDir, 'plugin.json')).existsSync();
+  bool isCompatible(PluginManifest manifest) {
+    try {
+      checkManifest(manifest);
+      return true;
+    } on PluginException {
+      return false;
+    }
   }
 
-  Future<void> loadFromDisk(String pluginId) async {
-    final pluginDir = await _pluginDirPath(pluginId);
+  Future<void> loadFromDisk(String pluginDir) async {
     final jsonFile = File(p.join(pluginDir, 'plugin.json'));
-
     if (!jsonFile.existsSync()) {
-      throw PluginFileNotFoundException(pluginId);
+      throw PluginFileNotFoundException(pluginDir);
     }
 
     final manifest = PluginManifest.fromJson(
       jsonDecode(jsonFile.readAsStringSync()) as Map<String, dynamic>,
     );
-    _checkManifest(manifest);
+    checkManifest(manifest);
     await _client.loadPlugin(pluginDir: pluginDir);
     _audioSourcePlugin = AudioSourcePluginAdapter(caller: _client);
     _activePluginDir = pluginDir;
-    _activeManifest = manifest;
-  }
-
-  Future<void> loadFromZipBytes(Uint8List zipBytes) async {
-    final archive = ZipDecoder().decodeBytes(zipBytes);
-    PluginManifest? manifest;
-    for (final file in archive) {
-      if (file.name == 'plugin.json') {
-        manifest = PluginManifest.fromJson(
-          jsonDecode(utf8.decode(file.content as List<int>))
-              as Map<String, dynamic>,
-        );
-        break;
-      }
-    }
-
-    if (manifest == null) {
-      throw InvalidPluginArchiveException();
-    }
-    _checkManifest(manifest);
-
-    final pluginDir = Directory(await _pluginDirPath(manifest.id));
-    if (pluginDir.existsSync()) {
-      pluginDir.deleteSync(recursive: true);
-    }
-    pluginDir.createSync(recursive: true);
-
-    for (final file in archive) {
-      final filename = p.join(pluginDir.path, file.name);
-      if (file.isFile) {
-        File(filename)
-          ..createSync(recursive: true)
-          ..writeAsBytesSync(file.content as List<int>);
-      } else {
-        Directory(filename).createSync(recursive: true);
-      }
-    }
-
-    await _client.loadPlugin(pluginDir: pluginDir.path);
-    _audioSourcePlugin = AudioSourcePluginAdapter(caller: _client);
-    _activePluginDir = pluginDir.path;
     _activeManifest = manifest;
   }
 
@@ -118,10 +76,10 @@ class AudioSourcePluginEngine {
     _activePluginDir = null;
   }
 
-  void _checkManifest(PluginManifest manifest) {
+  void checkManifest(PluginManifest manifest) {
     if (manifest.pluginType != PluginType.audioSource) {
       throw InvalidPluginTypeException(
-        expectedType: 'audioSource',
+        expectedType: PluginType.audioSource.name,
         actualType: manifest.type,
       );
     }
@@ -134,10 +92,5 @@ class AudioSourcePluginEngine {
         hostVersion: packageVersion,
       );
     }
-  }
-
-  Future<String> _pluginDirPath(String pluginId) async {
-    final appDir = await getApplicationSupportDirectory();
-    return p.join(appDir.path, 'plugins', 'audio_source', pluginId);
   }
 }

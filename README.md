@@ -21,7 +21,7 @@ The application supports two distinct plugins:
 * **Infinite Radio**: *Start radio* from any track's options replaces the queue with the seed plus a provider-generated radio batch (ListenBrainz `lb-radio`, requires sign-in). When the provider has no similar tracks, the current queue is left untouched and the app says so. With the persisted *Infinite music* switch (Settings → Playback, on by default) the queue keeps extending from the last played track when it ends — chained batch after batch and de-duplicated against the queue; signed-out playback simply stops at the end.
 * **Fault-Tolerant Streaming**: Automatic candidate resolution—if a stream URL expires or returns a 403 Forbidden, the player automatically falls back to the next available stream. When a track cannot be resolved at all (no candidates, no stream, or a `not_found` from the audio plugin) the failure is still reported and playback advances to the next queue track, bounded to one pass over the queue (also with repeat-all); transient errors (rate limit, transport) keep the current track.
 * **Global Search & Filter Chips**: Integrated with the active Metadata plugin (`ISearch`), supporting debounced queries, aggregated search views, category pagination, and instant track playback.
-* **Settings & Plugin Accounts**: A settings hub (gear on the three root screens) with an Appearance section (system/light/dark theme, accent color and an absolute-black AMOLED toggle, all persisted), a Playback section (infinite music), a Language selector, a Plugins section listing the active metadata and audio-source plugins with their versions and, when a plugin exposes authentication, its account (sign in/sign out), and an About page (app and host SDK versions). Contextual sign-in prompts appear when content or an action requires authentication, as a single message plus a "Sign in" snackbar action; browsing and playback stay anonymous.
+* **Settings, Plugin Management & Accounts**: A settings hub (gear on the three root screens) with an Appearance section (system/light/dark theme, accent color and an absolute-black AMOLED toggle, all persisted), a Playback section (infinite music), a Language selector, a Plugins section listing the active metadata and audio-source plugins with their versions, update/incompatibility status and per-plugin actions (update, reinstall, replace with another catalog plugin), and an About page (app and host SDK versions). Plugin archives are installed atomically (`.new` extraction, manifest/type/SDK validation, `.bak` rollback if activation fails); replacing a plugin logs out only the old one, removes its code and never touches plugin data. When a plugin exposes authentication, the detail page shows its account (sign in/sign out) between the version and the technical actions (Version → Account → Actions). Contextual sign-in prompts appear when content or an action requires authentication, as a single message plus a "Sign in" snackbar action; browsing and playback stay anonymous.
 * **Dynamic UI Generation**: The Home screen is generated entirely based on the sections (e.g., "Top Charts", "New Releases") returned by the active Metadata plugin.
 * **Modular Details Views**: Rich Slivers-based UI for Artists, Albums, and Playlists.
 
@@ -55,7 +55,7 @@ MusicAre follows a decoupled, Feature-First Clean Architecture organized into we
 │                                                        │
 │ ┌──────────────────────┐      ┌──────────────────────┐ │
 │ │ LOCAL STATE MACHINES │      │GLOBAL STATE MACHINES │ │
-│ │ (Screen-Level Cubit) │ ◄────│ (Metadata, Audio,    │ │
+│ │ (Screen-Level Cubit) │ ◄────│ (Plugins, User,      │ │
 │ │ (e.g. Home, Details) │      │  Player & Queue)     │ │
 │ └──────────┬───────────┘      │                      │ │
 │            │                  └──────────┬───────────┘ │
@@ -68,7 +68,9 @@ MusicAre follows a decoupled, Feature-First Clean Architecture organized into we
 │  * MetadataPluginEngine (Wire protocol + SemVer check) │
 │  * AudioSourcePluginEngine (Candidate search)          │
 │  * AudioPlayerService (Resolution, fallback & queue)   │
-│  * PluginDiscoveryService (GitHub Release Downloader)  │
+│  * PluginCatalog (GitHub releases, TTL cache)          │
+│  * PluginManager (install/activate transactions)       │
+│  * PluginRegistry (lifecycle + optional auth per type) │
 │  * MetadataAuthPresenter (Plugin login form)           │
 └──────────────────────────┬─────────────────────────────┘
                            │ (Contract Injection)
@@ -89,10 +91,21 @@ MusicAre follows a decoupled, Feature-First Clean Architecture organized into we
 
 1. **Presentation Layer (UI & Navigation)**: Composed of UI pages, reusable widgets, and `GoRouter` declarative navigation configurations.
 2. **State Management Layer (Cubits)**:
-   * **Global Cubits**: App-level singletons managing cross-cutting state (`MetadataPluginCubit`, `AudioSourcePluginCubit`, `PlayerCubit`).
+   * **Global Cubits**: App-level singletons managing cross-cutting state (`PluginSessionCubit`, `UserCubit`, `PluginManagerCubit`, `PlayerCubit`, `ThemeCubit`).
    * **Local Cubits**: Screen-scoped state machines instantiated for specific pages and destroyed when navigating away.
 3. **Services Layer (IoC / Dependency Injection)**: Houses central application services registered in `GetIt`, including host storage, native network clients, `AudioPlayerDriver`, and Plugin Engines.
 4. **Plugin Subsystems**: Interpreters acting as data providers decoupled from the Flutter UI thread.
+
+### Plugin capabilities and composition
+
+The host treats plugin capabilities as independent, type-keyed services:
+
+* `PluginLifecycle` is mandatory for every plugin: load/unload, compatibility and lifecycle state.
+* `PluginAuth` is optional: authentication state, sign-in/out and account identity for plugins that expose it.
+* A `PluginEntry` pairs the lifecycle with an optional auth adapter for one `PluginType`; its type comes from the lifecycle, so there is a single source of truth.
+* `PluginRegistry` indexes the entries and is the composition point used by `PluginManager` and `PluginSessionCubit`.
+* `MetadataPluginLifecycle` owns only the metadata engine; `MetadataPluginAuth` owns the auth flow and the account-id persistence through `PreferencesService`. `AudioSourcePluginLifecycle` has no auth entry. `PluginManager` logs out the old auth before switching plugins and refreshes the new one after activation.
+* `UserCubit` owns the saved-library index and observes `PluginAuth`; it does not authenticate. Account UI reads `PluginSessionCubit` through `PluginAccountSection`.
 
 ---
 
@@ -109,7 +122,7 @@ lib/
 │   └── widgets/                    # Reusable UI components (Slivers, matrices, carousels)
 │
 └── features/                       # Modular vertical feature slices
-    ├── plugin/                     # Dynamic plugin subsystem (Discovery, Metadata, Audio Source)
+    ├── plugin/                     # Dynamic plugin subsystem (Catalog, Management, Metadata, Audio Source)
     ├── onboarding/                 # Multi-step onboarding wizard
     ├── home/                       # Home page with dynamic browse sections
     ├── details/                    # Detail views (Album, Artist, Playlist)

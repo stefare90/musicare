@@ -4,10 +4,9 @@ import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/router/app_navigator.dart';
 import 'package:music_are/core/services/preferences_service.dart';
-import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
-import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_state.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
+import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
+import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_state.dart';
+import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/player/presentation/cubit/playback_settings_cubit.dart';
 import 'package:music_are/features/settings/presentation/widgets/accent_color_section.dart';
@@ -39,8 +38,7 @@ class SettingsPage extends StatelessWidget {
             SettingsSectionHeader(label: l10n.settingsPlaybackSection),
             const InfiniteMusicSwitch(),
             SettingsSectionHeader(label: l10n.settingsPluginsSection),
-            const _MetadataPluginTile(),
-            const _AudioSourcePluginTile(),
+            const _PluginTiles(),
             SettingsSectionHeader(label: l10n.settingsLanguageSection),
             const LanguageSection(),
             SettingsSectionHeader(label: l10n.settingsAboutSection),
@@ -56,33 +54,41 @@ class SettingsPage extends StatelessWidget {
   }
 }
 
-class _MetadataPluginTile extends StatelessWidget {
-  const _MetadataPluginTile();
+class _PluginTiles extends StatefulWidget {
+  const _PluginTiles();
 
   @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<MetadataPluginCubit, MetadataPluginState>(
-      builder: (context, state) {
-        final manifest = state is MetadataPluginLoadedState
-            ? state.manifest
-            : null;
-        return PluginTile(type: PluginType.metadata, manifest: manifest);
-      },
-    );
-  }
+  State<_PluginTiles> createState() => _PluginTilesState();
 }
 
-class _AudioSourcePluginTile extends StatelessWidget {
-  const _AudioSourcePluginTile();
+class _PluginTilesState extends State<_PluginTiles> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<PluginManagerCubit>().refresh();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AudioSourcePluginCubit, AudioSourcePluginState>(
+    return BlocBuilder<PluginManagerCubit, PluginManagerState>(
       builder: (context, state) {
-        final manifest = state is AudioSourcePluginLoadedState
-            ? state.manifest
-            : null;
-        return PluginTile(type: PluginType.audioSource, manifest: manifest);
+        final plugins = context.watch<PluginSessionCubit>();
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final type in PluginType.values)
+              PluginTile(
+                type: type,
+                manifest:
+                    state.slot(type).installed ?? plugins.manifestOf(type),
+                slot: state.slot(type),
+              ),
+          ],
+        );
       },
     );
   }

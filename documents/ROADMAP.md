@@ -51,19 +51,23 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ⬜ Downloads: browse and manage local tracks and downloaded collections, account-free (entry point only, empty until the local storage subsystem lands).
 
 ## ⚙️ Settings (`lib/features/settings/`)
-✅ Settings hub with a Plugins section: the active metadata and audio-source plugins with their versions, and a per-plugin detail page (version and, when the plugin exposes authentication, the account).
+✅ Settings hub with a Plugins section: the active metadata and audio-source plugins with their versions, update/incompatibility status, and a per-plugin detail page (version, actions and, when the plugin exposes authentication, the account).
 ✅ Appearance: theme (system/light/dark), accent color, absolute-black (AMOLED) toggle, persisted across launches.
 ✅ Playback: infinite music switch (on by default, persisted).
 ✅ Language: application language selector (English only for now), persisted.
 ✅ About: app version and host SDK versions.
 ⬜ Remaining sections: audio quality, downloads and cache, listening history, diagnostics.
-⬜ Per-plugin actions: update, reinstall, uninstall, change plugin.
+✅ Per-plugin actions: update, reinstall and replace with another catalog plugin (with confirmation).
+⬜ Uninstall a plugin without replacing it.
 
 ## 🧙 Onboarding (`lib/features/onboarding/`)
 ✅ Step wizard: intro, metadata provider install, audio source provider install, landing on Home once both are ready.
 
-## 🔌 Plugin system (`lib/features/plugin/{shared,discovery,metadata}` + host adapters)
-✅ Community plugin discovery from GitHub releases and in-app install/update.
+## 🔌 Plugin system (`lib/features/plugin/{shared,catalog,management,metadata}` + host adapters)
+✅ Community plugin catalog backed by GitHub releases, with an in-memory 6-hour TTL, force refresh and a composite-source merge.
+✅ Atomic plugin installation (extract to `.new`, validate manifest type/SDK, swap with a `.bak` backup, roll back on activation failure).
+✅ Plugin management slots per type: installed/remote manifests, update availability, incompatibility, and update/reinstall/replace flows (replacement logs out and removes only the old code, leaving plugin data untouched).
+✅ Unified update page for incompatible metadata and audio-source plugins, reached from the bootstrap.
 ✅ Metadata plugin engine over the Python wire protocol (`musicare_metadata_host_sdk`), with SemVer compatibility checks and per-plugin persistence.
 ✅ Host-side login form for metadata plugins (`MetadataAuthPresenter`), rendering the plugin-provided title, message and per-field help link; browser-based auth opens in the system browser (`url_launcher`).
 ✅ In-app sign-in/sign-out under Settings → Plugins (per-plugin account), with contextual sign-in prompts when a request needs authentication (rendered as a normal state, not an error) and the affected surfaces refreshing on auth change.

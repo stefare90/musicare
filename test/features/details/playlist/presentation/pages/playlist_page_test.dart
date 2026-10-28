@@ -14,10 +14,11 @@ import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
+import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 
 import '../../../../../helpers/metadata_plugin_test_helpers.dart';
+import '../../../../../helpers/plugin_session_cubit_test_helpers.dart';
 
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
@@ -100,11 +101,10 @@ void main() {
     final mockAuth = MockAuthService();
     when(() => mockMetadata.auth).thenReturn(mockAuth);
     when(() => mockAuth.isAuthenticated()).thenAnswer((_) async => false);
-
   });
 
   Widget buildTestableWidget({
-    MetadataPluginCubit? metadataCubit,
+    PluginSessionCubit? pluginCubit,
     Playlist? playlist,
   }) {
     final router = GoRouter(
@@ -131,8 +131,12 @@ void main() {
         child: MultiBlocProvider(
           providers: [
             BlocProvider<PlayerCubit>.value(value: mockPlayerCubit),
-            BlocProvider<MetadataPluginCubit>.value(
-              value: metadataCubit ?? buildMockMetadataPluginCubit(),
+            BlocProvider<PluginSessionCubit>.value(
+              value:
+                  pluginCubit ??
+                  buildTestPluginSessionCubit(
+                    metadata: testRuntimeLoaded(testPluginManifest()),
+                  ),
             ),
             BlocProvider<UserCubit>.value(value: userCubit),
           ],
@@ -405,9 +409,7 @@ void main() {
         durationMs: 1000,
       );
       final loaded = List.generate(3, song);
-      when(
-        () => mockPlaylist.tracks('pl1', offset: 0, limit: 20),
-      ).thenAnswer(
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
         (_) async => PaginatedResult<Track>(
           items: loaded,
           total: 3,
@@ -420,9 +422,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Song 2'), findsOneWidget);
 
-      when(
-        () => mockPlaylist.tracks('pl1', offset: 0, limit: 20),
-      ).thenAnswer(
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
         (_) async => PaginatedResult<Track>(
           items: [...loaded, song(3)],
           total: 4,
@@ -450,9 +450,7 @@ void main() {
         durationMs: 1000,
       );
       final window = List.generate(25, song).sublist(0, 20);
-      when(
-        () => mockPlaylist.tracks('pl1', offset: 0, limit: 20),
-      ).thenAnswer(
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
         (_) async => PaginatedResult<Track>(
           items: window,
           total: 25,
@@ -466,27 +464,19 @@ void main() {
 
       // Scroll until the head is off-screen (the header absorbs part of the
       // gesture).
-      for (
-        var i = 0;
-        i < 5 && find.text('Song 0').evaluate().isNotEmpty;
-        i++
-      ) {
-        await tester.drag(
-          find.byType(Scrollable).first,
-          const Offset(0, -500),
-        );
+      for (var i = 0; i < 5 && find.text('Song 0').evaluate().isNotEmpty; i++) {
+        await tester.drag(find.byType(Scrollable).first, const Offset(0, -500));
         await tester.pumpAndSettle();
       }
       expect(find.text('Song 0'), findsNothing);
-      final scrolled =
-          tester.state<ScrollableState>(find.byType(Scrollable).first);
+      final scrolled = tester.state<ScrollableState>(
+        find.byType(Scrollable).first,
+      );
       expect(scrolled.position.pixels, greaterThan(0));
       clearInteractions(mockPlaylist);
 
       // The provider appends at the tail, outside the loaded window.
-      when(
-        () => mockPlaylist.tracks('pl1', offset: 0, limit: 20),
-      ).thenAnswer(
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
         (_) async => PaginatedResult<Track>(
           items: window,
           total: 26,
@@ -497,11 +487,10 @@ void main() {
       userCubit.pushEdits(const PlaylistTracksChanged('pl1', added: ['t99']));
       await tester.pumpAndSettle();
 
-      verify(
-        () => mockPlaylist.tracks('pl1', offset: 0, limit: 20),
-      ).called(1);
-      final settled =
-          tester.state<ScrollableState>(find.byType(Scrollable).first);
+      verify(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).called(1);
+      final settled = tester.state<ScrollableState>(
+        find.byType(Scrollable).first,
+      );
       expect(settled.position.pixels, scrolled.position.pixels);
       expect(find.text('Song 0'), findsNothing);
     });
@@ -518,9 +507,7 @@ void main() {
         durationMs: 1000,
       );
       final window = List.generate(25, song).sublist(0, 20);
-      when(
-        () => mockPlaylist.tracks('pl1', offset: 0, limit: 20),
-      ).thenAnswer(
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
         (_) async => PaginatedResult<Track>(
           items: window,
           total: 25,
@@ -532,20 +519,14 @@ void main() {
       await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
 
-      for (
-        var i = 0;
-        i < 5 && find.text('Song 0').evaluate().isNotEmpty;
-        i++
-      ) {
-        await tester.drag(
-          find.byType(Scrollable).first,
-          const Offset(0, -500),
-        );
+      for (var i = 0; i < 5 && find.text('Song 0').evaluate().isNotEmpty; i++) {
+        await tester.drag(find.byType(Scrollable).first, const Offset(0, -500));
         await tester.pumpAndSettle();
       }
       expect(find.text('Song 0'), findsNothing);
-      final scrolled =
-          tester.state<ScrollableState>(find.byType(Scrollable).first);
+      final scrolled = tester.state<ScrollableState>(
+        find.byType(Scrollable).first,
+      );
       expect(scrolled.position.pixels, greaterThan(0));
       // Remove a row that is actually built, whatever the viewport shows.
       String? victim;
@@ -559,9 +540,7 @@ void main() {
       clearInteractions(mockPlaylist);
 
       final remaining = window.where((track) => track.id != victim).toList();
-      when(
-        () => mockPlaylist.tracks('pl1', offset: 0, limit: 20),
-      ).thenAnswer(
+      when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
         (_) async => PaginatedResult<Track>(
           items: remaining,
           total: 24,
@@ -573,8 +552,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Song ${victim.substring(1)}'), findsNothing);
-      final settled =
-          tester.state<ScrollableState>(find.byType(Scrollable).first);
+      final settled = tester.state<ScrollableState>(
+        find.byType(Scrollable).first,
+      );
       expect(settled.position.pixels, scrolled.position.pixels);
     });
 
@@ -655,12 +635,8 @@ void main() {
     testWidgets('reloads the index once when it is unknown', (tester) async {
       userCubit.set(testUserState(isAuthenticated: true, userId: 'me'));
       when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
-        (_) async => PaginatedResult(
-          items: [testTrack],
-          total: 1,
-          offset: 0,
-          limit: 20,
-        ),
+        (_) async =>
+            PaginatedResult(items: [testTrack], total: 1, offset: 0, limit: 20),
       );
 
       await tester.pumpWidget(buildTestableWidget());
@@ -672,12 +648,8 @@ void main() {
 
     testWidgets('does not reload the index when it is known', (tester) async {
       when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
-        (_) async => PaginatedResult(
-          items: [testTrack],
-          total: 1,
-          offset: 0,
-          limit: 20,
-        ),
+        (_) async =>
+            PaginatedResult(items: [testTrack], total: 1, offset: 0, limit: 20),
       );
 
       await tester.pumpWidget(buildTestableWidget());
@@ -697,12 +669,8 @@ void main() {
         ),
       );
       when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
-        (_) async => PaginatedResult(
-          items: [testTrack],
-          total: 1,
-          offset: 0,
-          limit: 20,
-        ),
+        (_) async =>
+            PaginatedResult(items: [testTrack], total: 1, offset: 0, limit: 20),
       );
 
       await tester.pumpWidget(buildTestableWidget());

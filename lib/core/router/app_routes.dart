@@ -1,6 +1,9 @@
 abstract class AppRoutes {
   static const String home = '/';
   static const String pluginUpdate = '/plugin-update';
+  static const String pluginUpdateTypeParam = 'type';
+  static const String pluginUpdateSegment =
+      '$pluginUpdate/:$pluginUpdateTypeParam';
   static const String welcome = '/welcome';
   static const String search = '/search';
   static const String library = '/library';

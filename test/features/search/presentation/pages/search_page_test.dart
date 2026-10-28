@@ -24,13 +24,14 @@ import 'package:music_are/core/widgets/skeletons/skeleton_track_list.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
+import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 import 'package:music_are/features/search/presentation/cubit/search_cubit.dart';
 import 'package:music_are/features/search/presentation/pages/search_page.dart';
 import 'package:music_are/features/search/presentation/widgets/search_results_body.dart';
 
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
+import '../../../../helpers/plugin_session_cubit_test_helpers.dart';
 
 class MockMetadataPluginEngine extends Mock implements MetadataPluginEngine {}
 
@@ -116,7 +117,9 @@ void main() {
     }
     sl.registerSingleton<MetadataPluginEngine>(mockEngine);
     sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
-  sl.registerLazySingleton<SearchRepository>(() => SearchRepository(mockEngine));
+    sl.registerLazySingleton<SearchRepository>(
+      () => SearchRepository(mockEngine),
+    );
   });
 
   tearDown(() {
@@ -125,12 +128,16 @@ void main() {
 
   Widget buildTestWidget({
     double textScale = 1.0,
-    MetadataPluginCubit? metadataCubit,
+    PluginSessionCubit? pluginCubit,
     double keyboardHeight = 0,
     ThemeData? theme,
   }) {
-    return BlocProvider<MetadataPluginCubit>.value(
-      value: metadataCubit ?? buildMockMetadataPluginCubit(),
+    return BlocProvider<PluginSessionCubit>.value(
+      value:
+          pluginCubit ??
+          buildTestPluginSessionCubit(
+            metadata: testRuntimeLoaded(testPluginManifest()),
+          ),
       child: BlocProvider<PlayerCubit>.value(
         value: mockPlayerCubit,
         child: MaterialApp(
@@ -472,48 +479,45 @@ void main() {
     },
   );
 
-  testWidgets(
-    'SearchPage aggregated view plays only the tapped track',
-    (tester) async {
-      final secondTrack = Track(
-        id: 't2',
-        name: 'Fix You',
-        externalUri: '',
-        artists: [Artist(id: 'a1', name: 'Coldplay', externalUri: '')],
-        album: dummyTrack.album,
-        durationMs: 294000,
-      );
-      when(() => mockSearch.all(any())).thenAnswer(
-        (_) async => SearchResponse(
-          tracks: [dummyTrack, secondTrack],
-          albums: [],
-          artists: [],
-          playlists: [],
-        ),
-      );
+  testWidgets('SearchPage aggregated view plays only the tapped track', (
+    tester,
+  ) async {
+    final secondTrack = Track(
+      id: 't2',
+      name: 'Fix You',
+      externalUri: '',
+      artists: [Artist(id: 'a1', name: 'Coldplay', externalUri: '')],
+      album: dummyTrack.album,
+      durationMs: 294000,
+    );
+    when(() => mockSearch.all(any())).thenAnswer(
+      (_) async => SearchResponse(
+        tracks: [dummyTrack, secondTrack],
+        albums: [],
+        artists: [],
+        playlists: [],
+      ),
+    );
 
-      await tester.pumpWidget(buildTestWidget());
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(buildTestWidget());
+    await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'Coldplay');
-      await tester.pump(const Duration(milliseconds: 400));
-      await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Coldplay');
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
 
-      expect(find.byType(TrackListTile), findsNWidgets(2));
+    expect(find.byType(TrackListTile), findsNWidgets(2));
 
-      when(
-        () => mockPlayerCubit.playTrack(secondTrack),
-      ).thenAnswer((_) async {});
+    when(() => mockPlayerCubit.playTrack(secondTrack)).thenAnswer((_) async {});
 
-      await tester.tap(find.byType(TrackListTile).at(1));
-      await tester.pump();
+    await tester.tap(find.byType(TrackListTile).at(1));
+    await tester.pump();
 
-      verify(() => mockPlayerCubit.playTrack(secondTrack)).called(1);
-      verifyNever(
-        () => mockPlayerCubit.playQueue(any(), index: any(named: 'index')),
-      );
-    },
-  );
+    verify(() => mockPlayerCubit.playTrack(secondTrack)).called(1);
+    verifyNever(
+      () => mockPlayerCubit.playQueue(any(), index: any(named: 'index')),
+    );
+  });
 
   testWidgets(
     'SearchPage displays SkeletonSearchAll during initial loading for All category',
@@ -801,11 +805,8 @@ void main() {
     addTearDown(tester.view.reset);
 
     when(
-      () => mockSearch.albums(
-        'Coldplay',
-        offset: 0,
-        limit: any(named: 'limit'),
-      ),
+      () =>
+          mockSearch.albums('Coldplay', offset: 0, limit: any(named: 'limit')),
     ).thenAnswer(
       (_) async => PaginatedResult<Album>(
         items: buildAlbums(4),
@@ -815,11 +816,8 @@ void main() {
       ),
     );
     when(
-      () => mockSearch.albums(
-        'Coldplay',
-        offset: 4,
-        limit: any(named: 'limit'),
-      ),
+      () =>
+          mockSearch.albums('Coldplay', offset: 4, limit: any(named: 'limit')),
     ).thenAnswer((_) async => throw Exception('boom'));
 
     await tester.pumpWidget(buildTestWidget());

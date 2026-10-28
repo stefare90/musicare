@@ -6,21 +6,24 @@ import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
+import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
 
-import '../../../../../helpers/metadata_plugin_test_helpers.dart';
+import '../../../../../helpers/plugin_session_cubit_test_helpers.dart';
 
 class MockPlayerCubit extends Mock implements PlayerCubit {}
 
 void main() {
   late BuildContext context;
 
-  Future<void> pumpContext(WidgetTester tester, UserCubit cubit) async {
+  Future<void> pumpContext(
+    WidgetTester tester, {
+    TestPluginSessionCubit? plugins,
+  }) async {
     await tester.pumpWidget(
-      BlocProvider<UserCubit>.value(
-        value: cubit,
+      BlocProvider<PluginSessionCubit>.value(
+        value: plugins ?? buildTestPluginSessionCubit(),
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -41,11 +44,7 @@ void main() {
     var signInCalls = 0;
     await pumpContext(
       tester,
-      TestUserCubit(testUserState())
-        ..onSignIn = () async {
-          signInCalls++;
-          return AuthResult.authenticated;
-        },
+      plugins: buildTestPluginSessionCubit()..onSignIn = (_) => signInCalls++,
     );
 
     final error = const MetadataAuthRequiredException('sign in');
@@ -65,14 +64,11 @@ void main() {
   testWidgets('other errors are neither notifiable nor actionable', (
     tester,
   ) async {
-    await pumpContext(tester, TestUserCubit(testUserState()));
+    await pumpContext(tester);
 
     expect(Exception('boom').needsNotice, isFalse);
     expect(Exception('boom').noticeAction(context), isNull);
-    expect(
-      const MetadataNotFoundException('missing').needsNotice,
-      isFalse,
-    );
+    expect(const MetadataNotFoundException('missing').needsNotice, isFalse);
     expect(
       const MetadataNotFoundException('missing').noticeAction(context),
       isNull,

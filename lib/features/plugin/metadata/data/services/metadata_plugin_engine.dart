@@ -1,17 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:archive/archive.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
+import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:pub_semver/pub_semver.dart';
 
-/// Keeps the current plugin on disk and exposes it as an [IMetadataPlugin].
-/// The Python interpreter lifecycle belongs to `musicare_runtime_host`.
 class MetadataPluginEngine {
   final MetadataClient _client;
   final MetadataAuthPresenter? _authPresenter;
@@ -31,32 +27,26 @@ class MetadataPluginEngine {
   bool get hasMetadata => _metadataPlugin != null;
   PluginManifest? get metadataManifest => _metadataManifest;
 
-  Future<bool> isPluginInstalledOnDisk(String pluginId) async {
-    final pluginDir = await _pluginDirPath(pluginId);
-    return File(p.join(pluginDir, 'plugin.json')).existsSync() &&
-        File(p.join(pluginDir, 'src', 'main.py')).existsSync();
+  bool isCompatible(PluginManifest manifest) {
+    try {
+      checkManifest(manifest);
+      return true;
+    } on PluginException {
+      return false;
+    }
   }
 
-  Future<void> loadFromDisk(String pluginId) async {
-    final pluginDir = await _pluginDirPath(pluginId);
+  Future<void> loadFromDisk(String pluginDir) async {
     final jsonFile = File(p.join(pluginDir, 'plugin.json'));
-
     if (!jsonFile.existsSync()) {
-      throw PluginFileNotFoundException(pluginId);
+      throw PluginFileNotFoundException(pluginDir);
     }
 
     final manifest = PluginManifest.fromJson(
       jsonDecode(jsonFile.readAsStringSync()) as Map<String, dynamic>,
     );
-    _checkVersion(manifest);
-    await _loadPluginDir(manifest);
-  }
-
-  Future<void> loadFromZipBytes(Uint8List zipBytes) async {
-    final manifest = _manifestFromZip(zipBytes);
-    _checkVersion(manifest);
-    await _extractToDisk(manifest, zipBytes);
-    await _loadPluginDir(manifest);
+    checkManifest(manifest);
+    await _loadPluginDir(manifest, pluginDir);
   }
 
   void unloadMetadata() {
@@ -64,22 +54,14 @@ class MetadataPluginEngine {
     _metadataManifest = null;
   }
 
-  PluginManifest _manifestFromZip(Uint8List zipBytes) {
-    final archive = ZipDecoder().decodeBytes(zipBytes);
-    for (final file in archive) {
-      if (file.name == 'plugin.json') {
-        return PluginManifest.fromJson(
-          jsonDecode(utf8.decode(file.content as List<int>))
-              as Map<String, dynamic>,
-        );
-      }
+  void checkManifest(PluginManifest manifest) {
+    if (manifest.pluginType != PluginType.metadata) {
+      throw InvalidPluginTypeException(
+        expectedType: PluginType.metadata.name,
+        actualType: manifest.type,
+      );
     }
-    throw InvalidPluginArchiveException();
-  }
 
-  /// A major mismatch rejects the plugin before load, so the user sees the
-  /// update page instead of a crash.
-  void _checkVersion(PluginManifest manifest) {
     final hostVersion = Version.parse(packageVersion);
     final pluginVersion = Version.parse(manifest.pluginSdkVersion);
     if (!VersionConstraint.compatibleWith(pluginVersion).allows(hostVersion)) {
@@ -90,42 +72,15 @@ class MetadataPluginEngine {
     }
   }
 
-  Future<void> _loadPluginDir(PluginManifest manifest) async {
-    final pluginDir = await _pluginDirPath(manifest.id);
+  Future<void> _loadPluginDir(
+    PluginManifest manifest,
+    String pluginDir,
+  ) async {
     await _client.loadPlugin(pluginDir: pluginDir);
     _metadataPlugin = MetadataPluginAdapter(
       caller: _client,
       authPresenter: _authPresenter,
     );
     _metadataManifest = manifest;
-  }
-
-  Future<void> _extractToDisk(
-    PluginManifest manifest,
-    Uint8List zipBytes,
-  ) async {
-    final pluginDirPath = await _pluginDirPath(manifest.id);
-    final pluginDir = Directory(pluginDirPath);
-    if (pluginDir.existsSync()) {
-      pluginDir.deleteSync(recursive: true);
-    }
-    pluginDir.createSync(recursive: true);
-
-    final archive = ZipDecoder().decodeBytes(zipBytes);
-    for (final file in archive) {
-      final filename = p.join(pluginDir.path, file.name);
-      if (file.isFile) {
-        File(filename)
-          ..createSync(recursive: true)
-          ..writeAsBytesSync(file.content as List<int>);
-      } else {
-        Directory(filename).createSync(recursive: true);
-      }
-    }
-  }
-
-  Future<String> _pluginDirPath(String pluginId) async {
-    final appDir = await getApplicationSupportDirectory();
-    return p.join(appDir.path, 'plugins', 'metadata', pluginId);
   }
 }

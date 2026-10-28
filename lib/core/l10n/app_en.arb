@@ -29,6 +29,32 @@
   "pluginVersionSection": "Version",
   "pluginVersionInstalled": "Installed version",
   "pluginVersionSdk": "Plugin SDK",
+  "pluginUpdateAvailable": "Update available · v{from} → v{to}",
+  "@pluginUpdateAvailable": {
+    "placeholders": {
+      "from": { "type": "String" },
+      "to": { "type": "String" }
+    }
+  },
+  "pluginIncompatible": "Incompatible with this version of the app",
+  "pluginActionsSection": "Actions",
+  "pluginActionUpdate": "Update",
+  "pluginActionReinstall": "Reinstall",
+  "pluginActionReplace": "Replace…",
+  "pluginUpdateTo": "Update to v{version}",
+  "@pluginUpdateTo": {
+    "placeholders": {
+      "version": { "type": "String" }
+    }
+  },
+  "pluginReplaceTitle": "Replace plugin?",
+  "pluginReplaceMessage": "The current plugin will be removed and replaced by \"{name}\". Continue?",
+  "@pluginReplaceMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "pluginNoAlternatives": "No other plugins are available for this type.",
   "pluginAccountSection": "Account",
   "libraryEmptyTitle": "Nothing saved yet",
   "libraryEmptyMessage": "Tracks, albums, artists and playlists you save will appear here.",

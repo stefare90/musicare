@@ -20,6 +20,8 @@ extension ExceptionLocalizer on Object {
       InvalidPluginTypeException() => context.l10n.pluginErrorInvalidArchive,
       PluginDownloadException() => context.l10n.pluginErrorDownloadFailed,
       PluginSearchException() => context.l10n.pluginErrorNetwork,
+      PluginActivationException(:final cause) =>
+        cause.toLocalizedString(context),
 
       PluginErrorNoContext() => context.l10n.pluginErrorNoContext,
 

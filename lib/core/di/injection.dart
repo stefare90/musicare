@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
@@ -11,19 +10,25 @@ import 'package:music_are/features/player/data/services/audio_player_service.dar
 import 'package:music_are/features/player/data/services/audio_stream_resolver.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
-import 'package:music_are/features/plugin/metadata/data/repositories/account_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/browse_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
-import 'package:music_are/features/plugin/metadata/data/repositories/plugin_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/search_repository.dart';
 import 'package:music_are/features/plugin/audio_source/data/services/audio_source_plugin_engine.dart';
-import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
-import 'package:music_are/features/plugin/discovery/data/services/plugin_discovery_service.dart';
+import 'package:music_are/features/plugin/audio_source/data/services/audio_source_plugin_lifecycle.dart';
+import 'package:music_are/features/plugin/catalog/data/services/github_topic_catalog.dart';
+import 'package:music_are/features/plugin/shared/data/services/plugin_catalog.dart';
+import 'package:music_are/features/plugin/management/data/services/plugin_manager.dart';
+import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
+import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
+import 'package:music_are/features/plugin/shared/data/services/plugin_storage.dart';
+import 'package:music_are/features/plugin/shared/data/models/plugin_entry.dart';
+import 'package:music_are/features/plugin/shared/data/services/plugin_registry.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
+import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_auth.dart';
+import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_lifecycle.dart';
 import 'package:music_are/features/plugin/metadata/presentation/services/metadata_auth_presenter.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
 import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
 import 'package:musicare_runtime_host/musicare_runtime_host.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,53 +38,26 @@ final sl = GetIt.instance;
 Future<void> initDependencies() async {
   final sharedPreferences = await SharedPreferences.getInstance();
 
-  sl.registerLazySingleton<SharedPreferences>(() => sharedPreferences);
   sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
-  sl.registerLazySingleton<NetworkService>(() => NetworkService());
   sl.registerLazySingleton<PreferencesService>(
-    () => PreferencesService(sl<SharedPreferences>()),
+    () => PreferencesService(sharedPreferences),
   );
   sl.registerLazySingleton<ThemeCubit>(
     () => ThemeCubit(sl<PreferencesService>()),
   );
-  sl.registerLazySingleton<GlobalKey<NavigatorState>>(() => rootNavigatorKey);
 
   final runtimeHost = RuntimeHost();
-  sl.registerSingleton<RuntimeHost>(runtimeHost);
   await runtimeHost.start();
 
-  sl.registerLazySingleton<MetadataClient>(
-    () => MetadataClient(
-      baseUri: Uri.parse(
-        'http://127.0.0.1:${runtimeHost.portOf(Subsystem.metadata)}',
-      ),
-    ),
-  );
-  sl.registerLazySingleton<AudioSourceClient>(
-    () => AudioSourceClient(
-      baseUri: Uri.parse(
-        'http://127.0.0.1:${runtimeHost.portOf(Subsystem.audio)}',
-      ),
-    ),
-  );
-
-  sl.registerLazySingleton<MetadataAuthPresenter>(
-    () => MetadataAuthPresenterImpl(
-      navigatorKey: sl<GlobalKey<NavigatorState>>(),
-    ),
-  );
   sl.registerLazySingleton<MetadataPluginEngine>(
     () => MetadataPluginEngine(
-      client: sl<MetadataClient>(),
-      authPresenter: sl<MetadataAuthPresenter>(),
+      client: MetadataClient(
+        baseUri: Uri.parse(
+          'http://127.0.0.1:${runtimeHost.portOf(Subsystem.metadata)}',
+        ),
+      ),
+      authPresenter: MetadataAuthPresenterImpl(navigatorKey: rootNavigatorKey),
     ),
-  );
-  sl.registerLazySingleton<AccountRepository>(
-    () =>
-        AccountRepository(sl<MetadataPluginEngine>(), sl<PreferencesService>()),
-  );
-  sl.registerLazySingleton<PluginRepository>(
-    () => PluginRepository(sl<MetadataPluginEngine>()),
   );
   sl.registerLazySingleton<LibraryRepository>(
     () => LibraryRepository(sl<MetadataPluginEngine>()),
@@ -96,34 +74,54 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<MediaRepository>(
     () => MediaRepository(sl<MetadataPluginEngine>()),
   );
-  sl.registerLazySingleton<MetadataPluginCubit>(
-    () => MetadataPluginCubit(
-      sl<PluginRepository>(),
-      sl<PreferencesService>(),
-      sl<PluginDiscoveryService>(),
-    ),
-  );
-  sl.registerLazySingleton<PluginDiscoveryService>(
-    () => PluginDiscoveryService(networkService: sl<NetworkService>()),
-  );
   sl.registerLazySingleton<AudioSourcePluginEngine>(
-    () => AudioSourcePluginEngine(client: sl<AudioSourceClient>()),
-  );
-  sl.registerLazySingleton<AudioSourcePluginCubit>(
-    () => AudioSourcePluginCubit(
-      sl<AudioSourcePluginEngine>(),
-      sl<PreferencesService>(),
-      sl<PluginDiscoveryService>(),
+    () => AudioSourcePluginEngine(
+      client: AudioSourceClient(
+        baseUri: Uri.parse(
+          'http://127.0.0.1:${runtimeHost.portOf(Subsystem.audio)}',
+        ),
+      ),
     ),
   );
-  sl.registerLazySingleton<AudioPlayerDriver>(() => AudioPlayerDriver());
-  sl.registerLazySingleton<AudioStreamResolver>(
-    () => AudioStreamResolver(sl<AudioSourcePluginEngine>()),
+  sl.registerLazySingleton<MetadataPluginLifecycle>(
+    () => MetadataPluginLifecycle(sl<MetadataPluginEngine>()),
+  );
+  sl.registerLazySingleton<MetadataPluginAuth>(
+    () => MetadataPluginAuth(
+      sl<MetadataPluginEngine>(),
+      sl<PreferencesService>(),
+    ),
+  );
+  sl.registerLazySingleton<AudioSourcePluginLifecycle>(
+    () => AudioSourcePluginLifecycle(sl<AudioSourcePluginEngine>()),
+  );
+  sl.registerLazySingleton<PluginRegistry>(
+    () => PluginRegistry([
+      PluginEntry(
+        lifecycle: sl<MetadataPluginLifecycle>(),
+        auth: sl<MetadataPluginAuth>(),
+      ),
+      PluginEntry(lifecycle: sl<AudioSourcePluginLifecycle>()),
+    ]),
+  );
+  sl.registerLazySingleton<PluginCatalog>(
+    () => GitHubTopicCatalog(networkService: NetworkService()),
+  );
+  sl.registerLazySingleton<PluginManager>(
+    () => PluginManager(
+      registry: sl<PluginRegistry>(),
+      catalog: sl<PluginCatalog>(),
+      storage: PluginStorage(),
+      preferences: sl<PreferencesService>(),
+    ),
+  );
+  sl.registerLazySingleton<PluginSessionCubit>(
+    () => PluginSessionCubit(sl<PluginRegistry>(), sl<NoticeBus>()),
   );
   sl.registerLazySingleton<AudioPlayerService>(
     () => AudioPlayerService(
-      driver: sl<AudioPlayerDriver>(),
-      resolver: sl<AudioStreamResolver>(),
+      driver: AudioPlayerDriver(),
+      resolver: AudioStreamResolver(sl<AudioSourcePluginEngine>()),
     ),
   );
   sl.registerLazySingleton<PlayerCubit>(
@@ -137,11 +135,14 @@ Future<void> initDependencies() async {
   );
   sl.registerLazySingleton<UserCubit>(
     () => UserCubit(
-      sl<AccountRepository>(),
+      sl<MetadataPluginAuth>(),
       sl<LibraryRepository>(),
       sl<NoticeBus>(),
       sl<PlaylistRepository>(),
     ),
+  );
+  sl.registerLazySingleton<PluginManagerCubit>(
+    () => PluginManagerCubit(sl<PluginManager>(), sl<NoticeBus>()),
   );
   sl.registerLazySingleton<UserSession>(() => sl<UserCubit>());
   sl.registerLazySingleton<UserFavorites>(() => sl<UserCubit>());

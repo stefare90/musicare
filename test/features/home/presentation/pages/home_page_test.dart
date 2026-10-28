@@ -10,10 +10,11 @@ import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/features/home/presentation/pages/home_page.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
+import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
+import '../../../../helpers/plugin_session_cubit_test_helpers.dart';
 
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
@@ -37,21 +38,27 @@ void main() {
 
     sl.registerLazySingleton<MetadataPluginEngine>(() => mockEngine);
     sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
-  sl.registerLazySingleton<BrowseRepository>(() => BrowseRepository(mockEngine));
+    sl.registerLazySingleton<BrowseRepository>(
+      () => BrowseRepository(mockEngine),
+    );
 
     when(() => mockEngine.hasMetadata).thenReturn(true);
     when(() => mockEngine.metadata).thenReturn(mockMetadata);
     when(() => mockMetadata.browse).thenReturn(mockBrowse);
   });
 
-  Widget buildTestableWidget({MetadataPluginCubit? metadataCubit}) {
+  Widget buildTestableWidget({PluginSessionCubit? pluginCubit}) {
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: NoticeListener(
         notices: sl<NoticeBus>().notices,
-        child: BlocProvider<MetadataPluginCubit>.value(
-          value: metadataCubit ?? buildMockMetadataPluginCubit(),
+        child: BlocProvider<PluginSessionCubit>.value(
+          value:
+              pluginCubit ??
+              buildTestPluginSessionCubit(
+                metadata: testRuntimeLoaded(testPluginManifest()),
+              ),
           child: const HomePage(),
         ),
       ),

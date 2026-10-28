@@ -2,13 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
-
-class MockMetadataPluginCubit extends Mock implements MetadataPluginCubit {}
 
 PluginManifest testPluginManifest({String name = 'Test Provider'}) =>
     PluginManifest(
@@ -21,9 +16,6 @@ PluginManifest testPluginManifest({String name = 'Test Provider'}) =>
       author: 'Test',
       description: 'Test plugin',
     );
-
-MetadataPluginLoadedState testLoadedState({String pluginName = 'Test Provider'}) =>
-    MetadataPluginLoadedState(manifest: testPluginManifest(name: pluginName));
 
 /// Controllable user cubit for tests: states are pushed and writes recorded,
 /// with no engine behind the facets.
@@ -42,11 +34,10 @@ class TestUserCubit extends Cubit<UserState> implements UserCubit {
   final List<String> toggledPlaylists = [];
   final List<(String, String)> addedTracks = [];
   final List<(String, String)> removedTracks = [];
-  AuthResult nextSignInResult = AuthResult.authenticated;
   AddTracksResult? nextAddResult;
   bool nextRemoveResult = true;
-  Future<AuthResult> Function()? onSignIn;
-  Future<void> Function()? onSignOut;
+  int initializeCalls = 0;
+  Future<void> Function()? onInitialize;
 
   void set(UserState state) => emit(state);
 
@@ -127,26 +118,14 @@ class TestUserCubit extends Cubit<UserState> implements UserCubit {
   void pushEdits(PlaylistTracksChanged event) => _edits.add(event);
 
   @override
-  Future<void> initialize() async {}
-
-  @override
-  Future<AuthResult> signIn() async {
-    if (onSignIn != null) return onSignIn!();
-    return nextSignInResult;
-  }
-
-  @override
-  Future<void> signOut() async {
-    await onSignOut?.call();
-    emit(const UserState());
+  Future<void> initialize() async {
+    initializeCalls++;
+    await onInitialize?.call();
   }
 
   @override
   void reset() => emit(
-    UserState(
-      isAuthenticated: state.isAuthenticated,
-      userId: state.userId,
-    ),
+    UserState(isAuthenticated: state.isAuthenticated, userId: state.userId),
   );
 
   @override
@@ -174,11 +153,3 @@ UserState testUserState({
   playlistIds: playlistIds,
   loaded: loaded,
 );
-
-MetadataPluginCubit buildMockMetadataPluginCubit({MetadataPluginState? state}) {
-  final cubit = MockMetadataPluginCubit();
-  when(() => cubit.state).thenReturn(state ?? testLoadedState());
-  when(() => cubit.stream).thenAnswer((_) => const Stream.empty());
-  return cubit;
-}
-

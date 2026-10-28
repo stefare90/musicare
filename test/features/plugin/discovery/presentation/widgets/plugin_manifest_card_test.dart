@@ -25,58 +25,92 @@ void main() {
   }
 
   group('PluginManifestCard Widget Tests', () {
-    testWidgets(
-      'renders manifest details and Install & Activate button when not active',
-      (tester) async {
-        PluginManifest? tappedManifest;
+    testWidgets('renders the manifest and the install action', (tester) async {
+      var taps = 0;
 
-        await tester.pumpWidget(
-          buildTestableWidget(
-            child: PluginManifestCard(
-              manifest: testManifest,
-              isActive: false,
-              onInstallTap: (manifest) => tappedManifest = manifest,
+      await tester.pumpWidget(
+        buildTestableWidget(
+          child: PluginManifestCard(
+            manifest: testManifest,
+            onAction: () => taps++,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('MusicBrainz & ListenBrainz'), findsOneWidget);
+      expect(find.text('By MusicAre Team'), findsOneWidget);
+      expect(find.text('Test description'), findsOneWidget);
+      expect(find.text('v1.0.0'), findsOneWidget);
+      expect(find.text('Install & Activate'), findsOneWidget);
+
+      await tester.tap(find.text('Install & Activate'));
+      expect(taps, 1);
+    });
+
+    testWidgets('renders Active badge and Reinstall for the installed plugin', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          child: PluginManifestCard(
+            manifest: testManifest,
+            isActive: true,
+            action: PluginAction.reinstall,
+            onAction: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Active'), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
+      expect(find.text('Reinstall'), findsOneWidget);
+      expect(find.text('Install & Activate'), findsNothing);
+
+      final button = tester.widget<ElevatedButton>(
+        find.byType(ElevatedButton),
+      );
+      expect(button.onPressed, isNotNull);
+    });
+
+    testWidgets('labels an update with the target version', (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          child: PluginManifestCard(
+            manifest: PluginManifest(
+              id: testManifest.id,
+              packageId: testManifest.packageId,
+              type: testManifest.type,
+              name: testManifest.name,
+              version: '2.0.0',
+              pluginSdkVersion: testManifest.pluginSdkVersion,
+              author: testManifest.author,
+              description: testManifest.description,
             ),
+            action: PluginAction.update,
+            onAction: () {},
           ),
-        );
-        await tester.pumpAndSettle();
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        expect(find.text('MusicBrainz & ListenBrainz'), findsOneWidget);
-        expect(find.text('By MusicAre Team'), findsOneWidget);
-        expect(find.text('Test description'), findsOneWidget);
-        expect(find.text('v1.0.0'), findsOneWidget);
-        expect(find.text('Install & Activate'), findsOneWidget);
+      expect(find.text('Update to v2.0.0'), findsOneWidget);
+    });
 
-        await tester.tap(find.text('Install & Activate'));
-        await tester.pumpAndSettle();
-
-        expect(tappedManifest, equals(testManifest));
-      },
-    );
-
-    testWidgets(
-      'renders Active badge and disabled button when isActive is true',
-      (tester) async {
-        await tester.pumpWidget(
-          buildTestableWidget(
-            child: PluginManifestCard(manifest: testManifest, isActive: true),
+    testWidgets('labels a different plugin as Replace', (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          child: PluginManifestCard(
+            manifest: testManifest,
+            action: PluginAction.replace,
+            onAction: () {},
           ),
-        );
-        await tester.pumpAndSettle();
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        expect(
-          find.text('Active'),
-          findsNWidgets(2),
-        ); // Badge in alto + testo pulsante
-        expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
-        expect(find.text('Install & Activate'), findsNothing);
-
-        // Verifica che il pulsante sia disabilitato (OutlinedButton con onPressed: null)
-        final outlinedButton = tester.widget<OutlinedButton>(
-          find.byType(OutlinedButton),
-        );
-        expect(outlinedButton.onPressed, isNull);
-      },
-    );
+      expect(find.text('Replace…'), findsOneWidget);
+    });
   });
 }

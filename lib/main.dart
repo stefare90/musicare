@@ -10,9 +10,9 @@ import 'package:music_are/core/theme/app_theme.dart';
 import 'package:music_are/core/theme/presentation/cubit/theme_cubit.dart';
 import 'package:music_are/core/theme/presentation/cubit/theme_state.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
+import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
-import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
+import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 
 void main() async {
@@ -38,14 +38,10 @@ class _MusicAreAppState extends State<MusicAreApp> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<MetadataPluginCubit>.value(
-          value: sl<MetadataPluginCubit>(),
-        ),
-        BlocProvider<AudioSourcePluginCubit>.value(
-          value: sl<AudioSourcePluginCubit>(),
-        ),
+        BlocProvider<PluginSessionCubit>.value(value: sl<PluginSessionCubit>()),
         BlocProvider<PlayerCubit>.value(value: sl<PlayerCubit>()),
         BlocProvider<UserCubit>.value(value: sl<UserCubit>()),
+        BlocProvider<PluginManagerCubit>.value(value: sl<PluginManagerCubit>()),
         BlocProvider<ThemeCubit>.value(value: sl<ThemeCubit>()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(

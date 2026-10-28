@@ -1,14 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_are/features/plugin/audio_source/data/services/audio_source_plugin_engine.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
+import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
-import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
-import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 class FakeAudioSourceClient extends Fake implements AudioSourceClient {
   @override
@@ -40,45 +37,30 @@ class FakeAudioSourceClient extends Fake implements AudioSourceClient {
   }
 }
 
-class FakePathProviderPlatform extends Fake
-    with MockPlatformInterfaceMixin
-    implements PathProviderPlatform {
-  final Directory tempDir;
-  FakePathProviderPlatform(this.tempDir);
-
-  @override
-  Future<String?> getApplicationSupportPath() async => tempDir.path;
-}
-
-Uint8List createTestAudioSourceZip({
-  String id = 'org.musicare.audiosource.youtube',
+String createPluginDir(
+  Directory root, {
   String type = 'audioSource',
   String sdkVersion = packageVersion,
-  bool includeJson = true,
+  String version = '1.0.0',
 }) {
-  final archive = Archive();
-  if (includeJson) {
-    final jsonContent = jsonEncode({
-      'id': id,
+  final dir = Directory('${root.path}/plugin')..createSync(recursive: true);
+  File('${dir.path}/plugin.json').writeAsStringSync(
+    jsonEncode({
+      'id': 'org.musicare.audiosource.youtube',
       'packageId': 'musicare_audiosource_youtube_plugin',
       'type': type,
       'name': 'YouTube Audio Source',
-      'version': '1.0.0',
+      'version': version,
       'pluginSdkVersion': sdkVersion,
       'author': 'MusicAre Team',
       'description': 'Test source',
-    });
-    final jsonBytes = utf8.encode(jsonContent);
-    archive.addFile(ArchiveFile('plugin.json', jsonBytes.length, jsonBytes));
-    final pyBytes = utf8.encode('def get_plugin(): pass');
-    archive.addFile(ArchiveFile('main.py', pyBytes.length, pyBytes));
-  }
-  return Uint8List.fromList(ZipEncoder().encode(archive));
+    }),
+  );
+  File('${dir.path}/main.py').writeAsStringSync('def get_plugin(): pass');
+  return dir.path;
 }
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-
   group('AudioSourcePluginEngine Unit Tests', () {
     late FakeAudioSourceClient client;
     late AudioSourcePluginEngine engine;
@@ -86,74 +68,67 @@ void main() {
 
     setUp(() {
       tempDir = Directory.systemTemp.createTempSync('audio_source_test_');
-      PathProviderPlatform.instance = FakePathProviderPlatform(tempDir);
       client = FakeAudioSourceClient();
       engine = AudioSourcePluginEngine(client: client);
     });
 
     tearDown(() {
-      if (tempDir.existsSync()) {
-        tempDir.deleteSync(recursive: true);
-      }
+      if (tempDir.existsSync()) tempDir.deleteSync(recursive: true);
     });
 
-    test('isPluginInstalledOnDisk returns false when files do not exist', () async {
-      expect(await engine.isPluginInstalledOnDisk('missing'), isFalse);
-    });
+    test('loadFromDisk loads the plugin from the directory', () async {
+      final dir = createPluginDir(tempDir);
 
-    test('loadFromDisk throws PluginFileNotFoundException when missing', () {
-      expect(
-        () async => await engine.loadFromDisk('missing'),
-        throwsA(isA<PluginFileNotFoundException>()),
-      );
-    });
-
-    test('loadFromZipBytes unpacks the zip and loads the plugin', () async {
-      await engine.loadFromZipBytes(createTestAudioSourceZip());
+      await engine.loadFromDisk(dir);
 
       expect(engine.isRunning, isTrue);
       expect(engine.activePluginId, 'org.musicare.audiosource.youtube');
       expect(engine.activePort, 8765);
       expect(engine.activeManifest?.name, 'YouTube Audio Source');
-      expect(client.loadedPluginDir, contains('org.musicare.audiosource.youtube'));
+      expect(client.loadedPluginDir, dir);
     });
 
-    test('loadFromZipBytes rejects an archive without plugin.json', () {
+    test('loadFromDisk throws when plugin.json is missing', () {
       expect(
-        () async =>
-            await engine.loadFromZipBytes(createTestAudioSourceZip(includeJson: false)),
-        throwsA(isA<InvalidPluginArchiveException>()),
+        () => engine.loadFromDisk('${tempDir.path}/missing'),
+        throwsA(isA<PluginFileNotFoundException>()),
       );
     });
 
-    test('loadFromZipBytes rejects a non-audioSource manifest', () {
+    test('loadFromDisk rejects a non-audioSource manifest', () {
+      final dir = createPluginDir(tempDir, type: 'metadata');
+
       expect(
-        () async =>
-            await engine.loadFromZipBytes(createTestAudioSourceZip(type: 'metadata')),
+        () => engine.loadFromDisk(dir),
         throwsA(isA<InvalidPluginTypeException>()),
       );
     });
 
-    test('loadFromZipBytes throws IncompatibleSdkVersionException on a mismatch', () {
+    test('loadFromDisk throws on an SDK mismatch', () {
+      final dir = createPluginDir(tempDir, sdkVersion: '9.0.0');
+
       expect(
-        () async =>
-            await engine.loadFromZipBytes(createTestAudioSourceZip(sdkVersion: '9.0.0')),
+        () => engine.loadFromDisk(dir),
         throwsA(isA<IncompatibleSdkVersionException>()),
       );
     });
 
-    test('audioSource throws PluginNotLoadedException when no plugin is loaded', () {
+    test('isCompatible reflects the manifest checks', () {
+      final dir = createPluginDir(tempDir);
+      final manifest = PluginManifest.fromJson(
+        jsonDecode(File('$dir/plugin.json').readAsStringSync())
+            as Map<String, dynamic>,
+      );
+
+      expect(engine.isCompatible(manifest), isTrue);
+    });
+
+    test('audioSource throws when no plugin is loaded', () {
       expect(() => engine.audioSource, throwsA(isA<PluginNotLoadedException>()));
     });
 
-    test('audioSource exposes the loaded adapter', () async {
-      await engine.loadFromZipBytes(createTestAudioSourceZip());
-
-      expect(engine.audioSource, isA<AudioSourcePluginAdapter>());
-    });
-
     test('searchCandidates delegates to the loaded plugin', () async {
-      await engine.loadFromZipBytes(createTestAudioSourceZip());
+      await engine.loadFromDisk(createPluginDir(tempDir));
 
       final candidates = await engine.searchCandidates(title: 'Test Song');
 
@@ -161,7 +136,7 @@ void main() {
     });
 
     test('resolveStream returns the resolved stream', () async {
-      await engine.loadFromZipBytes(createTestAudioSourceZip());
+      await engine.loadFromDisk(createPluginDir(tempDir));
 
       final stream = await engine.resolveStream('c2');
 
@@ -169,7 +144,7 @@ void main() {
     });
 
     test('terminate clears the active plugin state', () async {
-      await engine.loadFromZipBytes(createTestAudioSourceZip());
+      await engine.loadFromDisk(createPluginDir(tempDir));
       expect(engine.isRunning, isTrue);
 
       await engine.terminate();

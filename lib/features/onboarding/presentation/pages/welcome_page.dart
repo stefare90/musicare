@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
-import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/widgets/dialogs.dart';
 import 'package:music_are/features/onboarding/presentation/pages/welcome_audio_source_page.dart';
 import 'package:music_are/features/onboarding/presentation/pages/welcome_intro_page.dart';
 import 'package:music_are/features/onboarding/presentation/pages/welcome_metadata_page.dart';
 import 'package:music_are/features/onboarding/presentation/widgets/onboarding_dots_indicator.dart';
-import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
-import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_state.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
+import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
+import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
+import 'package:music_are/features/plugin/shared/data/capabilities/plugin_lifecycle.dart';
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
@@ -49,11 +46,9 @@ class _WelcomePageState extends State<WelcomePage> {
   }
 
   void _checkAndNavigateToHome(BuildContext context) {
-    final metadataState = context.read<MetadataPluginCubit>().state;
-    final audioSourceState = context.read<AudioSourcePluginCubit>().state;
-
-    if (metadataState is MetadataPluginLoadedState &&
-        audioSourceState is AudioSourcePluginLoadedState) {
+    final plugins = context.read<PluginSessionCubit>();
+    if (plugins.isLoaded(PluginType.metadata) &&
+        plugins.isLoaded(PluginType.audioSource)) {
       context.go('/');
     }
   }
@@ -71,33 +66,25 @@ class _WelcomePageState extends State<WelcomePage> {
         body: SafeArea(
           child: MultiBlocListener(
             listeners: [
-              BlocListener<MetadataPluginCubit, MetadataPluginState>(
-                listener: (context, state) {
-                  if (state is MetadataPluginLoadingState) {
-                    Dialogs.showLoading(
-                      context,
-                      message: context.l10n.installingPlugin,
-                    );
-                  } else if (state is MetadataPluginLoadedState) {
-                    Dialogs.hide(context);
-                  } else if (state is MetadataPluginErrorState) {
-                    Dialogs.hide(context);
-                    sl<NoticeBus>().emit(Notice.error(state.error));
-                  }
+              BlocListener<PluginSessionCubit, PluginSessionState>(
+                listenWhen: (previous, next) {
+                  return PluginType.values.any(
+                    (type) =>
+                        previous.stateOf(type).status !=
+                        next.stateOf(type).status,
+                  );
                 },
-              ),
-              BlocListener<AudioSourcePluginCubit, AudioSourcePluginState>(
                 listener: (context, state) {
-                  if (state is AudioSourcePluginLoadingState) {
+                  final loading = state.states.values.any(
+                    (plugin) => plugin.status == PluginLifecycleStatus.loading,
+                  );
+                  if (loading) {
                     Dialogs.showLoading(
                       context,
                       message: context.l10n.installingPlugin,
                     );
-                  } else if (state is AudioSourcePluginLoadedState) {
+                  } else {
                     Dialogs.hide(context);
-                  } else if (state is AudioSourcePluginErrorState) {
-                    Dialogs.hide(context);
-                    sl<NoticeBus>().emit(Notice.error(state.error));
                   }
                 },
               ),

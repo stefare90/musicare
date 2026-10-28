@@ -5,10 +5,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
+import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 
-import '../../../../../helpers/metadata_plugin_test_helpers.dart';
+import '../../../../../helpers/plugin_session_cubit_test_helpers.dart';
 
 void main() {
   late StreamController<Notice> controller;
@@ -22,9 +22,9 @@ void main() {
   });
 
   /// Mirrors `main.dart`: listener inside a root Scaffold, above the Navigator.
-  Widget buildTestableWidget({UserCubit? cubit, Widget? home}) {
-    return BlocProvider<UserCubit>.value(
-      value: cubit ?? TestUserCubit(testUserState()),
+  Widget buildTestableWidget({TestPluginSessionCubit? plugins, Widget? home}) {
+    return BlocProvider<PluginSessionCubit>.value(
+      value: plugins ?? buildTestPluginSessionCubit(),
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -93,16 +93,15 @@ void main() {
 
   testWidgets('offers the auth action for auth notices', (tester) async {
     var signInCalls = 0;
-    final cubit = TestUserCubit(testUserState())
-      ..onSignIn = () async {
-        signInCalls++;
-        return AuthResult.authenticated;
-      };
+    final plugins = buildTestPluginSessionCubit()
+      ..onSignIn = (_) => signInCalls++;
 
-    await tester.pumpWidget(buildTestableWidget(cubit: cubit));
+    await tester.pumpWidget(buildTestableWidget(plugins: plugins));
     await tester.pumpAndSettle();
 
-    controller.add(Notice.error(const MetadataAuthRequiredException('sign in')));
+    controller.add(
+      Notice.error(const MetadataAuthRequiredException('sign in')),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Metadata sign-in required.'), findsOneWidget);

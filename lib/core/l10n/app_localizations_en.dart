@@ -98,6 +98,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginVersionSdk => 'Plugin SDK';
 
   @override
+  String pluginUpdateAvailable(String from, String to) {
+    return 'Update available · v$from → v$to';
+  }
+
+  @override
+  String get pluginIncompatible => 'Incompatible with this version of the app';
+
+  @override
+  String get pluginActionsSection => 'Actions';
+
+  @override
+  String get pluginActionUpdate => 'Update';
+
+  @override
+  String get pluginActionReinstall => 'Reinstall';
+
+  @override
+  String get pluginActionReplace => 'Replace…';
+
+  @override
+  String pluginUpdateTo(String version) {
+    return 'Update to v$version';
+  }
+
+  @override
+  String get pluginReplaceTitle => 'Replace plugin?';
+
+  @override
+  String pluginReplaceMessage(String name) {
+    return 'The current plugin will be removed and replaced by \"$name\". Continue?';
+  }
+
+  @override
+  String get pluginNoAlternatives =>
+      'No other plugins are available for this type.';
+
+  @override
   String get pluginAccountSection => 'Account';
 
   @override

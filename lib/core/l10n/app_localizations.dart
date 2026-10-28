@@ -268,6 +268,66 @@ abstract class AppLocalizations {
   /// **'Plugin SDK'**
   String get pluginVersionSdk;
 
+  /// No description provided for @pluginUpdateAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available · v{from} → v{to}'**
+  String pluginUpdateAvailable(String from, String to);
+
+  /// No description provided for @pluginIncompatible.
+  ///
+  /// In en, this message translates to:
+  /// **'Incompatible with this version of the app'**
+  String get pluginIncompatible;
+
+  /// No description provided for @pluginActionsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get pluginActionsSection;
+
+  /// No description provided for @pluginActionUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get pluginActionUpdate;
+
+  /// No description provided for @pluginActionReinstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Reinstall'**
+  String get pluginActionReinstall;
+
+  /// No description provided for @pluginActionReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace…'**
+  String get pluginActionReplace;
+
+  /// No description provided for @pluginUpdateTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Update to v{version}'**
+  String pluginUpdateTo(String version);
+
+  /// No description provided for @pluginReplaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace plugin?'**
+  String get pluginReplaceTitle;
+
+  /// No description provided for @pluginReplaceMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The current plugin will be removed and replaced by \"{name}\". Continue?'**
+  String pluginReplaceMessage(String name);
+
+  /// No description provided for @pluginNoAlternatives.
+  ///
+  /// In en, this message translates to:
+  /// **'No other plugins are available for this type.'**
+  String get pluginNoAlternatives;
+
   /// No description provided for @pluginAccountSection.
   ///
   /// In en, this message translates to:

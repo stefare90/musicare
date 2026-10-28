@@ -10,7 +10,7 @@ import 'package:music_are/features/library/presentation/pages/downloads_page.dar
 import 'package:music_are/features/library/presentation/pages/library_page.dart';
 import 'package:music_are/features/library/presentation/pages/liked_tracks_page.dart';
 import 'package:music_are/features/onboarding/presentation/pages/welcome_page.dart';
-import 'package:music_are/features/plugin/metadata/presentation/pages/metadata_plugin_update_page.dart';
+import 'package:music_are/features/plugin/management/presentation/pages/plugin_update_page.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/search/presentation/pages/search_page.dart';
 import 'package:music_are/features/settings/presentation/pages/about_page.dart';
@@ -54,8 +54,15 @@ GoRouter createRouter({required String initialLocation}) {
         builder: (context, state) => const WelcomePage(),
       ),
       GoRoute(
-        path: AppRoutes.pluginUpdate,
-        builder: (context, state) => const MetadataPluginUpdatePage(),
+        path: AppRoutes.pluginUpdateSegment,
+        builder: (context, state) {
+          final type = PluginType.fromString(
+            state.pathParameters[AppRoutes.pluginUpdateTypeParam] ?? '',
+          );
+          return type == null
+              ? const WelcomePage()
+              : PluginUpdatePage(type: type);
+        },
       ),
       GoRoute(
         path: AppRoutes.settings,

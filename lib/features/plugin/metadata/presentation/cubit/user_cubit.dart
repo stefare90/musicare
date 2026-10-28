@@ -4,8 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
-import 'package:music_are/features/plugin/metadata/data/repositories/account_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
+import 'package:music_are/features/plugin/shared/data/capabilities/plugin_auth.dart';
+import 'package:music_are/features/plugin/shared/data/models/plugin_auth_state.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
 
 part 'user_favorites.dart';
@@ -14,9 +15,6 @@ part 'user_saved_media_index.dart';
 part 'user_session.dart';
 part 'user_state.dart';
 
-/// [cancelled] stays silent, [failed] shows feedback.
-enum AuthResult { authenticated, cancelled, failed }
-
 class UserCubit extends SafeCubit<UserState>
     implements
         UserSession,
@@ -24,12 +22,15 @@ class UserCubit extends SafeCubit<UserState>
         UserSavedMediaIndex,
         UserPlaylistEdits {
   UserCubit(this._account, this._library, this._notices, this._playlists)
-    : super(const UserState());
+    : super(const UserState()) {
+    _authSubscription = _account.authChanges.listen(_onAuthChanged);
+  }
 
-  final AccountRepository _account;
+  final PluginAuth _account;
   final LibraryRepository _library;
   final NoticeBus _notices;
   final PlaylistRepository _playlists;
+  StreamSubscription<PluginAuthState>? _authSubscription;
   final Set<MediaItemType> _loading = {};
   final StreamController<MediaItemType> _savedChanges =
       StreamController<MediaItemType>.broadcast();
@@ -62,65 +63,35 @@ class UserCubit extends SafeCubit<UserState>
   /// Emits the cached identity first: resolving it needs the network, which
   /// must never block `runApp` (offline boot).
   Future<void> initialize() async {
-    if (!_account.hasMetadata) return;
+    if (!_account.isAvailable) return;
+    final authState = _account.authState;
+    if (authState.isAuthenticated) {
+      _applySignedIn(authState.accountId);
+      return;
+    }
+    if (authState.status == PluginAuthStatus.signedOut) {
+      _applySignedOut();
+      return;
+    }
+
     var isAuthenticated = false;
     try {
       isAuthenticated = await _account.isAuthenticated();
     } catch (_) {}
     if (isClosed) return;
-    emit(
-      UserState(
-        isAuthenticated: isAuthenticated,
-        userId: isAuthenticated ? _account.cachedUserId : null,
-      ),
-    );
-
-    if (!isAuthenticated) return;
-    _resetIndex();
-    unawaited(_refreshIdentity());
-    _warmUp();
+    if (isAuthenticated) {
+      _applySignedIn(_account.cachedAccountId);
+    } else {
+      _applySignedOut();
+    }
   }
 
   Future<void> _refreshIdentity() async {
     try {
-      final userId = await _account.resolveUserId();
+      final userId = await _account.resolveAccountId();
       if (isClosed || userId == null || userId == state.userId) return;
       emit(state.copyWith(userId: userId));
     } catch (_) {}
-  }
-
-  Future<AuthResult> signIn() async {
-    try {
-      await _account.authenticate();
-      final isAuthenticated = await _account.isAuthenticated();
-      String? userId;
-      if (isAuthenticated) {
-        String? resolved;
-        try {
-          resolved = await _account.resolveUserId();
-        } catch (_) {
-          resolved = null;
-        }
-        userId = resolved ?? _account.cachedUserId;
-      }
-      if (isClosed) return AuthResult.cancelled;
-      emit(UserState(isAuthenticated: isAuthenticated, userId: userId));
-      if (isAuthenticated) {
-        _resetIndex();
-        _warmUp();
-      }
-      return isAuthenticated ? AuthResult.authenticated : AuthResult.cancelled;
-    } catch (_) {
-      return AuthResult.failed;
-    }
-  }
-
-  Future<void> signOut() async {
-    try {
-      await _account.logout();
-    } catch (_) {}
-    _resetIndex();
-    emit(const UserState());
   }
 
   /// Clears the saved index without signing out.
@@ -354,8 +325,48 @@ class UserCubit extends SafeCubit<UserState>
     }
   }
 
+  void _onAuthChanged(PluginAuthState authState) {
+    if (isClosed) return;
+    switch (authState.status) {
+      case PluginAuthStatus.signedIn:
+        _applySignedIn(authState.accountId);
+      case PluginAuthStatus.signedOut:
+        _applySignedOut();
+      case PluginAuthStatus.unavailable:
+        if (state.isAuthenticated) _applySignedOut();
+      case PluginAuthStatus.loading:
+      case PluginAuthStatus.error:
+        break;
+    }
+  }
+
+  void _applySignedIn(String? accountId) {
+    if (isClosed) return;
+    final previousId = state.userId;
+    final wasAuthenticated = state.isAuthenticated;
+    final userId = accountId == null || accountId.isEmpty
+        ? _account.cachedAccountId
+        : accountId;
+    emit(state.copyWith(isAuthenticated: true, userId: userId));
+    final isNewAccount =
+        !wasAuthenticated || (previousId != null && previousId != userId);
+    if (isNewAccount) {
+      _resetIndex();
+      _warmUp();
+      unawaited(_refreshIdentity());
+    } else if (userId == null || userId.isEmpty) {
+      unawaited(_refreshIdentity());
+    }
+  }
+
+  void _applySignedOut() {
+    _resetIndex();
+    emit(const UserState());
+  }
+
   @override
   Future<void> close() async {
+    await _authSubscription?.cancel();
     await _savedChanges.close();
     await _edits.close();
     return super.close();

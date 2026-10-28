@@ -11,10 +11,10 @@ import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/library/presentation/pages/library_page.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
+import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
 
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
+import '../../../../helpers/plugin_session_cubit_test_helpers.dart';
 
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
@@ -46,7 +46,9 @@ void main() {
 
     sl.registerLazySingleton<MetadataPluginEngine>(() => engine);
     sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
-  sl.registerLazySingleton<LibraryRepository>(() => LibraryRepository(engine));
+    sl.registerLazySingleton<LibraryRepository>(
+      () => LibraryRepository(engine),
+    );
     sl.registerLazySingleton<PlaylistRepository>(
       () => PlaylistRepository(engine),
     );
@@ -65,8 +67,12 @@ void main() {
         limit: any(named: 'limit'),
       ),
     ).thenAnswer(
-      (_) async =>
-          const PaginatedResult<Album>(items: [], total: 0, offset: 0, limit: 20),
+      (_) async => const PaginatedResult<Album>(
+        items: [],
+        total: 0,
+        offset: 0,
+        limit: 20,
+      ),
     );
     when(
       () => user.savedArtists(
@@ -74,15 +80,19 @@ void main() {
         limit: any(named: 'limit'),
       ),
     ).thenAnswer(
-      (_) async =>
-          const PaginatedResult<Artist>(items: [], total: 0, offset: 0, limit: 20),
+      (_) async => const PaginatedResult<Artist>(
+        items: [],
+        total: 0,
+        offset: 0,
+        limit: 20,
+      ),
     );
   });
 
-  Widget buildTestableWidget(MetadataPluginCubit cubit) {
+  Widget buildTestableWidget(PluginSessionCubit cubit) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<MetadataPluginCubit>.value(value: cubit),
+        BlocProvider<PluginSessionCubit>.value(value: cubit),
         BlocProvider<UserCubit>.value(value: sl<UserCubit>()),
       ],
       child: MaterialApp(
@@ -95,7 +105,11 @@ void main() {
 
   testWidgets('signed out shows the sign-in invitation', (tester) async {
     await tester.pumpWidget(
-      buildTestableWidget(buildMockMetadataPluginCubit()),
+      buildTestableWidget(
+        buildTestPluginSessionCubit(
+          metadata: testRuntimeLoaded(testPluginManifest()),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -124,7 +138,11 @@ void main() {
     );
 
     await tester.pumpWidget(
-      buildTestableWidget(buildMockMetadataPluginCubit()),
+      buildTestableWidget(
+        buildTestPluginSessionCubit(
+          metadata: testRuntimeLoaded(testPluginManifest()),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -154,7 +172,11 @@ void main() {
     );
 
     await tester.pumpWidget(
-      buildTestableWidget(buildMockMetadataPluginCubit()),
+      buildTestableWidget(
+        buildTestPluginSessionCubit(
+          metadata: testRuntimeLoaded(testPluginManifest()),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
     clearInteractions(user);
@@ -190,7 +212,11 @@ void main() {
     );
 
     await tester.pumpWidget(
-      buildTestableWidget(buildMockMetadataPluginCubit()),
+      buildTestableWidget(
+        buildTestPluginSessionCubit(
+          metadata: testRuntimeLoaded(testPluginManifest()),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -226,7 +252,11 @@ void main() {
     );
 
     await tester.pumpWidget(
-      buildTestableWidget(buildMockMetadataPluginCubit()),
+      buildTestableWidget(
+        buildTestPluginSessionCubit(
+          metadata: testRuntimeLoaded(testPluginManifest()),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -257,7 +287,11 @@ void main() {
     );
 
     await tester.pumpWidget(
-      buildTestableWidget(buildMockMetadataPluginCubit()),
+      buildTestableWidget(
+        buildTestPluginSessionCubit(
+          metadata: testRuntimeLoaded(testPluginManifest()),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -269,11 +303,7 @@ void main() {
   });
 
   testWidgets('renders nothing when no plugin is loaded', (tester) async {
-    await tester.pumpWidget(
-      buildTestableWidget(
-        buildMockMetadataPluginCubit(state: MetadataPluginNotConfiguredState()),
-      ),
-    );
+    await tester.pumpWidget(buildTestableWidget(buildTestPluginSessionCubit()));
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);

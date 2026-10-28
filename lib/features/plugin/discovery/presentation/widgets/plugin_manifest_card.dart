@@ -3,16 +3,20 @@ import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 
+enum PluginAction { install, update, reinstall, replace }
+
 class PluginManifestCard extends StatelessWidget {
   final PluginManifest manifest;
   final bool isActive;
-  final void Function(PluginManifest manifest)? onInstallTap;
+  final PluginAction action;
+  final VoidCallback? onAction;
 
   const PluginManifestCard({
     super.key,
     required this.manifest,
     this.isActive = false,
-    this.onInstallTap,
+    this.action = PluginAction.install,
+    this.onAction,
   });
 
   @override
@@ -87,21 +91,33 @@ class PluginManifestCard extends StatelessWidget {
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              child: isActive
-                  ? OutlinedButton.icon(
-                      onPressed: null,
-                      icon: const Icon(Icons.check_rounded),
-                      label: Text(context.l10n.activeLabel),
-                    )
-                  : ElevatedButton.icon(
-                      onPressed: () => onInstallTap?.call(manifest),
-                      icon: const Icon(Icons.download),
-                      label: Text(context.l10n.installAndActivate),
-                    ),
+              child: ElevatedButton.icon(
+                onPressed: onAction,
+                icon: Icon(_icon),
+                label: Text(_label(context)),
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  IconData get _icon {
+    return switch (action) {
+      PluginAction.install => Icons.download,
+      PluginAction.update => Icons.system_update_alt_rounded,
+      PluginAction.reinstall => Icons.refresh,
+      PluginAction.replace => Icons.swap_horiz_rounded,
+    };
+  }
+
+  String _label(BuildContext context) {
+    return switch (action) {
+      PluginAction.install => context.l10n.installAndActivate,
+      PluginAction.update => context.l10n.pluginUpdateTo(manifest.version),
+      PluginAction.reinstall => context.l10n.pluginActionReinstall,
+      PluginAction.replace => context.l10n.pluginActionReplace,
+    };
   }
 }

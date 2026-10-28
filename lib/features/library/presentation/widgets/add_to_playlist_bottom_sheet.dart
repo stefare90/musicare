@@ -18,7 +18,8 @@ import 'package:music_are/features/library/presentation/widgets/create_playlist_
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/utils/metadata_account_actions.dart';
+import 'package:music_are/features/plugin/shared/presentation/utils/plugin_account_actions.dart';
+import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 
 class AddToPlaylistBottomSheet extends StatelessWidget {
   final Track track;
@@ -35,15 +36,14 @@ class AddToPlaylistBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<AddToPlaylistCubit>(
-      create: (context) =>
-          AddToPlaylistCubit(
-            sl<LibraryRepository>(),
-            sl<PlaylistRepository>(),
-            sl<NoticeBus>(),
-            session: sl<UserSession>(),
-            savedMedia: sl<UserSavedMediaIndex>(),
-            edits: sl<UserPlaylistEdits>(),
-          )..load(),
+      create: (context) => AddToPlaylistCubit(
+        sl<LibraryRepository>(),
+        sl<PlaylistRepository>(),
+        sl<NoticeBus>(),
+        session: sl<UserSession>(),
+        savedMedia: sl<UserSavedMediaIndex>(),
+        edits: sl<UserPlaylistEdits>(),
+      )..load(),
       child: _AddToPlaylistBody(track: track),
     );
   }
@@ -106,7 +106,8 @@ class _AddToPlaylistBody extends StatelessWidget {
                 child: InfoCard(
                   icon: Icons.login_rounded,
                   title: context.l10n.playlistsSignInTitle,
-                  onAction: () => MetadataAccountActions.signIn(context),
+                  onAction: () =>
+                      PluginAccountActions.signIn(context, PluginType.metadata),
                   actionLabel: context.l10n.accountSignIn,
                   actionIcon: Icons.login_rounded,
                 ),

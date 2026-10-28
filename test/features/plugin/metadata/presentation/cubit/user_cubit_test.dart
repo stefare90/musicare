@@ -5,11 +5,13 @@ import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/services/preferences_service.dart';
-import 'package:music_are/features/plugin/metadata/data/repositories/account_repository.dart';
+import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_auth.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
+
+import '../../../../../helpers/metadata_plugin_test_helpers.dart';
 
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
@@ -37,6 +39,7 @@ void main() {
   late MockPlaylistService playlists;
   late MockPreferencesService preferences;
   late NoticeBus notices;
+  late MetadataPluginAuth account;
   late UserCubit cubit;
   late List<MediaItemType> savedChanges;
   late StreamSubscription<MediaItemType> savedChangesSubscription;
@@ -89,20 +92,26 @@ void main() {
     notices = NoticeBus();
     cachedUserId = null;
 
-    when(() => preferences.getMetadataUserId()).thenAnswer((_) => cachedUserId);
-    when(() => preferences.setMetadataUserId(any())).thenAnswer((
+    when(
+      () => preferences.pluginAccountId(any()),
+    ).thenAnswer((_) => cachedUserId);
+    when(() => preferences.setPluginAccountId(any(), any())).thenAnswer((
       invocation,
     ) async {
-      cachedUserId = invocation.positionalArguments.first as String;
+      cachedUserId = invocation.positionalArguments[1] as String;
       return true;
     });
-    when(() => preferences.removeMetadataUserId()).thenAnswer((_) async {
+    when(() => preferences.removePluginAccountId(any())).thenAnswer((_) async {
       cachedUserId = null;
       return true;
     });
+    when(
+      () => preferences.migratePluginAccountId(any()),
+    ).thenAnswer((_) async {});
 
+    account = MetadataPluginAuth(engine, preferences);
     cubit = UserCubit(
-      AccountRepository(engine, preferences),
+      account,
       LibraryRepository(engine),
       notices,
       PlaylistRepository(engine),
@@ -111,6 +120,7 @@ void main() {
     savedChangesSubscription = cubit.savedChanges.listen(savedChanges.add);
 
     when(() => engine.hasMetadata).thenReturn(true);
+    when(() => engine.metadataManifest).thenReturn(testPluginManifest());
     when(() => engine.metadata).thenReturn(metadata);
     when(() => metadata.auth).thenReturn(auth);
     when(() => metadata.user).thenReturn(user);
@@ -185,7 +195,7 @@ void main() {
     when(() => auth.authenticate()).thenAnswer((_) async {});
     when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
     when(() => user.me()).thenAnswer((_) async => {'user_id': userId});
-    await cubit.signIn();
+    await account.authenticate();
     await Future<void>.delayed(const Duration(milliseconds: 1));
   }
 
@@ -234,7 +244,7 @@ void main() {
         final seen = <Object>[];
         final subscription = notices.notices.listen(seen.add);
 
-        await cubit.signIn();
+        await account.authenticate();
         await pumpEventQueue();
 
         expect(seen, isEmpty);
@@ -293,32 +303,40 @@ void main() {
       expect(cubit.state.userId, isNull);
     });
 
-    test('initialize keeps the account usable when the identity times out',
-        () async {
-      stubEmptyLibrary();
-      when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
-      when(() => user.me()).thenAnswer((_) async => throw Exception('timeout'));
+    test(
+      'initialize keeps the account usable when the identity times out',
+      () async {
+        stubEmptyLibrary();
+        when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
+        when(
+          () => user.me(),
+        ).thenAnswer((_) async => throw Exception('timeout'));
 
-      await cubit.initialize();
-      await pumpEventQueue();
+        await cubit.initialize();
+        await pumpEventQueue();
 
-      expect(cubit.state.isAuthenticated, isTrue);
-      expect(cubit.state.userId, isNull);
-    });
+        expect(cubit.state.isAuthenticated, isTrue);
+        expect(cubit.state.userId, isNull);
+      },
+    );
 
-    test('initialize restores the cached identity when the provider is offline',
-        () async {
-      stubEmptyLibrary();
-      cachedUserId = 'cached-listener';
-      when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
-      when(() => user.me()).thenAnswer((_) async => throw Exception('offline'));
+    test(
+      'initialize restores the cached identity when the provider is offline',
+      () async {
+        stubEmptyLibrary();
+        cachedUserId = 'cached-listener';
+        when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
+        when(
+          () => user.me(),
+        ).thenAnswer((_) async => throw Exception('offline'));
 
-      await cubit.initialize();
-      await pumpEventQueue();
+        await cubit.initialize();
+        await pumpEventQueue();
 
-      expect(cubit.state.isAuthenticated, isTrue);
-      expect(cubit.state.userId, 'cached-listener');
-    });
+        expect(cubit.state.isAuthenticated, isTrue);
+        expect(cubit.state.userId, 'cached-listener');
+      },
+    );
 
     test('initialize refreshes a stale cached identity', () async {
       stubEmptyLibrary();
@@ -335,75 +353,85 @@ void main() {
       expect(cachedUserId, 'new-name');
     });
 
-    test('signIn authenticates and reports success with the user name',
-        () async {
-      stubEmptyLibrary();
-      when(() => auth.authenticate()).thenAnswer((_) async {});
-      when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
-      when(() => user.me()).thenAnswer((_) async => {'user_id': 'listener'});
+    test(
+      'a successful sign-in reaches the user state with the identity',
+      () async {
+        stubEmptyLibrary();
+        when(() => auth.authenticate()).thenAnswer((_) async {});
+        when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
+        when(() => user.me()).thenAnswer((_) async => {'user_id': 'listener'});
 
-      final result = await cubit.signIn();
+        await account.authenticate();
+        await pumpEventQueue();
 
-      expect(result, AuthResult.authenticated);
-      expect(cubit.state.isAuthenticated, isTrue);
-      expect(cubit.state.userId, 'listener');
-      expect(cachedUserId, 'listener');
-    });
+        expect(cubit.state.isAuthenticated, isTrue);
+        expect(cubit.state.userId, 'listener');
+        expect(cachedUserId, 'listener');
+      },
+    );
 
-    test('signIn reports cancellation when the form is dismissed', () async {
+    test('a dismissed form leaves the user signed out', () async {
       when(() => auth.authenticate()).thenAnswer((_) async {});
       when(() => auth.isAuthenticated()).thenAnswer((_) async => false);
 
-      final result = await cubit.signIn();
+      await account.authenticate();
 
-      expect(result, AuthResult.cancelled);
       expect(cubit.state.isAuthenticated, isFalse);
     });
 
-    test('signIn reports failure and keeps the signed-out state', () async {
+    test('a failed sign-in keeps the signed-out state', () async {
       when(
         () => auth.authenticate(),
       ).thenThrow(const MetadataAuthRequiredException('bad token'));
 
-      final result = await cubit.signIn();
+      await expectLater(account.authenticate(), throwsA(anything));
 
-      expect(result, AuthResult.failed);
       expect(cubit.state.isAuthenticated, isFalse);
     });
 
-    test('signIn succeeds even when the identity cannot be resolved', () async {
-      stubEmptyLibrary();
-      when(() => auth.authenticate()).thenAnswer((_) async {});
-      when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
-      when(() => user.me()).thenAnswer((_) async => throw Exception('timeout'));
+    test(
+      'a sign-in succeeds even when the identity cannot be resolved',
+      () async {
+        stubEmptyLibrary();
+        when(() => auth.authenticate()).thenAnswer((_) async {});
+        when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
+        when(
+          () => user.me(),
+        ).thenAnswer((_) async => throw Exception('timeout'));
 
-      final result = await cubit.signIn();
+        await account.authenticate();
+        await pumpEventQueue();
 
-      expect(result, AuthResult.authenticated);
-      expect(cubit.state.isAuthenticated, isTrue);
-      expect(cubit.state.userId, isNull);
-    });
+        expect(cubit.state.isAuthenticated, isTrue);
+        expect(cubit.state.userId, isNull);
+      },
+    );
 
-    test('signIn falls back to the cached identity when resolution fails',
-        () async {
-      stubEmptyLibrary();
-      cachedUserId = 'cached-listener';
-      when(() => auth.authenticate()).thenAnswer((_) async {});
-      when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
-      when(() => user.me()).thenAnswer((_) async => throw Exception('timeout'));
+    test(
+      'a sign-in falls back to the cached identity when resolution fails',
+      () async {
+        stubEmptyLibrary();
+        cachedUserId = 'cached-listener';
+        when(() => auth.authenticate()).thenAnswer((_) async {});
+        when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
+        when(
+          () => user.me(),
+        ).thenAnswer((_) async => throw Exception('timeout'));
 
-      final result = await cubit.signIn();
+        await account.authenticate();
+        await pumpEventQueue();
 
-      expect(result, AuthResult.authenticated);
-      expect(cubit.state.userId, 'cached-listener');
-    });
+        expect(cubit.state.userId, 'cached-listener');
+      },
+    );
 
     test('signOut clears the identity and the index', () async {
       await signIn();
       cubit.emit(cubit.state.withIds(MediaItemType.track, {'t1'}));
 
       when(() => auth.logout()).thenAnswer((_) async {});
-      await cubit.signOut();
+      await account.logout();
+      await pumpEventQueue();
 
       expect(cubit.state.isAuthenticated, isFalse);
       expect(cubit.state.userId, isNull);
@@ -426,7 +454,7 @@ void main() {
       expect(seen, [true]);
 
       when(() => auth.logout()).thenAnswer((_) async {});
-      await cubit.signOut();
+      await account.logout();
       await Future<void>.delayed(Duration.zero);
 
       expect(seen, [true, false]);
@@ -460,7 +488,7 @@ void main() {
       when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
       when(() => user.me()).thenAnswer((_) async => {'user_id': 'u1'});
 
-      await cubit.signIn();
+      await account.authenticate();
       await Future<void>.delayed(const Duration(milliseconds: 1));
 
       expect(cubit.isTrackSaved('t1'), isTrue);
@@ -483,25 +511,27 @@ void main() {
       );
     });
 
-    test('toggleTrack flips optimistically and rolls back on failure',
-        () async {
-      final completer = Completer<void>();
-      when(() => tracks.save(['t1'])).thenAnswer((_) => completer.future);
+    test(
+      'toggleTrack flips optimistically and rolls back on failure',
+      () async {
+        final completer = Completer<void>();
+        when(() => tracks.save(['t1'])).thenAnswer((_) => completer.future);
 
-      final seen = <Object>[];
-      final subscription = notices.notices.listen(seen.add);
+        final seen = <Object>[];
+        final subscription = notices.notices.listen(seen.add);
 
-      final future = cubit.toggleTrack(track);
-      expect(cubit.isTrackSaved('t1'), isTrue);
+        final future = cubit.toggleTrack(track);
+        expect(cubit.isTrackSaved('t1'), isTrue);
 
-      completer.completeError(const MetadataAuthRequiredException('sign in'));
-      await future;
-      await Future<void>.delayed(Duration.zero);
+        completer.completeError(const MetadataAuthRequiredException('sign in'));
+        await future;
+        await Future<void>.delayed(Duration.zero);
 
-      expect(cubit.isTrackSaved('t1'), isFalse);
-      expect(seen, hasLength(1));
-      await subscription.cancel();
-    });
+        expect(cubit.isTrackSaved('t1'), isFalse);
+        expect(seen, hasLength(1));
+        await subscription.cancel();
+      },
+    );
 
     test('toggleTrack on a saved track calls unsave', () async {
       when(() => tracks.unsave(['t1'])).thenAnswer((_) async {});
@@ -514,38 +544,40 @@ void main() {
       verifyNever(() => tracks.save(any()));
     });
 
-    test('a playlist save re-reads the library instead of trusting the id',
-        () async {
-      when(() => playlists.save('pl-original')).thenAnswer((_) async {});
+    test(
+      'a playlist save re-reads the library instead of trusting the id',
+      () async {
+        when(() => playlists.save('pl-original')).thenAnswer((_) async {});
 
-      await signIn();
+        await signIn();
 
-      const copy = Playlist(
-        id: 'pl-copy',
-        name: 'Weekly Exploration',
-        description: '',
-        externalUri: '',
-        owner: User(id: 'me', name: 'me', externalUri: ''),
-      );
-      when(
-        () => user.savedPlaylists(
-          offset: any(named: 'offset'),
-          limit: any(named: 'limit'),
-        ),
-      ).thenAnswer(
-        (_) async => const PaginatedResult<Playlist>(
-          items: [copy],
-          total: 1,
-          offset: 0,
-          limit: 100,
-        ),
-      );
+        const copy = Playlist(
+          id: 'pl-copy',
+          name: 'Weekly Exploration',
+          description: '',
+          externalUri: '',
+          owner: User(id: 'me', name: 'me', externalUri: ''),
+        );
+        when(
+          () => user.savedPlaylists(
+            offset: any(named: 'offset'),
+            limit: any(named: 'limit'),
+          ),
+        ).thenAnswer(
+          (_) async => const PaginatedResult<Playlist>(
+            items: [copy],
+            total: 1,
+            offset: 0,
+            limit: 100,
+          ),
+        );
 
-      await cubit.togglePlaylist(originalPlaylist);
-      await Future<void>.delayed(Duration.zero);
+        await cubit.togglePlaylist(originalPlaylist);
+        await Future<void>.delayed(Duration.zero);
 
-      expect(cubit.state.playlistIds, {'pl-copy'});
-    });
+        expect(cubit.state.playlistIds, {'pl-copy'});
+      },
+    );
 
     test('reset clears the cached IDs but keeps the sign-in', () async {
       cubit.emit(
@@ -570,7 +602,7 @@ void main() {
       cubit.emit(cubit.state.withIds(MediaItemType.track, {'t1'}));
 
       when(() => auth.logout()).thenAnswer((_) async {});
-      await cubit.signOut();
+      await account.logout();
       await Future<void>.delayed(Duration.zero);
 
       expect(cubit.state.trackIds, isEmpty);
@@ -590,7 +622,7 @@ void main() {
       when(() => auth.isAuthenticated()).thenAnswer((_) async => true);
       when(() => user.me()).thenAnswer((_) async => {'user_id': 'u1'});
 
-      await cubit.signIn();
+      await account.authenticate();
       await Future<void>.delayed(const Duration(milliseconds: 1));
 
       expect(cubit.state.trackIds, {'t1'});
@@ -710,9 +742,9 @@ void main() {
   group('playlist edits', () {
     test('addTrackToPlaylist returns the provider outcome', () async {
       const result = AddTracksResult(added: 1, alreadyPresent: []);
-      when(() => playlists.addTracks('pl1', ['t1'])).thenAnswer(
-        (_) async => result,
-      );
+      when(
+        () => playlists.addTracks('pl1', ['t1']),
+      ).thenAnswer((_) async => result);
 
       final outcome = await cubit.addTrackToPlaylist('pl1', 't1');
 
@@ -737,9 +769,9 @@ void main() {
     });
 
     test('removeTrackFromPlaylist returns true on success', () async {
-      when(() => playlists.removeTracks('pl1', ['t1'])).thenAnswer(
-        (_) async {},
-      );
+      when(
+        () => playlists.removeTracks('pl1', ['t1']),
+      ).thenAnswer((_) async {});
 
       final removed = await cubit.removeTrackFromPlaylist('pl1', 't1');
 
@@ -747,22 +779,24 @@ void main() {
       verify(() => playlists.removeTracks('pl1', ['t1'])).called(1);
     });
 
-    test('removeTrackFromPlaylist returns false and notifies on failure',
-        () async {
-      when(
-        () => playlists.removeTracks('pl1', ['t1']),
-      ).thenAnswer((_) async => throw const MetadataAuthRequiredException(''));
+    test(
+      'removeTrackFromPlaylist returns false and notifies on failure',
+      () async {
+        when(() => playlists.removeTracks('pl1', ['t1'])).thenAnswer(
+          (_) async => throw const MetadataAuthRequiredException(''),
+        );
 
-      final seen = <Object>[];
-      final subscription = notices.notices.listen(seen.add);
+        final seen = <Object>[];
+        final subscription = notices.notices.listen(seen.add);
 
-      final removed = await cubit.removeTrackFromPlaylist('pl1', 't1');
-      await Future<void>.delayed(Duration.zero);
+        final removed = await cubit.removeTrackFromPlaylist('pl1', 't1');
+        await Future<void>.delayed(Duration.zero);
 
-      expect(removed, isFalse);
-      expect(seen, hasLength(1));
-      await subscription.cancel();
-    });
+        expect(removed, isFalse);
+        expect(seen, hasLength(1));
+        await subscription.cancel();
+      },
+    );
 
     test('addTrackToPlaylist announces the addition', () async {
       when(() => playlists.addTracks('pl1', ['t1'])).thenAnswer(
@@ -812,9 +846,9 @@ void main() {
     });
 
     test('removeTrackFromPlaylist announces the removal', () async {
-      when(() => playlists.removeTracks('pl1', ['t1'])).thenAnswer(
-        (_) async {},
-      );
+      when(
+        () => playlists.removeTracks('pl1', ['t1']),
+      ).thenAnswer((_) async {});
 
       final seen = <PlaylistTracksChanged>[];
       final subscription = cubit.playlistEdits.listen(seen.add);

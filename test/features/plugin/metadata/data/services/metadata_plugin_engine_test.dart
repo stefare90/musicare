@@ -1,14 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
+import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
-import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
-import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 class FakeMetadataClient extends Fake implements MetadataClient {
   String? loadedPluginDir;
@@ -57,136 +54,134 @@ class FakeAuthPresenter implements MetadataAuthPresenter {
   Future<void> openBrowser(String url) async {}
 }
 
-class FakePathProviderPlatform extends Fake
-    with MockPlatformInterfaceMixin
-    implements PathProviderPlatform {
-  final Directory tempDir;
-  FakePathProviderPlatform(this.tempDir);
-
-  @override
-  Future<String?> getApplicationSupportPath() async => tempDir.path;
-}
-
-Uint8List createTestPluginZip({
+String createPluginDir(
+  Directory root, {
+  String type = 'metadata',
   String sdkVersion = packageVersion,
-  String pluginId = 'org.musicare.metadata.test',
-  bool includeJson = true,
+  String version = '1.0.0',
 }) {
-  final archive = Archive();
-
-  if (includeJson) {
-    final jsonBytes = utf8.encode(
-      jsonEncode({
-        'id': pluginId,
-        'packageId': 'musicare_metadata_test_plugin',
-        'type': 'metadata',
-        'name': 'Test Plugin',
-        'version': '1.0.0',
-        'pluginSdkVersion': sdkVersion,
-        'author': 'Test Author',
-        'description': 'Test Plugin Description',
-      }),
-    );
-    archive.addFile(ArchiveFile('plugin.json', jsonBytes.length, jsonBytes));
-    final entryBytes = utf8.encode('def get_plugin():\n    return None\n');
-    archive.addFile(
-      ArchiveFile('src/main.py', entryBytes.length, entryBytes),
-    );
-  }
-
-  return Uint8List.fromList(ZipEncoder().encode(archive));
+  final dir = Directory('${root.path}/plugin')..createSync(recursive: true);
+  File('${dir.path}/plugin.json').writeAsStringSync(
+    jsonEncode({
+      'id': 'org.musicare.metadata.test',
+      'packageId': 'musicare_metadata_test_plugin',
+      'type': type,
+      'name': 'Test Plugin',
+      'version': version,
+      'pluginSdkVersion': sdkVersion,
+      'author': 'Test Author',
+      'description': 'Test Plugin Description',
+    }),
+  );
+  Directory('${dir.path}/src').createSync(recursive: true);
+  File('${dir.path}/src/main.py')
+      .writeAsStringSync('def get_plugin():\n    return None\n');
+  return dir.path;
 }
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-
   group('MetadataPluginEngine Unit Tests', () {
     late FakeMetadataClient client;
     late MetadataPluginEngine engine;
-    late Directory tempDirectory;
+    late Directory tempDir;
 
     setUp(() {
-      tempDirectory = Directory.systemTemp.createTempSync(
-        'metadata_plugin_engine_test_',
-      );
-      PathProviderPlatform.instance = FakePathProviderPlatform(tempDirectory);
+      tempDir = Directory.systemTemp.createTempSync('metadata_engine_test_');
       client = FakeMetadataClient();
       engine = MetadataPluginEngine(client: client);
     });
 
     tearDown(() {
-      if (tempDirectory.existsSync()) {
-        tempDirectory.deleteSync(recursive: true);
-      }
+      if (tempDir.existsSync()) tempDir.deleteSync(recursive: true);
     });
 
-    test('accessing metadata when unloaded throws PluginNotLoadedException', () {
-      expect(engine.hasMetadata, isFalse);
-      expect(() => engine.metadata, throwsA(isA<PluginNotLoadedException>()));
-    });
+    test('loadFromDisk loads the manifest and the runtime', () async {
+      final dir = createPluginDir(tempDir);
 
-    test('loadFromDisk throws PluginFileNotFoundException when missing', () {
-      expect(
-        () async => await engine.loadFromDisk('missing'),
-        throwsA(isA<PluginFileNotFoundException>()),
-      );
-    });
-
-    test('loadFromZipBytes extracts the plugin and loads it into the runtime', () async {
-      await engine.loadFromZipBytes(createTestPluginZip());
+      await engine.loadFromDisk(dir);
 
       expect(engine.hasMetadata, isTrue);
       expect(engine.metadata, isA<MetadataPluginAdapter>());
       expect(engine.metadataManifest!.id, 'org.musicare.metadata.test');
-      expect(client.loadedPluginDir, isNotNull);
+      expect(client.loadedPluginDir, dir);
+    });
+
+    test('loadFromDisk throws when plugin.json is missing', () {
       expect(
-        await engine.isPluginInstalledOnDisk('org.musicare.metadata.test'),
-        isTrue,
+        () => engine.loadFromDisk('${tempDir.path}/missing'),
+        throwsA(isA<PluginFileNotFoundException>()),
       );
     });
 
-    test('loadFromZipBytes rejects an archive without plugin.json', () {
+    test('loadFromDisk rejects a manifest of another type', () {
+      final dir = createPluginDir(tempDir, type: 'audioSource');
+
       expect(
-        () async =>
-            await engine.loadFromZipBytes(createTestPluginZip(includeJson: false)),
-        throwsA(isA<InvalidPluginArchiveException>()),
+        () => engine.loadFromDisk(dir),
+        throwsA(isA<InvalidPluginTypeException>()),
       );
     });
 
-    test('core.support is exposed through the adapter as an async call', () async {
-      await engine.loadFromZipBytes(createTestPluginZip());
+    test('loadFromDisk rejects an incompatible SDK version', () {
+      final dir = createPluginDir(tempDir, sdkVersion: '1.0.0');
 
-      final support = engine.metadata.core.support();
-
-      expect(support, isA<Future<String>>());
-      expect(await support, 'MusicBrainz metadata provider');
+      expect(
+        () => engine.loadFromDisk(dir),
+        throwsA(isA<IncompatibleSdkVersionException>()),
+      );
     });
 
-    test(
-      'loadFromZipBytes wires the auth presenter into the adapter',
-      () async {
-        final presenter = FakeAuthPresenter();
-        final engineWithAuth = MetadataPluginEngine(
-          client: client,
-          authPresenter: presenter,
-        );
-        await engineWithAuth.loadFromZipBytes(createTestPluginZip());
+    test('isCompatible reflects the manifest checks', () {
+      final dir = createPluginDir(tempDir);
+      final manifest = PluginManifest.fromJson(
+        jsonDecode(File('$dir/plugin.json').readAsStringSync())
+            as Map<String, dynamic>,
+      );
 
-        await engineWithAuth.metadata.auth.authenticate();
+      expect(engine.isCompatible(manifest), isTrue);
+      expect(
+        engine.isCompatible(
+          PluginManifest.fromJson({
+            'id': 'x',
+            'packageId': 'x',
+            'type': 'audioSource',
+            'name': 'x',
+            'version': '1.0.0',
+            'pluginSdkVersion': packageVersion,
+            'author': 'x',
+            'description': 'x',
+          }),
+        ),
+        isFalse,
+      );
+    });
 
-        expect(presenter.promptFormCalls, 1);
-      },
-    );
+    test('core.support is exposed through the adapter', () async {
+      await engine.loadFromDisk(createPluginDir(tempDir));
 
-    test(
-      'loadFromZipBytes throws IncompatibleSdkVersionException on a major mismatch',
-      () {
-        expect(
-          () async =>
-              await engine.loadFromZipBytes(createTestPluginZip(sdkVersion: '1.0.0')),
-          throwsA(isA<IncompatibleSdkVersionException>()),
-        );
-      },
-    );
+      expect(await engine.metadata.core.support(), 'MusicBrainz metadata provider');
+    });
+
+    test('loadFromDisk wires the auth presenter into the adapter', () async {
+      final presenter = FakeAuthPresenter();
+      final engineWithAuth = MetadataPluginEngine(
+        client: client,
+        authPresenter: presenter,
+      );
+      await engineWithAuth.loadFromDisk(createPluginDir(tempDir));
+
+      await engineWithAuth.metadata.auth.authenticate();
+
+      expect(presenter.promptFormCalls, 1);
+    });
+
+    test('unloadMetadata clears the loaded plugin', () async {
+      await engine.loadFromDisk(createPluginDir(tempDir));
+
+      engine.unloadMetadata();
+
+      expect(engine.hasMetadata, isFalse);
+      expect(() => engine.metadata, throwsA(isA<PluginNotLoadedException>()));
+    });
   });
 }

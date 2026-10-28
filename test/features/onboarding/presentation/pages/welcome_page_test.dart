@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,29 +8,23 @@ import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/onboarding/presentation/pages/welcome_page.dart';
 import 'package:music_are/features/onboarding/presentation/widgets/onboarding_dots_indicator.dart';
-import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_cubit.dart';
-import 'package:music_are/features/plugin/audio_source/presentation/cubit/audio_source_plugin_state.dart';
-import 'package:music_are/features/plugin/discovery/data/services/plugin_discovery_service.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
+import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
+import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
+import 'package:music_are/features/plugin/shared/data/services/plugin_catalog.dart';
 import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 
-class MockMetadataPluginCubit extends Mock implements MetadataPluginCubit {}
+import '../../../../helpers/plugin_session_cubit_test_helpers.dart';
+import '../../../../helpers/plugin_manager_test_helpers.dart';
 
-class MockAudioSourcePluginCubit extends Mock
-    implements AudioSourcePluginCubit {}
-
-class MockPluginDiscoveryService extends Mock
-    implements PluginDiscoveryService {}
+class MockPluginCatalog extends Mock implements PluginCatalog {}
 
 void main() {
   final sl = GetIt.instance;
 
-  late MockMetadataPluginCubit mockMetadataCubit;
-  late MockAudioSourcePluginCubit mockAudioSourceCubit;
-  late MockPluginDiscoveryService mockDiscoveryService;
+  late MockPluginCatalog mockCatalog;
+  late TestPluginSessionCubit pluginCubit;
   late NoticeBus bus;
 
   final metadataManifest = PluginManifest(
@@ -63,41 +55,23 @@ void main() {
 
   setUp(() async {
     await sl.reset();
-    mockMetadataCubit = MockMetadataPluginCubit();
-    mockAudioSourceCubit = MockAudioSourcePluginCubit();
-    mockDiscoveryService = MockPluginDiscoveryService();
-
-    sl.registerLazySingleton<PluginDiscoveryService>(
-      () => mockDiscoveryService,
-    );
+    mockCatalog = MockPluginCatalog();
+    pluginCubit = buildTestPluginSessionCubit();
+    sl.registerLazySingleton<PluginCatalog>(() => mockCatalog);
     bus = NoticeBus();
     sl.registerLazySingleton<NoticeBus>(() => bus);
-
     when(
-      () => mockMetadataCubit.state,
-    ).thenReturn(MetadataPluginNotConfiguredState());
-    when(
-      () => mockMetadataCubit.stream,
-    ).thenAnswer((_) => const Stream.empty());
-
-    when(
-      () => mockAudioSourceCubit.state,
-    ).thenReturn(AudioSourcePluginNotConfiguredState());
-    when(
-      () => mockAudioSourceCubit.stream,
-    ).thenAnswer((_) => const Stream.empty());
-
-    when(
-      () =>
-          mockDiscoveryService.fetchCommunityPlugins(type: any(named: 'type')),
-    ).thenAnswer((_) async => []);
+      () => mockCatalog.latest(any(), forceRefresh: any(named: 'forceRefresh')),
+    ).thenAnswer((_) async => {});
   });
 
   Widget buildTestableWidget({required GoRouter router}) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<MetadataPluginCubit>.value(value: mockMetadataCubit),
-        BlocProvider<AudioSourcePluginCubit>.value(value: mockAudioSourceCubit),
+        BlocProvider<PluginSessionCubit>.value(value: pluginCubit),
+        BlocProvider<PluginManagerCubit>.value(
+          value: buildMockPluginManagerCubit(),
+        ),
       ],
       child: MaterialApp.router(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -166,11 +140,6 @@ void main() {
     testWidgets('shows continue button on Page 1 when metadata is loaded', (
       tester,
     ) async {
-      final metadataStream = StreamController<MetadataPluginState>.broadcast();
-      when(
-        () => mockMetadataCubit.stream,
-      ).thenAnswer((_) => metadataStream.stream);
-
       final router = GoRouter(
         initialLocation: '/welcome',
         routes: [
@@ -184,15 +153,9 @@ void main() {
       await tester.tap(find.text('Select Metadata Provider'));
       await tester.pumpAndSettle();
 
-      when(() => mockMetadataCubit.state).thenReturn(
-        MetadataPluginLoadedState(
-          manifest: metadataManifest,
-        ),
-      );
-      metadataStream.add(
-        MetadataPluginLoadedState(
-          manifest: metadataManifest,
-        ),
+      pluginCubit.setState(
+        PluginType.metadata,
+        testRuntimeLoaded(metadataManifest),
       );
       await tester.pumpAndSettle();
 
@@ -202,20 +165,18 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Audio Stream Provider'), findsOneWidget);
-
-      await metadataStream.close();
     });
 
     testWidgets(
       'shows finish setup button on Page 2 and navigates to / on tap',
       (tester) async {
-        when(() => mockMetadataCubit.state).thenReturn(
-          MetadataPluginLoadedState(
-            manifest: metadataManifest,
-          ),
+        pluginCubit.setState(
+          PluginType.metadata,
+          testRuntimeLoaded(metadataManifest),
         );
-        when(() => mockAudioSourceCubit.state).thenReturn(
-          AudioSourcePluginLoadedState(manifest: audioManifest, port: 8765),
+        pluginCubit.setState(
+          PluginType.audioSource,
+          testRuntimeLoaded(audioManifest, port: 8765),
         );
 
         bool navigatedToHome = false;
@@ -252,37 +213,5 @@ void main() {
         expect(find.text('Home Screen Content'), findsOneWidget);
       },
     );
-
-    testWidgets('shows an error snackbar on metadata plugin error', (
-      tester,
-    ) async {
-      final metadataStream = StreamController<MetadataPluginState>.broadcast();
-      when(
-        () => mockMetadataCubit.stream,
-      ).thenAnswer((_) => metadataStream.stream);
-
-      final router = GoRouter(
-        initialLocation: '/welcome',
-        routes: [
-          GoRoute(path: '/welcome', builder: (_, _) => const WelcomePage()),
-        ],
-      );
-
-      await tester.pumpWidget(buildTestableWidget(router: router));
-      await tester.pumpAndSettle();
-
-      metadataStream.add(
-        MetadataPluginErrorState(Exception('Download failure')),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.byType(SnackBar), findsOneWidget);
-      expect(
-        find.text('An unexpected error occurred: Download failure'),
-        findsOneWidget,
-      );
-
-      await metadataStream.close();
-    });
   });
 }

@@ -7,7 +7,7 @@ class PluginDiscoveryInitialState extends PluginDiscoveryState {}
 class PluginDiscoveryLoadingState extends PluginDiscoveryState {}
 
 class PluginDiscoveryLoadedState extends PluginDiscoveryState {
-  final List<PluginManifest> plugins;
+  final Map<String, PluginManifest> plugins;
   PluginDiscoveryLoadedState(this.plugins);
 }
 

@@ -17,9 +17,10 @@ import 'package:music_are/features/library/presentation/widgets/library_playlist
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/metadata_plugin_state.dart';
-import 'package:music_are/features/plugin/metadata/presentation/utils/metadata_account_actions.dart';
+import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
+import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
+import 'package:music_are/features/plugin/shared/data/capabilities/plugin_lifecycle.dart';
+import 'package:music_are/features/plugin/shared/presentation/utils/plugin_account_actions.dart';
 
 class LibraryPage extends StatelessWidget {
   const LibraryPage({super.key});
@@ -32,12 +33,12 @@ class LibraryPage extends StatelessWidget {
     return BlocProvider<LibraryCubit>(
       create: (context) =>
           LibraryCubit(
-            sl<LibraryRepository>(),
-            sl<NoticeBus>(),
-            playlist: sl<PlaylistRepository>(),
-            session: sl<UserSession>(),
-            savedMedia: sl<UserSavedMediaIndex>(),
-          )
+              sl<LibraryRepository>(),
+              sl<NoticeBus>(),
+              playlist: sl<PlaylistRepository>(),
+              session: sl<UserSession>(),
+              savedMedia: sl<UserSavedMediaIndex>(),
+            )
             ..updateGridColumns(columns)
             ..loadAll(),
       child: const _LibraryView(),
@@ -78,7 +79,7 @@ class _LibraryViewState extends State<_LibraryView>
 
   // The reload after signing in is driven inside LibraryCubit.
   Future<void> _signIn(BuildContext context) async {
-    await MetadataAccountActions.signIn(context);
+    await PluginAccountActions.signIn(context, PluginType.metadata);
   }
 
   Future<void> _createPlaylist(BuildContext context) async {
@@ -98,9 +99,11 @@ class _LibraryViewState extends State<_LibraryView>
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<MetadataPluginCubit, MetadataPluginState>(
+    return BlocBuilder<PluginSessionCubit, PluginSessionState>(
       builder: (context, pluginState) {
-        final pluginReady = pluginState is MetadataPluginLoadedState;
+        final pluginReady =
+            pluginState.stateOf(PluginType.metadata).status ==
+            PluginLifecycleStatus.loaded;
         return BlocBuilder<UserCubit, UserState>(
           builder: (context, auth) {
             return Scaffold(
@@ -151,15 +154,9 @@ class _LibraryViewState extends State<_LibraryView>
                                 TabBar(
                                   controller: _tabController,
                                   tabs: [
-                                    Tab(
-                                      text: context.l10n.libraryPlaylistsTab,
-                                    ),
-                                    Tab(
-                                      text: context.l10n.libraryAlbumsTab,
-                                    ),
-                                    Tab(
-                                      text: context.l10n.libraryArtistsTab,
-                                    ),
+                                    Tab(text: context.l10n.libraryPlaylistsTab),
+                                    Tab(text: context.l10n.libraryAlbumsTab),
+                                    Tab(text: context.l10n.libraryArtistsTab),
                                   ],
                                 ),
                                 Expanded(

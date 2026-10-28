@@ -33,6 +33,12 @@ class InvalidPluginTypeException extends PluginException {
   });
 }
 
+class PluginActivationException extends PluginException {
+  final Object cause;
+
+  const PluginActivationException(this.cause);
+}
+
 class PluginDownloadException extends PluginException {
   final String? url;
   PluginDownloadException([this.url]);

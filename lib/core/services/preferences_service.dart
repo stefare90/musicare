@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:music_are/core/theme/app_accent.dart';
+import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PreferencesService {
-  static const String _activeMetadataPluginIdKey = 'active_metadata_plugin_id';
-  static const String _activeAudioSourcePluginIdKey =
-      'active_audio_source_plugin_id';
-  static const String _metadataUserIdPrefix = 'metadata_user_id_';
+  static const String _activePluginIdSuffix = '_active_plugin_id';
+  static const String _pluginAccountIdPrefix = 'plugin_account_id_';
+  static const String _legacyMetadataUserIdPrefix = 'metadata_user_id_';
   static const String _themeModeKey = 'theme_mode';
   static const String _accentKey = 'accent_color';
   static const String _amoledBlackKey = 'amoled_black';
@@ -17,36 +17,45 @@ class PreferencesService {
 
   PreferencesService(this._prefs);
 
-  String? getActivePluginId() => _prefs.getString(_activeMetadataPluginIdKey);
-  Future<bool> setActivePluginId(String pluginId) =>
-      _prefs.setString(_activeMetadataPluginIdKey, pluginId);
-  Future<bool> removeActivePluginId() =>
-      _prefs.remove(_activeMetadataPluginIdKey);
+  String _activePluginKey(PluginType type) =>
+      '${type.name.toLowerCase()}$_activePluginIdSuffix';
 
-  String? getMetadataUserId() {
-    final pluginId = getActivePluginId();
-    if (pluginId == null) return null;
-    return _prefs.getString('$_metadataUserIdPrefix$pluginId');
+  String? activePluginId(PluginType type) =>
+      _prefs.getString(_activePluginKey(type));
+
+  Future<bool> setActivePluginId(PluginType type, String pluginId) =>
+      _prefs.setString(_activePluginKey(type), pluginId);
+
+  Future<bool> clearActivePluginId(PluginType type) =>
+      _prefs.remove(_activePluginKey(type));
+
+  String? pluginAccountId(String pluginId) {
+    return _prefs.getString('$_pluginAccountIdPrefix$pluginId') ??
+        _prefs.getString('$_legacyMetadataUserIdPrefix$pluginId');
   }
 
-  Future<bool> setMetadataUserId(String userId) {
-    final pluginId = getActivePluginId();
-    if (pluginId == null) return Future.value(false);
-    return _prefs.setString('$_metadataUserIdPrefix$pluginId', userId);
+  Future<bool> setPluginAccountId(String pluginId, String accountId) =>
+      _prefs.setString('$_pluginAccountIdPrefix$pluginId', accountId);
+
+  Future<bool> removePluginAccountId(String pluginId) async {
+    final removed = await _prefs.remove('$_pluginAccountIdPrefix$pluginId');
+    await _prefs.remove('$_legacyMetadataUserIdPrefix$pluginId');
+    return removed;
   }
 
-  Future<bool> removeMetadataUserId() {
-    final pluginId = getActivePluginId();
-    if (pluginId == null) return Future.value(false);
-    return _prefs.remove('$_metadataUserIdPrefix$pluginId');
+  Future<void> migratePluginAccountId(String pluginId) async {
+    final legacy = _prefs.getString('$_legacyMetadataUserIdPrefix$pluginId');
+    if (legacy == null) return;
+    final key = '$_pluginAccountIdPrefix$pluginId';
+    if (!_prefs.containsKey(key)) {
+      await _prefs.setString(key, legacy);
+    }
+    await _prefs.remove('$_legacyMetadataUserIdPrefix$pluginId');
   }
 
-  String? getActiveAudioSourcePluginId() =>
-      _prefs.getString(_activeAudioSourcePluginIdKey);
-  Future<bool> setActiveAudioSourcePluginId(String pluginId) =>
-      _prefs.setString(_activeAudioSourcePluginIdKey, pluginId);
-  Future<bool> removeActiveAudioSourcePluginId() =>
-      _prefs.remove(_activeAudioSourcePluginIdKey);
+  Future<void> removePluginScopedKeys(String pluginId) async {
+    await removePluginAccountId(pluginId);
+  }
 
   ThemeMode? getThemeMode() =>
       _enumByName(ThemeMode.values, _prefs.getString(_themeModeKey));
