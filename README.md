@@ -187,6 +187,13 @@ The tooling is split by job:
 
 The release version is the single source of truth in `pubspec.yaml` (`version: x.y.z+n`); the tag is derived as `v<version>` (e.g. `v1.0.0+2`) and the release asset as `MusicAre-<versionName>.apk`. `--bump` increments the version (and `+n`) and commits it before building; without it, no file is modified.
 
+#### Release signing
+The Android package is `com.musicare.app` (`applicationId` and `namespace`).
+
+Release builds are signed **only** with the release keystore. `android/app/build.gradle.kts` reads `android/key.properties` (gitignored, next to `settings.gradle.kts`) with `storeFile`, `storePassword`, `keyAlias` and `keyPassword`, and creates the `release` signing config from it. There is **no fallback to the debug key**: when the file is missing, the release build fails up front with an explicit message instead of producing an APK that Android would refuse as an app update.
+
+`tool/release.sh` pins the SHA-256 fingerprint of the release certificate: `apksigner verify --print-certs` must report exactly that digest, so an APK signed with any other key (debug key included) is rejected even though its signature is technically valid.
+
 ### 3. Run the App
 Once the Python backend is staged, you can run the app normally:
 ```bash

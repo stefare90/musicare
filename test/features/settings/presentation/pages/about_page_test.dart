@@ -13,7 +13,7 @@ void main() {
   setUp(() {
     PackageInfo.setMockInitialValues(
       appName: 'MusicAre',
-      packageName: 'com.example.music_are',
+      packageName: 'com.musicare.app',
       version: '1.2.3',
       buildNumber: '7',
       buildSignature: '',

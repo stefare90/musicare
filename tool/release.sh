@@ -185,14 +185,23 @@ echo "APK: package=$APK_PACKAGE versionName=$APK_NAME versionCode=$APK_CODE"
 [ "$APK_CODE" = "$VERSION_CODE" ] ||
   fail "APK versionCode '$APK_CODE' does not match pubspec versionCode '$VERSION_CODE'."
 
+# Release APKs must be signed with the project release keystore: the fingerprint of
+# its certificate is pinned here so a build signed with any other key (including
+# the Android debug key) is rejected even when apksigner reports a valid signature.
+EXPECTED_SIGNER_SHA256="651d7369e571187eff5e9c1a49ac49a1c424711d93db4aa0c37d1d561846aa6"
+
 step "8. Signature gate"
 CERTS=$("$APKSIGNER" verify --print-certs "$APK" 2>&1) ||
   fail "apksigner could not verify the APK (unsigned or malformed)."
-echo "$CERTS" | grep -q 'Signer #1 certificate DN:'
 echo "$CERTS" | grep 'Signer #1 certificate DN:' || true
-if echo "$CERTS" | grep -q 'CN=Android Debug'; then
-  fail "the APK is signed with the Android debug key."
-fi
+APK_SIGNER_SHA256=$(echo "$CERTS" |
+  sed -n 's/^Signer #1 certificate SHA-256 digest:[[:space:]]*//p' |
+  head -n 1 | tr -d '[:space:]:' | tr 'A-F' 'a-f')
+[ -n "$APK_SIGNER_SHA256" ] ||
+  fail "could not read the leaf certificate SHA-256 digest: the APK is not signed."
+[ "$APK_SIGNER_SHA256" = "$EXPECTED_SIGNER_SHA256" ] ||
+  fail "the APK is signed with the wrong key (expected SHA-256 $EXPECTED_SIGNER_SHA256, found $APK_SIGNER_SHA256). It was not signed with the release keystore: the debug key or an unsigned build would produce this."
+echo "Signer SHA-256: $APK_SIGNER_SHA256 (release keystore)"
 
 step "9. Checksum"
 SHA256=$(sha256sum "$APK" | awk '{print $1}')
