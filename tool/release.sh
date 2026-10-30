@@ -219,24 +219,36 @@ if [ "$PUBLISH" = false ]; then
   echo "Not done:   the tag and the GitHub release (dry run, no --publish)"
   echo ""
   echo "Publishing would run:"
-  echo "   git tag $TAG && git push origin $TAG"
-  echo "   gh release create $TAG <apk>#MusicAre-$VERSION_NAME.apk --title 'MusicAre $VERSION_NAME' --notes '…' --latest"
+  echo "   git tag -a $TAG -m 'MusicAre $VERSION_NAME (build $VERSION_CODE)' && git push origin $TAG"
+  echo "   gh release create $TAG MusicAre-$VERSION_NAME.apk --title 'MusicAre $VERSION_NAME' --notes '…' --latest"
   echo ""
   echo "Re-run with --publish to publish."
   exit 0
 fi
 
 step "10. Publishing"
-git tag "$TAG"
+git tag -a "$TAG" -m "MusicAre $VERSION_NAME (build $VERSION_CODE)"
+[ "$(git cat-file -t "$TAG")" = "tag" ] ||
+  fail "tag $TAG is not annotated."
 git push origin "$TAG"
-gh release create "$TAG" "$APK#MusicAre-$VERSION_NAME.apk" \
+
+# gh names the asset after the uploaded file (`path#label` only sets a label),
+# so the APK is copied under its published name before uploading.
+ASSET_DIR=$(mktemp -d)
+ASSET="$ASSET_DIR/MusicAre-$VERSION_NAME.apk"
+cp "$APK" "$ASSET"
+gh release create "$TAG" "$ASSET" \
   --title "MusicAre $VERSION_NAME" \
   --notes "MusicAre $VERSION_NAME (build $VERSION_CODE)." \
   --latest
+rm -rf "$ASSET_DIR"
 
-PUBLISHED_TAG=$(gh api "repos/$REPO_SLUG/releases/latest" --jq .tag_name)
+PUBLISHED_TAG=$(gh release view "$TAG" --json tagName --jq .tagName)
 [ "$PUBLISHED_TAG" = "$TAG" ] ||
-  fail "the latest release is '$PUBLISHED_TAG', expected '$TAG'."
+  fail "could not read back the release for tag $TAG (found '$PUBLISHED_TAG')."
+PUBLISHED_ASSET=$(gh release view "$TAG" --json assets --jq '.assets[].name' | head -n 1)
+[ "$PUBLISHED_ASSET" = "MusicAre-$VERSION_NAME.apk" ] ||
+  fail "published asset is '$PUBLISHED_ASSET', expected 'MusicAre-$VERSION_NAME.apk'."
 
 step "✅ Released $TAG"
 echo "Tag:        $TAG"

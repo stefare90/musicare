@@ -189,7 +189,7 @@ The tooling is split by job:
 | `tool/build.sh debug\|release` | Stages for Android, then runs `flutter build apk` in the same shell and checks the embedded runtime assets. |
 | `tool/release.sh [--skip-checks] [--bump patch\|minor\|major] [--publish]` | Release pipeline: `main` + clean tree, analyze/tests, keystore gate, tag/versionCode checks, release build, APK badging and signature gates, SHA-256. Without `--publish` it stops before the tag (dry run). |
 
-The release version is the single source of truth in `pubspec.yaml` (`version: x.y.z+n`); the tag is derived as `v<version>` (e.g. `v1.0.0+2`) and the release asset as `MusicAre-<versionName>.apk`. `--bump` increments the version (and `+n`) and commits it before building; without it, no file is modified.
+The release version is the single source of truth in `pubspec.yaml` (`version: x.y.z+n`); the annotated tag is derived as `v<version>` (e.g. `v1.0.0+2`) and the release asset as `MusicAre-<versionName>.apk` (the APK is copied under that name before upload, because `gh` names assets after the file). `--bump` increments the version (and `+n`) and commits it before building; without it, no file is modified.
 
 #### Release signing
 The Android package is `com.musicare.app` (`applicationId` and `namespace`).
