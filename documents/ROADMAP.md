@@ -83,6 +83,12 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ⬜ Local cache for metadata responses and cover warm-up.
 ⬜ 2×2 mosaic built from track covers when a playlist has no image.
 
+## 📦 Distribution & release (`tool/`)
+✅ Android release APKs signed with the release keystore (never the debug key), built as `com.musicare.app` with the version read from `pubspec.yaml`.
+✅ GitHub Releases (public repository) as the distribution channel: a stable release is published from an annotated `v<version>` tag, carrying `MusicAre-<version>.apk`.
+✅ Release pipeline (`tool/release.sh`): preflight on `main` with a clean tree, analyze/tests, keystore and tag gates, staging plus build, badging/signature/checksum gates, and publishing only when `--publish` is passed.
+⬜ In-app update check against the latest published release, with download and install.
+
 ## 🛠️ Backlog (fixes and ideas, not yet approved)
 ⬜ Fix a cover occasionally missing on the first cold load.
 ⬜ Speed up cover rendering and cache warm-up.
