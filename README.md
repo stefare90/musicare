@@ -16,12 +16,14 @@ The application supports two distinct plugins:
 ## ✨ Current Features
 
 * **Dynamic Onboarding Wizard**: Effortlessly discover, download, and configure your preferred Metadata and Audio Source plugins straight from GitHub releases.
-* **Universal Media Player**: Native background playback support (`audio_service`) with lock-screen controls, gapless transitions, and hardware media key bindings.
+* **Universal Media Player**: Native background playback support (`audio_service`) with a notification, lock-screen controls and hardware media key bindings.
 * **Smart Queue Management**: Advanced immutable queue system supporting shuffle (preserving history), repeat modes (One, All, Off), and dynamic inserts. Playing from a partially loaded list keeps loading the rest in the background, with loading and retry states in the queue sheet.
 * **Infinite Radio**: *Start radio* from any track's options replaces the queue with the seed plus a provider-generated radio batch (ListenBrainz `lb-radio`, requires sign-in). When the provider has no similar tracks, the current queue is left untouched and the app says so. With the persisted *Infinite music* switch (Settings → Playback, on by default) the queue keeps extending from the last played track when it ends — chained batch after batch and de-duplicated against the queue; signed-out playback simply stops at the end.
 * **Fault-Tolerant Streaming**: Automatic candidate resolution—if a stream URL expires or returns a 403 Forbidden, the player automatically falls back to the next available stream. When a track cannot be resolved at all (no candidates, no stream, or a `not_found` from the audio plugin) the failure is still reported and playback advances to the next queue track, bounded to one pass over the queue (also with repeat-all); transient errors (rate limit, transport) keep the current track.
 * **Global Search & Filter Chips**: Integrated with the active Metadata plugin (`ISearch`), supporting debounced queries, aggregated search views, category pagination, and instant track playback.
 * **Settings, Plugin Management & Accounts**: A settings hub (gear on the three root screens) with an Appearance section (system/light/dark theme, accent color and an absolute-black AMOLED toggle, all persisted), a Playback section (infinite music), a Language selector, a Plugins section listing the active metadata and audio-source plugins with their versions, update/incompatibility status and per-plugin actions (update, reinstall, replace with another catalog plugin), and an About page (app and host SDK versions). Plugin archives are installed atomically (`.new` extraction, manifest/type/SDK validation, `.bak` rollback if activation fails); replacing a plugin logs out only the old one, removes its code and never touches plugin data. When a plugin exposes authentication, the detail page shows its account (sign in/sign out) between the version and the technical actions (Version → Account → Actions). Contextual sign-in prompts appear when content or an action requires authentication, as a single message plus a "Sign in" snackbar action; browsing and playback stay anonymous.
+* **Library & Saved Content**: Saved playlists, albums and artists tabs kept in sync with the active provider, a pinned *Liked Songs* list, playlist creation from the library or from a track's sheet, and per-track removal by swipe. The saved state is global and optimistic, so search, details, player and track sheet show and toggle the same value, and *Add to playlist* offers the playlists you own.
+* **Covers & Sharing**: Covers are cached on disk, playlists with at least two covers render a 2×2 mosaic, and any album, artist, playlist or track can be shared as text plus link through the system share sheet.
 * **Dynamic UI Generation**: The Home screen is generated entirely based on the sections (e.g., "Top Charts", "New Releases") returned by the active Metadata plugin.
 * **Modular Details Views**: Rich Slivers-based UI for Artists, Albums, and Playlists.
 
@@ -35,7 +37,8 @@ The application supports two distinct plugins:
 * **Audio Engine**: `just_audio` & `audio_service`
 * **Plugin Subsystem**:
   * `musicare_plugin_sdk` (Pure-Python plugin SDKs, shared host runtime and Dart host SDKs)
-  * `serious_python` (Embedded CPython 3.10+ host daemon)
+  * `serious_python` 6 (embedded CPython 3.14 host daemon)
+* **Covers & Persistence**: `cached_network_image` (on-disk cover cache) & `shared_preferences` (settings, plugin account ids)
 
 ---
 
@@ -44,57 +47,53 @@ The application supports two distinct plugins:
 MusicAre follows a decoupled, Feature-First Clean Architecture organized into well-defined layers:
 
 ```text
-┌────────────────────────────────────────────────────────┐
-│                  PRESENTATION LAYER                    │
-│      (UI Pages, Slivers, Mini-Player & Full-Player)    │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│                 STATE MANAGEMENT LAYER                 │
-│                                                        │
-│ ┌──────────────────────┐      ┌──────────────────────┐ │
-│ │ LOCAL STATE MACHINES │      │GLOBAL STATE MACHINES │ │
-│ │ (Screen-Level Cubit) │ ◄────│ (Plugins, User,      │ │
-│ │ (e.g. Home, Details) │      │  Player & Queue)     │ │
-│ └──────────┬───────────┘      │                      │ │
-│            │                  └──────────┬───────────┘ │
-└────────────┼─────────────────────────────┼─────────────┘
-             │                             │
-             ▼                             ▼
-┌────────────────────────────────────────────────────────┐
-│                  SERVICES LAYER (IoC)                  │
-│                                                        │
-│  * MetadataPluginEngine (Wire protocol + SemVer check) │
-│  * AudioSourcePluginEngine (Candidate search)          │
-│  * AudioPlayerService (Resolution, fallback & queue)   │
-│  * PluginCatalog (GitHub releases, TTL cache)          │
-│  * PluginManager (install/activate transactions)       │
-│  * PluginRegistry (lifecycle + optional auth per type) │
-│  * MetadataAuthPresenter (Plugin login form)           │
-└──────────────────────────┬─────────────────────────────┘
-                           │ (Contract Injection)
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│                   PLUGIN SUBSYSTEMS                    │
-├────────────────────────────┬───────────────────────────┤
-│     METADATA DAEMON        │   AUDIO SOURCE DAEMON     │
-│  (CPython + Flask)         │ (CPython + Flask)         │
-│                            │                           │
-│  * Python plugin (.zip)    │  * Python plugin (.zip)   │
-│  * JSON wire protocol      │  * Two-tier JIT resolve   │
-│  * Ephemeral port          │  * Ephemeral port         │
-└────────────────────────────┴───────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                    PRESENTATION LAYER                    │
+│  (UI pages, widgets, slivers, mini- & full-player)       │
+└──────────────────────────────────────────────────────────┘
+                            │ state & commands
+                            ▼
+┌──────────────────────────────────────────────────────────┐
+│                  STATE MANAGEMENT LAYER                  │
+│  Global (GetIt): PluginSessionCubit, PluginManagerCubit, │
+│    UserCubit, PlayerCubit, ThemeCubit                    │
+│  Local: page-scoped cubits (Home, Search, Details, …)    │
+└──────────────────────────────────────────────────────────┘
+                            │ page → cubit → repository → engine
+                            ▼
+┌──────────────────────────────────────────────────────────┐
+│                        DATA LAYER                        │
+│  Repositories: Media, Browse, Search, Playlist, Library  │
+│  Engines: MetadataPluginEngine, AudioSourcePluginEngine  │
+│  Services: AudioPlayerService (+ AudioStreamResolver,    │
+│    MusicAreAudioHandler), PluginCatalog, PluginManager,  │
+│    PluginRegistry, PluginStorage, MetadataAuthPresenter  │
+└──────────────────────────────────────────────────────────┘
+                            │ HTTP + JSON on loopback
+                            ▼
+┌──────────────────────────────────────────────────────────┐
+│           PYTHON RUNTIME (one CPython process)           │
+│  Metadata daemon: Flask, ephemeral port, plugin .zip     │
+│  Audio daemon: Flask, ephemeral port, plugin .zip        │
+│  two-tier JIT: search_candidates → resolve_stream        │
+│  shared by both: plugin_runtime and the host SDKs        │
+└──────────────────────────────────────────────────────────┘
 ```
 
 ### Layer Responsibilities
 
-1. **Presentation Layer (UI & Navigation)**: Composed of UI pages, reusable widgets, and `GoRouter` declarative navigation configurations.
+1. **Presentation Layer (UI & Navigation)**: UI pages, reusable widgets and the `GoRouter` configuration (a stateful shell plus a dedicated navigator for the player).
 2. **State Management Layer (Cubits)**:
-   * **Global Cubits**: App-level singletons managing cross-cutting state (`PluginSessionCubit`, `UserCubit`, `PluginManagerCubit`, `PlayerCubit`, `ThemeCubit`).
-   * **Local Cubits**: Screen-scoped state machines instantiated for specific pages and destroyed when navigating away.
-3. **Services Layer (IoC / Dependency Injection)**: Houses central application services registered in `GetIt`, including host storage, native network clients, `AudioPlayerDriver`, and Plugin Engines.
-4. **Plugin Subsystems**: Interpreters acting as data providers decoupled from the Flutter UI thread.
+   * **Global cubits** (GetIt singletons, provided from `main.dart`): `PluginSessionCubit` (active plugins: lifecycle + account), `PluginManagerCubit` (install/update/replace), `UserCubit` (session, saved-media index, library mutations), `PlayerCubit` (queue, playback, radio) and `ThemeCubit`.
+   * **Local cubits**: page-scoped state machines created and disposed with their page (`HomeCubit`, `SearchCubit`, `LibraryCubit`, …).
+3. **Data Layer**:
+   * **Repositories** (`lib/features/plugin/metadata/data/repositories/`): one thin, stateless repository per domain (media, browse, search, playlist, library) that narrows the plugin engine to the calls its domain needs. The direction is always page → cubit → repository → engine: **no cubit imports a plugin engine**.
+   * **Engines and player services**: `MetadataPluginEngine` and `AudioSourcePluginEngine` own the wire protocol; `AudioPlayerService` (with `AudioStreamResolver` and `MusicAreAudioHandler`) owns queue advancement, stream resolution and fallback, and the media session, and is the only path from the player to the audio engine.
+   * **Plugin management**: `PluginCatalog` (GitHub releases with a TTL cache), `PluginManager` (install/activate transactions), `PluginRegistry` (capabilities per plugin type), `PluginStorage` (plugin code and manifests on disk) and `MetadataAuthPresenter` (host-side login form).
+4. **Services & infrastructure** (`lib/core/`): `PreferencesService`, `NetworkService`, `NoticeBus` (global UI notices) and `AppInitializer`, registered in GetIt.
+5. **Plugin Subsystems**: a single `serious_python` process hosts the metadata and audio-source Flask apps on two ephemeral ports; each daemon loads its plugin `.zip` at runtime and speaks JSON over loopback.
+
+The two data paths meet only in the UI. **Content** (home, search, details, library) flows page → cubit → repository → `MetadataPluginEngine`. **Playback** flows `PlayerCubit` → `AudioPlayerService` → `AudioStreamResolver` → `AudioSourcePluginEngine` (two-tier JIT: `searchCandidates`, then `resolveStream` on demand), with audio output through `AudioPlayerDriver` (`just_audio`) and the notification/lock-screen session through `MusicAreAudioHandler` (`audio_service`).
 
 ### Plugin capabilities and composition
 
@@ -118,17 +117,22 @@ lib/
 │   ├── di/                         # Service locator configuration (GetIt)
 │   ├── l10n/                       # Localization and translations (.arb)
 │   ├── models/                     # Universal UI models (MediaItemMetadata, MediaType)
+│   ├── notice/                     # Global notices (NoticeBus and snackbar policy)
 │   ├── router/                     # Navigation rules and router configuration
+│   ├── services/                   # Preferences, network client and app initialization
+│   ├── theme/                      # Material 3 theme, accents and typography
+│   ├── utils/                      # Fetch-all helpers, playlist ownership, media labels
 │   └── widgets/                    # Reusable UI components (Slivers, matrices, carousels)
 │
 └── features/                       # Modular vertical feature slices
-    ├── plugin/                     # Dynamic plugin subsystem (Catalog, Management, Metadata, Audio Source)
+    ├── plugin/                     # Plugin subsystem (Catalog, Discovery, Management, Metadata, Audio Source)
     ├── onboarding/                 # Multi-step onboarding wizard
     ├── home/                       # Home page with dynamic browse sections
     ├── details/                    # Detail views (Album, Artist, Playlist)
     ├── search/                     # Polymorphic search (Tracks, Albums, Artists, Playlists) with context skeletons
     ├── library/                    # User library synced with active metadata provider
     ├── player/                     # Native audio playback engine, Queue, MiniPlayer
+    ├── settings/                   # Settings hub, appearance, playback, language, plugin details
     └── shell/                      # Root scaffold with bottom navigation
 ```
 
@@ -137,8 +141,8 @@ lib/
 ## 🚀 Quickstart & Setup
 
 ### 1. Prerequisites
-* **Flutter SDK**: `v3.44.0` or higher (Dart 3.12+)
-* **Python**: `3.10+` (used by SeriousPython's standalone packaging tool)
+* **Flutter SDK**: `v3.44.0` or higher (Dart 3.12.2+)
+* **Python**: not required locally — `serious_python` bundles CPython 3.14 and pip for packaging (a local `python3` is only needed by the plugin platform repo's own test suite)
 * **Android Target**: Android SDK / NDK configured (for mobile deployments)
 
 ### 2. SeriousPython Staging Setup
