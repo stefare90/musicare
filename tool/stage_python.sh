@@ -1,13 +1,27 @@
 #!/bin/bash
 # Stages the flat Python app (both engines + the shared plugin_runtime package + both
 # plugin SDKs + the unified main.py) from the musicare_plugin_sdk repository and packages
-# it into the Flutter asset that serious_python runs on the device.
+# it into the Flutter assets that serious_python runs on the device.
 #
-# Usage: ./tool/build_python.sh [Android | Linux] [apk]
+# Staging only: it does not build the app. Use ./tool/build.sh [debug|release].
+#
+# Usage: ./tool/stage_python.sh [Android | Linux]
+
 set -e
 
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+ROOT_DIR=$(dirname "$SCRIPT_DIR")
+cd "$ROOT_DIR"
+
 PLATFORM=${1:-Android}
-ACTION=${2:-}
+case "$PLATFORM" in
+  Android | Linux) ;;
+  *)
+    echo "❌ Error: unsupported platform '$PLATFORM' (expected Android or Linux)."
+    echo "   Usage: ./tool/stage_python.sh [Android | Linux]"
+    exit 1
+    ;;
+esac
 
 echo "=================================================="
 echo "1. Resolving the plugin platform repository"
@@ -16,7 +30,7 @@ echo "=================================================="
 # The staging sources live in the musicare_plugin_sdk repository (the pubspec git
 # dependency). Prefer the workspace checkout, then fall back to the pub-cache clone.
 PLATFORM_DIR=""
-for CANDIDATE in "../musicare_plugin_sdk" "../../musicare_plugin_sdk"; do
+for CANDIDATE in "$ROOT_DIR/../musicare_plugin_sdk" "$ROOT_DIR/../../musicare_plugin_sdk"; do
   if [ -f "$CANDIDATE/python/main.py" ]; then
     PLATFORM_DIR=$(realpath "$CANDIDATE")
     break
@@ -56,8 +70,8 @@ cp -r "$PLATFORM_DIR/python/audio/plugin_sdk/musicare_audio_plugin_sdk" \
 cp -r "$PLATFORM_DIR/python/metadata/plugin_sdk/musicare_metadata_plugin_sdk" \
   build/host_staging/
 
-export SERIOUS_PYTHON_SITE_PACKAGES=$(pwd)/build/site-packages
-export SERIOUS_PYTHON_APP=$(pwd)/build/python-app
+export SERIOUS_PYTHON_SITE_PACKAGES="$ROOT_DIR/build/site-packages"
+export SERIOUS_PYTHON_APP="$ROOT_DIR/build/python-app"
 
 # `--requirements` values go straight to `pip install`, so `-r <file>` is how a
 # requirements file is passed (the `=` form keeps the leading dash unambiguous).
@@ -119,25 +133,13 @@ if [ ${#STAGING_ERRORS[@]} -gt 0 ]; then
   echo "APK contains no app.zip and no sitepackages.zip, i.e. no Python runtime."
   echo ""
   echo "Re-run the staging from the project root (it exports both variables):"
-  echo "   ./tool/build_python.sh $PLATFORM"
+  echo "   ./tool/stage_python.sh $PLATFORM"
   exit 1
 fi
 
 echo "=================================================="
 echo "✅ SeriousPython Host Runtime staged successfully for $PLATFORM!"
 echo "=================================================="
-
-# If requested, compile the Flutter build directly while environment variables are preserved
-if [ "$ACTION" == "apk" ] || [ "$ACTION" == "--build" ]; then
-  echo "=================================================="
-  echo "3. Building Flutter Release APK with SeriousPython"
-  echo "=================================================="
-  flutter build apk
-  echo "=================================================="
-  echo "🎉 Release APK built successfully with Flask included!"
-  echo "=================================================="
-else
-  echo ""
-  echo "💡 To build the APK with the Python runtime included, run:"
-  echo "   ./tool/build_python.sh $PLATFORM apk"
-fi
+echo ""
+echo "Artifacts: build/python-app, build/site-packages"
+echo "Build the app with: ./tool/build.sh [debug|release]"

@@ -153,14 +153,14 @@ Then run the staging script for your target platform:
 
 **For Android:**
 ```bash
-./tool/build_python.sh Android
+./tool/stage_python.sh Android
 ```
 
 **For Linux Desktop:**
 ```bash
-./tool/build_python.sh Linux
+./tool/stage_python.sh Linux
 ```
-*This script bundles Flask, the host runtime (including the shared `plugin_runtime` package), the plugin SDKs and the PIP dependencies into `build/python-app` and `build/site-packages`, exporting both variables for you. It then verifies the produced artifacts and exits with a non-zero code if any of them is missing or empty.*
+*This script bundles Flask, the host runtime (including the shared `plugin_runtime` package), the plugin SDKs and the PIP dependencies into `build/python-app` and `build/site-packages`, exporting both variables for you. It then verifies the produced artifacts and exits with a non-zero code if any of them is missing or empty. It does **not** build the app: use `tool/build.sh` for that.*
 
 #### Environment Variables
 Gradle consumes the staging through **two** environment variables when `flutter build apk` runs:
@@ -170,10 +170,22 @@ Gradle consumes the staging through **two** environment variables when `flutter 
 
 **VS Code** sets both of them for debug/run sessions via `.vscode/launch.json`, so no action is needed there. From a **terminal** both must be exported in the same shell that runs the build, which is what this single command does:
 ```bash
-./tool/build_python.sh Android apk
+./tool/build.sh release   # or: ./tool/build.sh debug
 ```
+It stages the runtime for Android first, verifies that `assets/app.zip` and `assets/sitepackages.zip` ended up inside the APK, and prints the APK path and size.
 
 Note that `flutter clean` deletes `build/` and therefore the whole staging: re-run the script before the next build.
+
+#### Build and release scripts
+The tooling is split by job:
+
+| Script | Purpose |
+| :--- | :--- |
+| `tool/stage_python.sh [Android\|Linux]` | Stages the Python runtime only (default: Android). |
+| `tool/build.sh debug\|release` | Stages for Android, then runs `flutter build apk` in the same shell and checks the embedded runtime assets. |
+| `tool/release.sh [--skip-checks] [--bump patch\|minor\|major] [--publish]` | Release pipeline: `main` + clean tree, analyze/tests, keystore gate, tag/versionCode checks, release build, APK badging and signature gates, SHA-256. Without `--publish` it stops before the tag (dry run). |
+
+The release version is the single source of truth in `pubspec.yaml` (`version: x.y.z+n`); the tag is derived as `v<version>` (e.g. `v1.0.0+2`) and the release asset as `MusicAre-<versionName>.apk`. `--bump` increments the version (and `+n`) and commits it before building; without it, no file is modified.
 
 ### 3. Run the App
 Once the Python backend is staged, you can run the app normally:

@@ -72,7 +72,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ✅ Host-side login form for metadata plugins (`MetadataAuthPresenter`), rendering the plugin-provided title, message and per-field help link; browser-based auth opens in the system browser (`url_launcher`).
 ✅ In-app sign-in/sign-out under Settings → Plugins (per-plugin account), with contextual sign-in prompts when a request needs authentication (rendered as a normal state, not an error) and the affected surfaces refreshing on auth change.
 
-## 🐍 Audio source subsystem (`lib/features/plugin/audio_source/`, `tool/build_python.sh`)
+## 🐍 Audio source subsystem (`lib/features/plugin/audio_source/`, `tool/stage_python.sh`)
 ✅ Embedded CPython daemon (`serious_python`) hosting both subsystems as two Flask apps on separate ephemeral ports, with hot plugin loading.
 ✅ Audio source plugin engine over the wire protocol (`musicare_audio_host_sdk`), with candidate search and just-in-time stream resolution.
 ✅ Reproducible staging script with explicit artifact verification.
