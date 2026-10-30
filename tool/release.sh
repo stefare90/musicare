@@ -192,7 +192,7 @@ echo "APK: package=$APK_PACKAGE versionName=$APK_NAME versionCode=$APK_CODE"
 # Release APKs must be signed with the project release keystore: the fingerprint of
 # its certificate is pinned here so a build signed with any other key (including
 # the Android debug key) is rejected even when apksigner reports a valid signature.
-EXPECTED_SIGNER_SHA256="651d7369e571187eff5e9c1a49ac49a1c424711d93db4aa0c37d1d561846aa6"
+EXPECTED_SIGNER_SHA256="651d7369e571187eff5e9c1a49ac49a1c424711d93db4aa0ec37d1d561846aa6"
 
 step "8. Signature gate"
 CERTS=$("$APKSIGNER" verify --print-certs "$APK" 2>&1) ||
