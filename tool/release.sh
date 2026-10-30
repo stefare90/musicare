@@ -144,7 +144,11 @@ REPO_SLUG=$(git remote get-url origin |
   sed -E 's#^(git@github.com:|https://github.com/)##; s#\.git$##')
 [ -n "$REPO_SLUG" ] || fail "could not derive the GitHub repository from 'origin'."
 
-LATEST_TAG=$(gh api "repos/$REPO_SLUG/releases/latest" --jq .tag_name 2>/dev/null || true)
+LATEST_TAG=""
+if ! LATEST_TAG=$(gh api "repos/$REPO_SLUG/releases/latest" --jq .tag_name 2>/dev/null); then
+  LATEST_TAG=""
+fi
+[ "$LATEST_TAG" = "null" ] && LATEST_TAG=""
 if [ -z "$LATEST_TAG" ]; then
   echo "No published release found: $TAG will be the first one."
 else
