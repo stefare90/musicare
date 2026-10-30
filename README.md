@@ -194,6 +194,17 @@ Release builds are signed **only** with the release keystore. `android/app/build
 
 `tool/release.sh` pins the SHA-256 fingerprint of the release certificate: `apksigner verify --print-certs` must report exactly that digest, so an APK signed with any other key (debug key included) is rejected even though its signature is technically valid.
 
+#### Cutting a release
+Prerequisites: `main` checked out and clean, the release keystore in place (`android/key.properties`), `gh` authenticated against the repository, and a free tag `v<version>` whose `+n` is higher than the latest published release's.
+
+```bash
+./tool/release.sh                        # dry run: every gate, nothing written to git or GitHub
+./tool/release.sh --publish              # git tag, push and GitHub release
+./tool/release.sh --bump minor --publish # bump semver and +n first (committed before building)
+```
+
+The dry run is the recommended check before publishing: it runs analyze/tests, the keystore and tag gates, the release build, the badging and signature gates and prints the APK SHA-256. `--skip-checks` skips `flutter analyze` and `flutter test`.
+
 ### 3. Run the App
 Once the Python backend is staged, you can run the app normally:
 ```bash
@@ -205,6 +216,16 @@ After building an APK, verify that it actually embeds the runtime:
 unzip -l build/app/outputs/flutter-apk/app-*.apk | grep -E 'app\.zip|sitepackages\.zip'
 ```
 Both `assets/app.zip` and `assets/sitepackages.zip` must be listed with a non-zero size: this is the only straightforward check for an APK that was built without Python.
+
+#### Installing an APK on a device
+```bash
+./tool/build.sh release
+adb install -r build/app/outputs/flutter-apk/app-release.apk
+```
+
+`adb install -r` replaces the APK and keeps the app data (installed plugins, account, preferences). Do not use `flutter install` for this: it first tries `adb install -t -r`, but when that fails it **uninstalls** the app and installs it again, wiping the plugins and the signed-in account without asking. With plain `adb` a failed install is just an error message and the decision stays with you.
+
+The reinstall is refused (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`, `INSTALL_FAILED_VERSION_DOWNGRADE`) when the new APK is signed with a different key — debug vs release — or its `versionCode` is lower; in those cases the data has to go (`adb uninstall com.musicare.app`). The package is `com.musicare.app`, so a device still running an old `com.example.music_are` build gets a separate, fresh installation. A release APK is not debuggable: `adb shell run-as com.musicare.app` only works on debug builds.
 
 ---
 
