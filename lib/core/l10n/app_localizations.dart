@@ -556,6 +556,36 @@ abstract class AppLocalizations {
   /// **'An unexpected error occurred: {details}'**
   String pluginErrorUnknown(Object details);
 
+  /// No description provided for @pluginErrorInvalidArgument.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin rejected the request.'**
+  String get pluginErrorInvalidArgument;
+
+  /// No description provided for @pluginErrorUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This operation is not supported by the plugin.'**
+  String get pluginErrorUnsupported;
+
+  /// No description provided for @pluginErrorInternal.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin hit an internal error: {details}'**
+  String pluginErrorInternal(Object details);
+
+  /// No description provided for @pluginErrorRuntimeNotStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin runtime is not running.'**
+  String get pluginErrorRuntimeNotStarted;
+
+  /// No description provided for @pluginErrorInstallFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin could not be installed: {details}'**
+  String pluginErrorInstallFailed(Object details);
+
   /// No description provided for @pluginErrorStreamResolution.
   ///
   /// In en, this message translates to:

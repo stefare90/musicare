@@ -17,7 +17,7 @@ class PluginErrorTable implements ErrorTable {
       IncompatibleSdkVersionException() => ErrorSpec(
         l10n.pluginErrorIncompatibleSdkVersion,
       ),
-      InvalidPluginTypeException() => ErrorSpec(l10n.pluginErrorInvalidArchive),
+      InvalidPluginTypeException() => ErrorSpec(l10n.pluginErrorInvalidType),
       PluginDownloadException() => ErrorSpec(l10n.pluginErrorDownloadFailed),
       PluginSearchException() => ErrorSpec(l10n.pluginErrorNetwork),
       PluginErrorNoContext() => ErrorSpec(l10n.pluginErrorNoContext),
@@ -25,8 +25,12 @@ class PluginErrorTable implements ErrorTable {
         l10n.pluginErrorStreamResolution,
       ),
       MetadataRadioEmptyException() => ErrorSpec(l10n.radioNoMatches),
-      PluginActivationException() => null,
-      PendingLoadException() => null,
+      PluginActivationException() => ErrorSpec(
+        l10n.pluginErrorInternal(error.toString()),
+      ),
+      PendingLoadException() => ErrorSpec(
+        l10n.pluginErrorInternal(error.toString()),
+      ),
     };
   }
 

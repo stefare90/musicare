@@ -27,9 +27,13 @@ class MetadataErrorTable implements ErrorTable {
       MetadataTransportException(:final message) => ErrorSpec(
         '${l10n.pluginErrorNetwork}: $message',
       ),
-      MetadataInvalidArgumentException() => null,
-      MetadataUnsupportedException() => null,
-      MetadataInternalException() => null,
+      MetadataInvalidArgumentException() => ErrorSpec(
+        l10n.pluginErrorInvalidArgument,
+      ),
+      MetadataUnsupportedException() => ErrorSpec(l10n.pluginErrorUnsupported),
+      MetadataInternalException(:final message) => ErrorSpec(
+        l10n.pluginErrorInternal(message),
+      ),
     };
   }
 

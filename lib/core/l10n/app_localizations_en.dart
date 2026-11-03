@@ -257,6 +257,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get pluginErrorInvalidArgument => 'The plugin rejected the request.';
+
+  @override
+  String get pluginErrorUnsupported =>
+      'This operation is not supported by the plugin.';
+
+  @override
+  String pluginErrorInternal(Object details) {
+    return 'The plugin hit an internal error: $details';
+  }
+
+  @override
+  String get pluginErrorRuntimeNotStarted =>
+      'The plugin runtime is not running.';
+
+  @override
+  String pluginErrorInstallFailed(Object details) {
+    return 'The plugin could not be installed: $details';
+  }
+
+  @override
   String get pluginErrorStreamResolution =>
       'No playable audio stream could be found for this track.';
 

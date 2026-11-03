@@ -10,8 +10,12 @@ class RuntimeErrorTable implements ErrorTable {
     if (error is! RuntimeHostException) return null;
     return switch (error) {
       RuntimeBootTimeoutException() => ErrorSpec(l10n.pluginErrorTimeout),
-      RuntimeNotStartedException() => null,
-      PluginInstallException() => null,
+      RuntimeNotStartedException() => ErrorSpec(
+        l10n.pluginErrorRuntimeNotStarted,
+      ),
+      PluginInstallException(:final message) => ErrorSpec(
+        l10n.pluginErrorInstallFailed(message),
+      ),
     };
   }
 

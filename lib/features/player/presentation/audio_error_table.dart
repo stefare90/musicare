@@ -13,7 +13,7 @@ class AudioErrorTable implements ErrorTable {
   ErrorSpec? describe(Object error, AppLocalizations l10n) {
     if (error is PendingLoadException) {
       return ErrorSpec(
-        l10n.pluginErrorUnknown(error.toString()),
+        l10n.pluginErrorInternal(error.toString()),
         action: (context) => (
           label: context.l10n.retry,
           onAction: () => context.read<PlayerCubit>().retryPendingLoad(),
@@ -22,12 +22,18 @@ class AudioErrorTable implements ErrorTable {
     }
     if (error is! AudioPluginException) return null;
     return switch (error) {
-      AudioNotFoundException() => null,
-      AudioRateLimitedException() => null,
-      AudioTransportException() => null,
-      AudioInvalidArgumentException() => null,
-      AudioUnsupportedException() => null,
-      AudioInternalException() => null,
+      AudioNotFoundException() => ErrorSpec(l10n.pluginErrorResourceNotFound),
+      AudioRateLimitedException() => ErrorSpec(l10n.pluginErrorRateLimited),
+      AudioTransportException(:final message) => ErrorSpec(
+        '${l10n.pluginErrorNetwork}: $message',
+      ),
+      AudioInvalidArgumentException() => ErrorSpec(
+        l10n.pluginErrorInvalidArgument,
+      ),
+      AudioUnsupportedException() => ErrorSpec(l10n.pluginErrorUnsupported),
+      AudioInternalException(:final message) => ErrorSpec(
+        l10n.pluginErrorInternal(message),
+      ),
     };
   }
 

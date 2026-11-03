@@ -3,7 +3,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:musicare_runtime_host/musicare_runtime_host.dart';
 import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/error_presentation.dart';
@@ -129,6 +131,28 @@ void main() {
       expect(
         TimeoutException('Timed out').toLocalizedString(buildContext),
         equals('Connection timed out. Please try again.'),
+      );
+
+      expect(
+        const AudioInternalException(
+          'no stream',
+        ).toLocalizedString(buildContext),
+        equals('The plugin hit an internal error: no stream'),
+      );
+
+      expect(
+        const RuntimeNotStartedException(
+          'metadata is not running',
+        ).toLocalizedString(buildContext),
+        equals('The plugin runtime is not running.'),
+      );
+
+      expect(
+        InvalidPluginTypeException(
+          expectedType: 'metadata',
+          actualType: 'audio',
+        ).toLocalizedString(buildContext),
+        equals('Plugin type is invalid.'),
       );
 
       expect(
