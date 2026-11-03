@@ -13,10 +13,12 @@ import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubi
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/plugin/shared/data/services/plugin_catalog.dart';
-import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
+import 'package:music_are/core/notice/notice_listener.dart';
 
 import '../../../../helpers/plugin_session_cubit_test_helpers.dart';
 import '../../../../helpers/plugin_manager_test_helpers.dart';
+
+import '../../../../helpers/error_presentation_test_helpers.dart';
 
 class MockPluginCatalog extends Mock implements PluginCatalog {}
 
@@ -55,6 +57,7 @@ void main() {
 
   setUp(() async {
     await sl.reset();
+    registerTestErrorPresentation();
     mockCatalog = MockPluginCatalog();
     pluginCubit = buildTestPluginSessionCubit();
     sl.registerLazySingleton<PluginCatalog>(() => mockCatalog);

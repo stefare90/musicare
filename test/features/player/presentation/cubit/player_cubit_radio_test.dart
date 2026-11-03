@@ -13,6 +13,8 @@ import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptio
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 
+import '../../../../helpers/error_presentation_test_helpers.dart';
+
 class MockAudioPlayerService extends Mock implements AudioPlayerService {}
 
 class MockMediaRepository extends Mock implements MediaRepository {}
@@ -72,6 +74,7 @@ void main() {
     final third = _track('third');
 
     setUp(() {
+      registerTestErrorPresentation();
       service = MockAudioPlayerService();
       media = MockMediaRepository();
       user = MockUserSession();

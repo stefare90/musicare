@@ -4,7 +4,10 @@ import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/widgets/media/media_card_error.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 
+import '../../helpers/error_presentation_test_helpers.dart';
+
 void main() {
+  setUp(registerTestErrorPresentation);
   Widget buildTestableWidget({required Widget child}) {
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,

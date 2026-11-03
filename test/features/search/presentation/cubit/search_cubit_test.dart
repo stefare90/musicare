@@ -11,6 +11,8 @@ import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptio
 import 'package:music_are/features/search/presentation/cubit/search_cubit.dart';
 import 'package:music_are/features/search/presentation/cubit/search_state.dart';
 
+import '../../../../helpers/error_presentation_test_helpers.dart';
+
 class MockMetadataPluginEngine extends Mock implements MetadataPluginEngine {}
 
 class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
@@ -50,6 +52,7 @@ void main() {
     );
 
     setUp(() {
+      registerTestErrorPresentation();
       mockEngine = MockMetadataPluginEngine();
       mockMetadata = MockMetadataPlugin();
       mockSearch = MockISearch();

@@ -12,6 +12,8 @@ import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 
+import '../../../../helpers/error_presentation_test_helpers.dart';
+
 class MockAudioPlayerService extends Mock implements AudioPlayerService {}
 
 class MockMediaRepository extends Mock implements MediaRepository {}
@@ -53,6 +55,7 @@ void main() {
     final track1 = createTestTrack('1', 'Song 1');
 
     setUp(() {
+      registerTestErrorPresentation();
       mockAudioService = MockAudioPlayerService();
       notices = NoticeBus();
       snapshotController = StreamController<PlaybackData>.broadcast();

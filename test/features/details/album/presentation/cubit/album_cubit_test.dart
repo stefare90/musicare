@@ -8,6 +8,8 @@ import 'package:music_are/features/details/album/presentation/cubit/album_state.
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 
+import '../../../../../helpers/error_presentation_test_helpers.dart';
+
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
 class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
@@ -44,6 +46,7 @@ void main() {
     }
 
     setUp(() {
+      registerTestErrorPresentation();
       mockPluginEngine = MockPluginEngine();
       mockMetadataPlugin = MockMetadataPlugin();
       mockAlbumService = MockAlbumService();

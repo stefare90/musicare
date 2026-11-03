@@ -7,7 +7,10 @@ import 'package:music_are/core/widgets/media/media_card_error.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/core/widgets/media/section_row.dart';
 
+import '../../helpers/error_presentation_test_helpers.dart';
+
 void main() {
+  setUp(registerTestErrorPresentation);
   Widget buildTestableWidget({required Widget child, double textScale = 1.0}) {
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,

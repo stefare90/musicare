@@ -4,10 +4,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:music_are/core/notice/notice.dart';
 import 'package:music_are/core/widgets/dialogs.dart';
-import 'package:music_are/features/plugin/shared/presentation/utils/exception_localizer.dart';
-import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
+import 'package:music_are/core/notice/exception_localizer.dart';
 
-/// The only place that builds snackbars: everything else emits on the bus.
 class NoticeListener extends StatefulWidget {
   final Stream<Notice> notices;
 
@@ -47,14 +45,9 @@ class _NoticeListenerState extends State<NoticeListener> {
     super.dispose();
   }
 
-  /// The host Scaffold does not lift the snackbar for the keyboard: do it
-  /// here from the same data.
   double _keyboardInset() {
     final media = MediaQuery.of(context);
-    return math.max(
-      0.0,
-      media.viewInsets.bottom - media.viewPadding.bottom,
-    );
+    return math.max(0.0, media.viewInsets.bottom - media.viewPadding.bottom);
   }
 
   void _show(Notice notice) {

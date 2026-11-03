@@ -7,7 +7,7 @@ import 'package:music_are/features/details/artist/presentation/cubit/artist_stat
 import 'package:music_are/features/player/data/models/pending_source.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
-import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
+import 'package:music_are/core/notice/exception_localizer.dart';
 
 class ArtistCubit extends SafeCubit<ArtistState> {
   final MediaRepository _media;

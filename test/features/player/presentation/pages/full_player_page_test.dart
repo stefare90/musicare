@@ -20,6 +20,8 @@ import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
 
+import '../../../../helpers/error_presentation_test_helpers.dart';
+
 class MockPlayerCubit extends Mock implements PlayerCubit {}
 
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
@@ -64,6 +66,7 @@ void main() {
     );
 
     setUp(() {
+      registerTestErrorPresentation();
       mockPlayerCubit = MockPlayerCubit();
       when(
         () => mockPlayerCubit.stream,

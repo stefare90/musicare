@@ -15,6 +15,8 @@ import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 
+import '../../../../../helpers/error_presentation_test_helpers.dart';
+
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
 class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
@@ -64,6 +66,7 @@ void main() {
 
   setUp(() async {
     await sl.reset();
+    registerTestErrorPresentation();
 
     mockEngine = MockPluginEngine();
     mockMetadata = MockMetadataPlugin();

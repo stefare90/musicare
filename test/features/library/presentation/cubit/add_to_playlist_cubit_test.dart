@@ -9,6 +9,8 @@ import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin
 
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
 
+import '../../../../helpers/error_presentation_test_helpers.dart';
+
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
 class MockMetadataPlugin extends Mock implements IMetadataPlugin {}
@@ -58,6 +60,7 @@ void main() {
   );
 
   setUp(() {
+    registerTestErrorPresentation();
     engine = MockPluginEngine();
     metadata = MockMetadataPlugin();
     user = MockUserService();

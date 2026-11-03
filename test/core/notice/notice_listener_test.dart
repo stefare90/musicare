@@ -3,21 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
+import 'package:music_are/core/notice/error_presentation.dart';
 import 'package:music_are/core/notice/notice.dart';
+import 'package:music_are/core/notice/notice_listener.dart';
 import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
-import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
 
-import '../../../../../helpers/plugin_session_cubit_test_helpers.dart';
+import '../../helpers/error_presentation_test_helpers.dart';
+import '../../helpers/plugin_session_cubit_test_helpers.dart';
 
 void main() {
   late StreamController<Notice> controller;
 
   setUp(() {
     controller = StreamController<Notice>.broadcast();
+    sl.registerLazySingleton<ErrorPresentation>(() => testErrorPresentation);
   });
 
   tearDown(() async {
+    await sl.reset();
     await controller.close();
   });
 

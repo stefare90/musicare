@@ -6,7 +6,7 @@ import 'package:music_are/features/details/album/presentation/cubit/album_state.
 import 'package:music_are/features/player/data/models/pending_source.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
-import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
+import 'package:music_are/core/notice/exception_localizer.dart';
 
 class AlbumCubit extends SafeCubit<AlbumState> {
   final MediaRepository _media;

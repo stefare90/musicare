@@ -4,12 +4,24 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
+import 'package:music_are/core/notice/error_presentation.dart';
+import 'package:music_are/core/notice/exception_localizer.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
-import 'package:music_are/features/plugin/shared/presentation/utils/exception_localizer.dart';
+
+import '../../helpers/error_presentation_test_helpers.dart';
 
 void main() {
+  setUp(() {
+    sl.registerLazySingleton<ErrorPresentation>(() => testErrorPresentation);
+  });
+
+  tearDown(() async {
+    await sl.reset();
+  });
+
   group('ExceptionLocalizer Unit Tests', () {
     testWidgets('maps domain and system exceptions to localized strings', (
       tester,

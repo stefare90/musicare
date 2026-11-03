@@ -1,11 +1,8 @@
 import 'dart:async';
 
 import 'package:music_are/core/notice/notice.dart';
-
 export 'package:music_are/core/notice/notice.dart';
 
-/// App-wide one-shot channel: one `NoticeListener` at the root shows every
-/// snackbar, on any route. Events emitted before it subscribes are buffered.
 class NoticeBus {
   NoticeBus() {
     _controller.onListen = _flush;

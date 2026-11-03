@@ -3,7 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/widgets/error_tile.dart';
 
+import '../../helpers/error_presentation_test_helpers.dart';
+
 void main() {
+  setUp(registerTestErrorPresentation);
   Widget buildTestableWidget({required Widget child}) {
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,

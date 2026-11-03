@@ -15,6 +15,8 @@ import 'package:music_are/features/plugin/shared/data/services/plugin_catalog.da
 import '../../../../../helpers/plugin_session_cubit_test_helpers.dart';
 import '../../../../../helpers/plugin_manager_test_helpers.dart';
 
+import '../../../../../helpers/error_presentation_test_helpers.dart';
+
 class MockPluginCatalog extends Mock implements PluginCatalog {}
 
 void main() {
@@ -53,6 +55,7 @@ void main() {
     await sl.reset();
     catalog = MockPluginCatalog();
     sl.registerSingleton<PluginCatalog>(catalog);
+    registerTestErrorPresentation();
   });
 
   tearDown(() async {

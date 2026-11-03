@@ -1,6 +1,7 @@
+import 'package:music_are/core/notice/rethrown_error.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 
-abstract class PluginException implements Exception {
+sealed class PluginException implements Exception {
   const PluginException();
 }
 
@@ -33,10 +34,14 @@ class InvalidPluginTypeException extends PluginException {
   });
 }
 
-class PluginActivationException extends PluginException {
+class PluginActivationException extends PluginException
+    implements RethrownError {
   final Object cause;
 
   const PluginActivationException(this.cause);
+
+  @override
+  Object get rethrown => cause;
 }
 
 class PluginDownloadException extends PluginException {
@@ -61,8 +66,11 @@ class MetadataRadioEmptyException extends PluginException {
   const MetadataRadioEmptyException();
 }
 
-class PendingLoadException extends PluginException {
+class PendingLoadException extends PluginException implements RethrownError {
   final Object cause;
 
   const PendingLoadException(this.cause);
+
+  @override
+  Object get rethrown => cause;
 }

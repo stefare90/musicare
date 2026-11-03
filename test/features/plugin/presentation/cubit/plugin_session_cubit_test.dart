@@ -13,6 +13,8 @@ import 'package:music_are/features/plugin/shared/data/services/plugin_registry.d
 
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
 
+import '../../../../helpers/error_presentation_test_helpers.dart';
+
 class MockPluginLifecycle extends Mock implements PluginLifecycle {}
 
 class MockPluginAuth extends Mock implements PluginAuth {}
@@ -28,6 +30,7 @@ void main() {
   late PluginSessionCubit cubit;
 
   setUp(() {
+    registerTestErrorPresentation();
     metadata = MockPluginLifecycle();
     audio = MockPluginLifecycle();
     metadataAuth = MockPluginAuth();

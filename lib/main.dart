@@ -13,7 +13,7 @@ import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
-import 'package:music_are/features/plugin/shared/presentation/widgets/notice_listener.dart';
+import 'package:music_are/core/notice/notice_listener.dart';
 
 void main() async {
   final initialLocation = await AppInitializer.initialize();

@@ -2,8 +2,6 @@ import 'package:flutter/foundation.dart';
 
 typedef NoticeAction = ({String label, VoidCallback onAction});
 
-/// Closed on purpose: a new kind cannot reach the renderer unhandled. The
-/// action lives on the notice, not on the error, so a message can offer one.
 sealed class Notice {
   const Notice();
 
@@ -19,8 +17,6 @@ final class ErrorNotice extends Notice {
   const ErrorNotice(this.error);
 }
 
-/// Plain text already localized by the emitter (which has a `BuildContext`),
-/// unlike [ErrorNotice], resolved when shown.
 final class MessageNotice extends Notice {
   final String message;
   final NoticeAction? action;

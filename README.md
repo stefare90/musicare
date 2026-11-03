@@ -91,6 +91,7 @@ MusicAre follows a decoupled, Feature-First Clean Architecture organized into we
    * **Engines and player services**: `MetadataPluginEngine` and `AudioSourcePluginEngine` own the wire protocol; `AudioPlayerService` (with `AudioStreamResolver` and `MusicAreAudioHandler`) owns queue advancement, stream resolution and fallback, and the media session, and is the only path from the player to the audio engine.
    * **Plugin management**: `PluginCatalog` (GitHub releases with a TTL cache), `PluginManager` (install/activate transactions), `PluginRegistry` (capabilities per plugin type), `PluginStorage` (plugin code and manifests on disk) and `MetadataAuthPresenter` (host-side login form).
 4. **Services & infrastructure** (`lib/core/`): `PreferencesService`, `NetworkService`, `NoticeBus` (global UI notices) and `AppInitializer`, registered in GetIt.
+   * **Error presentation**: `NoticeBus` + `NoticeListener` (the single snackbar renderer) live in `core/notice/`. Every domain ships an `ErrorTable` (`MetadataErrorTable`, `AudioErrorTable`, `RuntimeErrorTable`, `PluginErrorTable`) that maps its own `sealed` SDK exceptions to localized texts and, where needed, an action; `ErrorPresentation` composes the tables in DI, unwraps rethrown errors and falls back to the generic message.
 5. **Plugin Subsystems**: a single `serious_python` process hosts the metadata and audio-source Flask apps on two ephemeral ports; each daemon loads its plugin `.zip` at runtime and speaks JSON over loopback.
 
 The two data paths meet only in the UI. **Content** (home, search, details, library) flows page → cubit → repository → `MetadataPluginEngine`. **Playback** flows `PlayerCubit` → `AudioPlayerService` → `AudioStreamResolver` → `AudioSourcePluginEngine` (two-tier JIT: `searchCandidates`, then `resolveStream` on demand), with audio output through `AudioPlayerDriver` (`just_audio`) and the notification/lock-screen session through `MusicAreAudioHandler` (`audio_service`).
@@ -117,7 +118,7 @@ lib/
 │   ├── di/                         # Service locator configuration (GetIt)
 │   ├── l10n/                       # Localization and translations (.arb)
 │   ├── models/                     # Universal UI models (MediaItemMetadata, MediaType)
-│   ├── notice/                     # Global notices (NoticeBus and snackbar policy)
+│   ├── notice/                     # Global notices (NoticeBus, NoticeListener, error presentation)
 │   ├── router/                     # Navigation rules and router configuration
 │   ├── services/                   # Preferences, network client and app initialization
 │   ├── theme/                      # Material 3 theme, accents and typography

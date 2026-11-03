@@ -1,6 +1,8 @@
 import 'package:get_it/get_it.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:music_are/core/notice/error_presentation.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
+import 'package:music_are/core/notice/system_error_table.dart';
 import 'package:music_are/core/router/app_router.dart';
 import 'package:music_are/core/services/network_service.dart';
 import 'package:music_are/core/services/preferences_service.dart';
@@ -9,7 +11,11 @@ import 'package:music_are/features/player/data/services/audio_player_driver.dart
 import 'package:music_are/features/player/data/services/audio_player_service.dart';
 import 'package:music_are/features/player/data/services/audio_stream_resolver.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
+import 'package:music_are/features/player/presentation/audio_error_table.dart';
+import 'package:music_are/features/plugin/metadata/presentation/metadata_error_table.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
+import 'package:music_are/features/plugin/shared/presentation/plugin_error_table.dart';
+import 'package:music_are/features/plugin/shared/presentation/runtime_error_table.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/browse_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
@@ -39,6 +45,15 @@ Future<void> initDependencies() async {
   final sharedPreferences = await SharedPreferences.getInstance();
 
   sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
+  sl.registerLazySingleton<ErrorPresentation>(
+    () => const ErrorPresentation([
+      MetadataErrorTable(),
+      AudioErrorTable(),
+      RuntimeErrorTable(),
+      SystemErrorTable(),
+      PluginErrorTable(),
+    ]),
+  );
   sl.registerLazySingleton<PreferencesService>(
     () => PreferencesService(sharedPreferences),
   );

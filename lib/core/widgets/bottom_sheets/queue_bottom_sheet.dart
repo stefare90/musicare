@@ -7,7 +7,7 @@ import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/pending_state.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/player/presentation/widgets/queue_track_tile.dart';
-import 'package:music_are/features/plugin/shared/presentation/utils/exception_localizer.dart';
+import 'package:music_are/core/notice/exception_localizer.dart';
 import 'package:music_are/core/widgets/skeletons/skeleton_track_list.dart';
 
 class QueueBottomSheet extends StatelessWidget {

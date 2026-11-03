@@ -10,6 +10,8 @@ import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 
 import '../../../helpers/metadata_plugin_test_helpers.dart';
 
+import '../../../helpers/error_presentation_test_helpers.dart';
+
 class MockPluginManager extends Mock implements PluginManager {}
 
 void main() {
@@ -35,6 +37,7 @@ void main() {
   );
 
   setUp(() {
+    registerTestErrorPresentation();
     manager = MockPluginManager();
     notices = NoticeBus();
     cubit = PluginManagerCubit(manager, notices);

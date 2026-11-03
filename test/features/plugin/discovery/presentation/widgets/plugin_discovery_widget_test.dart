@@ -8,6 +8,8 @@ import 'package:music_are/features/plugin/shared/data/services/plugin_catalog.da
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 
+import '../../../../../helpers/error_presentation_test_helpers.dart';
+
 class MockPluginCatalog extends Mock implements PluginCatalog {}
 
 PluginManifest manifest({
@@ -39,6 +41,7 @@ void main() {
     catalog = MockPluginCatalog();
     actions = [];
     sl.registerSingleton<PluginCatalog>(catalog);
+    registerTestErrorPresentation();
   });
 
   tearDown(() async {

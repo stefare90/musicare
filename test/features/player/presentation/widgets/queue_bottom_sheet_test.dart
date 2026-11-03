@@ -12,6 +12,8 @@ import 'package:music_are/features/player/presentation/cubit/queue_state.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/core/widgets/skeletons/skeleton_track_list.dart';
 
+import '../../../../helpers/error_presentation_test_helpers.dart';
+
 class MockPlayerCubit extends Mock implements PlayerCubit {}
 
 Track createTestTrack(String id, String name) {
@@ -40,6 +42,7 @@ void main() {
     final track2 = createTestTrack('t2', 'Something');
 
     setUp(() {
+      registerTestErrorPresentation();
       mockPlayerCubit = MockPlayerCubit();
       when(() => mockPlayerCubit.stream).thenAnswer((_) => const Stream.empty());
       when(() => mockPlayerCubit.skipToIndex(any())).thenAnswer((_) async {});

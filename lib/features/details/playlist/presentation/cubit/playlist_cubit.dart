@@ -11,7 +11,7 @@ import 'package:music_are/features/plugin/metadata/data/repositories/media_repos
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
-import 'package:music_are/features/plugin/shared/presentation/utils/notice.dart';
+import 'package:music_are/core/notice/exception_localizer.dart';
 
 class PlaylistCubit extends SafeCubit<PlaylistState> {
   final MediaRepository _media;

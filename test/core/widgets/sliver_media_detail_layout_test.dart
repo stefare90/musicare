@@ -8,7 +8,10 @@ import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
 import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 
+import '../../helpers/error_presentation_test_helpers.dart';
+
 void main() {
+  setUp(registerTestErrorPresentation);
   final testAlbum = Album(
     id: 'al1',
     name: 'Abbey Road',
