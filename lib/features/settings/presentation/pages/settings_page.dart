@@ -2,21 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
-import 'package:music_are/core/router/app_navigator.dart';
 import 'package:music_are/core/services/preferences_service.dart';
 import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
 import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_state.dart';
 import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/player/presentation/cubit/playback_settings_cubit.dart';
-import 'package:music_are/features/settings/presentation/widgets/accent_color_section.dart';
-import 'package:music_are/features/settings/presentation/widgets/app_version_tile.dart';
-import 'package:music_are/features/settings/presentation/widgets/amoled_black_switch.dart';
-import 'package:music_are/features/settings/presentation/widgets/infinite_music_switch.dart';
-import 'package:music_are/features/settings/presentation/widgets/language_section.dart';
-import 'package:music_are/features/settings/presentation/widgets/plugin_tile.dart';
+import 'package:music_are/features/settings/presentation/widgets/settings/about_tile.dart';
+import 'package:music_are/features/settings/presentation/widgets/settings/accent_color_tile.dart';
+import 'package:music_are/features/settings/presentation/widgets/settings/amoled_black_tile.dart';
+import 'package:music_are/features/settings/presentation/widgets/settings/app_version_tile.dart';
+import 'package:music_are/features/settings/presentation/widgets/settings/infinite_music_tile.dart';
+import 'package:music_are/features/settings/presentation/widgets/settings/language_tile.dart';
+import 'package:music_are/features/settings/presentation/widgets/settings/plugin_tile.dart';
+import 'package:music_are/features/settings/presentation/widgets/settings/theme_mode_tile.dart';
 import 'package:music_are/features/settings/presentation/widgets/settings_section_header.dart';
-import 'package:music_are/features/settings/presentation/widgets/theme_mode_section.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -33,22 +33,18 @@ class SettingsPage extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 24.0),
           children: [
             SettingsSectionHeader(label: l10n.settingsAppearanceSection),
-            const ThemeModeSection(),
-            const AccentColorSection(),
-            const AmoledBlackSwitch(),
+            const ThemeModeTile(),
+            const AccentColorTile(),
+            const AmoledBlackTile(),
             SettingsSectionHeader(label: l10n.settingsPlaybackSection),
-            const InfiniteMusicSwitch(),
+            const InfiniteMusicTile(),
             SettingsSectionHeader(label: l10n.settingsPluginsSection),
             const _PluginTiles(),
             SettingsSectionHeader(label: l10n.settingsLanguageSection),
-            const LanguageSection(),
+            const LanguageTile(),
             SettingsSectionHeader(label: l10n.settingsApplicationSection),
             const AppVersionTile(),
-            ListTile(
-              title: Text(l10n.settingsAboutRow),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () => AppNavigator.toAbout(context),
-            ),
+            const AboutTile(),
           ],
         ),
       ),

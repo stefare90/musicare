@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
-import 'package:music_are/core/errors/exception_localizer.dart';
 import 'package:music_are/core/router/app_navigator.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/features/update/presentation/cubit/app_update_cubit.dart';
@@ -48,13 +47,9 @@ class AppVersionTile extends StatelessWidget {
         state.progressPercent,
       ),
       AppUpdateStatus.installing => l10n.updateStatusInstalling,
-      AppUpdateStatus.failed => state.failure!.toLocalizedString(context),
       _ => null,
     };
     if (text == null) return null;
-    final color = state.status == AppUpdateStatus.failed
-        ? context.colorScheme.error
-        : context.colorScheme.primary;
-    return (text, color);
+    return (text, context.colorScheme.primary);
   }
 }

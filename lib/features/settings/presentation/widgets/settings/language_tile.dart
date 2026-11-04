@@ -4,8 +4,8 @@ import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/theme/presentation/cubit/theme_cubit.dart';
 
-class LanguageSection extends StatelessWidget {
-  const LanguageSection({super.key});
+class LanguageTile extends StatelessWidget {
+  const LanguageTile({super.key});
 
   @override
   Widget build(BuildContext context) {

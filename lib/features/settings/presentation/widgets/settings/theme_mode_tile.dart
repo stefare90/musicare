@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/theme/presentation/cubit/theme_cubit.dart';
 
-class ThemeModeSection extends StatelessWidget {
-  const ThemeModeSection({super.key});
+class ThemeModeTile extends StatelessWidget {
+  const ThemeModeTile({super.key});
 
   @override
   Widget build(BuildContext context) {

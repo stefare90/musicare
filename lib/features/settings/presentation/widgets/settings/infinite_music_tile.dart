@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/features/player/presentation/cubit/playback_settings_cubit.dart';
 
-class InfiniteMusicSwitch extends StatelessWidget {
-  const InfiniteMusicSwitch({super.key});
+class InfiniteMusicTile extends StatelessWidget {
+  const InfiniteMusicTile({super.key});
 
   @override
   Widget build(BuildContext context) {

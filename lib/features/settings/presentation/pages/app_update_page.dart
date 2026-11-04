@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
-import 'package:music_are/features/settings/presentation/widgets/app_version_header.dart';
-import 'package:music_are/features/settings/presentation/widgets/app_version_section.dart';
+import 'package:music_are/features/settings/presentation/widgets/app_version/app_version_header.dart';
+import 'package:music_are/features/settings/presentation/widgets/app_version/app_version_section.dart';
 import 'package:music_are/features/update/presentation/cubit/app_update_cubit.dart';
 import 'package:music_are/features/update/presentation/cubit/app_update_state.dart';
 import 'package:music_are/features/update/presentation/widgets/update_actions_section.dart';

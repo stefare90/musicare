@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
-import 'package:music_are/features/settings/presentation/widgets/plugin_detail_header.dart';
-import 'package:music_are/features/settings/presentation/widgets/plugin_version_section.dart';
+import 'package:music_are/features/settings/presentation/widgets/plugin_detail/plugin_detail_header.dart';
+import 'package:music_are/features/settings/presentation/widgets/plugin_detail/plugin_version_section.dart';
 
 class PluginDetailBody extends StatelessWidget {
   final PluginManifest manifest;

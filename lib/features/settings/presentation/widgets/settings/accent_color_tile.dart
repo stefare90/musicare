@@ -4,8 +4,8 @@ import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/theme/app_accent.dart';
 import 'package:music_are/core/theme/presentation/cubit/theme_cubit.dart';
 
-class AccentColorSection extends StatelessWidget {
-  const AccentColorSection({super.key});
+class AccentColorTile extends StatelessWidget {
+  const AccentColorTile({super.key});
 
   @override
   Widget build(BuildContext context) {
