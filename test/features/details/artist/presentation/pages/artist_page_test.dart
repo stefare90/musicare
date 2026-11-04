@@ -8,6 +8,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
+import 'package:music_are/core/widgets/error_tile.dart';
 import 'package:music_are/core/widgets/media/track_matrix.dart';
 import 'package:music_are/features/details/artist/presentation/pages/artist_page.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
@@ -383,6 +384,51 @@ void main() {
 
       expect(find.byIcon(Icons.favorite_border_rounded), findsOneWidget);
       expect(find.byIcon(Icons.favorite_rounded), findsNothing);
+    });
+
+    testWidgets('hides popular tracks when the section is empty', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 2000);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(tester.view.reset);
+
+      stubArtistSections();
+      when(() => mockArtist.topTracks('a1', offset: 0, limit: 6)).thenAnswer(
+        (_) async => const PaginatedResult<Track>(
+          items: [],
+          total: 0,
+          offset: 0,
+          limit: 6,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Popular Tracks'), findsNothing);
+      expect(find.byType(ErrorTile), findsNothing);
+      expect(find.text('Discography'), findsOneWidget);
+    });
+
+    testWidgets('shows an error tile when popular tracks require auth', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 2000);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(tester.view.reset);
+
+      stubArtistSections();
+      when(() => mockArtist.topTracks('a1', offset: 0, limit: 6)).thenAnswer(
+        (_) async => throw const MetadataAuthRequiredException('sign in'),
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ErrorTile), findsOneWidget);
+      expect(find.text('Popular Tracks'), findsOneWidget);
+      expect(find.text('Discography'), findsOneWidget);
     });
   });
 }
