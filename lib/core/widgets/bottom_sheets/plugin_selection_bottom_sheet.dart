@@ -3,7 +3,7 @@ import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/widgets/bottom_sheets/base_modal_bottom_sheet.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
-import 'package:music_are/core/notice/exception_localizer.dart';
+import 'package:music_are/core/errors/exception_localizer.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/plugin_type_localizer.dart';
 
 class PluginSelectionBottomSheet {

@@ -5,7 +5,7 @@ import 'package:music_are/core/models/section_state.dart';
 import 'package:music_are/features/home/presentation/cubit/home_state.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/browse_repository.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
-import 'package:music_are/core/notice/exception_localizer.dart';
+import 'package:music_are/core/errors/exception_localizer.dart';
 
 class HomeCubit extends SafeCubit<HomeState> {
   final BrowseRepository _browse;

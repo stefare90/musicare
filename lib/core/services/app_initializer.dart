@@ -1,6 +1,7 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:music_are/core/di/injection.dart';
+import 'package:music_are/core/license/app_license.dart';
 import 'package:music_are/features/player/data/services/audio_handler.dart';
 import 'package:music_are/features/player/data/services/audio_player_service.dart';
 import 'package:music_are/features/plugin/management/data/services/plugin_manager.dart';
@@ -10,6 +11,7 @@ import 'package:music_are/core/services/plugin_startup_route.dart';
 
 abstract class AppInitializer {
   static Future<String> initialize() async {
+    AppLicense.register();
     WidgetsFlutterBinding.ensureInitialized();
 
     await initDependencies();

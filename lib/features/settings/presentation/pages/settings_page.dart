@@ -10,6 +10,7 @@ import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubi
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/player/presentation/cubit/playback_settings_cubit.dart';
 import 'package:music_are/features/settings/presentation/widgets/accent_color_section.dart';
+import 'package:music_are/features/settings/presentation/widgets/app_version_tile.dart';
 import 'package:music_are/features/settings/presentation/widgets/amoled_black_switch.dart';
 import 'package:music_are/features/settings/presentation/widgets/infinite_music_switch.dart';
 import 'package:music_are/features/settings/presentation/widgets/language_section.dart';
@@ -41,9 +42,10 @@ class SettingsPage extends StatelessWidget {
             const _PluginTiles(),
             SettingsSectionHeader(label: l10n.settingsLanguageSection),
             const LanguageSection(),
-            SettingsSectionHeader(label: l10n.settingsAboutSection),
+            SettingsSectionHeader(label: l10n.settingsApplicationSection),
+            const AppVersionTile(),
             ListTile(
-              title: Text(l10n.settingsAboutTile),
+              title: Text(l10n.settingsAboutRow),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () => AppNavigator.toAbout(context),
             ),

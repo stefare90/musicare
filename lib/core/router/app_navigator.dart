@@ -70,6 +70,10 @@ abstract class AppNavigator {
     context.push(AppRoutes.settingsAbout);
   }
 
+  static void toAppUpdate(BuildContext context) {
+    context.push(AppRoutes.settingsUpdate);
+  }
+
   static void pop(BuildContext context) {
     if (context.canPop()) {
       context.pop();

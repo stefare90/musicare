@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +8,8 @@ import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/pages/full_player_page.dart';
 import 'package:music_are/features/player/presentation/widgets/mini_player.dart';
+import 'package:music_are/features/update/presentation/cubit/app_update_cubit.dart';
+import 'package:music_are/features/update/presentation/widgets/app_update_prompt.dart';
 
 class ShellPage extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
@@ -19,6 +23,7 @@ class ShellPage extends StatefulWidget {
 class _ShellPageState extends State<ShellPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _panelController;
+  Timer? _updateCheckTimer;
   double _dragStartProgress = 0.0;
 
   static const double _miniPlayerHeight = 64.0;
@@ -31,10 +36,16 @@ class _ShellPageState extends State<ShellPage>
       vsync: this,
       duration: const Duration(milliseconds: 260),
     );
+    _updateCheckTimer = Timer(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        AppUpdatePrompt.runStartupCheck(context.read<AppUpdateCubit>());
+      }
+    });
   }
 
   @override
   void dispose() {
+    _updateCheckTimer?.cancel();
     _panelController.dispose();
     super.dispose();
   }

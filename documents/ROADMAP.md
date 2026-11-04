@@ -55,7 +55,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ✅ Appearance: theme (system/light/dark), accent color, absolute-black (AMOLED) toggle, persisted across launches.
 ✅ Playback: infinite music switch (on by default, persisted).
 ✅ Language: application language selector (English only for now), persisted.
-✅ About: app version and host SDK versions.
+✅ About: app icon, version, founder and source-code links, and the license (BSD-3-Clause via the standard license page).
 ⬜ Remaining sections: audio quality, downloads and cache, listening history, diagnostics.
 ✅ Per-plugin actions: update, reinstall and replace with another catalog plugin (with confirmation).
 ⬜ Uninstall a plugin without replacing it.
@@ -87,7 +87,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ✅ Android release APKs signed with the release keystore (never the debug key), built as `com.musicare.app` with the version read from `pubspec.yaml`.
 ✅ GitHub Releases (public repository) as the distribution channel: a stable release is published from an annotated `v<version>` tag, carrying `MusicAre-<version>.apk`.
 ✅ Release pipeline (`tool/release.sh`): preflight on `main` with a clean tree, analyze/tests, keystore and tag gates, staging plus build, badging/signature/checksum gates, and publishing only when `--publish` is passed.
-⬜ In-app update check against the latest published release, with download and install.
+✅ In-app update check against the latest published release: one silent check per cold start, an update dialog above every route, progress and cancellation in Settings → Application → App version, SHA-256 and APK signature/version gates, and the system installer prompt (`lib/features/update/`).
 
 ## 🛠️ Backlog (fixes and ideas, not yet approved)
 ⬜ Fix a cover occasionally missing on the first cold load.

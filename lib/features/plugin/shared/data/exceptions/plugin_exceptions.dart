@@ -1,4 +1,4 @@
-import 'package:music_are/core/notice/rethrown_error.dart';
+import 'package:music_are/core/errors/rethrown_error.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 
 sealed class PluginException implements Exception {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:music_are/core/config/app_assets.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/features/onboarding/presentation/widgets/onboarding_bottom_action_button.dart';
@@ -25,7 +26,7 @@ class WelcomeIntroPage extends StatelessWidget {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(38),
                     child: Image.asset(
-                      'assets/images/app_icon.png',
+                      AppAssets.appIcon,
                       height: 200,
                       width: 200,
                       fit: BoxFit.cover,

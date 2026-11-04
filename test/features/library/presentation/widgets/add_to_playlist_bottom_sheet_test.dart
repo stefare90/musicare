@@ -13,7 +13,7 @@ import 'package:music_are/features/plugin/metadata/data/repositories/library_rep
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
-import 'package:music_are/core/notice/notice_listener.dart';
+import 'package:music_are/core/widgets/notice_listener.dart';
 
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
 

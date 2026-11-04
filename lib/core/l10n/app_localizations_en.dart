@@ -700,7 +700,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLanguageEnglish => 'English';
 
   @override
-  String get settingsAboutSection => 'About';
+  String get settingsAboutProjectSection => 'Project';
 
   @override
   String get settingsAboutTile => 'About MusicAre';
@@ -716,6 +716,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsAboutAudioSdk => 'Audio source plugin SDK';
+
+  @override
+  String get settingsAboutFounder => 'Founder';
+
+  @override
+  String get settingsAboutSourceCode => 'Source code';
+
+  @override
+  String get settingsAboutLegalSection => 'Legal';
+
+  @override
+  String get settingsAboutLicense => 'License';
 
   @override
   String get settingsAccentViolet => 'Violet';
@@ -740,4 +752,99 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsAccentPink => 'Pink';
+
+  @override
+  String get settingsApplicationSection => 'Application';
+
+  @override
+  String get settingsAppVersionTile => 'App version';
+
+  @override
+  String get settingsAboutRow => 'About';
+
+  @override
+  String get updateAvailableTitle => 'Update available';
+
+  @override
+  String updateDialogMessage(String version, String size, String current) {
+    return 'Version $version ($size) — you\'re on $current.';
+  }
+
+  @override
+  String get updateAction => 'Update';
+
+  @override
+  String get updateNotNow => 'Not now';
+
+  @override
+  String get updateVersionSection => 'Version';
+
+  @override
+  String get updateInstalledVersion => 'Installed version';
+
+  @override
+  String get updateDownloadingNotice =>
+      'Downloading — see Settings → App version';
+
+  @override
+  String get updateCheckForUpdate => 'Check for update';
+
+  @override
+  String get updateStatusSection => 'Status';
+
+  @override
+  String get updateActionsSection => 'Actions';
+
+  @override
+  String get updateStatusIdle => 'Not checked yet';
+
+  @override
+  String get updateStatusChecking => 'Checking for updates…';
+
+  @override
+  String get updateStatusUpToDate => 'You\'re up to date';
+
+  @override
+  String updateStatusAvailable(String version, String size) {
+    return 'Version $version is available ($size).';
+  }
+
+  @override
+  String updateStatusDownloading(int percent) {
+    return 'Downloading $percent%';
+  }
+
+  @override
+  String get updateStatusInstalling => 'Opening the installer…';
+
+  @override
+  String get updateCancel => 'Cancel';
+
+  @override
+  String updateTileSubtitleAvailable(String version) {
+    return 'Update available: $version';
+  }
+
+  @override
+  String get updateErrorCheck => 'Couldn\'t check for updates.';
+
+  @override
+  String get updateErrorRateLimited =>
+      'GitHub is limiting update checks. Try again later.';
+
+  @override
+  String get updateErrorDownload => 'The update download failed.';
+
+  @override
+  String get updateErrorCorrupted => 'The downloaded file is corrupted.';
+
+  @override
+  String get updateErrorRejected =>
+      'The downloaded package does not match this app, so it was not installed.';
+
+  @override
+  String get updateErrorInstall => 'Couldn\'t open the installer.';
+
+  @override
+  String get linkOpenFailed => 'Couldn\'t open the link.';
 }

@@ -222,12 +222,16 @@
   "settingsLanguageSection": "Language",
   "settingsLanguageLabel": "App language",
   "settingsLanguageEnglish": "English",
-  "settingsAboutSection": "About",
+  "settingsAboutProjectSection": "Project",
   "settingsAboutTile": "About MusicAre",
   "settingsAboutAppVersion": "Version",
   "settingsAboutHostSdksSection": "Host SDKs",
   "settingsAboutMetadataSdk": "Metadata plugin SDK",
   "settingsAboutAudioSdk": "Audio source plugin SDK",
+  "settingsAboutFounder": "Founder",
+  "settingsAboutSourceCode": "Source code",
+  "settingsAboutLegalSection": "Legal",
+  "settingsAboutLicense": "License",
   "settingsAccentViolet": "Violet",
   "settingsAccentBlue": "Blue",
   "settingsAccentCyan": "Cyan",
@@ -235,5 +239,56 @@
   "settingsAccentGreen": "Green",
   "settingsAccentAmber": "Amber",
   "settingsAccentOrange": "Orange",
-  "settingsAccentPink": "Pink"
+  "settingsAccentPink": "Pink",
+  "settingsApplicationSection": "Application",
+  "settingsAppVersionTile": "App version",
+  "settingsAboutRow": "About",
+  "updateAvailableTitle": "Update available",
+  "updateDialogMessage": "Version {version} ({size}) — you're on {current}.",
+  "@updateDialogMessage": {
+    "placeholders": {
+      "version": { "type": "String" },
+      "size": { "type": "String" },
+      "current": { "type": "String" }
+    }
+  },
+  "updateAction": "Update",
+  "updateNotNow": "Not now",
+  "updateVersionSection": "Version",
+  "updateInstalledVersion": "Installed version",
+  "updateDownloadingNotice": "Downloading — see Settings → App version",
+  "updateCheckForUpdate": "Check for update",
+  "updateStatusSection": "Status",
+  "updateActionsSection": "Actions",
+  "updateStatusIdle": "Not checked yet",
+  "updateStatusChecking": "Checking for updates…",
+  "updateStatusUpToDate": "You're up to date",
+  "updateStatusAvailable": "Version {version} is available ({size}).",
+  "@updateStatusAvailable": {
+    "placeholders": {
+      "version": { "type": "String" },
+      "size": { "type": "String" }
+    }
+  },
+  "updateStatusDownloading": "Downloading {percent}%",
+  "@updateStatusDownloading": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "updateStatusInstalling": "Opening the installer…",
+  "updateCancel": "Cancel",
+  "updateTileSubtitleAvailable": "Update available: {version}",
+  "@updateTileSubtitleAvailable": {
+    "placeholders": {
+      "version": { "type": "String" }
+    }
+  },
+  "updateErrorCheck": "Couldn't check for updates.",
+  "updateErrorRateLimited": "GitHub is limiting update checks. Try again later.",
+  "updateErrorDownload": "The update download failed.",
+  "updateErrorCorrupted": "The downloaded file is corrupted.",
+  "updateErrorRejected": "The downloaded package does not match this app, so it was not installed.",
+  "updateErrorInstall": "Couldn't open the installer.",
+  "linkOpenFailed": "Couldn't open the link."
 }

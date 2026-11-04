@@ -1330,11 +1330,11 @@ abstract class AppLocalizations {
   /// **'English'**
   String get settingsLanguageEnglish;
 
-  /// No description provided for @settingsAboutSection.
+  /// No description provided for @settingsAboutProjectSection.
   ///
   /// In en, this message translates to:
-  /// **'About'**
-  String get settingsAboutSection;
+  /// **'Project'**
+  String get settingsAboutProjectSection;
 
   /// No description provided for @settingsAboutTile.
   ///
@@ -1365,6 +1365,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Audio source plugin SDK'**
   String get settingsAboutAudioSdk;
+
+  /// No description provided for @settingsAboutFounder.
+  ///
+  /// In en, this message translates to:
+  /// **'Founder'**
+  String get settingsAboutFounder;
+
+  /// No description provided for @settingsAboutSourceCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Source code'**
+  String get settingsAboutSourceCode;
+
+  /// No description provided for @settingsAboutLegalSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal'**
+  String get settingsAboutLegalSection;
+
+  /// No description provided for @settingsAboutLicense.
+  ///
+  /// In en, this message translates to:
+  /// **'License'**
+  String get settingsAboutLicense;
 
   /// No description provided for @settingsAccentViolet.
   ///
@@ -1413,6 +1437,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pink'**
   String get settingsAccentPink;
+
+  /// No description provided for @settingsApplicationSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Application'**
+  String get settingsApplicationSection;
+
+  /// No description provided for @settingsAppVersionTile.
+  ///
+  /// In en, this message translates to:
+  /// **'App version'**
+  String get settingsAppVersionTile;
+
+  /// No description provided for @settingsAboutRow.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAboutRow;
+
+  /// No description provided for @updateAvailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get updateAvailableTitle;
+
+  /// No description provided for @updateDialogMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} ({size}) — you\'re on {current}.'**
+  String updateDialogMessage(String version, String size, String current);
+
+  /// No description provided for @updateAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get updateAction;
+
+  /// No description provided for @updateNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get updateNotNow;
+
+  /// No description provided for @updateVersionSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get updateVersionSection;
+
+  /// No description provided for @updateInstalledVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed version'**
+  String get updateInstalledVersion;
+
+  /// No description provided for @updateDownloadingNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading — see Settings → App version'**
+  String get updateDownloadingNotice;
+
+  /// No description provided for @updateCheckForUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for update'**
+  String get updateCheckForUpdate;
+
+  /// No description provided for @updateStatusSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get updateStatusSection;
+
+  /// No description provided for @updateActionsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get updateActionsSection;
+
+  /// No description provided for @updateStatusIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not checked yet'**
+  String get updateStatusIdle;
+
+  /// No description provided for @updateStatusChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for updates…'**
+  String get updateStatusChecking;
+
+  /// No description provided for @updateStatusUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re up to date'**
+  String get updateStatusUpToDate;
+
+  /// No description provided for @updateStatusAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} is available ({size}).'**
+  String updateStatusAvailable(String version, String size);
+
+  /// No description provided for @updateStatusDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading {percent}%'**
+  String updateStatusDownloading(int percent);
+
+  /// No description provided for @updateStatusInstalling.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening the installer…'**
+  String get updateStatusInstalling;
+
+  /// No description provided for @updateCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get updateCancel;
+
+  /// No description provided for @updateTileSubtitleAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available: {version}'**
+  String updateTileSubtitleAvailable(String version);
+
+  /// No description provided for @updateErrorCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check for updates.'**
+  String get updateErrorCheck;
+
+  /// No description provided for @updateErrorRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub is limiting update checks. Try again later.'**
+  String get updateErrorRateLimited;
+
+  /// No description provided for @updateErrorDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'The update download failed.'**
+  String get updateErrorDownload;
+
+  /// No description provided for @updateErrorCorrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'The downloaded file is corrupted.'**
+  String get updateErrorCorrupted;
+
+  /// No description provided for @updateErrorRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The downloaded package does not match this app, so it was not installed.'**
+  String get updateErrorRejected;
+
+  /// No description provided for @updateErrorInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the installer.'**
+  String get updateErrorInstall;
+
+  /// No description provided for @linkOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the link.'**
+  String get linkOpenFailed;
 }
 
 class _AppLocalizationsDelegate

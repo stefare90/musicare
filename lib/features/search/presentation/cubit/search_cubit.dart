@@ -6,7 +6,7 @@ import 'package:music_are/core/cubit/safe_cubit.dart';
 import 'package:music_are/core/widgets/media/media_card_metrics.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/search_repository.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
-import 'package:music_are/core/notice/exception_localizer.dart';
+import 'package:music_are/core/errors/exception_localizer.dart';
 import 'package:music_are/features/search/presentation/cubit/search_state.dart';
 
 class SearchCubit extends SafeCubit<SearchState> {

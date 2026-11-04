@@ -11,7 +11,7 @@ import 'package:music_are/features/plugin/shared/data/services/plugin_catalog.da
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_version.dart';
-import 'package:music_are/core/notice/exception_localizer.dart';
+import 'package:music_are/core/errors/exception_localizer.dart';
 
 typedef PluginSelectedCallback = Future<void> Function(PluginManifest manifest);
 

@@ -14,6 +14,7 @@ import 'package:music_are/features/plugin/management/presentation/pages/plugin_u
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/search/presentation/pages/search_page.dart';
 import 'package:music_are/features/settings/presentation/pages/about_page.dart';
+import 'package:music_are/features/settings/presentation/pages/app_update_page.dart';
 import 'package:music_are/features/settings/presentation/pages/plugin_detail_page.dart';
 import 'package:music_are/features/settings/presentation/pages/settings_page.dart';
 import 'package:music_are/features/shell/presentation/pages/shell_page.dart';
@@ -71,6 +72,10 @@ GoRouter createRouter({required String initialLocation}) {
           GoRoute(
             path: AppRoutes.settingsAboutSegment,
             builder: (context, state) => const AboutPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.settingsUpdateSegment,
+            builder: (context, state) => const AppUpdatePage(),
           ),
           GoRoute(
             path: AppRoutes.settingsPluginSegment,

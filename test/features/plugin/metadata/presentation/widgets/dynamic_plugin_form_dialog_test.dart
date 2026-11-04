@@ -4,7 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/plugin/metadata/presentation/widgets/dynamic_plugin_form_dialog.dart';
-import 'package:music_are/core/notice/notice_listener.dart';
+import 'package:music_are/core/widgets/notice_listener.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 
 import '../../../../../helpers/error_presentation_test_helpers.dart';

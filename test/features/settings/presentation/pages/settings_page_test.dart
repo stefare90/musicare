@@ -10,12 +10,18 @@ import 'package:music_are/features/plugin/management/presentation/cubit/plugin_m
 import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/settings/presentation/pages/settings_page.dart';
+import 'package:music_are/features/update/data/models/installed_app.dart';
+import 'package:music_are/features/update/presentation/cubit/app_update_cubit.dart';
+import 'package:music_are/features/update/presentation/cubit/app_update_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/audio_source_test_helpers.dart';
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
 import '../../../../helpers/plugin_session_cubit_test_helpers.dart';
 import '../../../../helpers/plugin_manager_test_helpers.dart';
+
+class MockAppUpdateCubit extends Mock implements AppUpdateCubit {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +29,13 @@ void main() {
   final sl = GetIt.instance;
   late ThemeCubit themeCubit;
   late PreferencesService preferences;
+  late MockAppUpdateCubit updateCubit;
+
+  const installed = InstalledApp(
+    packageName: 'com.musicare.app',
+    versionName: '1.0.1',
+    versionCode: 3,
+  );
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
@@ -33,6 +46,11 @@ void main() {
       sl.unregister<PreferencesService>();
     }
     sl.registerSingleton<PreferencesService>(preferences);
+    updateCubit = MockAppUpdateCubit();
+    when(
+      () => updateCubit.state,
+    ).thenReturn(const AppUpdateState.idle(installed));
+    when(() => updateCubit.stream).thenAnswer((_) => const Stream.empty());
   });
 
   tearDown(() => sl.reset());
@@ -44,6 +62,7 @@ void main() {
     return MultiBlocProvider(
       providers: [
         BlocProvider<ThemeCubit>.value(value: themeCubit),
+        BlocProvider<AppUpdateCubit>.value(value: updateCubit),
         BlocProvider<PluginManagerCubit>.value(
           value:
               managementCubit ??
@@ -188,8 +207,10 @@ void main() {
     expect(find.text('Language'), findsOneWidget);
     expect(find.text('App language'), findsOneWidget);
     expect(find.text('English'), findsOneWidget);
+    expect(find.text('Application'), findsOneWidget);
+    expect(find.text('App version'), findsOneWidget);
+    expect(find.text('v1.0.1 (3)'), findsOneWidget);
     expect(find.text('About'), findsOneWidget);
-    expect(find.text('About MusicAre'), findsOneWidget);
   });
 
   testWidgets('persists the selected theme mode', (tester) async {

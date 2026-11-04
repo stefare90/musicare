@@ -27,4 +27,6 @@ abstract class AppRoutes {
   static const String settingsPlugin = '$settings/plugin';
   static const String settingsAboutSegment = 'about';
   static const String settingsAbout = '$settings/$settingsAboutSegment';
+  static const String settingsUpdateSegment = 'update';
+  static const String settingsUpdate = '$settings/$settingsUpdateSegment';
 }

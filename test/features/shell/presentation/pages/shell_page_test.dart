@@ -16,8 +16,12 @@ import 'package:music_are/features/player/presentation/pages/full_player_page.da
 import 'package:music_are/features/player/presentation/widgets/mini_player.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/shell/presentation/pages/shell_page.dart';
+import 'package:music_are/features/update/presentation/cubit/app_update_cubit.dart';
+import 'package:music_are/features/update/presentation/cubit/app_update_state.dart';
 
 class MockPlayerCubit extends Mock implements PlayerCubit {}
+
+class MockAppUpdateCubit extends Mock implements AppUpdateCubit {}
 
 class MockPluginEngine extends Mock implements MetadataPluginEngine {}
 
@@ -42,12 +46,19 @@ Track createTestTrack(String id, String name) {
 
 void main() {
   late MockPlayerCubit mockPlayerCubit;
+  late MockAppUpdateCubit mockUpdateCubit;
   final testTrack = createTestTrack('t1', 'Come Together');
 
   setUp(() {
     mockPlayerCubit = MockPlayerCubit();
     when(() => mockPlayerCubit.state).thenReturn(const PlayerState());
     when(() => mockPlayerCubit.stream).thenAnswer((_) => const Stream.empty());
+    mockUpdateCubit = MockAppUpdateCubit();
+    when(() => mockUpdateCubit.state).thenReturn(const AppUpdateState.idle());
+    when(() => mockUpdateCubit.stream).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockUpdateCubit.check(silent: any(named: 'silent')),
+    ).thenAnswer((_) async {});
   });
 
   GoRouter createTestRouter({double keyboardHeight = 0}) {
@@ -129,6 +140,7 @@ void main() {
     return MultiBlocProvider(
       providers: [
         BlocProvider<PlayerCubit>.value(value: mockPlayerCubit),
+        BlocProvider<AppUpdateCubit>.value(value: mockUpdateCubit),
         BlocProvider<UserCubit>(
           create: (_) => TestUserCubit(testUserState()),
         ),
@@ -142,6 +154,22 @@ void main() {
   }
 
   group('ShellPage Widget Tests', () {
+    testWidgets('runs a single silent update check after the delay', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pump();
+
+      verifyNever(() => mockUpdateCubit.check(silent: any(named: 'silent')));
+
+      await tester.pump(const Duration(milliseconds: 1600));
+      verify(() => mockUpdateCubit.check(silent: true)).called(1);
+
+      clearInteractions(mockUpdateCubit);
+      await tester.pump(const Duration(seconds: 5));
+      verifyNever(() => mockUpdateCubit.check(silent: any(named: 'silent')));
+    });
+
     testWidgets('renders NavigationBar and initial branch when no track is active', (
       tester,
     ) async {
