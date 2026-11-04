@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:music_are/core/config/app_info.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
-import 'package:music_are/core/theme/theme_extension.dart';
+import 'package:music_are/core/license/app_license.dart';
+import 'package:music_are/core/widgets/dialogs.dart';
+import 'package:music_are/features/settings/presentation/widgets/about_header.dart';
 import 'package:music_are/features/settings/presentation/widgets/settings_section_header.dart';
-import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart'
-    as audio_sdk;
-import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart'
-    as metadata_sdk;
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
@@ -18,6 +18,34 @@ class AboutPage extends StatefulWidget {
 class _AboutPageState extends State<AboutPage> {
   late final Future<PackageInfo> _packageInfo = PackageInfo.fromPlatform();
 
+  Future<void> _openLink(String url) async {
+    var opened = false;
+    try {
+      opened = await launchUrl(
+        Uri.parse(url),
+        mode: LaunchMode.externalApplication,
+      );
+    } on Exception {
+      opened = false;
+    }
+    if (!opened && mounted) {
+      Dialogs.showMessageSnackBar(
+        context,
+        message: context.l10n.linkOpenFailed,
+      );
+    }
+  }
+
+  Future<void> _showLicenses() async {
+    final info = await _packageInfo;
+    if (!mounted) return;
+    showLicensePage(
+      context: context,
+      applicationName: AppInfo.name,
+      applicationVersion: '${info.version} (${info.buildNumber})',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -27,50 +55,31 @@ class _AboutPageState extends State<AboutPage> {
       body: ListView(
         padding: const EdgeInsets.only(bottom: 24.0),
         children: [
-          FutureBuilder<PackageInfo>(
-            future: _packageInfo,
-            builder: (context, snapshot) {
-              final info = snapshot.data;
-              final version = info == null
-                  ? '—'
-                  : 'v${info.version} (${info.buildNumber})';
-              return _InfoRow(
-                label: l10n.settingsAboutAppVersion,
-                value: version,
-              );
-            },
+          AboutHeader(packageInfo: _packageInfo),
+          SettingsSectionHeader(label: l10n.settingsAboutProjectSection),
+          ListTile(
+            leading: const Icon(Icons.person_outline_rounded),
+            title: Text(l10n.settingsAboutFounder),
+            subtitle: const Text(AppInfo.founder),
+            trailing: const Icon(Icons.open_in_new_rounded),
+            onTap: () => _openLink(AppInfo.websiteUrl),
           ),
-          SettingsSectionHeader(label: l10n.settingsAboutHostSdksSection),
-          _InfoRow(
-            label: l10n.settingsAboutMetadataSdk,
-            value: metadata_sdk.packageVersion,
+          ListTile(
+            leading: const Icon(Icons.code_rounded),
+            title: Text(l10n.settingsAboutSourceCode),
+            subtitle: const Text(AppInfo.repositoryLabel),
+            trailing: const Icon(Icons.open_in_new_rounded),
+            onTap: () => _openLink(AppInfo.repositoryUrl),
           ),
-          _InfoRow(
-            label: l10n.settingsAboutAudioSdk,
-            value: audio_sdk.packageVersion,
+          SettingsSectionHeader(label: l10n.settingsAboutLegalSection),
+          ListTile(
+            leading: const Icon(Icons.description_outlined),
+            title: Text(l10n.settingsAboutLicense),
+            subtitle: const Text(AppLicense.spdx),
+            trailing: const Icon(Icons.open_in_new_rounded),
+            onTap: _showLicenses,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _InfoRow({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      dense: true,
-      title: Text(label),
-      trailing: Text(
-        value,
-        style: context.textTheme.bodyMedium?.copyWith(
-          color: context.colorScheme.onSurfaceVariant,
-        ),
       ),
     );
   }

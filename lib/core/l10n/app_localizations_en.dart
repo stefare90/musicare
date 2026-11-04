@@ -706,18 +706,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAboutTile => 'About MusicAre';
 
   @override
-  String get settingsAboutAppVersion => 'Version';
-
-  @override
-  String get settingsAboutHostSdksSection => 'Host SDKs';
-
-  @override
-  String get settingsAboutMetadataSdk => 'Metadata plugin SDK';
-
-  @override
-  String get settingsAboutAudioSdk => 'Audio source plugin SDK';
-
-  @override
   String get settingsAboutFounder => 'Founder';
 
   @override

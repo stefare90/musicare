@@ -1342,30 +1342,6 @@ abstract class AppLocalizations {
   /// **'About MusicAre'**
   String get settingsAboutTile;
 
-  /// No description provided for @settingsAboutAppVersion.
-  ///
-  /// In en, this message translates to:
-  /// **'Version'**
-  String get settingsAboutAppVersion;
-
-  /// No description provided for @settingsAboutHostSdksSection.
-  ///
-  /// In en, this message translates to:
-  /// **'Host SDKs'**
-  String get settingsAboutHostSdksSection;
-
-  /// No description provided for @settingsAboutMetadataSdk.
-  ///
-  /// In en, this message translates to:
-  /// **'Metadata plugin SDK'**
-  String get settingsAboutMetadataSdk;
-
-  /// No description provided for @settingsAboutAudioSdk.
-  ///
-  /// In en, this message translates to:
-  /// **'Audio source plugin SDK'**
-  String get settingsAboutAudioSdk;
-
   /// No description provided for @settingsAboutFounder.
   ///
   /// In en, this message translates to:
