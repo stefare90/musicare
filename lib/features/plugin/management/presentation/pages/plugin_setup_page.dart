@@ -22,6 +22,7 @@ class _PluginSetupPageState extends State<PluginSetupPage> {
   @override
   void initState() {
     super.initState();
+    context.read<PluginManagerCubit>().refresh(fetchCatalog: false);
     if (_isReady(context.read<PluginSessionCubit>().state)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) context.go(AppRoutes.home);

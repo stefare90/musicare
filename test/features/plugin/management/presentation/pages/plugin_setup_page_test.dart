@@ -7,8 +7,11 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
+import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/router/app_routes.dart';
 import 'package:music_are/features/plugin/discovery/presentation/widgets/plugin_discovery_widget.dart';
+import 'package:music_are/features/plugin/management/data/models/plugin_slot_data.dart';
+import 'package:music_are/features/plugin/management/data/services/plugin_manager.dart';
 import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
 import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_state.dart';
 import 'package:music_are/features/plugin/management/presentation/pages/plugin_setup_page.dart';
@@ -25,11 +28,29 @@ import '../../../../../helpers/plugin_session_cubit_test_helpers.dart';
 
 class MockPluginCatalog extends Mock implements PluginCatalog {}
 
+/// Only `snapshot` matters here; everything else is out of scope.
+class FakePluginManager implements PluginManager {
+  FakePluginManager(this.slots);
+
+  final Map<PluginType, PluginSlotData> slots;
+
+  @override
+  Future<PluginSlotData> snapshot(
+    PluginType type, {
+    bool fetchCatalog = true,
+    bool forceRefresh = false,
+  }) async => slots[type] ?? const PluginSlotData();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      super.noSuchMethod(invocation);
+}
+
 void main() {
   final sl = GetIt.instance;
 
   late MockPluginCatalog catalog;
-  late MockPluginManagerCubit management;
+  late PluginManagerCubit management;
   late TestPluginSessionCubit session;
   late StreamController<PluginManagerState> managerEvents;
 
@@ -85,27 +106,41 @@ void main() {
     await sl.reset();
   });
 
-  Widget buildTestableWidget({
+  MockPluginManagerCubit managerMock(
     PluginLifecycleState? metadataState,
     PluginLifecycleState? audioState,
     PluginManagerState? managerState,
-  }) {
-    session = buildTestPluginSessionCubit(
-      metadata: metadataState,
-      audioSource: audioState,
-    );
-    management = MockPluginManagerCubit();
-    when(() => management.state).thenReturn(
+  ) {
+    final mock = MockPluginManagerCubit();
+    when(() => mock.state).thenReturn(
       managerState ??
           testManagerState(
             metadata: metadataState?.manifest,
             audioSource: audioState?.manifest,
           ),
     );
-    when(() => management.stream).thenAnswer((_) => managerEvents.stream);
+    when(() => mock.stream).thenAnswer((_) => managerEvents.stream);
+    when(() => mock.change(any(), any())).thenAnswer((_) async {});
     when(
-      () => management.change(any(), any()),
+      () => mock.refresh(
+        force: any(named: 'force'),
+        fetchCatalog: any(named: 'fetchCatalog'),
+      ),
     ).thenAnswer((_) async {});
+    return mock;
+  }
+
+  Widget buildTestableWidget({
+    PluginLifecycleState? metadataState,
+    PluginLifecycleState? audioState,
+    PluginManagerState? managerState,
+    PluginManagerCubit? managerCubit,
+  }) {
+    session = buildTestPluginSessionCubit(
+      metadata: metadataState,
+      audioSource: audioState,
+    );
+    management = managerCubit ?? managerMock(metadataState, audioState, managerState);
 
     return MultiBlocProvider(
       providers: [
@@ -343,5 +378,37 @@ void main() {
     expect(find.text('Home stub'), findsNothing);
     expect(find.text('Metadata'), findsNothing);
     expect(find.text('Audio source'), findsOneWidget);
+  });
+
+  testWidgets('an installed plugin that did not start is not offered as new', (
+    tester,
+  ) async {
+    // The page opens on boot, before anything refreshed the manager: the slot
+    // has no manifest, so the card used to read "Not installed" and the
+    // catalog used to offer Install & Activate for an installed plugin.
+    when(
+      () => catalog.latest(any(), forceRefresh: any(named: 'forceRefresh')),
+    ).thenAnswer((_) async => {obsoleteMetadata.id: obsoleteMetadata});
+
+    final manager = FakePluginManager({
+      PluginType.metadata: PluginSlotData(installed: obsoleteMetadata),
+    });
+    final cubit = PluginManagerCubit(manager, NoticeBus());
+    addTearDown(cubit.close);
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        metadataState: testRuntimeFailure(Exception('boot failed')),
+        audioState: testRuntimeLoaded(audioInstalled),
+        managerCubit: cubit,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Old Provider'), findsNWidgets(2));
+    expect(find.text('Installed version: v1.0.0'), findsOneWidget);
+    expect(find.text('Not installed'), findsNothing);
+    expect(find.text('Install & Activate'), findsNothing);
+    expect(find.text('Reinstall'), findsOneWidget);
   });
 }
