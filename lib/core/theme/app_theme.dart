@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:music_are/core/theme/app_accent.dart';
 import 'package:music_are/core/theme/app_colors.dart';
+import 'package:music_are/core/theme/app_semantic_colors.dart';
 import 'package:music_are/core/theme/app_typography.dart';
 
 abstract class AppTheme {
@@ -91,6 +92,7 @@ abstract class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: backgroundColor,
       textTheme: AppTypography.textTheme(colorScheme.onSurface),
+      extensions: [AppSemanticColors.of(colorScheme.brightness)],
 
       appBarTheme: AppBarTheme(
         backgroundColor: backgroundColor,

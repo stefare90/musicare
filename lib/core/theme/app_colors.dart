@@ -32,6 +32,12 @@ abstract class AppColors {
   static const Color primary = Color.fromARGB(255, 193, 128, 255);
   static const Color error = Color.fromARGB(255, 255, 113, 113);
   static const Color onError = Color.fromARGB(255, 255, 255, 255);
+  // Warning is a meaning, not an accent: it must never follow the user's
+  // primary colour, or a green accent would read as "all good".
+  static const Color warningOnDark = Color(0xFFFFC107);
+  static const Color warningOnLight = Color(0xFF8A5A00);
+  static const Color warningContainerOnDark = Color(0xFF6B4E00);
+  static const Color warningContainerOnLight = Color(0xFFFFE0A3);
 
   static const AppSurfacePalette light = AppSurfacePalette(
     background: Color(0xFFF8F9FA),

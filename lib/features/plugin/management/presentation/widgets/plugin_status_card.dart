@@ -26,20 +26,19 @@ class PluginStatusCard extends StatelessWidget {
     final incompatible = status == PluginLifecycleStatus.incompatible;
     final failed = status == PluginLifecycleStatus.error;
     final blocked = incompatible || failed;
-    final accent = blocked ? scheme.error : scheme.primary;
+    final accent = blocked ? scheme.error : context.semanticColors.warning;
+    final tint = blocked
+        ? scheme.errorContainer
+        : context.semanticColors.warningContainer;
     final installed = manifest;
 
     return Container(
       padding: const EdgeInsets.all(20.0),
       margin: const EdgeInsets.only(bottom: 25.0),
       decoration: BoxDecoration(
-        color: blocked
-            ? scheme.errorContainer.withValues(alpha: 0.2)
-            : scheme.primaryContainer.withValues(alpha: 0.18),
+        color: tint.withValues(alpha: blocked ? 0.2 : 0.18),
         border: Border.all(
-          color: blocked
-              ? scheme.errorContainer
-              : scheme.primary.withValues(alpha: 0.4),
+          color: blocked ? tint : accent.withValues(alpha: 0.4),
         ),
         borderRadius: BorderRadius.circular(16.0),
       ),
