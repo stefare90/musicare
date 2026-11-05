@@ -5,7 +5,7 @@ import 'package:music_are/core/widgets/bottom_sheets/plugin_selection_bottom_she
 import 'package:music_are/core/widgets/dialogs.dart';
 import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
 import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_state.dart';
-import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
+import 'package:music_are/features/plugin/shared/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/settings/presentation/widgets/settings_section_header.dart';
 

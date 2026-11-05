@@ -17,7 +17,7 @@ import 'package:music_are/features/library/presentation/widgets/library_playlist
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/playlist_repository.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
-import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
+import 'package:music_are/features/plugin/shared/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/plugin/shared/data/capabilities/plugin_lifecycle.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/plugin_account_actions.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
+import 'package:music_are/features/plugin/shared/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/capabilities/plugin_lifecycle.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_auth_state.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';

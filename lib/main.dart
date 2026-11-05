@@ -12,7 +12,7 @@ import 'package:music_are/core/theme/presentation/cubit/theme_state.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
-import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
+import 'package:music_are/features/plugin/shared/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/core/widgets/notice_listener.dart';
 import 'package:music_are/features/update/presentation/cubit/app_update_cubit.dart';
 

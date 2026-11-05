@@ -328,6 +328,42 @@ abstract class AppLocalizations {
   /// **'No other plugins are available for this type.'**
   String get pluginNoAlternatives;
 
+  /// No description provided for @pluginSetupNotInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Not installed'**
+  String get pluginSetupNotInstalled;
+
+  /// No description provided for @pluginSetupLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load'**
+  String get pluginSetupLoadFailed;
+
+  /// No description provided for @pluginSetupLoadFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin is installed but did not start. Reinstall or replace it below.'**
+  String get pluginSetupLoadFailedMessage;
+
+  /// No description provided for @pluginSetupMetadataNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Needed to browse albums, artists and playlists.'**
+  String get pluginSetupMetadataNeeded;
+
+  /// No description provided for @pluginSetupAudioSourceNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Needed to play tracks.'**
+  String get pluginSetupAudioSourceNeeded;
+
+  /// No description provided for @pluginSetupDiscoveryHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'{type} plugins on GitHub'**
+  String pluginSetupDiscoveryHeader(String type);
+
   /// No description provided for @pluginAccountSection.
   ///
   /// In en, this message translates to:

@@ -4,11 +4,11 @@ import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/widgets/info_card.dart';
 import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
 import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_state.dart';
-import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
+import 'package:music_are/features/plugin/shared/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/plugin_type_localizer.dart';
 import 'package:music_are/features/settings/presentation/widgets/plugin_detail/plugin_account_section.dart';
-import 'package:music_are/features/plugin/management/presentation/widgets/plugin_actions_section.dart';
+import 'package:music_are/features/settings/presentation/widgets/plugin_detail/plugin_actions_section.dart';
 import 'package:music_are/features/settings/presentation/widgets/plugin_detail/plugin_detail_body.dart';
 
 class PluginDetailPage extends StatelessWidget {

@@ -11,48 +11,51 @@ void main() {
   final incompatible = PluginLifecycleState.incompatible(manifest);
   const notConfigured = PluginLifecycleState.notConfigured();
 
-  test('an incompatible metadata plugin takes priority', () {
-    expect(
-      pluginStartupLocation(metadataState: incompatible, audioState: loaded),
-      '${AppRoutes.pluginUpdate}/metadata',
-    );
-  });
-
-  test('an incompatible audio plugin opens its own update page', () {
-    expect(
-      pluginStartupLocation(metadataState: loaded, audioState: incompatible),
-      '${AppRoutes.pluginUpdate}/audioSource',
-    );
-  });
-
-  test('metadata wins when both plugins are incompatible', () {
-    expect(
-      pluginStartupLocation(
-        metadataState: incompatible,
-        audioState: incompatible,
-      ),
-      '${AppRoutes.pluginUpdate}/metadata',
-    );
-  });
-
   test('both loaded plugins start on Home', () {
     expect(
       pluginStartupLocation(metadataState: loaded, audioState: loaded),
-      '/',
+      AppRoutes.home,
     );
   });
 
-  test('a missing plugin starts onboarding', () {
-    expect(
-      pluginStartupLocation(metadataState: loaded, audioState: notConfigured),
-      '/welcome',
-    );
+  test('no installed plugin starts onboarding', () {
     expect(
       pluginStartupLocation(
         metadataState: notConfigured,
         audioState: notConfigured,
       ),
-      '/welcome',
+      AppRoutes.welcome,
+    );
+  });
+
+  test('a loaded metadata plugin with a missing audio plugin opens setup', () {
+    expect(
+      pluginStartupLocation(metadataState: loaded, audioState: notConfigured),
+      AppRoutes.pluginSetup,
+    );
+  });
+
+  test('an incompatible metadata plugin opens setup', () {
+    expect(
+      pluginStartupLocation(metadataState: incompatible, audioState: loaded),
+      AppRoutes.pluginSetup,
+    );
+  });
+
+  test('an incompatible audio plugin opens setup', () {
+    expect(
+      pluginStartupLocation(metadataState: loaded, audioState: incompatible),
+      AppRoutes.pluginSetup,
+    );
+  });
+
+  test('two incompatible plugins open setup once', () {
+    expect(
+      pluginStartupLocation(
+        metadataState: incompatible,
+        audioState: incompatible,
+      ),
+      AppRoutes.pluginSetup,
     );
   });
 }

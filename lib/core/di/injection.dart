@@ -32,7 +32,7 @@ import 'package:music_are/features/plugin/catalog/data/services/github_topic_cat
 import 'package:music_are/features/plugin/shared/data/services/plugin_catalog.dart';
 import 'package:music_are/features/plugin/management/data/services/plugin_manager.dart';
 import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
-import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
+import 'package:music_are/features/plugin/shared/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/services/plugin_storage.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_entry.dart';
 import 'package:music_are/features/plugin/shared/data/services/plugin_registry.dart';

@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
-import 'package:music_are/features/plugin/presentation/cubit/plugin_session_state.dart';
+import 'package:music_are/features/plugin/shared/presentation/cubit/plugin_session_state.dart';
 import 'package:music_are/features/plugin/shared/data/capabilities/plugin_lifecycle.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_auth_state.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/plugin/shared/data/services/plugin_registry.dart';
-export 'package:music_are/features/plugin/presentation/cubit/plugin_session_state.dart';
+export 'package:music_are/features/plugin/shared/presentation/cubit/plugin_session_state.dart';
 
 class PluginSessionCubit extends Cubit<PluginSessionState> {
   PluginSessionCubit(this._registry, this._notices)

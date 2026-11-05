@@ -8,7 +8,7 @@ import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/l10n/app_localizations_en.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/features/plugin/metadata/presentation/errors/metadata_error_table.dart';
-import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
+import 'package:music_are/features/plugin/shared/presentation/cubit/plugin_session_cubit.dart';
 
 import '../../../../../helpers/plugin_session_cubit_test_helpers.dart';
 

@@ -7,7 +7,7 @@ import 'package:music_are/core/services/preferences_service.dart';
 import 'package:music_are/core/theme/app_accent.dart';
 import 'package:music_are/core/theme/presentation/cubit/theme_cubit.dart';
 import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
-import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
+import 'package:music_are/features/plugin/shared/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/settings/presentation/pages/settings_page.dart';
 import 'package:music_are/features/update/data/models/installed_app.dart';

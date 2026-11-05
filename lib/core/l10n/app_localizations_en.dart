@@ -135,6 +135,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'No other plugins are available for this type.';
 
   @override
+  String get pluginSetupNotInstalled => 'Not installed';
+
+  @override
+  String get pluginSetupLoadFailed => 'Could not load';
+
+  @override
+  String get pluginSetupLoadFailedMessage =>
+      'The plugin is installed but did not start. Reinstall or replace it below.';
+
+  @override
+  String get pluginSetupMetadataNeeded =>
+      'Needed to browse albums, artists and playlists.';
+
+  @override
+  String get pluginSetupAudioSourceNeeded => 'Needed to play tracks.';
+
+  @override
+  String pluginSetupDiscoveryHeader(String type) {
+    return '$type plugins on GitHub';
+  }
+
+  @override
   String get pluginAccountSection => 'Account';
 
   @override

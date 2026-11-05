@@ -5,7 +5,7 @@ import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/services/preferences_service.dart';
 import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
 import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_state.dart';
-import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
+import 'package:music_are/features/plugin/shared/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/player/presentation/cubit/playback_settings_cubit.dart';
 import 'package:music_are/features/settings/presentation/widgets/settings/about_tile.dart';

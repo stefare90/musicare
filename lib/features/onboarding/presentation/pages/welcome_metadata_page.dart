@@ -5,7 +5,7 @@ import 'package:music_are/features/onboarding/presentation/widgets/onboarding_bo
 import 'package:music_are/features/onboarding/presentation/widgets/onboarding_step_scaffold.dart';
 import 'package:music_are/features/plugin/discovery/presentation/widgets/plugin_discovery_widget.dart';
 import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
-import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
+import 'package:music_are/features/plugin/shared/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/plugin/shared/data/capabilities/plugin_lifecycle.dart';
 

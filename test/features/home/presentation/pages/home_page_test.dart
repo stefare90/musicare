@@ -10,7 +10,7 @@ import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/core/widgets/error_card.dart';
 import 'package:music_are/features/home/presentation/pages/home_page.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
-import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
+import 'package:music_are/features/plugin/shared/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/core/widgets/notice_listener.dart';
 
 import '../../../../helpers/metadata_plugin_test_helpers.dart';

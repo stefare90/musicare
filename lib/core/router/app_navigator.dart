@@ -62,8 +62,8 @@ abstract class AppNavigator {
     context.push('${AppRoutes.settingsPlugin}/${type.name}');
   }
 
-  static void toPluginUpdate(BuildContext context, PluginType type) {
-    context.go('${AppRoutes.pluginUpdate}/${type.name}');
+  static void toPluginSetup(BuildContext context) {
+    context.go(AppRoutes.pluginSetup);
   }
 
   static void toAbout(BuildContext context) {

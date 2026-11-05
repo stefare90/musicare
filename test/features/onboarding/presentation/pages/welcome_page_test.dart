@@ -9,7 +9,7 @@ import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/onboarding/presentation/pages/welcome_page.dart';
 import 'package:music_are/features/onboarding/presentation/widgets/onboarding_dots_indicator.dart';
 import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
-import 'package:music_are/features/plugin/presentation/cubit/plugin_session_cubit.dart';
+import 'package:music_are/features/plugin/shared/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/plugin/shared/data/services/plugin_catalog.dart';

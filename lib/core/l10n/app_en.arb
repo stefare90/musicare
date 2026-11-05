@@ -55,6 +55,17 @@
     }
   },
   "pluginNoAlternatives": "No other plugins are available for this type.",
+  "pluginSetupNotInstalled": "Not installed",
+  "pluginSetupLoadFailed": "Could not load",
+  "pluginSetupLoadFailedMessage": "The plugin is installed but did not start. Reinstall or replace it below.",
+  "pluginSetupMetadataNeeded": "Needed to browse albums, artists and playlists.",
+  "pluginSetupAudioSourceNeeded": "Needed to play tracks.",
+  "pluginSetupDiscoveryHeader": "{type} plugins on GitHub",
+  "@pluginSetupDiscoveryHeader": {
+    "placeholders": {
+      "type": { "type": "String" }
+    }
+  },
   "pluginAccountSection": "Account",
   "libraryEmptyTitle": "Nothing saved yet",
   "libraryEmptyMessage": "Tracks, albums, artists and playlists you save will appear here.",

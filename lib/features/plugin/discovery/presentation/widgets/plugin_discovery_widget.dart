@@ -19,12 +19,14 @@ class PluginDiscoveryWidget extends StatelessWidget {
   final PluginType? pluginType;
   final PluginManifest? installed;
   final PluginSelectedCallback? onSelected;
+  final String? header;
 
   const PluginDiscoveryWidget({
     super.key,
     this.pluginType,
     this.installed,
     this.onSelected,
+    this.header,
   });
 
   @override
@@ -36,6 +38,7 @@ class PluginDiscoveryWidget extends StatelessWidget {
         pluginType: pluginType,
         installed: installed,
         onSelected: onSelected,
+        header: header,
       ),
     );
   }
@@ -45,11 +48,13 @@ class _PluginDiscoveryView extends StatelessWidget {
   final PluginType? pluginType;
   final PluginManifest? installed;
   final PluginSelectedCallback? onSelected;
+  final String? header;
 
   const _PluginDiscoveryView({
     this.pluginType,
     this.installed,
     this.onSelected,
+    this.header,
   });
 
   @override
@@ -61,7 +66,7 @@ class _PluginDiscoveryView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              context.l10n.communityPluginsHeader,
+              header ?? context.l10n.communityPluginsHeader,
               style: context.textTheme.titleMedium,
             ),
             IconButton(
