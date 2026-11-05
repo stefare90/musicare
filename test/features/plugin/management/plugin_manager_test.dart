@@ -90,7 +90,9 @@ void main() {
     when(() => storage.commit(any(), any())).thenAnswer((_) async {});
     when(() => storage.rollback(any(), any())).thenAnswer((_) async {});
     when(() => storage.removeCodeDir(any(), any())).thenAnswer((_) async {});
-    when(() => catalog.latest(PluginType.metadata)).thenAnswer(
+    when(
+      () => catalog.latest(PluginType.metadata),
+    ).thenAnswer(
       (_) async => {
         installed.id: installed,
         remote.id: remote,
@@ -143,6 +145,15 @@ void main() {
       expect(snapshot.updateAvailable, isTrue);
     },
   );
+
+  test('reloadCatalog reloads the catalog once', () async {
+    when(() => catalog.reload()).thenAnswer((_) async {});
+
+    await manager.reloadCatalog();
+
+    verify(() => catalog.reload()).called(1);
+    verifyNever(() => catalog.latest(any()));
+  });
 
   test(
     'snapshot never marks an older or incompatible remote as an update',

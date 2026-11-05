@@ -27,12 +27,9 @@ class GitHubTopicCatalog implements PluginCatalog {
   });
 
   @override
-  Future<Map<String, PluginManifest>> latest(
-    PluginType type, {
-    bool forceRefresh = false,
-  }) async {
-    if (forceRefresh || _isStale()) {
-      await _fetchAll();
+  Future<Map<String, PluginManifest>> latest(PluginType type) async {
+    if (_isStale()) {
+      await reload();
     }
     final manifests = _cachedManifests ?? const {};
     return {
@@ -78,7 +75,8 @@ class GitHubTopicCatalog implements PluginCatalog {
         now().difference(cachedAt) >= cacheTtl;
   }
 
-  Future<void> _fetchAll() async {
+  @override
+  Future<void> reload() async {
     _cachedManifests = null;
     _cachedZips.clear();
     _cachedAt = null;

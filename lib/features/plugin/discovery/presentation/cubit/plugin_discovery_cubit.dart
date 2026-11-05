@@ -17,9 +17,10 @@ class PluginDiscoveryCubit extends SafeCubit<PluginDiscoveryState> {
       emit(PluginDiscoveryLoadingState());
     }
     try {
+      if (forceRefresh) await _catalog.reload();
       final manifests = type == null
           ? <String, PluginManifest>{}
-          : await _catalog.latest(type, forceRefresh: forceRefresh);
+          : await _catalog.latest(type);
       emit(PluginDiscoveryLoadedState(manifests));
     } catch (e) {
       emit(PluginDiscoveryErrorState(e));

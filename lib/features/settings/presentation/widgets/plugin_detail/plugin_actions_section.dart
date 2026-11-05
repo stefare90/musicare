@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:music_are/core/errors/exception_localizer.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/widgets/bottom_sheets/plugin_selection_bottom_sheet.dart';
 import 'package:music_are/core/widgets/dialogs.dart';
@@ -19,6 +20,8 @@ class PluginActionsSection extends StatefulWidget {
 }
 
 class _PluginActionsSectionState extends State<PluginActionsSection> {
+  bool _checking = false;
+
   @override
   void initState() {
     super.initState();
@@ -48,38 +51,43 @@ class _PluginActionsSectionState extends State<PluginActionsSection> {
             SettingsSectionHeader(label: l10n.pluginActionsSection),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (slot.updateAvailable) ...[
-                    Expanded(
-                      child: FilledButton.tonal(
-                        onPressed: busy
-                            ? null
-                            : () => context.read<PluginManagerCubit>().update(
-                                widget.type,
-                              ),
-                        child: Text(l10n.pluginActionUpdate),
-                      ),
-                    ),
-                    const SizedBox(width: 8.0),
-                  ],
-                  Expanded(
-                    child: FilledButton.tonal(
-                      onPressed: busy || installed == null
+                    FilledButton.tonal(
+                      onPressed: busy
                           ? null
-                          : () => context.read<PluginManagerCubit>().reinstall(
-                              widget.type,
-                            ),
-                      child: Text(l10n.pluginActionReinstall),
+                          : () => context
+                                .read<PluginManagerCubit>()
+                                .update(widget.type),
+                      child: Text(l10n.pluginActionUpdate),
                     ),
+                    const SizedBox(height: 8.0),
+                  ],
+                  FilledButton.tonal(
+                    onPressed: busy || installed == null
+                        ? null
+                        : () => context
+                              .read<PluginManagerCubit>()
+                              .reinstall(widget.type),
+                    child: Text(l10n.pluginActionReinstall),
                   ),
-                  const SizedBox(width: 8.0),
-                  Expanded(
-                    child: FilledButton.tonal(
-                      onPressed: busy ? null : _showAlternatives,
-                      child: Text(l10n.pluginActionReplace),
-                    ),
+                  const SizedBox(height: 8.0),
+                  FilledButton.tonal(
+                    onPressed: busy ? null : _showAlternatives,
+                    child: Text(l10n.pluginActionReplace),
                   ),
+                  const SizedBox(height: 8.0),
+                  FilledButton.tonalIcon(
+                    onPressed: busy || _checking ? null : _checkForUpdate,
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: Text(l10n.updateCheckForUpdate),
+                  ),
+                  if (_checking) ...[
+                    const SizedBox(height: 12.0),
+                    const LinearProgressIndicator(),
+                  ],
                 ],
               ),
             ),
@@ -91,6 +99,38 @@ class _PluginActionsSectionState extends State<PluginActionsSection> {
           ],
         );
       },
+    );
+  }
+
+  Future<void> _checkForUpdate() async {
+    final cubit = context.read<PluginManagerCubit>();
+    setState(() => _checking = true);
+    await cubit.refresh(force: true);
+    if (!mounted) return;
+    setState(() => _checking = false);
+
+    final l10n = context.l10n;
+    final slot = cubit.state.slot(widget.type);
+    final error = slot.error;
+    if (error != null) {
+      Dialogs.showErrorSnackBar(
+        context,
+        message: error.toLocalizedString(context),
+      );
+      return;
+    }
+    if (slot.updateAvailable && slot.remote != null) {
+      Dialogs.showMessageSnackBar(
+        context,
+        message: l10n.pluginUpdateAvailableNotice(slot.remote!.version),
+      );
+      return;
+    }
+    Dialogs.showMessageSnackBar(
+      context,
+      message: slot.remote == null
+          ? l10n.pluginNoPublishedRelease
+          : l10n.updateStatusUpToDate,
     );
   }
 

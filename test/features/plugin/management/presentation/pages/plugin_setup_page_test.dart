@@ -38,7 +38,6 @@ class FakePluginManager implements PluginManager {
   Future<PluginSlotData> snapshot(
     PluginType type, {
     bool fetchCatalog = true,
-    bool forceRefresh = false,
   }) async => slots[type] ?? const PluginSlotData();
 
   @override
@@ -95,9 +94,7 @@ void main() {
     catalog = MockPluginCatalog();
     sl.registerSingleton<PluginCatalog>(catalog);
     registerTestErrorPresentation();
-    when(
-      () => catalog.latest(any(), forceRefresh: any(named: 'forceRefresh')),
-    ).thenAnswer((_) async => {});
+    when(() => catalog.latest(any())).thenAnswer((_) async => {});
     managerEvents = StreamController<PluginManagerState>.broadcast();
   });
 
@@ -387,7 +384,7 @@ void main() {
     // has no manifest, so the card used to read "Not installed" and the
     // catalog used to offer Install & Activate for an installed plugin.
     when(
-      () => catalog.latest(any(), forceRefresh: any(named: 'forceRefresh')),
+      () => catalog.latest(any()),
     ).thenAnswer((_) async => {obsoleteMetadata.id: obsoleteMetadata});
 
     final manager = FakePluginManager({

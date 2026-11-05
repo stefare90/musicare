@@ -76,6 +76,64 @@ void main() {
     expect(slot.updateAvailable, isTrue);
   });
 
+  test('a forced refresh reloads the catalog once, not once per slot', () async {
+    when(() => manager.reloadCatalog()).thenAnswer((_) async {});
+    when(
+      () => manager.snapshot(
+        any(),
+        fetchCatalog: any(named: 'fetchCatalog'),
+      ),
+    ).thenAnswer((_) async => const PluginSlotData());
+
+    await cubit.refresh(force: true);
+
+    // The forced refresh belongs to the catalog: repeating it for every slot
+    // would download the whole catalog twice and burn the GitHub quota.
+    verify(() => manager.reloadCatalog()).called(1);
+    for (final type in PluginType.values) {
+      verify(
+        () => manager.snapshot(type, fetchCatalog: true),
+      ).called(1);
+    }
+  });
+
+  test('a forced refresh fills every slot of the catalog', () async {
+    when(() => manager.reloadCatalog()).thenAnswer((_) async {});
+    when(
+      () => manager.snapshot(
+        any(),
+        fetchCatalog: any(named: 'fetchCatalog'),
+      ),
+    ).thenAnswer(
+      (_) async => PluginSlotData(
+        installed: installed,
+        remote: remote,
+        updateAvailable: true,
+      ),
+    );
+
+    await cubit.refresh(force: true);
+
+    expect(cubit.state.updatableTypes, PluginType.values);
+  });
+
+  test('a failed forced refresh reports the error on every slot', () async {
+    final error = Exception('catalog unavailable');
+    when(() => manager.reloadCatalog()).thenThrow(error);
+
+    await cubit.refresh(force: true);
+
+    for (final type in PluginType.values) {
+      expect(cubit.state.slot(type).error, error);
+    }
+    verifyNever(
+      () => manager.snapshot(
+        any(),
+        fetchCatalog: any(named: 'fetchCatalog'),
+      ),
+    );
+  });
+
   test('update applies the remote manifest', () async {
     when(
       () => manager.snapshot(
@@ -102,7 +160,10 @@ void main() {
 
   test('reinstall fetches the catalog when the slot has no remote', () async {
     when(
-      () => manager.snapshot(PluginType.metadata, fetchCatalog: true),
+      () => manager.snapshot(
+        PluginType.metadata,
+        fetchCatalog: true,
+      ),
     ).thenAnswer(
       (_) async => PluginSlotData(installed: installed, remote: remote),
     );
@@ -113,7 +174,10 @@ void main() {
     await cubit.reinstall(PluginType.metadata);
 
     verify(
-      () => manager.snapshot(PluginType.metadata, fetchCatalog: true),
+      () => manager.snapshot(
+        PluginType.metadata,
+        fetchCatalog: true,
+      ),
     ).called(1);
     verify(() => manager.apply(PluginType.metadata, remote)).called(1);
     expect(cubit.state.slot(PluginType.metadata).installed, remote);
@@ -121,7 +185,10 @@ void main() {
 
   test('reinstall falls back to the installed manifest when the catalog is empty', () async {
     when(
-      () => manager.snapshot(PluginType.metadata, fetchCatalog: true),
+      () => manager.snapshot(
+        PluginType.metadata,
+        fetchCatalog: true,
+      ),
     ).thenAnswer((_) async => PluginSlotData(installed: installed));
     when(
       () => manager.apply(PluginType.metadata, installed),

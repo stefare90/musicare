@@ -43,10 +43,7 @@ void main() {
 
     test('fetchPlugins emits Loading and Loaded with a map by id', () async {
       when(
-        () => catalog.latest(
-          PluginType.metadata,
-          forceRefresh: false,
-        ),
+        () => catalog.latest(PluginType.metadata),
       ).thenAnswer((_) async => {manifest.id: manifest});
 
       expectLater(
@@ -63,9 +60,7 @@ void main() {
     });
 
     test('a network error becomes PluginDiscoveryErrorState', () async {
-      when(
-        () => catalog.latest(any(), forceRefresh: any(named: 'forceRefresh')),
-      ).thenThrow(Exception('offline'));
+      when(() => catalog.latest(any())).thenThrow(Exception('offline'));
 
       await cubit.fetchPlugins(type: PluginType.metadata);
 

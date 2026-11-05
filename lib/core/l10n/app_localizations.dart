@@ -370,6 +370,54 @@ abstract class AppLocalizations {
   /// **'Account'**
   String get pluginAccountSection;
 
+  /// No description provided for @pluginUpdatesAvailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin updates available'**
+  String get pluginUpdatesAvailableTitle;
+
+  /// No description provided for @pluginUpdateLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} {from} → {to}'**
+  String pluginUpdateLine(String name, String from, String to);
+
+  /// No description provided for @pluginUpdateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Update now'**
+  String get pluginUpdateNow;
+
+  /// No description provided for @pluginUpdating.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating plugins…'**
+  String get pluginUpdating;
+
+  /// No description provided for @pluginUpdatesDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugins updated.'**
+  String get pluginUpdatesDone;
+
+  /// No description provided for @pluginUpdatesPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {done} of {total} plugins.'**
+  String pluginUpdatesPartial(int done, int total);
+
+  /// No description provided for @pluginUpdateAvailableNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'v{version} is available'**
+  String pluginUpdateAvailableNotice(String version);
+
+  /// No description provided for @pluginNoPublishedRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'No published release found'**
+  String get pluginNoPublishedRelease;
+
   /// No description provided for @libraryEmptyTitle.
   ///
   /// In en, this message translates to:

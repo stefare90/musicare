@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/theme/theme_extension.dart';
+import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
+import 'package:music_are/features/plugin/management/presentation/widgets/plugin_update_prompt.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/pages/full_player_page.dart';
 import 'package:music_are/features/player/presentation/widgets/mini_player.dart';
@@ -36,10 +38,15 @@ class _ShellPageState extends State<ShellPage>
       vsync: this,
       duration: const Duration(milliseconds: 260),
     );
-    _updateCheckTimer = Timer(const Duration(milliseconds: 1500), () {
-      if (mounted) {
-        AppUpdatePrompt.runStartupCheck(context.read<AppUpdateCubit>());
-      }
+    _updateCheckTimer = Timer(const Duration(milliseconds: 1500), () async {
+      if (!mounted) return;
+      final appUpdates = context.read<AppUpdateCubit>();
+      await AppUpdatePrompt.runStartupCheck(appUpdates);
+      if (!mounted || appUpdates.state.update != null) return;
+      await PluginUpdatePrompt.runStartupCheck(
+        context,
+        context.read<PluginManagerCubit>(),
+      );
     });
   }
 

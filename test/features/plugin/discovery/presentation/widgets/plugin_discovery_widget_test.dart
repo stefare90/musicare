@@ -53,11 +53,9 @@ void main() {
     PluginManifest? remote,
   }) {
     when(
-      () => catalog.latest(
-        PluginType.metadata,
-        forceRefresh: any(named: 'forceRefresh'),
-      ),
+      () => catalog.latest(PluginType.metadata),
     ).thenAnswer((_) async => remote == null ? {} : {remote.id: remote});
+    when(() => catalog.reload()).thenAnswer((_) async {});
 
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,

@@ -67,6 +67,32 @@
     }
   },
   "pluginAccountSection": "Account",
+  "pluginUpdatesAvailableTitle": "Plugin updates available",
+  "pluginUpdateLine": "{name} {from} → {to}",
+  "@pluginUpdateLine": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "from": { "type": "String" },
+      "to": { "type": "String" }
+    }
+  },
+  "pluginUpdateNow": "Update now",
+  "pluginUpdating": "Updating plugins…",
+  "pluginUpdatesDone": "Plugins updated.",
+  "pluginUpdatesPartial": "Updated {done} of {total} plugins.",
+  "@pluginUpdatesPartial": {
+    "placeholders": {
+      "done": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "pluginUpdateAvailableNotice": "v{version} is available",
+  "@pluginUpdateAvailableNotice": {
+    "placeholders": {
+      "version": { "type": "String" }
+    }
+  },
+  "pluginNoPublishedRelease": "No published release found",
   "libraryEmptyTitle": "Nothing saved yet",
   "libraryEmptyMessage": "Tracks, albums, artists and playlists you save will appear here.",
   "homeTab": "Home",

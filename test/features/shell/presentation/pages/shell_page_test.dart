@@ -16,8 +16,12 @@ import 'package:music_are/features/player/presentation/pages/full_player_page.da
 import 'package:music_are/features/player/presentation/widgets/mini_player.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/shell/presentation/pages/shell_page.dart';
+import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
+import 'package:music_are/features/update/data/models/app_update.dart';
+import 'package:music_are/features/update/data/models/installed_app.dart';
 import 'package:music_are/features/update/presentation/cubit/app_update_cubit.dart';
 import 'package:music_are/features/update/presentation/cubit/app_update_state.dart';
+import '../../../../helpers/plugin_manager_test_helpers.dart';
 
 class MockPlayerCubit extends Mock implements PlayerCubit {}
 
@@ -47,9 +51,11 @@ Track createTestTrack(String id, String name) {
 void main() {
   late MockPlayerCubit mockPlayerCubit;
   late MockAppUpdateCubit mockUpdateCubit;
+  late PluginManagerCubit pluginManagerCubit;
   final testTrack = createTestTrack('t1', 'Come Together');
 
   setUp(() {
+    pluginManagerCubit = buildMockPluginManagerCubit();
     mockPlayerCubit = MockPlayerCubit();
     when(() => mockPlayerCubit.state).thenReturn(const PlayerState());
     when(() => mockPlayerCubit.stream).thenAnswer((_) => const Stream.empty());
@@ -141,6 +147,7 @@ void main() {
       providers: [
         BlocProvider<PlayerCubit>.value(value: mockPlayerCubit),
         BlocProvider<AppUpdateCubit>.value(value: mockUpdateCubit),
+        BlocProvider<PluginManagerCubit>.value(value: pluginManagerCubit),
         BlocProvider<UserCubit>(
           create: (_) => TestUserCubit(testUserState()),
         ),
@@ -168,6 +175,70 @@ void main() {
       clearInteractions(mockUpdateCubit);
       await tester.pump(const Duration(seconds: 5));
       verifyNever(() => mockUpdateCubit.check(silent: any(named: 'silent')));
+    });
+
+    testWidgets('runs the plugin update check after the app update check', (
+      tester,
+    ) async {
+      final calls = <String>[];
+      when(() => mockUpdateCubit.check(silent: any(named: 'silent')))
+          .thenAnswer((_) async {
+            calls.add('app');
+          });
+      when(
+        () => pluginManagerCubit.refresh(
+          force: any(named: 'force'),
+          fetchCatalog: any(named: 'fetchCatalog'),
+        ),
+      ).thenAnswer((_) async {
+        calls.add('plugin');
+      });
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pump(const Duration(milliseconds: 1600));
+      await tester.pumpAndSettle();
+
+      expect(calls, ['app', 'plugin']);
+      verify(
+        () => pluginManagerCubit.refresh(fetchCatalog: true, force: false),
+      ).called(1);
+    });
+
+    testWidgets('skips the plugin update check when the app can update', (
+      tester,
+    ) async {
+      const installed = InstalledApp(
+        packageName: 'com.musicare.app',
+        versionName: '1.0.3',
+        versionCode: 5,
+      );
+      when(() => mockUpdateCubit.check(silent: any(named: 'silent')))
+          .thenAnswer((_) async {
+            when(() => mockUpdateCubit.state).thenReturn(
+              AppUpdateState.available(
+                installed,
+                AppUpdate(
+                  versionName: '1.0.4',
+                  versionCode: 6,
+                  apkUri: Uri.parse('https://example.com/MusicAre.apk'),
+                  apkSize: 1024,
+                  sha256: 'a' * 64,
+                ),
+              ),
+            );
+          });
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pump(const Duration(milliseconds: 1600));
+      await tester.pumpAndSettle();
+
+      verifyNever(
+        () => pluginManagerCubit.refresh(
+          force: any(named: 'force'),
+          fetchCatalog: any(named: 'fetchCatalog'),
+        ),
+      );
+      expect(find.byType(AlertDialog), findsNothing);
     });
 
     testWidgets('renders NavigationBar and initial branch when no track is active', (

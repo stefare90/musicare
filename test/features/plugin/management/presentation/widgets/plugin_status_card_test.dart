@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
+import 'package:music_are/core/theme/app_accent.dart';
+import 'package:music_are/core/theme/app_semantic_colors.dart';
+import 'package:music_are/core/theme/app_theme.dart';
 import 'package:music_are/features/plugin/management/presentation/widgets/plugin_status_card.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_lifecycle_state.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
@@ -18,8 +21,9 @@ void main() {
     description: 'Obsolete',
   );
 
-  Widget buildTestableWidget(PluginStatusCard card) {
+  Widget buildTestableWidget(PluginStatusCard card, {ThemeData? theme}) {
     return MaterialApp(
+      theme: theme,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(body: card),
@@ -134,5 +138,24 @@ void main() {
 
     expect(find.text('Audio source'), findsOneWidget);
     expect(find.text('Needed to play tracks.'), findsOneWidget);
+  });
+
+  testWidgets('a missing plugin uses the warning colour, never the accent', (
+    tester,
+  ) async {
+    final theme = AppTheme.darkThemeOf(AppAccent.green);
+    await tester.pumpWidget(
+      buildTestableWidget(
+        const PluginStatusCard(
+          status: PluginLifecycleStatus.notConfigured,
+          type: PluginType.metadata,
+        ),
+        theme: theme,
+      ),
+    );
+
+    final icon = tester.widget<Icon>(find.byType(Icon));
+    expect(icon.color, AppSemanticColors.of(Brightness.dark).warning);
+    expect(icon.color, isNot(theme.colorScheme.primary));
   });
 }

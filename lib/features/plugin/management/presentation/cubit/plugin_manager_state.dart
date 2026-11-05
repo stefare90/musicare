@@ -44,6 +44,9 @@ class PluginSlotState {
     );
   }
 
+  bool get canUpdate =>
+      updateAvailable && !incompatible && installed != null && remote != null;
+
   @override
   bool operator ==(Object other) {
     return other is PluginSlotState &&
@@ -73,4 +76,9 @@ class PluginManagerState {
 
   PluginSlotState slot(PluginType type) =>
       slots[type] ?? const PluginSlotState();
+
+  List<PluginType> get updatableTypes => [
+    for (final type in PluginType.values)
+      if (slot(type).canUpdate) type,
+  ];
 }

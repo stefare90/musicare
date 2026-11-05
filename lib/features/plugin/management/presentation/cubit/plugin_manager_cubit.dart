@@ -21,6 +21,18 @@ class PluginManagerCubit extends SafeCubit<PluginManagerState> {
     bool force = false,
     bool fetchCatalog = true,
   }) async {
+    if (force) {
+      try {
+        await _manager.reloadCatalog();
+      } catch (e) {
+        // The forced refresh is catalog-wide: it fails for every slot at once,
+        // and the installed manifests already known are left untouched.
+        for (final type in PluginType.values) {
+          _setSlot(type, state.slot(type).copyWith(error: e));
+        }
+        return;
+      }
+    }
     for (final type in PluginType.values) {
       try {
         final snapshot = await _manager.snapshot(

@@ -136,9 +136,12 @@ void main() {
     verify(() => network.get(Uri.parse(searchUri))).called(2);
   });
 
-  test('forceRefresh bypasses a fresh cache', () async {
+  test('reload bypasses a fresh cache and feeds every type', () async {
     await catalog.latest(PluginType.metadata);
-    await catalog.latest(PluginType.metadata, forceRefresh: true);
+    await catalog.reload();
+    // One catalog refresh is enough for all the types: no extra network.
+    await catalog.latest(PluginType.metadata);
+    await catalog.latest(PluginType.audioSource);
 
     verify(() => network.get(Uri.parse(searchUri))).called(2);
   });

@@ -39,6 +39,8 @@ class PluginManager {
     }
   }
 
+  Future<void> reloadCatalog() => catalog.reload();
+
   Future<PluginSlotData> snapshot(
     PluginType type, {
     bool fetchCatalog = true,

@@ -160,6 +160,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginAccountSection => 'Account';
 
   @override
+  String get pluginUpdatesAvailableTitle => 'Plugin updates available';
+
+  @override
+  String pluginUpdateLine(String name, String from, String to) {
+    return '$name $from → $to';
+  }
+
+  @override
+  String get pluginUpdateNow => 'Update now';
+
+  @override
+  String get pluginUpdating => 'Updating plugins…';
+
+  @override
+  String get pluginUpdatesDone => 'Plugins updated.';
+
+  @override
+  String pluginUpdatesPartial(int done, int total) {
+    return 'Updated $done of $total plugins.';
+  }
+
+  @override
+  String pluginUpdateAvailableNotice(String version) {
+    return 'v$version is available';
+  }
+
+  @override
+  String get pluginNoPublishedRelease => 'No published release found';
+
+  @override
   String get libraryEmptyTitle => 'Nothing saved yet';
 
   @override

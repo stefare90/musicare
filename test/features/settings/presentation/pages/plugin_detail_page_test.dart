@@ -1,17 +1,22 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
+import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_state.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/shared/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_auth_state.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
+import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/settings/presentation/pages/plugin_detail_page.dart';
 
 import '../../../../helpers/audio_source_test_helpers.dart';
+import '../../../../helpers/error_presentation_test_helpers.dart';
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
 import '../../../../helpers/plugin_session_cubit_test_helpers.dart';
 import '../../../../helpers/plugin_manager_test_helpers.dart';
@@ -263,5 +268,185 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(() => management.change(PluginType.metadata, alternative)).called(1);
+  });
+
+  group('Check for update', () {
+    late PluginManagerState current;
+
+    setUp(registerTestErrorPresentation);
+
+    PluginManagerCubit buildCubit({
+      required PluginManagerState Function() afterCheck,
+      Future<void> Function()? gate,
+    }) {
+      final cubit = buildMockPluginManagerCubit(
+        state: testManagerState(
+          metadataSlot: testPluginSlot(installed: testPluginManifest()),
+        ),
+      );
+      final events = StreamController<PluginManagerState>.broadcast();
+      addTearDown(events.close);
+      current = cubit.state;
+      when(() => cubit.state).thenAnswer((_) => current);
+      when(() => cubit.stream).thenAnswer((_) => events.stream);
+      when(
+        () => cubit.refresh(
+          force: true,
+          fetchCatalog: any(named: 'fetchCatalog'),
+        ),
+      ).thenAnswer((_) async {
+        if (gate != null) await gate();
+        current = PluginManagerState({...current.slots, ...afterCheck().slots});
+        events.add(current);
+      });
+      return cubit;
+    }
+
+    Future<void> tapCheck(WidgetTester tester) async {
+      await tester.tap(find.text('Check for update'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('shows a spinner while the catalog is being checked', (
+      tester,
+    ) async {
+      final completer = Completer<void>();
+      final installed = testPluginManifest();
+      final cubit = buildCubit(
+        gate: () => completer.future,
+        afterCheck: () => testManagerState(
+          metadataSlot: testPluginSlot(installed: installed, remote: installed),
+        ),
+      );
+      await tester.pumpWidget(
+        buildTestableWidget(type: PluginType.metadata, managementCubit: cubit),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Check for update'));
+      await tester.pump();
+
+      expect(find.byType(LinearProgressIndicator), findsOneWidget);
+
+      completer.complete();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LinearProgressIndicator), findsNothing);
+      expect(find.text("You're up to date"), findsOneWidget);
+    });
+
+    testWidgets('stacks the actions with Check for update last', (
+      tester,
+    ) async {
+      final installed = testPluginManifest();
+      final cubit = buildMockPluginManagerCubit(
+        state: testManagerState(
+          metadataSlot: testPluginSlot(
+            installed: installed,
+            remote: installed,
+            updateAvailable: true,
+          ),
+        ),
+      );
+      await tester.pumpWidget(
+        buildTestableWidget(type: PluginType.metadata, managementCubit: cubit),
+      );
+      await tester.pumpAndSettle();
+
+      final update = tester.getTopLeft(find.text('Update')).dy;
+      final reinstall = tester.getTopLeft(find.text('Reinstall')).dy;
+      final replace = tester.getTopLeft(find.text('Replace…')).dy;
+      final check = tester.getTopLeft(find.text('Check for update')).dy;
+
+      expect(update, lessThan(reinstall));
+      expect(reinstall, lessThan(replace));
+      expect(replace, lessThan(check));
+    });
+
+    testWidgets('reports an up-to-date plugin', (tester) async {
+      final installed = testPluginManifest();
+      final cubit = buildCubit(
+        afterCheck: () => testManagerState(
+          metadataSlot: testPluginSlot(installed: installed, remote: installed),
+        ),
+      );
+      await tester.pumpWidget(
+        buildTestableWidget(type: PluginType.metadata, managementCubit: cubit),
+      );
+      await tester.pumpAndSettle();
+
+      await tapCheck(tester);
+
+      expect(find.text("You're up to date"), findsOneWidget);
+      expect(find.text('Update'), findsNothing);
+    });
+
+    testWidgets('reports the new version and reveals Update', (tester) async {
+      final installed = testPluginManifest();
+      final remote = PluginManifest(
+        id: installed.id,
+        packageId: installed.packageId,
+        type: installed.type,
+        name: installed.name,
+        version: '2.0.0',
+        pluginSdkVersion: installed.pluginSdkVersion,
+        author: installed.author,
+        description: installed.description,
+      );
+      final cubit = buildCubit(
+        afterCheck: () => testManagerState(
+          metadataSlot: testPluginSlot(
+            installed: installed,
+            remote: remote,
+            updateAvailable: true,
+          ),
+        ),
+      );
+      await tester.pumpWidget(
+        buildTestableWidget(type: PluginType.metadata, managementCubit: cubit),
+      );
+      await tester.pumpAndSettle();
+
+      await tapCheck(tester);
+
+      expect(find.text('v2.0.0 is available'), findsOneWidget);
+      expect(find.text('Update'), findsOneWidget);
+    });
+
+    testWidgets('reports a plugin with no published release', (tester) async {
+      final cubit = buildCubit(
+        afterCheck: () => testManagerState(
+          metadataSlot: testPluginSlot(installed: testPluginManifest()),
+        ),
+      );
+      await tester.pumpWidget(
+        buildTestableWidget(type: PluginType.metadata, managementCubit: cubit),
+      );
+      await tester.pumpAndSettle();
+
+      await tapCheck(tester);
+
+      expect(find.text('No published release found'), findsOneWidget);
+    });
+
+    testWidgets('reports a failed check', (tester) async {
+      final installed = testPluginManifest();
+      final cubit = buildCubit(
+        afterCheck: () => testManagerState(
+          metadataSlot: testPluginSlot(
+            installed: installed,
+            error: PluginSearchException(403),
+          ),
+        ),
+      );
+      await tester.pumpWidget(
+        buildTestableWidget(type: PluginType.metadata, managementCubit: cubit),
+      );
+      await tester.pumpAndSettle();
+
+      await tapCheck(tester);
+
+      expect(find.text('Network error occurred'), findsOneWidget);
+    });
   });
 }

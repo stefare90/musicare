@@ -57,7 +57,8 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ✅ Language: application language selector (English only for now), persisted.
 ✅ About: app icon, version, founder and source-code links, and the license (BSD-3-Clause via the standard license page).
 ⬜ Remaining sections: audio quality, downloads and cache, listening history, diagnostics.
-✅ Per-plugin actions: update, reinstall and replace with another catalog plugin (with confirmation).
+✅ Per-plugin actions: check for update, update, reinstall and replace with another catalog plugin (with confirmation).
+✅ Startup prompt listing every plugin with an available update and applying them in sequence, skipped when an app update is offered.
 ⬜ Uninstall a plugin without replacing it.
 
 ## 🧙 Onboarding (`lib/features/onboarding/`)

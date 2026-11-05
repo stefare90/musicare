@@ -63,9 +63,8 @@ void main() {
     sl.registerLazySingleton<PluginCatalog>(() => mockCatalog);
     bus = NoticeBus();
     sl.registerLazySingleton<NoticeBus>(() => bus);
-    when(
-      () => mockCatalog.latest(any(), forceRefresh: any(named: 'forceRefresh')),
-    ).thenAnswer((_) async => {});
+    when(() => mockCatalog.latest(any())).thenAnswer((_) async => {});
+    when(() => mockCatalog.reload()).thenAnswer((_) async {});
   });
 
   Widget buildTestableWidget({required GoRouter router}) {
@@ -112,6 +111,8 @@ void main() {
       );
       expect(find.text('Select Metadata Provider'), findsOneWidget);
       expect(find.byType(OnboardingDotsIndicator), findsOneWidget);
+      // Onboarding never prompts for plugin updates: that belongs to the shell.
+      expect(find.byType(AlertDialog), findsNothing);
 
       await tester.tap(find.text('Select Metadata Provider'));
       await tester.pumpAndSettle();
