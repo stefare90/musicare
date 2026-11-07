@@ -65,7 +65,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ✅ Step wizard: intro, metadata provider install, audio source provider install, landing on Home once both are ready.
 
 ## 🔌 Plugin system (`lib/features/plugin/{shared,catalog,management,metadata}` + host adapters)
-✅ Community plugin catalog backed by GitHub releases, with an in-memory 6-hour TTL, force refresh and a composite-source merge.
+✅ Community plugin catalog backed by GitHub releases, with an in-memory 6-hour TTL, an explicit reload that bypasses it, and a dedicated error when GitHub rate-limits the catalog.
 ✅ Atomic plugin installation (extract to `.new`, validate manifest type/SDK, swap with a `.bak` backup, roll back on activation failure).
 ✅ Plugin management slots per type: installed/remote manifests, update availability, incompatibility, and update/reinstall/replace flows (replacement logs out and removes only the old code, leaving plugin data untouched).
 ✅ Unified setup page for missing or incompatible metadata and audio-source plugins, reached from the bootstrap and settling every pending slot in one pass.
