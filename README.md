@@ -191,9 +191,11 @@ The tooling is split by job:
 | :--- | :--- |
 | `tool/stage_python.sh [Android\|Linux]` | Stages the Python runtime only (default: Android). |
 | `tool/build.sh debug\|release` | Stages for Android, then runs `flutter build apk` in the same shell and checks the embedded runtime assets. |
-| `tool/release.sh [--skip-checks] [--bump patch\|minor\|major] [--publish]` | Release pipeline: `main` + clean tree, analyze/tests, keystore gate, tag/versionCode checks, release build, APK badging and signature gates, SHA-256. Without `--publish` it stops before the tag (dry run). |
+| `tool/release.sh [--skip-checks] [--bump patch\|minor\|major] [--publish] [--notes <text> \| --notes-file <path>] [--no-push-branch]` | Release pipeline: `main` + clean tree, analyze/tests, keystore gate, tag/versionCode checks, release build, APK badging and signature gates, SHA-256. Without `--publish` it stops before the tag (dry run). |
 
 The release version is the single source of truth in `pubspec.yaml` (`version: x.y.z+n`); the annotated tag is derived as `v<version>` (e.g. `v1.0.0+2`) and the release asset as `MusicAre-<versionName>.apk` (the APK is copied under that name before upload, because `gh` names assets after the file). `--bump` increments the version (and `+n`) and commits it before building; without it, no file is modified.
+
+The release body is `MusicAre <version> (build <n>).` unless `--notes <text>` or `--notes-file <path>` is given: the two flags are mutually exclusive and an empty (or whitespace-only) body is rejected before anything is built. With `--publish` the script pushes the tag, creates the GitHub release and then pushes the branch (`git push origin main`), so the release commit is not left off `origin/main`; `--no-push-branch` keeps the branch local. The dry run prints the exact commands it would run, and never tags, pushes or publishes.
 
 #### Release signing
 The Android package is `com.musicare.app` (`applicationId` and `namespace`).
@@ -207,8 +209,10 @@ Prerequisites: `main` checked out and clean, the release keystore in place (`and
 
 ```bash
 ./tool/release.sh                        # dry run: every gate, nothing written to git or GitHub
-./tool/release.sh --publish              # git tag, push and GitHub release
+./tool/release.sh --publish              # tag, GitHub release, then push of the branch
 ./tool/release.sh --bump minor --publish # bump semver and +n first (committed before building)
+./tool/release.sh --publish --notes-file notes-1.0.4.md  # release body from a file
+./tool/release.sh --publish --notes "…" --no-push-branch # keep the branch local
 ```
 
 The dry run is the recommended check before publishing: it runs analyze/tests, the keystore and tag gates, the release build, the badging and signature gates and prints the APK SHA-256. `--skip-checks` skips `flutter analyze` and `flutter test`.

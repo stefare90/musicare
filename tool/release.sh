@@ -7,10 +7,18 @@
 # as `v<version>` (e.g. v1.0.0+2).
 #
 # Usage: ./tool/release.sh [--skip-checks] [--bump patch|minor|major] [--publish]
-#   --skip-checks  skip `flutter analyze` and `flutter test`
-#   --bump         bump pubspec.yaml (and commit it) before building
-#   --publish      create and push the tag, then publish the GitHub release
-#                  (without it the script is a dry run: everything but the tag)
+#                          [--notes <text> | --notes-file <path>] [--no-push-branch]
+#   --skip-checks     skip `flutter analyze` and `flutter test`
+#   --bump            bump pubspec.yaml (and commit it) before building
+#   --publish         create and push the tag, publish the GitHub release and push
+#                     the branch; without it the script is a dry run (nothing is
+#                     tagged, pushed or published)
+#   --notes           release body as inline text (empty text is rejected)
+#   --notes-file      release body read from a file (an empty file is rejected)
+#   --no-push-branch  with --publish, leave the branch out of the push
+#
+# Without --notes/--notes-file the release body stays the historical one:
+# "MusicAre <version> (build <n>)."
 
 set -e
 
@@ -21,15 +29,54 @@ cd "$ROOT_DIR"
 SKIP_CHECKS=false
 PUBLISH=false
 BUMP=""
+PUSH_BRANCH=true
+NOTES=""
+NOTES_FILE=""
+NOTES_INPUT="" # "inline" | "file" | "" (default body)
 
 usage() {
   echo "Usage: ./tool/release.sh [--skip-checks] [--bump patch|minor|major] [--publish]"
+  echo "                         [--notes <text> | --notes-file <path>] [--no-push-branch]"
+}
+
+fail() {
+  echo "❌ Error: $*"
+  exit 1
+}
+
+step() {
+  echo "=================================================="
+  echo "$*"
+  echo "=================================================="
+}
+
+notes_source() {
+  case "$NOTES_INPUT" in
+    file) echo "file: $NOTES_FILE" ;;
+    inline) echo "inline text" ;;
+    *) echo "default body" ;;
+  esac
 }
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --skip-checks) SKIP_CHECKS=true ;;
     --publish) PUBLISH=true ;;
+    --no-push-branch) PUSH_BRANCH=false ;;
+    --notes)
+      [ -z "$NOTES_INPUT" ] || fail "use either --notes or --notes-file, not both."
+      [ $# -ge 2 ] || fail "--notes expects the release body as its argument."
+      NOTES=${2:-}
+      NOTES_INPUT=inline
+      shift
+      ;;
+    --notes-file)
+      [ -z "$NOTES_INPUT" ] || fail "use either --notes or --notes-file, not both."
+      [ $# -ge 2 ] || fail "--notes-file expects a path as its argument."
+      NOTES_FILE=${2:-}
+      NOTES_INPUT=file
+      shift
+      ;;
     --bump)
       BUMP=${2:-}
       case "$BUMP" in
@@ -55,16 +102,21 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-fail() {
-  echo "❌ Error: $*"
-  exit 1
-}
-
-step() {
-  echo "=================================================="
-  echo "$*"
-  echo "=================================================="
-}
+case "$NOTES_INPUT" in
+  inline)
+    case "$NOTES" in
+      *[![:space:]]*) ;;
+      *) fail "the release notes are empty (--notes)." ;;
+    esac
+    ;;
+  file)
+    [ -f "$NOTES_FILE" ] || fail "--notes-file '$NOTES_FILE' is not an existing file."
+    [ -r "$NOTES_FILE" ] || fail "--notes-file '$NOTES_FILE' is not readable."
+    [ -n "$(tr -d '[:space:]' <"$NOTES_FILE")" ] ||
+      fail "--notes-file '$NOTES_FILE' is empty (blank content)."
+    ;;
+  *) ;;
+esac
 
 read_version() {
   VERSION=$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml | head -n 1)
@@ -85,6 +137,10 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD)
 [ -z "$(git status --porcelain)" ] || fail "the working tree is not clean; commit or stash first."
 
 read_version
+
+if [ -z "$NOTES_INPUT" ]; then
+  NOTES="MusicAre $VERSION_NAME (build $VERSION_CODE)."
+fi
 
 if [ -n "$BUMP" ]; then
   step "2. Bumping the version ($BUMP)"
@@ -216,11 +272,23 @@ if [ "$PUBLISH" = false ]; then
   step "10. Dry run: nothing was published"
   echo "Checked:    main branch, clean tree, analyze/tests, keystore, tag availability, versionCode"
   echo "Built:      release APK signed with the release key, assets verified"
-  echo "Not done:   the tag and the GitHub release (dry run, no --publish)"
+  echo "Not done:   the tag, the GitHub release and the branch push (dry run, no --publish)"
   echo ""
+  echo "Notes:      $(notes_source)"
   echo "Publishing would run:"
   echo "   git tag -a $TAG -m 'MusicAre $VERSION_NAME (build $VERSION_CODE)' && git push origin $TAG"
-  echo "   gh release create $TAG MusicAre-$VERSION_NAME.apk --title 'MusicAre $VERSION_NAME' --notes '…' --latest"
+  if [ "$NOTES_INPUT" = "file" ]; then
+    echo "   gh release create $TAG MusicAre-$VERSION_NAME.apk --title 'MusicAre $VERSION_NAME' --notes-file '$NOTES_FILE' --latest"
+  elif [ "$NOTES_INPUT" = "inline" ]; then
+    echo "   gh release create $TAG MusicAre-$VERSION_NAME.apk --title 'MusicAre $VERSION_NAME' --notes '<the --notes text>' --latest"
+  else
+    echo "   gh release create $TAG MusicAre-$VERSION_NAME.apk --title 'MusicAre $VERSION_NAME' --notes '$NOTES' --latest"
+  fi
+  if [ "$PUSH_BRANCH" = true ]; then
+    echo "   git push origin $BRANCH"
+  else
+    echo "   (branch push skipped: --no-push-branch)"
+  fi
   echo ""
   echo "Re-run with --publish to publish."
   exit 0
@@ -237,9 +305,15 @@ git push origin "$TAG"
 ASSET_DIR=$(mktemp -d)
 ASSET="$ASSET_DIR/MusicAre-$VERSION_NAME.apk"
 cp "$APK" "$ASSET"
+if [ "$NOTES_INPUT" = "file" ]; then
+  NOTES_ARGS=(--notes-file "$NOTES_FILE")
+else
+  NOTES_ARGS=(--notes "$NOTES")
+fi
+echo "Release notes: $(notes_source)"
 gh release create "$TAG" "$ASSET" \
   --title "MusicAre $VERSION_NAME" \
-  --notes "MusicAre $VERSION_NAME (build $VERSION_CODE)." \
+  "${NOTES_ARGS[@]}" \
   --latest
 rm -rf "$ASSET_DIR"
 
@@ -249,6 +323,14 @@ PUBLISHED_TAG=$(gh release view "$TAG" --json tagName --jq .tagName)
 PUBLISHED_ASSET=$(gh release view "$TAG" --json assets --jq '.assets[].name' | head -n 1)
 [ "$PUBLISHED_ASSET" = "MusicAre-$VERSION_NAME.apk" ] ||
   fail "published asset is '$PUBLISHED_ASSET', expected 'MusicAre-$VERSION_NAME.apk'."
+
+if [ "$PUSH_BRANCH" = true ]; then
+  step "11. Pushing the branch"
+  echo "Pushing $BRANCH to origin: the tag alone would leave the release commit off the branch."
+  git push origin "$BRANCH"
+else
+  echo "Skipping the branch push (--no-push-branch): $BRANCH stays local."
+fi
 
 step "✅ Released $TAG"
 echo "Tag:        $TAG"
