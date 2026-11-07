@@ -439,6 +439,7 @@ void main() {
           ),
         ),
       );
+
       await tester.pumpWidget(
         buildTestableWidget(type: PluginType.metadata, managementCubit: cubit),
       );
@@ -446,7 +447,11 @@ void main() {
 
       await tapCheck(tester);
 
-      expect(find.text('Network error occurred'), findsOneWidget);
+      // A 403 is the exhausted quota, not a generic network failure.
+      expect(
+        find.text('The provider is limiting requests. Please try again shortly.'),
+        findsOneWidget,
+      );
     });
   });
 }

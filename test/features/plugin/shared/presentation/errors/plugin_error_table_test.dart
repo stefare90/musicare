@@ -73,4 +73,23 @@ void main() {
       expect(table.notifies(error), isFalse);
     }
   });
+
+  test('an exhausted GitHub quota has its own message', () {
+    expect(
+      table.describe(const PluginQuotaExceededException(), l10n)?.text,
+      'The provider is limiting requests. Please try again shortly.',
+    );
+    expect(
+      table.describe(PluginSearchException(403), l10n)?.text,
+      'The provider is limiting requests. Please try again shortly.',
+    );
+    expect(
+      table.describe(PluginSearchException(429), l10n)?.text,
+      'The provider is limiting requests. Please try again shortly.',
+    );
+    expect(
+      table.describe(PluginSearchException(500), l10n)?.text,
+      'Network error occurred',
+    );
+  });
 }

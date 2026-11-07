@@ -19,6 +19,10 @@ class PluginErrorTable implements ErrorTable {
       ),
       InvalidPluginTypeException() => ErrorSpec(l10n.pluginErrorInvalidType),
       PluginDownloadException() => ErrorSpec(l10n.pluginErrorDownloadFailed),
+      PluginSearchException(:final statusCode)
+          when statusCode == 403 || statusCode == 429 =>
+        ErrorSpec(l10n.pluginErrorRateLimited),
+      PluginQuotaExceededException() => ErrorSpec(l10n.pluginErrorRateLimited),
       PluginSearchException() => ErrorSpec(l10n.pluginErrorNetwork),
       PluginErrorNoContext() => ErrorSpec(l10n.pluginErrorNoContext),
       StreamResolutionException() => ErrorSpec(

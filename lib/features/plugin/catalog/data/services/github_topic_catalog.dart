@@ -21,10 +21,7 @@ class GitHubTopicCatalog implements PluginCatalog {
   Map<String, PluginManifest>? _cachedManifests;
   DateTime? _cachedAt;
 
-  GitHubTopicCatalog({
-    required this.networkService,
-    this.now = DateTime.now,
-  });
+  GitHubTopicCatalog({required this.networkService, this.now = DateTime.now});
 
   @override
   Future<Map<String, PluginManifest>> latest(PluginType type) async {
@@ -77,40 +74,57 @@ class GitHubTopicCatalog implements PluginCatalog {
 
   @override
   Future<void> reload() async {
-    _cachedManifests = null;
-    _cachedZips.clear();
-    _cachedAt = null;
-
-    final response = await networkService.get(Uri.parse(searchUrl));
-    if (response.statusCode != 200) {
-      throw PluginSearchException(response.statusCode);
-    }
-
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
-    final items = data['items'] as List<dynamic>? ?? [];
-    final manifests = <String, PluginManifest>{};
-
-    for (final item in items) {
-      try {
-        final repo = item as Map<String, dynamic>;
-        final manifest = await _latestManifestFor(repo['full_name'] as String);
-        if (manifest != null) {
-          manifests[manifest.id] = manifest;
-        }
-      } catch (_) {
-        // A broken repository does not hide the other available plugins.
+    try {
+      final response = await networkService.get(Uri.parse(searchUrl));
+      if (response.statusCode != 200) {
+        throw PluginSearchException(response.statusCode);
       }
-    }
 
-    _cachedManifests = manifests;
-    _cachedAt = now();
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final items = data['items'] as List<dynamic>? ?? [];
+      final manifests = <String, PluginManifest>{};
+      final zips = <String, Uint8List>{};
+
+      for (final item in items) {
+        try {
+          final repo = item as Map<String, dynamic>;
+          final manifest = await _latestManifestFor(
+            repo['full_name'] as String,
+            zips,
+          );
+          if (manifest != null) {
+            manifests[manifest.id] = manifest;
+          }
+        } on PluginQuotaExceededException {
+          rethrow;
+        } catch (_) {
+          // A broken repository does not hide the other available plugins.
+        }
+      }
+
+      _cachedManifests = manifests;
+      _cachedZips
+        ..clear()
+        ..addAll(zips);
+      _cachedAt = now();
+    } catch (_) {
+      if (_cachedManifests != null) _cachedAt = now();
+      rethrow;
+    }
   }
 
-  Future<PluginManifest?> _latestManifestFor(String fullName) async {
+  Future<PluginManifest?> _latestManifestFor(
+    String fullName,
+    Map<String, Uint8List> zips,
+  ) async {
     final releaseResponse = await networkService.get(
       Uri.parse('https://api.github.com/repos/$fullName/releases/latest'),
     );
-    if (releaseResponse.statusCode != 200) return null;
+    final status = releaseResponse.statusCode;
+    if (status == 403 || status == 429) {
+      throw const PluginQuotaExceededException();
+    }
+    if (status != 200) return null;
 
     final release = jsonDecode(releaseResponse.body) as Map<String, dynamic>;
     final assets = release['assets'] as List<dynamic>? ?? [];
@@ -126,7 +140,7 @@ class GitHubTopicCatalog implements PluginCatalog {
 
     final zipBytes = await _downloadZip(zipUrl);
     final manifest = _manifestFromZip(zipBytes);
-    _cachedZips[_cacheKey(manifest.id, manifest.version)] = zipBytes;
+    zips[_cacheKey(manifest.id, manifest.version)] = zipBytes;
     return manifest;
   }
 

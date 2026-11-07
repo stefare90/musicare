@@ -54,6 +54,10 @@ class PluginSearchException extends PluginException {
   PluginSearchException([this.statusCode]);
 }
 
+class PluginQuotaExceededException extends PluginException {
+  const PluginQuotaExceededException();
+}
+
 class PluginErrorNoContext extends PluginException {}
 
 class StreamResolutionException extends PluginException {

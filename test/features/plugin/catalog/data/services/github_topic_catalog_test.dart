@@ -219,4 +219,34 @@ void main() {
     final audio = await catalog.latest(PluginType.audioSource);
     expect(audio.keys, ['org.musicare.audiosource.test']);
   });
+
+  test('an exhausted quota fails the reload instead of emptying the catalog', () async {
+    await catalog.latest(PluginType.metadata);
+    now = now.add(GitHubTopicCatalog.cacheTtl);
+    when(
+      () => network.get(Uri.parse(metadataRelease)),
+    ).thenAnswer((_) async => http.Response('rate limited', 403));
+
+    await expectLater(
+      catalog.latest(PluginType.metadata),
+      throwsA(isA<PluginQuotaExceededException>()),
+    );
+
+    // The last good catalog survives the failed reload, and reading it again
+    // does not touch the network (the quota is already exhausted).
+    final metadata = await catalog.latest(PluginType.metadata);
+    expect(metadata.keys, ['org.musicare.metadata.test']);
+    verify(() => network.get(Uri.parse(searchUri))).called(2);
+    verify(() => network.get(Uri.parse(metadataRelease))).called(2);
+  });
+
+  test('a repository without a release is skipped, not fatal', () async {
+    when(
+      () => network.get(Uri.parse(metadataRelease)),
+    ).thenAnswer((_) async => http.Response('not found', 404));
+
+    final audio = await catalog.latest(PluginType.audioSource);
+
+    expect(audio.keys, ['org.musicare.audiosource.test']);
+  });
 }
