@@ -5,8 +5,10 @@ import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 
-PluginManifest testPluginManifest({String name = 'Test Provider'}) =>
-    PluginManifest(
+PluginManifest testPluginManifest({
+  String name = 'Test Provider',
+  String? repository,
+}) => PluginManifest(
       id: 'test.plugin',
       packageId: 'test_plugin',
       type: 'metadata',
@@ -15,6 +17,7 @@ PluginManifest testPluginManifest({String name = 'Test Provider'}) =>
       pluginSdkVersion: '4.1.0',
       author: 'Test',
       description: 'Test plugin',
+      repository: repository,
     );
 
 /// Controllable user cubit for tests: states are pushed and writes recorded,

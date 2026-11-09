@@ -14,12 +14,29 @@ import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dar
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/features/settings/presentation/pages/plugin_detail_page.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 import '../../../../helpers/audio_source_test_helpers.dart';
 import '../../../../helpers/error_presentation_test_helpers.dart';
 import '../../../../helpers/metadata_plugin_test_helpers.dart';
 import '../../../../helpers/plugin_session_cubit_test_helpers.dart';
 import '../../../../helpers/plugin_manager_test_helpers.dart';
+
+class FakeUrlLauncher extends Fake
+    with MockPlatformInterfaceMixin
+    implements UrlLauncherPlatform {
+  FakeUrlLauncher({this.result = true});
+
+  final bool result;
+  final List<String> launched = [];
+
+  @override
+  Future<bool> launchUrl(String url, LaunchOptions options) async {
+    launched.add(url);
+    return result;
+  }
+}
 
 void main() {
   setUpAll(() {
@@ -452,6 +469,74 @@ void main() {
         find.text('The provider is limiting requests. Please try again shortly.'),
         findsOneWidget,
       );
+    });
+  });
+
+  group('Repository', () {
+    const repository = 'https://github.com/stefare90/musicare_metadata_musicbrainz_plugin';
+    late FakeUrlLauncher launcher;
+
+    setUp(() {
+      launcher = FakeUrlLauncher();
+      UrlLauncherPlatform.instance = launcher;
+    });
+
+    tearDown(() {
+      UrlLauncherPlatform.instance = FakeUrlLauncher();
+    });
+
+    Widget withRepository() {
+      final manifest = testPluginManifest(repository: repository);
+      return buildTestableWidget(
+        type: PluginType.metadata,
+        managementCubit: buildMockPluginManagerCubit(
+          state: testManagerState(
+            metadataSlot: testPluginSlot(installed: manifest),
+            audioSource: testAudioSourceManifest(),
+          ),
+        ),
+        pluginCubit: buildTestPluginSessionCubit(
+          metadata: testRuntimeLoaded(manifest),
+          audioSource: testRuntimeLoaded(testAudioSourceManifest()),
+        ),
+      );
+    }
+
+    testWidgets('shows the manifest repository as a header link and opens it', (
+      tester,
+    ) async {
+      await tester.pumpWidget(withRepository());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Repository'), findsOneWidget);
+      expect(find.text(repository), findsNothing);
+
+      await tester.tap(find.text('Repository'));
+      await tester.pumpAndSettle();
+
+      expect(launcher.launched, [repository]);
+    });
+
+    testWidgets('hides the link when the manifest has no repository', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildTestableWidget(type: PluginType.metadata));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Repository'), findsNothing);
+    });
+
+    testWidgets('says so when the link cannot be opened', (tester) async {
+      launcher = FakeUrlLauncher(result: false);
+      UrlLauncherPlatform.instance = launcher;
+
+      await tester.pumpWidget(withRepository());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Repository'));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Couldn't open the link."), findsOneWidget);
     });
   });
 }

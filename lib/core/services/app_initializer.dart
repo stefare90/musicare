@@ -5,9 +5,11 @@ import 'package:music_are/core/license/app_license.dart';
 import 'package:music_are/features/player/data/services/audio_handler.dart';
 import 'package:music_are/features/player/data/services/audio_player_service.dart';
 import 'package:music_are/features/plugin/management/data/services/plugin_manager.dart';
+import 'package:music_are/features/plugin/shared/data/services/plugin_switch_reset.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:music_are/core/services/plugin_startup_route.dart';
+import 'package:music_are/features/listening/data/services/listening_tracker.dart';
 
 abstract class AppInitializer {
   static Future<String> initialize() async {
@@ -15,6 +17,8 @@ abstract class AppInitializer {
     WidgetsFlutterBinding.ensureInitialized();
 
     await initDependencies();
+
+    sl<ListeningTracker>().start();
 
     await AudioService.init<MusicAreAudioHandler>(
       builder: () => MusicAreAudioHandler(sl<AudioPlayerService>()),
@@ -27,6 +31,7 @@ abstract class AppInitializer {
     );
 
     final manager = sl<PluginManager>();
+    sl<PluginSwitchReset>().start();
     await manager.initialize();
     await sl<UserCubit>().initialize();
 

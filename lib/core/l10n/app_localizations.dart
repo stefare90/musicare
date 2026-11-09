@@ -1432,11 +1432,11 @@ abstract class AppLocalizations {
   /// **'Founder'**
   String get settingsAboutFounder;
 
-  /// No description provided for @settingsAboutSourceCode.
+  /// No description provided for @settingsAboutRepository.
   ///
   /// In en, this message translates to:
-  /// **'Source code'**
-  String get settingsAboutSourceCode;
+  /// **'Repository'**
+  String get settingsAboutRepository;
 
   /// No description provided for @settingsAboutLegalSection.
   ///

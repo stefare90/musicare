@@ -421,6 +421,16 @@ class AudioPlayerService {
   Future<void> stop() => _driver.stop();
   Future<void> seek(Duration position) => _driver.seek(position);
 
+  Future<void> clearQueue() async {
+    _pendingGeneration++;
+    _pendingLoader = null;
+    _activeFetch = null;
+    _loadedTrackId = null;
+    _consecutiveFailures = 0;
+    await _driver.stop();
+    _updateData(const PlaybackData());
+  }
+
   void toggleShuffle() => _updateData(
     _playbackData.copyWith(queue: _playbackData.queue.toggleShuffle()),
   );

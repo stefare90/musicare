@@ -256,6 +256,19 @@ void main() {
       verify(() => mockDriver.stop()).called(1);
     });
 
+    test('clearQueue drops the queue and stops the driver', () async {
+      await service.playQueue([track1, track2], index: 0);
+      clearInteractions(mockDriver);
+
+      await service.clearQueue();
+
+      expect(service.playbackData.queue.isEmpty, isTrue);
+      expect(service.playbackData.currentTrack, isNull);
+      expect(service.playbackData.isPlaying, isFalse);
+      expect(service.playbackData.position, Duration.zero);
+      verify(() => mockDriver.stop()).called(1);
+    });
+
     test('end of the queue pauses where it is, on demand', () async {
       await service.playQueue([track1], index: 0);
       clearInteractions(mockDriver);

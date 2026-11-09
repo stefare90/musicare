@@ -62,7 +62,7 @@ void main() {
     expect(find.byType(Image), findsOneWidget);
     expect(find.text('Founder'), findsOneWidget);
     expect(find.text(AppInfo.founder), findsOneWidget);
-    expect(find.text('Source code'), findsOneWidget);
+    expect(find.text('Repository'), findsOneWidget);
     expect(find.text(AppInfo.repositoryLabel), findsOneWidget);
     expect(find.text('License'), findsOneWidget);
     expect(find.text('BSD-3-Clause'), findsOneWidget);
@@ -75,7 +75,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(launcher.launched, [AppInfo.websiteUrl]);
 
-    await tester.tap(find.text('Source code'));
+    await tester.tap(find.text('Repository'));
     await tester.pumpAndSettle();
     expect(launcher.launched.last, AppInfo.repositoryUrl);
   });

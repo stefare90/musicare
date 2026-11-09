@@ -40,6 +40,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ✅ "Play Next", "Add to queue", "Save to favorites" and "Share" wired in the track options bottom sheet (with the real saved state and optimistic rollback).
 ✅ "Start radio" from the track sheet replaces the queue with the seed plus its provider batch, and the queue keeps extending from the last played track when it ends ("Infinite music", chained and de-duplicated, switch on by default, signed-in only).
 ✅ Queue auto-extends from partially loaded lists (playlist, album, artist top tracks, liked): background fill with loading/error states in the queue sheet.
+✅ Listening tracker: one reader of the player stream, `playing_now` at start and after a real pause, a `single` at half the track or four minutes (tracks ≥ 30 s), dedupe per start, best-effort delivery to the signed-in plugin's listen history (`lib/features/listening/`).
 
 ## 📚 Library (`lib/features/library/`)
 ✅ Sign-in invitation when signed out, with the account entry point in the page header.
@@ -51,12 +52,12 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ⬜ Downloads: browse and manage local tracks and downloaded collections, account-free (entry point only, empty until the local storage subsystem lands).
 
 ## ⚙️ Settings (`lib/features/settings/`)
-✅ Settings hub with a Plugins section: the active metadata and audio-source plugins with their versions, update/incompatibility status, and a per-plugin detail page (version, actions and, when the plugin exposes authentication, the account).
+✅ Settings hub with a Plugins section: the active metadata and audio-source plugins with their versions, update/incompatibility status, a per-plugin detail page (version, a repository link from the manifest under the description, actions and, when the plugin exposes authentication, the account).
 ✅ Appearance: theme (system/light/dark), accent color, absolute-black (AMOLED) toggle, persisted across launches.
 ✅ Playback: infinite music switch (on by default, persisted).
 ✅ Language: application language selector (English only for now), persisted.
-✅ About: app icon, version, founder and source-code links, and the license (BSD-3-Clause via the standard license page).
-⬜ Remaining sections: audio quality, downloads and cache, listening history, diagnostics.
+✅ About: app icon, version, founder and repository links, and the license (BSD-3-Clause via the standard license page).
+⬜ Remaining sections: audio quality, downloads and cache, diagnostics.
 ✅ Per-plugin actions: check for update, update, reinstall and replace with another catalog plugin (with confirmation).
 ✅ Startup prompt listing every plugin with an available update and applying them in sequence, skipped when an app update is offered.
 ⬜ Uninstall a plugin without replacing it.
@@ -67,7 +68,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ## 🔌 Plugin system (`lib/features/plugin/{shared,catalog,management,metadata}` + host adapters)
 ✅ Community plugin catalog backed by GitHub releases, with an in-memory 6-hour TTL, an explicit reload that bypasses it, and a dedicated error when GitHub rate-limits the catalog.
 ✅ Atomic plugin installation (extract to `.new`, validate manifest type/SDK, swap with a `.bak` backup, roll back on activation failure).
-✅ Plugin management slots per type: installed/remote manifests, update availability, incompatibility, and update/reinstall/replace flows (replacement logs out and removes only the old code, leaving plugin data untouched).
+✅ Plugin management slots per type: installed/remote manifests, update availability, incompatibility, and update/reinstall/replace flows (replacement logs out and removes only the old code, leaving plugin data untouched, and clears the queue plus the saved index because track ids belong to the provider).
 ✅ Unified setup page for missing or incompatible metadata and audio-source plugins, reached from the bootstrap and settling every pending slot in one pass.
 ✅ Metadata plugin engine over the Python wire protocol (`musicare_metadata_host_sdk`), with SemVer compatibility checks and per-plugin persistence.
 ✅ Host-side login form for metadata plugins (`MetadataAuthPresenter`), rendering the plugin-provided title, message and per-field help link; browser-based auth opens in the system browser (`url_launcher`).

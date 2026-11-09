@@ -761,7 +761,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAboutFounder => 'Founder';
 
   @override
-  String get settingsAboutSourceCode => 'Source code';
+  String get settingsAboutRepository => 'Repository';
 
   @override
   String get settingsAboutLegalSection => 'Legal';

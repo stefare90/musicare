@@ -66,7 +66,7 @@ class _AboutPageState extends State<AboutPage> {
           ),
           AboutLinkTile(
             icon: Icons.code_rounded,
-            title: l10n.settingsAboutSourceCode,
+            title: l10n.settingsAboutRepository,
             subtitle: AppInfo.repositoryLabel,
             onTap: () => _openLink(AppInfo.repositoryUrl),
           ),

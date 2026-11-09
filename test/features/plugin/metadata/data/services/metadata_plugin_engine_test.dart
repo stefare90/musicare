@@ -7,8 +7,31 @@ import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptio
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 
+ListenEvent testListenEvent() {
+  return ListenEvent(
+    kind: ListenKind.playingNow,
+    track: Track(
+      id: 'recording',
+      name: 'Karma Police',
+      externalUri: '',
+      artists: [Artist(id: 'artist', name: 'Radiohead', externalUri: '')],
+      album: Album(
+        id: 'release-group',
+        name: 'OK Computer',
+        artists: const [],
+        releaseDate: '',
+        externalUri: '',
+        totalTracks: 12,
+        albumType: AlbumType.album,
+      ),
+      durationMs: 261000,
+    ),
+  );
+}
+
 class FakeMetadataClient extends Fake implements MetadataClient {
   String? loadedPluginDir;
+  Object? listenError;
 
   @override
   Future<Map<String, dynamic>> loadPlugin({
@@ -29,8 +52,9 @@ class FakeMetadataClient extends Fake implements MetadataClient {
             {'id': 'token', 'label': 'Token', 'is_password': true},
           ],
         };
-      case 'core.support':
-        return 'MusicBrainz metadata provider';
+      case 'listen.record':
+        if (listenError != null) throw listenError!;
+        return null;
       default:
         return null;
     }
@@ -156,10 +180,10 @@ void main() {
       );
     });
 
-    test('core.support is exposed through the adapter', () async {
+    test('listen.record is exposed through the adapter', () async {
       await engine.loadFromDisk(createPluginDir(tempDir));
 
-      expect(await engine.metadata.core.support(), 'MusicBrainz metadata provider');
+      await engine.metadata.listen.record(testListenEvent());
     });
 
     test('loadFromDisk wires the auth presenter into the adapter', () async {

@@ -289,6 +289,15 @@ void main() {
     verifyNever(
       () => storage.install(any(), any(), validate: any(named: 'validate')),
     );
+    // The installed plugin must survive a refused target untouched: no code
+    // directory removed, no rollback, no active id or account key changed.
+    verifyNever(() => storage.removeCodeDir(any(), any()));
+    verifyNever(() => storage.rollback(any(), any()));
+    verifyNever(() => storage.commit(any(), any()));
+    verifyNever(() => preferences.setActivePluginId(any(), any()));
+    verifyNever(() => preferences.clearActivePluginId(any()));
+    verifyNever(() => preferences.removePluginScopedKeys(any()));
+    verifyNever(() => runtime.unload());
   });
 
   test('alternatives exclude the active and incompatible plugins', () async {

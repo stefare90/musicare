@@ -4,6 +4,7 @@ import 'package:music_are/core/theme/theme_extension.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/plugin_type_icon.dart';
 import 'package:music_are/features/plugin/shared/presentation/utils/plugin_type_localizer.dart';
+import 'package:music_are/features/settings/presentation/widgets/plugin_detail/plugin_repository_link.dart';
 
 class PluginDetailHeader extends StatelessWidget {
   final PluginManifest manifest;
@@ -14,6 +15,7 @@ class PluginDetailHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final type = manifest.pluginType;
+    final repository = manifest.repository;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
@@ -39,6 +41,8 @@ class PluginDetailHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 12.0),
                 Text(manifest.description, style: context.textTheme.bodyMedium),
+                if (repository != null && repository.isNotEmpty)
+                  PluginRepositoryLink(repository: repository),
               ],
             ),
           ),

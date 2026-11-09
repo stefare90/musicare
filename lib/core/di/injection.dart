@@ -7,6 +7,8 @@ import 'package:music_are/core/router/app_router.dart';
 import 'package:music_are/core/services/network_service.dart';
 import 'package:music_are/core/services/preferences_service.dart';
 import 'package:music_are/core/theme/presentation/cubit/theme_cubit.dart';
+import 'package:music_are/features/listening/data/services/listening_tracker.dart';
+import 'package:music_are/features/plugin/metadata/data/services/metadata_history_sink.dart';
 import 'package:music_are/features/player/data/services/audio_player_driver.dart';
 import 'package:music_are/features/player/data/services/audio_player_service.dart';
 import 'package:music_are/features/player/data/services/audio_stream_resolver.dart';
@@ -36,6 +38,7 @@ import 'package:music_are/features/plugin/shared/presentation/cubit/plugin_sessi
 import 'package:music_are/features/plugin/shared/data/services/plugin_storage.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_entry.dart';
 import 'package:music_are/features/plugin/shared/data/services/plugin_registry.dart';
+import 'package:music_are/features/plugin/shared/data/services/plugin_switch_reset.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_engine.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_auth.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_plugin_lifecycle.dart';
@@ -139,6 +142,15 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<PluginSessionCubit>(
     () => PluginSessionCubit(sl<PluginRegistry>(), sl<NoticeBus>()),
   );
+  sl.registerLazySingleton<PluginSwitchReset>(
+    () => PluginSwitchReset(
+      lifecycle: sl<MetadataPluginLifecycle>().changes,
+      onPluginChanged: () async {
+        sl<UserCubit>().reset();
+        await sl<AudioPlayerService>().clearQueue();
+      },
+    ),
+  );
   sl.registerLazySingleton<AudioPlayerService>(
     () => AudioPlayerService(
       driver: AudioPlayerDriver(),
@@ -177,4 +189,13 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<UserFavorites>(() => sl<UserCubit>());
   sl.registerLazySingleton<UserSavedMediaIndex>(() => sl<UserCubit>());
   sl.registerLazySingleton<UserPlaylistEdits>(() => sl<UserCubit>());
+
+  sl.registerLazySingleton<ListeningTracker>(
+    () => ListeningTracker(
+      playback: sl<AudioPlayerService>().playbackDataStream,
+      sinks: [
+        MetadataHistorySink(sl<MetadataPluginEngine>(), sl<UserSession>()),
+      ],
+    ),
+  );
 }
