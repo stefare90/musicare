@@ -45,7 +45,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 final sl = GetIt.instance;
 
-Future<void> initDependencies() async {
+Future<void> initCoreDependencies() async {
   final sharedPreferences = await SharedPreferences.getInstance();
 
   sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
@@ -56,17 +56,21 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<ThemeCubit>(
     () => ThemeCubit(sl<PreferencesService>()),
   );
+  sl.registerLazySingleton<RuntimeHost>(() => RuntimeHost());
+  sl.registerLazySingleton<RuntimeBoot>(
+    () => RuntimeBoot(
+      host: sl<RuntimeHost>(),
+      preferences: sl<PreferencesService>(),
+    ),
+  );
+}
 
-  final runtime = await RuntimeBoot(
-    host: RuntimeHost(),
-    preferences: sl<PreferencesService>(),
-  ).start();
-
+void initRuntimeDependencies(RuntimePorts ports) {
   sl.registerLazySingleton<MetadataPluginEngine>(
     () => MetadataPluginEngine(
       client: MetadataClient(
         baseUri: Uri.parse(
-          'http://127.0.0.1:${runtime.portOf(Subsystem.metadata)}',
+          'http://127.0.0.1:${ports.portOf(Subsystem.metadata)}',
         ),
       ),
       authPresenter: MetadataAuthPresenterImpl(navigatorKey: rootNavigatorKey),
@@ -90,9 +94,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<AudioSourcePluginEngine>(
     () => AudioSourcePluginEngine(
       client: AudioSourceClient(
-        baseUri: Uri.parse(
-          'http://127.0.0.1:${runtime.portOf(Subsystem.audio)}',
-        ),
+        baseUri: Uri.parse('http://127.0.0.1:${ports.portOf(Subsystem.audio)}'),
       ),
     ),
   );
