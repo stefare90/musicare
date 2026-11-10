@@ -58,8 +58,6 @@ class ErrorTile extends StatelessWidget {
                 const SizedBox(height: 1),
                 Text(
                   localizedErrorMessage,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: context.textTheme.labelSmall?.copyWith(
                     color: subTextColor,
                   ),

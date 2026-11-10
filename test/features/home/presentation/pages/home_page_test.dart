@@ -131,7 +131,7 @@ void main() {
       tester,
     ) async {
       when(() => mockBrowse.sections(offset: 0, limit: 10)).thenAnswer(
-        (_) async => throw const MetadataAuthRequiredException('sign in'),
+        (_) async => throw const MetadataAuthRequiredException(''),
       );
 
       await tester.pumpWidget(buildTestableWidget());

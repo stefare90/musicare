@@ -105,11 +105,13 @@ void main() {
     await tester.pumpAndSettle();
 
     controller.add(
-      Notice.error(const MetadataAuthRequiredException('sign in')),
+      Notice.error(
+        const MetadataAuthRequiredException('token rejected by provider'),
+      ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Metadata sign-in required.'), findsOneWidget);
+    expect(find.text('token rejected by provider'), findsOneWidget);
 
     await tester.tap(find.text('Sign in'));
     await tester.pumpAndSettle();

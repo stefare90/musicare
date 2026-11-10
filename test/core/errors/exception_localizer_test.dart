@@ -101,9 +101,9 @@ void main() {
 
       expect(
         const MetadataAuthRequiredException(
-          'sign in',
+          'token rejected by provider',
         ).toLocalizedString(buildContext),
-        equals('Metadata sign-in required.'),
+        equals('token rejected by provider'),
       );
 
       expect(

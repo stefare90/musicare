@@ -946,7 +946,7 @@ void main() {
 
     testWidgets('announces an auth-required search failure', (tester) async {
       when(() => mockSearch.all(any())).thenAnswer(
-        (_) async => throw const MetadataAuthRequiredException('sign in'),
+        (_) async => throw const MetadataAuthRequiredException(''),
       );
 
       await tester.pumpWidget(buildTestWidget());

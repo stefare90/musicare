@@ -214,7 +214,7 @@ void main() {
       tester,
     ) async {
       when(() => mockPlaylist.tracks('pl1', offset: 0, limit: 20)).thenAnswer(
-        (_) async => throw const MetadataAuthRequiredException('sign in'),
+        (_) async => throw const MetadataAuthRequiredException(''),
       );
 
       await tester.pumpWidget(buildTestableWidget());

@@ -54,11 +54,11 @@ void main() {
 
   test('the auth action survives composition', () {
     final spec = presentation.describe(
-      const MetadataAuthRequiredException('sign in'),
+      const MetadataAuthRequiredException('token rejected by provider'),
       l10n,
     );
 
-    expect(spec!.text, 'Metadata sign-in required.');
+    expect(spec!.text, 'token rejected by provider');
     expect(spec.action, isNotNull);
   });
 }

@@ -12,8 +12,8 @@ class MetadataErrorTable implements ErrorTable {
   ErrorSpec? describe(Object error, AppLocalizations l10n) {
     if (error is! MetadataPluginException) return null;
     return switch (error) {
-      MetadataAuthRequiredException() => ErrorSpec(
-        l10n.pluginErrorAuthRequired,
+      MetadataAuthRequiredException(:final message) => ErrorSpec(
+        message.isEmpty ? l10n.pluginErrorAuthRequired : message,
         action: (context) => (
           label: context.l10n.accountSignIn,
           onAction: () =>

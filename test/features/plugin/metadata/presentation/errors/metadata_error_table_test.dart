@@ -43,6 +43,23 @@ void main() {
     expect(spec!.text, 'Network error occurred: Call "user.saved" timed out');
   });
 
+  test('keeps the provider cause for auth-required errors', () {
+    const cause =
+        'your MetaBrainz account does not have a verified email address';
+    final spec = table.describe(
+      const MetadataAuthRequiredException(cause),
+      l10n,
+    );
+
+    expect(spec!.text, cause);
+  });
+
+  test('falls back to the localized text when auth-required carries no cause', () {
+    final spec = table.describe(const MetadataAuthRequiredException(''), l10n);
+
+    expect(spec!.text, 'Metadata sign-in required.');
+  });
+
   test('responds null to errors from another domain', () {
     expect(
       table.describe(const AudioNotFoundException('missing'), l10n),
