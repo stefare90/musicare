@@ -1665,6 +1665,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t open the link.'**
   String get linkOpenFailed;
+
+  /// No description provided for @pluginErrorRuntimeStart.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin runtime did not start.'**
+  String get pluginErrorRuntimeStart;
 }
 
 class _AppLocalizationsDelegate

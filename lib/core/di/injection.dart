@@ -2,10 +2,11 @@ import 'package:get_it/get_it.dart';
 import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
 import 'package:music_are/core/errors/error_presentation.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
-import 'package:music_are/core/errors/system_error_table.dart';
+import 'package:music_are/core/errors/app_error_presentation.dart';
 import 'package:music_are/core/router/app_router.dart';
 import 'package:music_are/core/services/network_service.dart';
 import 'package:music_are/core/services/preferences_service.dart';
+import 'package:music_are/core/services/runtime_boot.dart';
 import 'package:music_are/core/theme/presentation/cubit/theme_cubit.dart';
 import 'package:music_are/features/listening/data/services/listening_tracker.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_history_sink.dart';
@@ -13,16 +14,11 @@ import 'package:music_are/features/player/data/services/audio_player_driver.dart
 import 'package:music_are/features/player/data/services/audio_player_service.dart';
 import 'package:music_are/features/player/data/services/audio_stream_resolver.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
-import 'package:music_are/features/player/presentation/errors/audio_error_table.dart';
 import 'package:music_are/features/update/data/services/app_update_downloader.dart';
 import 'package:music_are/features/update/data/services/app_update_installer.dart';
 import 'package:music_are/features/update/data/services/app_update_checker.dart';
-import 'package:music_are/features/update/presentation/errors/app_update_error_table.dart';
 import 'package:music_are/features/update/presentation/cubit/app_update_cubit.dart';
-import 'package:music_are/features/plugin/metadata/presentation/errors/metadata_error_table.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
-import 'package:music_are/features/plugin/shared/presentation/errors/plugin_error_table.dart';
-import 'package:music_are/features/plugin/shared/presentation/errors/runtime_error_table.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/browse_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/library_repository.dart';
 import 'package:music_are/features/plugin/metadata/data/repositories/media_repository.dart';
@@ -53,16 +49,7 @@ Future<void> initDependencies() async {
   final sharedPreferences = await SharedPreferences.getInstance();
 
   sl.registerLazySingleton<NoticeBus>(() => NoticeBus());
-  sl.registerLazySingleton<ErrorPresentation>(
-    () => const ErrorPresentation([
-      MetadataErrorTable(),
-      AudioErrorTable(),
-      RuntimeErrorTable(),
-      SystemErrorTable(),
-      PluginErrorTable(),
-      UpdateErrorTable(),
-    ]),
-  );
+  sl.registerLazySingleton<ErrorPresentation>(() => appErrorPresentation);
   sl.registerLazySingleton<PreferencesService>(
     () => PreferencesService(sharedPreferences),
   );
@@ -70,14 +57,16 @@ Future<void> initDependencies() async {
     () => ThemeCubit(sl<PreferencesService>()),
   );
 
-  final runtimeHost = RuntimeHost();
-  await runtimeHost.start();
+  final runtime = await RuntimeBoot(
+    host: RuntimeHost(),
+    preferences: sl<PreferencesService>(),
+  ).start();
 
   sl.registerLazySingleton<MetadataPluginEngine>(
     () => MetadataPluginEngine(
       client: MetadataClient(
         baseUri: Uri.parse(
-          'http://127.0.0.1:${runtimeHost.portOf(Subsystem.metadata)}',
+          'http://127.0.0.1:${runtime.portOf(Subsystem.metadata)}',
         ),
       ),
       authPresenter: MetadataAuthPresenterImpl(navigatorKey: rootNavigatorKey),
@@ -102,7 +91,7 @@ Future<void> initDependencies() async {
     () => AudioSourcePluginEngine(
       client: AudioSourceClient(
         baseUri: Uri.parse(
-          'http://127.0.0.1:${runtimeHost.portOf(Subsystem.audio)}',
+          'http://127.0.0.1:${runtime.portOf(Subsystem.audio)}',
         ),
       ),
     ),

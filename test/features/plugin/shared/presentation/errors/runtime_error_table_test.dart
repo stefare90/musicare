@@ -23,6 +23,16 @@ void main() {
     }
   });
 
+  test('a boot timeout is not reported as a connection timeout', () {
+    final spec = table.describe(
+      const RuntimeBootTimeoutException('no ping'),
+      l10n,
+    )!;
+
+    expect(spec.text, l10n.pluginErrorRuntimeStart);
+    expect(spec.text, isNot(l10n.pluginErrorTimeout));
+  });
+
   test('keeps the install detail', () {
     expect(
       table.describe(const PluginInstallException('bad zip'), l10n)!.text,

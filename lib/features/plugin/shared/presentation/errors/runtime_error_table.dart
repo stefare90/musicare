@@ -9,7 +9,7 @@ class RuntimeErrorTable implements ErrorTable {
   ErrorSpec? describe(Object error, AppLocalizations l10n) {
     if (error is! RuntimeHostException) return null;
     return switch (error) {
-      RuntimeBootTimeoutException() => ErrorSpec(l10n.pluginErrorTimeout),
+      RuntimeBootTimeoutException() => ErrorSpec(l10n.pluginErrorRuntimeStart),
       RuntimeNotStartedException() => ErrorSpec(
         l10n.pluginErrorRuntimeNotStarted,
       ),

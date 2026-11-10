@@ -323,5 +323,6 @@
   "updateErrorCorrupted": "The downloaded file is corrupted.",
   "updateErrorRejected": "The downloaded package does not match this app, so it was not installed.",
   "updateErrorInstall": "Couldn't open the installer.",
-  "linkOpenFailed": "Couldn't open the link."
+  "linkOpenFailed": "Couldn't open the link.",
+  "pluginErrorRuntimeStart": "The plugin runtime did not start."
 }

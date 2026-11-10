@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -17,8 +19,19 @@ import 'package:music_are/core/widgets/notice_listener.dart';
 import 'package:music_are/features/update/presentation/cubit/app_update_cubit.dart';
 
 void main() async {
-  final initialLocation = await AppInitializer.initialize();
-  runApp(MusicAreApp(initialLocation: initialLocation));
+  try {
+    runApp(MusicAreApp(initialLocation: await AppInitializer.initialize()));
+  } catch (error, stack) {
+    FlutterError.reportError(
+      FlutterErrorDetails(
+        exception: error,
+        stack: stack,
+        library: 'MusicAre startup',
+        context: ErrorDescription('while booting the app'),
+      ),
+    );
+    exit(1);
+  }
 }
 
 class MusicAreApp extends StatefulWidget {

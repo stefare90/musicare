@@ -12,6 +12,7 @@ class PreferencesService {
   static const String _amoledBlackKey = 'amoled_black';
   static const String _languageCodeKey = 'language_code';
   static const String _infiniteMusicKey = 'infinite_music';
+  static const String _runtimeSessionKey = 'runtime_session';
 
   final SharedPreferences _prefs;
 
@@ -78,6 +79,10 @@ class PreferencesService {
   bool? getInfiniteMusic() => _prefs.getBool(_infiniteMusicKey);
   Future<bool> setInfiniteMusic(bool value) =>
       _prefs.setBool(_infiniteMusicKey, value);
+
+  String? getRuntimeSession() => _prefs.getString(_runtimeSessionKey);
+  Future<bool> setRuntimeSession(String value) =>
+      _prefs.setString(_runtimeSessionKey, value);
 }
 
 T? _enumByName<T extends Enum>(List<T> values, String? name) {
