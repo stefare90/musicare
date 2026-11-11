@@ -29,10 +29,16 @@ class PluginManager {
       final type = entry.type;
       try {
         final id = preferences.activePluginId(type);
-        if (id == null || id.isEmpty) continue;
-        final manifest = await storage.installed(type, id);
+        final versionDir = preferences.activePluginVersionDir(type);
+        if (id == null ||
+            id.isEmpty ||
+            versionDir == null ||
+            versionDir.isEmpty) {
+          continue;
+        }
+        final manifest = await storage.installed(type, id, versionDir);
         if (manifest == null) continue;
-        final dir = await storage.codeDir(type, id);
+        final dir = await storage.codeDir(type, id, versionDir);
         final error = await entry.lifecycle.load(id, dir);
         if (error == null) await entry.auth?.refresh();
       } catch (_) {}
@@ -47,7 +53,10 @@ class PluginManager {
   }) async {
     final plugin = registry.entryOf(type).lifecycle;
     final id = preferences.activePluginId(type);
-    final installed = id == null ? null : await storage.installed(type, id);
+    final versionDir = preferences.activePluginVersionDir(type);
+    final installed = id == null || versionDir == null
+        ? null
+        : await storage.installed(type, id, versionDir);
 
     PluginManifest? remote;
     var updateAvailable = false;
@@ -93,11 +102,12 @@ class PluginManager {
 
     final previousId = preferences.activePluginId(type);
     final zipBytes = await catalog.download(target);
-    final manifest = await storage.install(
+    final installed = await storage.install(
       type,
       zipBytes,
       validate: plugin.validate,
     );
+    final manifest = installed.manifest;
     final isSwitch = previousId != null && previousId != manifest.id;
 
     if (isSwitch) {
@@ -106,19 +116,15 @@ class PluginManager {
       } catch (_) {}
     }
 
-    final dir = await storage.codeDir(type, manifest.id);
+    final dir = await storage.codeDir(type, manifest.id, installed.versionDir);
     final error = await plugin.load(manifest.id, dir);
-    if (error != null) {
-      await storage.rollback(type, manifest.id);
-      throw PluginActivationException(error);
-    }
+    if (error != null) throw PluginActivationException(error);
 
-    await storage.commit(type, manifest.id);
     await preferences.setActivePluginId(type, manifest.id);
+    await preferences.setActivePluginVersionDir(type, installed.versionDir);
     await entry.auth?.refresh();
 
     if (isSwitch) {
-      await storage.removeCodeDir(type, previousId);
       await preferences.removePluginScopedKeys(previousId);
     }
 

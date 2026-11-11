@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:music_are/core/services/preferences_service.dart';
+import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
+import 'package:music_are/features/plugin/shared/data/services/plugin_storage.dart';
 import 'package:musicare_runtime_host/musicare_runtime_host.dart';
 
 class RuntimePorts {
@@ -20,10 +22,11 @@ class RuntimePorts {
   }
 }
 
-class RuntimeBoot {
-  RuntimeBoot({
+class PluginRuntimeBoot {
+  PluginRuntimeBoot({
     required this.host,
     required this.preferences,
+    required this.storage,
     Future<bool> Function(int port)? ping,
     int? Function()? processId,
   }) : _ping = ping ?? _pingOverHttp,
@@ -31,6 +34,7 @@ class RuntimeBoot {
 
   final RuntimeHost host;
   final PreferencesService preferences;
+  final PluginStorage storage;
 
   final Future<bool> Function(int port) _ping;
   final int? Function() _processId;
@@ -45,6 +49,7 @@ class RuntimeBoot {
       return RuntimePorts(saved.ports);
     }
 
+    await _prepareStore();
     await host.start();
     final ports = <Subsystem, int>{
       for (final subsystem in host.subsystems)
@@ -59,6 +64,24 @@ class RuntimeBoot {
       }),
     );
     return RuntimePorts(ports);
+  }
+
+  // Runs only on a real boot: a reattached interpreter may still read the retired dirs.
+  Future<void> _prepareStore() async {
+    final keep = <String>{};
+    for (final type in PluginType.values) {
+      final id = preferences.activePluginId(type);
+      final versionDir = preferences.activePluginVersionDir(type);
+      if (id == null ||
+          id.isEmpty ||
+          versionDir == null ||
+          versionDir.isEmpty) {
+        continue;
+      }
+      if (await storage.installed(type, id, versionDir) == null) continue;
+      keep.add(storage.versionDirKey(type, id, versionDir));
+    }
+    await storage.prune(keep: keep);
   }
 
   Future<bool> _isServing(_RuntimeSession session) async {

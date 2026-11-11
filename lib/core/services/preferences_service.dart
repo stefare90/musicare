@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class PreferencesService {
   static const String _activePluginIdSuffix = '_active_plugin_id';
+  static const String _activePluginVersionDirSuffix =
+      '_active_plugin_version_dir';
   static const String _pluginAccountIdPrefix = 'plugin_account_id_';
   static const String _legacyMetadataUserIdPrefix = 'metadata_user_id_';
   static const String _themeModeKey = 'theme_mode';
@@ -21,6 +23,9 @@ class PreferencesService {
   String _activePluginKey(PluginType type) =>
       '${type.name.toLowerCase()}$_activePluginIdSuffix';
 
+  String _activePluginVersionDirKey(PluginType type) =>
+      '${type.name.toLowerCase()}$_activePluginVersionDirSuffix';
+
   String? activePluginId(PluginType type) =>
       _prefs.getString(_activePluginKey(type));
 
@@ -29,6 +34,17 @@ class PreferencesService {
 
   Future<bool> clearActivePluginId(PluginType type) =>
       _prefs.remove(_activePluginKey(type));
+
+  String? activePluginVersionDir(PluginType type) =>
+      _prefs.getString(_activePluginVersionDirKey(type));
+
+  Future<bool> setActivePluginVersionDir(
+    PluginType type,
+    String versionDir,
+  ) => _prefs.setString(_activePluginVersionDirKey(type), versionDir);
+
+  Future<bool> clearActivePluginVersionDir(PluginType type) =>
+      _prefs.remove(_activePluginVersionDirKey(type));
 
   String? pluginAccountId(String pluginId) {
     return _prefs.getString('$_pluginAccountIdPrefix$pluginId') ??

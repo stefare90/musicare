@@ -9,6 +9,8 @@ import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+typedef InstalledPluginVersion = ({PluginManifest manifest, String versionDir});
+
 class PluginStorage {
   PluginStorage({Future<Directory> Function()? appDir})
     : _appDir = appDir ?? _defaultAppDir;
@@ -18,24 +20,30 @@ class PluginStorage {
   static Future<Directory> _defaultAppDir() async =>
       Directory((await getApplicationSupportDirectory()).path);
 
-  Future<String> codeDir(PluginType type, String id) async {
+  Future<Directory> pluginsDir() async =>
+      Directory(p.join((await _appDir()).path, 'plugins'));
+
+  Future<String> codeDir(PluginType type, String id, String versionDir) async {
     final root = await _appDir();
-    return p.join(root.path, 'plugins', _segmentOf(type), id);
+    return p.join(root.path, 'plugins', _segmentOf(type), id, versionDir);
   }
 
-  Future<PluginManifest?> installed(PluginType type, String id) async {
-    final manifestFile = File(p.join(await codeDir(type, id), 'plugin.json'));
-    if (!manifestFile.existsSync()) return null;
-    try {
-      return PluginManifest.fromJson(
-        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>,
-      );
-    } catch (_) {
-      return null;
-    }
+  String versionDirKey(PluginType type, String id, String versionDir) =>
+      [_segmentOf(type), id, versionDir].join('/');
+
+  Future<PluginManifest?> installed(
+    PluginType type,
+    String id,
+    String versionDir,
+  ) async {
+    final manifestFile = File(
+      p.join(await codeDir(type, id, versionDir), 'plugin.json'),
+    );
+    return _readManifest(manifestFile);
   }
 
-  Future<PluginManifest> install(
+  /// A taken name gets a suffix: a path a loaded module may read is never reused.
+  Future<InstalledPluginVersion> install(
     PluginType type,
     Uint8List zipBytes, {
     required void Function(PluginManifest manifest) validate,
@@ -50,50 +58,77 @@ class PluginStorage {
     }
     validate(manifest);
 
-    final dirPath = await codeDir(type, manifest.id);
-    final newDir = Directory('$dirPath.new');
-    final backupDir = Directory('$dirPath.bak');
-    final liveDir = Directory(dirPath);
-    _deleteIfExists(newDir);
-    _deleteIfExists(backupDir);
+    final idDir = await _pluginDir(type, manifest.id);
+    idDir.createSync(recursive: true);
+    final versionDir = _freeVersionDir(idDir, manifest.version);
+    final staging = Directory(p.join(idDir.path, '$versionDir.new'));
+    final target = Directory(p.join(idDir.path, versionDir));
 
     try {
-      _extract(archive, newDir);
-      if (liveDir.existsSync()) {
-        liveDir.renameSync(backupDir.path);
-      }
-      newDir.renameSync(dirPath);
+      _extract(archive, staging);
+      staging.renameSync(target.path);
     } catch (_) {
-      _deleteIfExists(newDir);
-      if (!liveDir.existsSync() && backupDir.existsSync()) {
-        backupDir.renameSync(dirPath);
-      }
+      _deleteIfExists(staging);
       rethrow;
     }
-    return manifest;
+    return (manifest: manifest, versionDir: versionDir);
   }
 
-  Future<void> commit(PluginType type, String id) async {
-    final dirPath = await codeDir(type, id);
-    _deleteIfExists(Directory('$dirPath.new'));
-    _deleteIfExists(Directory('$dirPath.bak'));
-  }
+  /// Call it only before the interpreter starts: a loaded module may still read a code dir.
+  Future<List<Directory>> prune({required Set<String> keep}) async {
+    final root = await pluginsDir();
+    if (!root.existsSync()) return const [];
 
-  Future<void> rollback(PluginType type, String id) async {
-    final dirPath = await codeDir(type, id);
-    final liveDir = Directory(dirPath);
-    final backupDir = Directory('$dirPath.bak');
-    _deleteIfExists(Directory('$dirPath.new'));
-    if (!backupDir.existsSync()) {
-      _deleteIfExists(liveDir);
-      return;
+    final removed = <Directory>[];
+    for (final type in PluginType.values) {
+      final subsystem = Directory(p.join(root.path, _segmentOf(type)));
+      if (!subsystem.existsSync()) continue;
+      for (final idDir in _directoriesOf(subsystem)) {
+        final id = p.basename(idDir.path);
+        final versions = _directoriesOf(idDir);
+        final active = versions
+            .where(
+              (dir) =>
+                  keep.contains(versionDirKey(type, id, p.basename(dir.path))),
+            )
+            .toList();
+        if (active.isEmpty) {
+          idDir.deleteSync(recursive: true);
+          removed.add(idDir);
+          continue;
+        }
+        for (final version in versions) {
+          if (active.contains(version)) continue;
+          version.deleteSync(recursive: true);
+          removed.add(version);
+        }
+      }
     }
-    _deleteIfExists(liveDir);
-    backupDir.renameSync(dirPath);
+    return removed;
   }
 
-  Future<void> removeCodeDir(PluginType type, String id) async {
-    _deleteIfExists(Directory(await codeDir(type, id)));
+  Future<Directory> _pluginDir(PluginType type, String id) async {
+    final root = await _appDir();
+    return Directory(p.join(root.path, 'plugins', _segmentOf(type), id));
+  }
+
+  String _freeVersionDir(Directory parent, String requested) {
+    final base = _safeDirName(requested);
+    var index = 1;
+    while (true) {
+      final candidate = index == 1 ? base : '$base-$index';
+      final target = p.join(parent.path, candidate);
+      if (!Directory(target).existsSync() &&
+          !Directory('$target.new').existsSync()) {
+        return candidate;
+      }
+      index++;
+    }
+  }
+
+  String _safeDirName(String value) {
+    final cleaned = value.replaceAll(RegExp(r'[\\/]'), '_').trim();
+    return cleaned.isEmpty ? 'unknown' : cleaned;
   }
 
   String _segmentOf(PluginType type) {
@@ -101,6 +136,17 @@ class PluginStorage {
       PluginType.metadata => 'metadata',
       PluginType.audioSource => 'audio_source',
     };
+  }
+
+  PluginManifest? _readManifest(File file) {
+    if (!file.existsSync()) return null;
+    try {
+      return PluginManifest.fromJson(
+        jsonDecode(file.readAsStringSync()) as Map<String, dynamic>,
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   PluginManifest _manifestFrom(Archive archive) {
@@ -134,4 +180,7 @@ class PluginStorage {
       directory.deleteSync(recursive: true);
     }
   }
+
+  List<Directory> _directoriesOf(Directory parent) =>
+      parent.listSync(followLinks: false).whereType<Directory>().toList();
 }

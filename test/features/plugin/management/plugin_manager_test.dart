@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -13,6 +14,9 @@ import 'package:music_are/features/plugin/shared/data/capabilities/plugin_auth.d
 import 'package:music_are/features/plugin/shared/data/capabilities/plugin_lifecycle.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_entry.dart';
 import 'package:music_are/features/plugin/shared/data/services/plugin_registry.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../helpers/plugin_archive.dart';
 
 class MockPluginLifecycle extends Mock implements PluginLifecycle {}
 
@@ -76,20 +80,27 @@ void main() {
       () => preferences.activePluginId(PluginType.metadata),
     ).thenReturn(installed.id);
     when(
+      () => preferences.activePluginVersionDir(PluginType.metadata),
+    ).thenReturn(installed.version);
+    when(
       () => preferences.setActivePluginId(any(), any()),
+    ).thenAnswer((_) async => true);
+    when(
+      () => preferences.setActivePluginVersionDir(any(), any()),
     ).thenAnswer((_) async => true);
     when(
       () => preferences.removePluginScopedKeys(any()),
     ).thenAnswer((_) async {});
     when(
-      () => storage.installed(PluginType.metadata, installed.id),
+      () => storage.installed(
+        PluginType.metadata,
+        installed.id,
+        installed.version,
+      ),
     ).thenAnswer((_) async => installed);
     when(
-      () => storage.codeDir(any(), any()),
+      () => storage.codeDir(any(), any(), any()),
     ).thenAnswer((_) async => '/tmp/plugin');
-    when(() => storage.commit(any(), any())).thenAnswer((_) async {});
-    when(() => storage.rollback(any(), any())).thenAnswer((_) async {});
-    when(() => storage.removeCodeDir(any(), any())).thenAnswer((_) async {});
     when(
       () => catalog.latest(PluginType.metadata),
     ).thenAnswer(
@@ -129,10 +140,29 @@ void main() {
     }
   });
 
-  test('initialize loads the active plugin from disk', () async {
+  test('initialize loads the active plugin by id and version', () async {
     await manager.initialize();
 
-    verify(() => runtime.load(installed.id, '/tmp/plugin')).called(1);
+    verify(
+      () => runtime.load(installed.id, '/tmp/plugin'),
+    ).called(1);
+    verify(
+      () => storage.codeDir(
+        PluginType.metadata,
+        installed.id,
+        installed.version,
+      ),
+    ).called(1);
+  });
+
+  test('initialize skips a plugin without a version pointer', () async {
+    when(
+      () => preferences.activePluginVersionDir(PluginType.metadata),
+    ).thenReturn(null);
+
+    await manager.initialize();
+
+    verifyNever(() => runtime.load(any(), any()));
   });
 
   test(
@@ -171,51 +201,48 @@ void main() {
     },
   );
 
-  test(
-    'apply on the same id updates without purging or removing code',
-    () async {
-      final events = <String>[];
-      final bytes = Uint8List.fromList([1, 2, 3]);
-      final sameId = manifest(version: '3.0.0');
-      when(
-        () => preferences.activePluginId(PluginType.metadata),
-      ).thenReturn(sameId.id);
-      when(() => catalog.download(sameId)).thenAnswer((_) async {
-        events.add('download');
-        return bytes;
-      });
-      when(
-        () => storage.install(
-          PluginType.metadata,
-          bytes,
-          validate: any(named: 'validate'),
-        ),
-      ).thenAnswer((_) async {
-        events.add('install');
-        return sameId;
-      });
-      when(() => runtime.load(sameId.id, any())).thenAnswer((_) async {
-        events.add('load');
-        return null;
-      });
-      when(() => storage.commit(PluginType.metadata, sameId.id)).thenAnswer((
-        _,
-      ) async {
-        events.add('commit');
-      });
+  test('apply on the same id updates without purging the account', () async {
+    final events = <String>[];
+    final bytes = Uint8List.fromList([1, 2, 3]);
+    final sameId = manifest(version: '3.0.0');
+    when(
+      () => preferences.activePluginId(PluginType.metadata),
+    ).thenReturn(sameId.id);
+    when(() => catalog.download(sameId)).thenAnswer((_) async {
+      events.add('download');
+      return bytes;
+    });
+    when(
+      () => storage.install(
+        PluginType.metadata,
+        bytes,
+        validate: any(named: 'validate'),
+      ),
+    ).thenAnswer((_) async {
+      events.add('install');
+      return (manifest: sameId, versionDir: '3.0.0');
+    });
+    when(() => runtime.load(sameId.id, any())).thenAnswer((_) async {
+      events.add('load');
+      return null;
+    });
 
-      final result = await manager.apply(PluginType.metadata, sameId);
+    final result = await manager.apply(PluginType.metadata, sameId);
 
-      expect(result, sameId);
-      expect(events, ['download', 'install', 'load', 'commit']);
-      verifyNever(() => auth.logout());
-      verifyNever(() => storage.removeCodeDir(any(), any()));
-      expect(preferences.activePluginId(PluginType.metadata), sameId.id);
-    },
-  );
+    expect(result, sameId);
+    expect(events, ['download', 'install', 'load']);
+    verifyNever(() => auth.logout());
+    verifyNever(() => preferences.removePluginScopedKeys(any()));
+    verify(
+      () => preferences.setActivePluginId(PluginType.metadata, sameId.id),
+    ).called(1);
+    verify(
+      () => preferences.setActivePluginVersionDir(PluginType.metadata, '3.0.0'),
+    ).called(1);
+  });
 
   test(
-    'apply on a different id logs out the old plugin and removes its code',
+    'apply on a different id logs out the old plugin and switches the pointer',
     () async {
       final events = <String>[];
       final bytes = Uint8List.fromList([1, 2, 3]);
@@ -228,7 +255,7 @@ void main() {
         ),
       ).thenAnswer((_) async {
         events.add('install');
-        return target;
+        return (manifest: target, versionDir: '1.0.0');
       });
       when(() => auth.logout()).thenAnswer((_) async {
         events.add('logout');
@@ -237,24 +264,21 @@ void main() {
         events.add('load');
         return null;
       });
-      when(
-        () => storage.removeCodeDir(PluginType.metadata, installed.id),
-      ).thenAnswer((_) async {
-        events.add('remove');
-      });
 
       await manager.apply(PluginType.metadata, target);
 
-      expect(events, ['install', 'logout', 'load', 'remove']);
+      expect(events, ['install', 'logout', 'load']);
       verify(
         () => preferences.setActivePluginId(PluginType.metadata, target.id),
       ).called(1);
+      verify(
+        () => preferences.setActivePluginVersionDir(PluginType.metadata, '1.0.0'),
+      ).called(1);
       verify(() => preferences.removePluginScopedKeys(installed.id)).called(1);
-      verify(() => storage.commit(PluginType.metadata, target.id)).called(1);
     },
   );
 
-  test('a failed activation rolls the new code back', () async {
+  test('a failed activation keeps the active plugin and its pointer', () async {
     final bytes = Uint8List.fromList([1, 2, 3]);
     when(() => catalog.download(target)).thenAnswer((_) async => bytes);
     when(
@@ -263,7 +287,7 @@ void main() {
         bytes,
         validate: any(named: 'validate'),
       ),
-    ).thenAnswer((_) async => target);
+    ).thenAnswer((_) async => (manifest: target, versionDir: '1.0.0'));
     final error = Exception('activation failed');
     when(() => runtime.load(target.id, any())).thenAnswer((_) async => error);
 
@@ -272,9 +296,9 @@ void main() {
       throwsA(isA<PluginActivationException>()),
     );
 
-    verify(() => storage.rollback(PluginType.metadata, target.id)).called(1);
     verifyNever(() => preferences.setActivePluginId(any(), any()));
-    verifyNever(() => storage.commit(any(), any()));
+    verifyNever(() => preferences.setActivePluginVersionDir(any(), any()));
+    verifyNever(() => preferences.removePluginScopedKeys(any()));
   });
 
   test('an incompatible target is rejected before downloading', () async {
@@ -289,12 +313,10 @@ void main() {
     verifyNever(
       () => storage.install(any(), any(), validate: any(named: 'validate')),
     );
-    // The installed plugin must survive a refused target untouched: no code
-    // directory removed, no rollback, no active id or account key changed.
-    verifyNever(() => storage.removeCodeDir(any(), any()));
-    verifyNever(() => storage.rollback(any(), any()));
-    verifyNever(() => storage.commit(any(), any()));
+    // The installed plugin must survive a refused target untouched: no active
+    // id or account key changed.
     verifyNever(() => preferences.setActivePluginId(any(), any()));
+    verifyNever(() => preferences.setActivePluginVersionDir(any(), any()));
     verifyNever(() => preferences.clearActivePluginId(any()));
     verifyNever(() => preferences.removePluginScopedKeys(any()));
     verifyNever(() => runtime.unload());
@@ -316,5 +338,119 @@ void main() {
     final result = await manager.alternatives(PluginType.metadata);
 
     expect(result, [alternative]);
+  });
+
+  group('with a real plugin store', () {
+    late Directory tempDir;
+    late PluginStorage realStorage;
+    late PreferencesService realPreferences;
+
+    setUp(() async {
+      tempDir = Directory.systemTemp.createTempSync('plugin_manager_store_');
+      realStorage = PluginStorage(appDir: () async => tempDir);
+      await realStorage.install(
+        PluginType.metadata,
+        pluginZip(id: installed.id, version: '1.0.0'),
+        validate: (_) {},
+      );
+      SharedPreferences.setMockInitialValues({
+        'metadata_active_plugin_id': installed.id,
+        'metadata_active_plugin_version_dir': '1.0.0',
+      });
+      realPreferences = PreferencesService(
+        await SharedPreferences.getInstance(),
+      );
+      manager = PluginManager(
+        registry: PluginRegistry([
+          PluginEntry(lifecycle: runtime, auth: auth),
+        ]),
+        catalog: catalog,
+        storage: realStorage,
+        preferences: realPreferences,
+      );
+      File(
+        '${tempDir.path}/plugins/metadata/${installed.id}/auth.json',
+      ).writeAsStringSync('{"token":"keep-me"}');
+    });
+
+    tearDown(() {
+      if (tempDir.existsSync()) tempDir.deleteSync(recursive: true);
+    });
+
+    String versionDir(String id, String versionDir) =>
+        '${tempDir.path}/plugins/metadata/$id/$versionDir';
+
+    test(
+      'switching plugin leaves every code dir and the old data untouched',
+      () async {
+        final oldManifest = File('${versionDir(installed.id, '1.0.0')}/plugin.json');
+        final oldBytes = oldManifest.readAsStringSync();
+        final bytes = pluginZip(id: target.id, version: '1.0.0');
+        when(() => catalog.download(target)).thenAnswer((_) async => bytes);
+
+        await manager.apply(PluginType.metadata, target);
+
+        expect(oldManifest.existsSync(), isTrue);
+        expect(oldManifest.readAsStringSync(), oldBytes);
+        expect(
+          File('${versionDir(target.id, '1.0.0')}/plugin.json').existsSync(),
+          isTrue,
+        );
+        expect(
+          File('${tempDir.path}/plugins/metadata/${installed.id}/auth.json')
+              .existsSync(),
+          isTrue,
+        );
+        expect(realPreferences.activePluginId(PluginType.metadata), target.id);
+        expect(
+          realPreferences.activePluginVersionDir(PluginType.metadata),
+          '1.0.0',
+        );
+      },
+    );
+
+    test('reinstalling the same version writes a new path', () async {
+      final oldManifest = File('${versionDir(installed.id, '1.0.0')}/plugin.json');
+      final oldBytes = oldManifest.readAsStringSync();
+      final bytes = pluginZip(id: installed.id, version: '1.0.0');
+      when(
+        () => catalog.download(any()),
+      ).thenAnswer((_) async => bytes);
+
+      await manager.apply(PluginType.metadata, installed);
+
+      expect(oldManifest.readAsStringSync(), oldBytes);
+      expect(
+        File('${versionDir(installed.id, '1.0.0-2')}/plugin.json').existsSync(),
+        isTrue,
+      );
+      expect(
+        realPreferences.activePluginVersionDir(PluginType.metadata),
+        '1.0.0-2',
+      );
+    });
+
+    test('a failed activation leaves the active version in place', () async {
+      final bytes = pluginZip(id: target.id, version: '1.0.0');
+      when(() => catalog.download(target)).thenAnswer((_) async => bytes);
+      when(
+        () => runtime.load(target.id, any()),
+      ).thenAnswer((_) async => Exception('activation failed'));
+
+      await expectLater(
+        manager.apply(PluginType.metadata, target),
+        throwsA(isA<PluginActivationException>()),
+      );
+
+      expect(
+        File('${versionDir(installed.id, '1.0.0')}/plugin.json').existsSync(),
+        isTrue,
+      );
+      expect(realPreferences.activePluginId(PluginType.metadata), installed.id);
+      expect(
+        realPreferences.activePluginVersionDir(PluginType.metadata),
+        '1.0.0',
+      );
+    });
   });
 }

@@ -6,7 +6,6 @@ import 'package:music_are/core/errors/app_error_presentation.dart';
 import 'package:music_are/core/router/app_router.dart';
 import 'package:music_are/core/services/network_service.dart';
 import 'package:music_are/core/services/preferences_service.dart';
-import 'package:music_are/core/services/runtime_boot.dart';
 import 'package:music_are/core/theme/presentation/cubit/theme_cubit.dart';
 import 'package:music_are/features/listening/data/services/listening_tracker.dart';
 import 'package:music_are/features/plugin/metadata/data/services/metadata_history_sink.dart';
@@ -31,6 +30,7 @@ import 'package:music_are/features/plugin/shared/data/services/plugin_catalog.da
 import 'package:music_are/features/plugin/management/data/services/plugin_manager.dart';
 import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
 import 'package:music_are/features/plugin/shared/presentation/cubit/plugin_session_cubit.dart';
+import 'package:music_are/features/plugin/shared/data/services/plugin_runtime_boot.dart';
 import 'package:music_are/features/plugin/shared/data/services/plugin_storage.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_entry.dart';
 import 'package:music_are/features/plugin/shared/data/services/plugin_registry.dart';
@@ -56,11 +56,12 @@ Future<void> initCoreDependencies() async {
   sl.registerLazySingleton<ThemeCubit>(
     () => ThemeCubit(sl<PreferencesService>()),
   );
-  sl.registerLazySingleton<RuntimeHost>(() => RuntimeHost());
-  sl.registerLazySingleton<RuntimeBoot>(
-    () => RuntimeBoot(
-      host: sl<RuntimeHost>(),
+  sl.registerLazySingleton<PluginStorage>(() => PluginStorage());
+  sl.registerLazySingleton<PluginRuntimeBoot>(
+    () => PluginRuntimeBoot(
+      host: RuntimeHost(),
       preferences: sl<PreferencesService>(),
+      storage: sl<PluginStorage>(),
     ),
   );
 }
@@ -126,7 +127,7 @@ void initRuntimeDependencies(RuntimePorts ports) {
     () => PluginManager(
       registry: sl<PluginRegistry>(),
       catalog: sl<PluginCatalog>(),
-      storage: PluginStorage(),
+      storage: sl<PluginStorage>(),
       preferences: sl<PreferencesService>(),
     ),
   );

@@ -59,6 +59,21 @@ void main() {
       expect(service.activePluginId(PluginType.audioSource), 'audio.plugin');
     });
 
+    test('active plugin version dirs use one generic key per type', () async {
+      expect(service.activePluginVersionDir(PluginType.metadata), isNull);
+
+      await service.setActivePluginVersionDir(PluginType.metadata, '4.0.1');
+      await service.setActivePluginVersionDir(PluginType.audioSource, '1.0.0-2');
+
+      expect(service.activePluginVersionDir(PluginType.metadata), '4.0.1');
+      expect(service.activePluginVersionDir(PluginType.audioSource), '1.0.0-2');
+      expect(prefs.getString('metadata_active_plugin_version_dir'), '4.0.1');
+
+      await service.clearActivePluginVersionDir(PluginType.metadata);
+      expect(service.activePluginVersionDir(PluginType.metadata), isNull);
+      expect(service.activePluginVersionDir(PluginType.audioSource), '1.0.0-2');
+    });
+
     test('plugin account ids are scoped per plugin', () async {
       await service.setPluginAccountId('first.plugin', 'listener');
 
