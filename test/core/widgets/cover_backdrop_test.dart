@@ -13,8 +13,12 @@ void main() {
     height: 500,
   );
 
-  Widget buildTestableWidget({List<sdk.Image> images = const [image]}) {
+  Widget buildTestableWidget({
+    List<sdk.Image> images = const [image],
+    ThemeData? theme,
+  }) {
     return MaterialApp(
+      theme: theme,
       home: Scaffold(
         body: SizedBox(
           width: 400,
@@ -40,6 +44,46 @@ void main() {
     expect(find.byType(MediaCoverImage), findsOneWidget);
     // No shimmer behind: the backdrop only appears once the image is ready.
     expect(find.byType(ShimmerBox), findsNothing);
+  });
+
+  testWidgets('dark lifts the blurred field with an additive offset', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildTestableWidget(theme: ThemeData(brightness: Brightness.dark)),
+    );
+    await tester.pump();
+
+    final filter = tester.widget<ColorFiltered>(find.byType(ColorFiltered));
+    expect(
+      filter.colorFilter,
+      const ColorFilter.matrix([
+        1, 0, 0, 0, 40, //
+        0, 1, 0, 0, 40, //
+        0, 0, 1, 0, 40, //
+        0, 0, 0, 1, 0, //
+      ]),
+    );
+  });
+
+  testWidgets('light lowers the blurred field with an additive offset', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildTestableWidget(theme: ThemeData(brightness: Brightness.light)),
+    );
+    await tester.pump();
+
+    final filter = tester.widget<ColorFiltered>(find.byType(ColorFiltered));
+    expect(
+      filter.colorFilter,
+      const ColorFilter.matrix([
+        1, 0, 0, 0, -100, //
+        0, 1, 0, 0, -100, //
+        0, 0, 1, 0, -100, //
+        0, 0, 0, 1, 0, //
+      ]),
+    );
   });
 
   testWidgets('blurs the default placeholder when there is no artwork', (

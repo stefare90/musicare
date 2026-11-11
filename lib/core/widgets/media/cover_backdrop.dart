@@ -7,6 +7,19 @@ import 'package:music_are/core/widgets/media/media_cover_image.dart';
 
 /// Blurred cover with a colored halo that fades into [background].
 class CoverBackdrop extends StatelessWidget {
+  static const List<double> _liftDark = [
+    1, 0, 0, 0, 40, //
+    0, 1, 0, 0, 40, //
+    0, 0, 1, 0, 40, //
+    0, 0, 0, 1, 0, //
+  ];
+  static const List<double> _liftLight = [
+    1, 0, 0, 0, -100, //
+    0, 1, 0, 0, -100, //
+    0, 0, 1, 0, -100, //
+    0, 0, 0, 1, 0, //
+  ];
+
   final List<sdk.Image> images;
   final MediaType mediaType;
   final double? coverTarget;
@@ -42,15 +55,20 @@ class CoverBackdrop extends StatelessWidget {
           children: [
             Opacity(
               opacity: opacity ?? (isDark ? 0.35 : 0.18),
-              child: ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-                child: MediaCoverImage(
-                  images: images,
-                  mediaType: mediaType,
-                  width: coverTarget,
-                  height: coverTarget,
-                  fit: BoxFit.cover,
-                  showLoadingPlaceholder: false,
+              child: ColorFiltered(
+                colorFilter: ColorFilter.matrix(
+                  isDark ? _liftDark : _liftLight,
+                ),
+                child: ImageFiltered(
+                  imageFilter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+                  child: MediaCoverImage(
+                    images: images,
+                    mediaType: mediaType,
+                    width: coverTarget,
+                    height: coverTarget,
+                    fit: BoxFit.cover,
+                    showLoadingPlaceholder: false,
+                  ),
                 ),
               ),
             ),

@@ -70,9 +70,9 @@ class FullPlayerPage extends StatelessWidget {
                       mediaType: MediaType.track,
                       background: context.colorScheme.surface,
                       haloCenter: isLandscape
-                          ? const Alignment(-0.3, 0.0)
-                          : const Alignment(0.0, -0.3),
-                      haloRadius: 0.85,
+                          ? const Alignment(-0.4, 0.0)
+                          : const Alignment(0.0, -0.4),
+                      haloRadius: 0.75,
                       haloScaleY: 0.9,
                     ),
                   ),

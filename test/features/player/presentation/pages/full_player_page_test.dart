@@ -162,6 +162,15 @@ void main() {
         expect(find.byIcon(Icons.graphic_eq_rounded), findsOneWidget);
         expect(find.byIcon(Icons.queue_music_rounded), findsOneWidget);
         expect(find.byType(Slider), findsOneWidget);
+
+        final shaded = tester
+            .widgetList<Container>(find.byType(Container))
+            .where((container) {
+              final decoration = container.decoration;
+              return decoration is BoxDecoration &&
+                  decoration.boxShadow != null;
+            });
+        expect(shaded, isEmpty);
       },
     );
 
@@ -196,6 +205,14 @@ void main() {
       expect(find.byIcon(Icons.queue_music_rounded), findsOneWidget);
       expect(find.byIcon(Icons.download_rounded), findsOneWidget);
       expect(find.byIcon(Icons.favorite_border_rounded), findsOneWidget);
+
+      final shaded = tester
+          .widgetList<Container>(find.byType(Container))
+          .where((container) {
+            final decoration = container.decoration;
+            return decoration is BoxDecoration && decoration.boxShadow != null;
+          });
+      expect(shaded, isEmpty);
     });
 
     testWidgets('status bar icons are dark in the light theme', (tester) async {

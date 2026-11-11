@@ -37,22 +37,10 @@ class FullPlayerPortraitView extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 14.0, bottom: 8.0),
                 child: AspectRatio(
                   aspectRatio: 1.0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.35),
-                          blurRadius: 24,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: MediaCoverImage(
-                      images: track.album.images,
-                      mediaType: MediaType.track,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
+                  child: MediaCoverImage(
+                    images: track.album.images,
+                    mediaType: MediaType.track,
+                    borderRadius: BorderRadius.circular(20),
                   ),
                 ),
               ),
