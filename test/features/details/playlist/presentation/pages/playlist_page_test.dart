@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,6 +12,7 @@ import 'package:music_are/features/plugin/metadata/data/repositories/playlist_re
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/details/playlist/presentation/pages/playlist_page.dart';
+import 'package:music_are/features/details/playlist/presentation/widgets/playlist_visibility_badge.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/player/presentation/cubit/player_state.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
@@ -208,6 +211,31 @@ void main() {
 
       expect(find.text('Public'), findsNothing);
       expect(find.text('Private'), findsNothing);
+    });
+
+    testWidgets('keeps the badge at its final size while loading', (
+      tester,
+    ) async {
+      userCubit.set(testUserState(isAuthenticated: true, userId: 'u1'));
+      final tracks = Completer<PaginatedResult<Track>>();
+      when(
+        () => mockPlaylist.tracks('pl1', offset: 0, limit: 20),
+      ).thenAnswer((_) => tracks.future);
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pump();
+
+      final whileLoading = tester.getSize(
+        find.byType(PlaylistVisibilityBadge),
+      );
+
+      tracks.complete(
+        PaginatedResult(items: [], total: 0, offset: 0, limit: 20),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Private'), findsOneWidget);
+      expect(tester.getSize(find.byType(PlaylistVisibilityBadge)), whileLoading);
     });
 
     testWidgets('announces the sign-in invitation when access is required', (

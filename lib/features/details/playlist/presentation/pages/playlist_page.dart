@@ -16,7 +16,6 @@ import 'package:music_are/core/widgets/media/sliver_media_scaffold.dart';
 import 'package:music_are/core/widgets/media/sliver_track_list.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_cubit.dart';
 import 'package:music_are/features/details/playlist/presentation/cubit/playlist_state.dart';
-import 'package:music_are/core/widgets/skeletons/skeleton_playlist_badge.dart';
 import 'package:music_are/features/details/playlist/presentation/widgets/playlist_visibility_badge.dart';
 import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/library/presentation/utils/track_actions.dart';
@@ -172,11 +171,13 @@ class _PlaylistViewState extends State<_PlaylistView> {
         final loadingPlaylist = state is PlaylistLoadingState
             ? state.playlist
             : null;
+        final showsVisibility =
+            loadingPlaylist?.isOwnedBy(currentUserId) ?? false;
         return SliverMediaScaffold(
           metadata: state.metadata,
           isLoading: true,
-          headerBadge: (loadingPlaylist?.isOwnedBy(currentUserId) ?? false)
-              ? const SkeletonPlaylistBadge()
+          headerBadge: showsVisibility
+              ? PlaylistVisibilityBadge(isPublic: loadingPlaylist!.isPublic)
               : null,
         );
       },
