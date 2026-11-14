@@ -15,6 +15,9 @@ class PluginStorage {
   PluginStorage({Future<Directory> Function()? appDir})
     : _appDir = appDir ?? _defaultAppDir;
 
+  static const String _versionDirPrefix = 'plugin_version_';
+  static const String _dataDirName = 'data';
+
   final Future<Directory> Function() _appDir;
 
   static Future<Directory> _defaultAppDir() async =>
@@ -24,8 +27,13 @@ class PluginStorage {
       Directory(p.join((await _appDir()).path, 'plugins'));
 
   Future<String> codeDir(PluginType type, String id, String versionDir) async {
-    final root = await _appDir();
-    return p.join(root.path, 'plugins', _segmentOf(type), id, versionDir);
+    final root = await pluginsDir();
+    return p.join(root.path, _segmentOf(type), id, versionDir);
+  }
+
+  Future<Directory> dataDir(PluginType type, String id) async {
+    final root = await pluginsDir();
+    return Directory(p.join(root.path, _segmentOf(type), id, _dataDirName));
   }
 
   String versionDirKey(PluginType type, String id, String versionDir) =>
@@ -60,7 +68,11 @@ class PluginStorage {
 
     final idDir = await _pluginDir(type, manifest.id);
     idDir.createSync(recursive: true);
-    final versionDir = _freeVersionDir(idDir, manifest.version);
+    (await dataDir(type, manifest.id)).createSync(recursive: true);
+    final versionDir = _freeVersionDir(
+      idDir,
+      '$_versionDirPrefix${manifest.version}',
+    );
     final staging = Directory(p.join(idDir.path, '$versionDir.new'));
     final target = Directory(p.join(idDir.path, versionDir));
 
@@ -85,8 +97,8 @@ class PluginStorage {
       if (!subsystem.existsSync()) continue;
       for (final idDir in _directoriesOf(subsystem)) {
         final id = p.basename(idDir.path);
-        final versions = _directoriesOf(idDir);
-        final active = versions
+        final entries = _directoriesOf(idDir);
+        final active = entries
             .where(
               (dir) =>
                   keep.contains(versionDirKey(type, id, p.basename(dir.path))),
@@ -97,10 +109,11 @@ class PluginStorage {
           removed.add(idDir);
           continue;
         }
-        for (final version in versions) {
-          if (active.contains(version)) continue;
-          version.deleteSync(recursive: true);
-          removed.add(version);
+        for (final entry in entries) {
+          if (active.contains(entry)) continue;
+          if (!p.basename(entry.path).startsWith(_versionDirPrefix)) continue;
+          entry.deleteSync(recursive: true);
+          removed.add(entry);
         }
       }
     }
@@ -108,8 +121,8 @@ class PluginStorage {
   }
 
   Future<Directory> _pluginDir(PluginType type, String id) async {
-    final root = await _appDir();
-    return Directory(p.join(root.path, 'plugins', _segmentOf(type), id));
+    final root = await pluginsDir();
+    return Directory(p.join(root.path, _segmentOf(type), id));
   }
 
   String _freeVersionDir(Directory parent, String requested) {

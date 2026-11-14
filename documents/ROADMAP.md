@@ -67,7 +67,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 
 ## 🔌 Plugin system (`lib/features/plugin/{shared,catalog,management,metadata}` + host adapters)
 ✅ Community plugin catalog backed by GitHub releases, with an in-memory 6-hour TTL, an explicit reload that bypasses it, and a dedicated error when GitHub rate-limits the catalog.
-✅ Versioned plugin store (`plugins/<type>/<id>/<versionDir>`): each version is extracted into a fresh, immutable path, a switch only moves the active pointer, `auth.json` stays per plugin, an id with no active version is removed entirely, and retired versions are pruned before the interpreter boots.
+✅ Versioned plugin store (`plugins/<type>/<id>/plugin_version_<versionDir>` plus a `data/` dir per plugin): each version is extracted into a fresh, immutable path, a switch only moves the active pointer, `auth.json` stays per plugin, an id with no active version is removed entirely, and retired versions are pruned before the interpreter boots while `data/` and pre-prefix dirs are left alone.
 ✅ Plugin management slots per type: installed/remote manifests, update availability, incompatibility, and update/reinstall/replace flows (replacement logs out and removes only the old code, leaving plugin data untouched, and clears the queue plus the saved index because track ids belong to the provider).
 ✅ Unified setup page for missing or incompatible metadata and audio-source plugins, reached from the bootstrap and settling every pending slot in one pass.
 ✅ Metadata plugin engine over the Python wire protocol (`musicare_metadata_host_sdk`), with SemVer compatibility checks and per-plugin persistence.

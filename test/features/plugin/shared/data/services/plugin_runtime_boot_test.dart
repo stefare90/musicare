@@ -166,10 +166,13 @@ void main() {
   });
 
   test('prunes the retired versions before booting', () async {
-    final retired = version('org.example', '1.0.0');
-    final active = version('org.example', '2.0.0');
+    final retired = version('org.example', 'plugin_version_1.0.0');
+    final active = version('org.example', 'plugin_version_2.0.0');
     await preferences.setActivePluginId(PluginType.metadata, 'org.example');
-    await preferences.setActivePluginVersionDir(PluginType.metadata, '2.0.0');
+    await preferences.setActivePluginVersionDir(
+      PluginType.metadata,
+      'plugin_version_2.0.0',
+    );
 
     await bootWith(_FakeLauncher()).start();
 
@@ -179,7 +182,7 @@ void main() {
 
   test('does not touch the store when it attaches to a live runtime', () async {
     await bootWith(_FakeLauncher()).start();
-    final previous = version('org.example', '1.0.0');
+    final previous = version('org.example', 'plugin_version_1.0.0');
 
     await PluginRuntimeBoot(
       host: hostWith(_FakeLauncher()),

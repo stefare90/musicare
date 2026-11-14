@@ -344,18 +344,20 @@ void main() {
     late Directory tempDir;
     late PluginStorage realStorage;
     late PreferencesService realPreferences;
+    late String installedVersionDir;
 
     setUp(() async {
       tempDir = Directory.systemTemp.createTempSync('plugin_manager_store_');
       realStorage = PluginStorage(appDir: () async => tempDir);
-      await realStorage.install(
+      final installedRelease = await realStorage.install(
         PluginType.metadata,
         pluginZip(id: installed.id, version: '1.0.0'),
         validate: (_) {},
       );
+      installedVersionDir = installedRelease.versionDir;
       SharedPreferences.setMockInitialValues({
         'metadata_active_plugin_id': installed.id,
-        'metadata_active_plugin_version_dir': '1.0.0',
+        'metadata_active_plugin_version_dir': installedVersionDir,
       });
       realPreferences = PreferencesService(
         await SharedPreferences.getInstance(),
@@ -383,7 +385,9 @@ void main() {
     test(
       'switching plugin leaves every code dir and the old data untouched',
       () async {
-        final oldManifest = File('${versionDir(installed.id, '1.0.0')}/plugin.json');
+        final oldManifest = File(
+          '${versionDir(installed.id, installedVersionDir)}/plugin.json',
+        );
         final oldBytes = oldManifest.readAsStringSync();
         final bytes = pluginZip(id: target.id, version: '1.0.0');
         when(() => catalog.download(target)).thenAnswer((_) async => bytes);
@@ -393,7 +397,9 @@ void main() {
         expect(oldManifest.existsSync(), isTrue);
         expect(oldManifest.readAsStringSync(), oldBytes);
         expect(
-          File('${versionDir(target.id, '1.0.0')}/plugin.json').existsSync(),
+          File(
+            '${versionDir(target.id, 'plugin_version_1.0.0')}/plugin.json',
+          ).existsSync(),
           isTrue,
         );
         expect(
@@ -404,13 +410,15 @@ void main() {
         expect(realPreferences.activePluginId(PluginType.metadata), target.id);
         expect(
           realPreferences.activePluginVersionDir(PluginType.metadata),
-          '1.0.0',
+          'plugin_version_1.0.0',
         );
       },
     );
 
     test('reinstalling the same version writes a new path', () async {
-      final oldManifest = File('${versionDir(installed.id, '1.0.0')}/plugin.json');
+      final oldManifest = File(
+        '${versionDir(installed.id, installedVersionDir)}/plugin.json',
+      );
       final oldBytes = oldManifest.readAsStringSync();
       final bytes = pluginZip(id: installed.id, version: '1.0.0');
       when(
@@ -421,12 +429,14 @@ void main() {
 
       expect(oldManifest.readAsStringSync(), oldBytes);
       expect(
-        File('${versionDir(installed.id, '1.0.0-2')}/plugin.json').existsSync(),
+        File(
+          '${versionDir(installed.id, 'plugin_version_1.0.0-2')}/plugin.json',
+        ).existsSync(),
         isTrue,
       );
       expect(
         realPreferences.activePluginVersionDir(PluginType.metadata),
-        '1.0.0-2',
+        'plugin_version_1.0.0-2',
       );
     });
 
@@ -443,13 +453,15 @@ void main() {
       );
 
       expect(
-        File('${versionDir(installed.id, '1.0.0')}/plugin.json').existsSync(),
+        File(
+          '${versionDir(installed.id, installedVersionDir)}/plugin.json',
+        ).existsSync(),
         isTrue,
       );
       expect(realPreferences.activePluginId(PluginType.metadata), installed.id);
       expect(
         realPreferences.activePluginVersionDir(PluginType.metadata),
-        '1.0.0',
+        installedVersionDir,
       );
     });
   });
