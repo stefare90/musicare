@@ -55,8 +55,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authFormHelpFailed => 'Could not open the link. Please try again.';
 
   @override
+  String get authFormFieldRequired => 'This field is required.';
+
+  @override
   String get authSignInFailed =>
-      'Metadata sign-in failed. Please check your details and try again.';
+      'Sign-in failed. Please check your details and try again.';
 
   @override
   String get accountTooltip => 'Account';
@@ -334,7 +337,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'No playable audio stream could be found for this track.';
 
   @override
-  String get pluginErrorAuthRequired => 'Metadata sign-in required.';
+  String get pluginErrorAuthRequired => 'Sign-in required.';
 
   @override
   String get noSectionsFound => 'No browse sections found.';

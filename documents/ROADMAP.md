@@ -71,7 +71,7 @@ Legend: ✅ implemented · ⬜ to do (feature, fix or idea)
 ✅ Plugin management slots per type: installed/remote manifests, update availability, incompatibility, and update/reinstall/replace flows (replacement logs out and removes only the old code, leaving plugin data untouched, and clears the queue plus the saved index because track ids belong to the provider).
 ✅ Unified setup page for missing or incompatible metadata and audio-source plugins, reached from the bootstrap and settling every pending slot in one pass.
 ✅ Metadata plugin engine over the Python wire protocol (`musicare_metadata_host_sdk`), with SemVer compatibility checks and per-plugin persistence.
-✅ Host-side login form for metadata plugins (`MetadataAuthPresenter`), rendering the plugin-provided title, message and per-field help link; browser-based auth opens in the system browser (`url_launcher`).
+✅ Host-side login form for any plugin type that exposes authentication (`PluginAuthPresenterImpl`), rendering the plugin-provided title, message and per-field help link; browser-based auth opens in the system browser (`url_launcher`).
 ✅ In-app sign-in/sign-out under Settings → Plugins (per-plugin account), with contextual sign-in prompts when a request needs authentication (rendered as a normal state, not an error) and the affected surfaces refreshing on auth change.
 
 ## 🐍 Audio source subsystem (`lib/features/plugin/audio_source/`, `tool/stage_python.sh`)

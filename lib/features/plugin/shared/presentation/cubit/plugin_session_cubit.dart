@@ -51,7 +51,10 @@ class PluginSessionCubit extends Cubit<PluginSessionState> {
 
   bool isLoaded(PluginType type) => stateOf(type).isLoaded;
 
-  bool hasAuth(PluginType type) => _registry.entryOf(type).auth != null;
+  bool hasAuth(PluginType type) {
+    if (_registry.entryOf(type).auth == null) return false;
+    return state.authOf(type).status != PluginAuthStatus.unavailable;
+  }
 
   Future<void> signIn(PluginType type) async {
     final auth = _registry.entryOf(type).auth;

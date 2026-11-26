@@ -3,9 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
-import 'package:music_are/features/plugin/metadata/presentation/widgets/dynamic_plugin_form_dialog.dart';
 import 'package:music_are/core/widgets/notice_listener.dart';
-import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:music_are/features/plugin/shared/presentation/widgets/plugin_auth_form_dialog.dart';
+import 'package:musicare_auth_host_sdk/musicare_auth_host_sdk.dart';
 
 import '../../../../../helpers/error_presentation_test_helpers.dart';
 
@@ -24,6 +24,13 @@ void main() {
     await sl.reset();
   });
 
+  const tokenField = FormInputField(
+    id: 'token',
+    label: 'Token',
+    isPassword: true,
+    helpUrl: 'https://listenbrainz.org/profile/',
+  );
+
   Future<void> pumpDialog(
     WidgetTester tester, {
     String? message,
@@ -41,7 +48,7 @@ void main() {
         ),
       ),
       home: Scaffold(
-        body: DynamicPluginFormDialog(
+        body: PluginAuthFormDialog(
           title: 'Connect to ListenBrainz',
           message: message,
           fields: fields,
@@ -51,13 +58,6 @@ void main() {
         ),
       ),
     ),
-  );
-
-  const tokenField = FormInputField(
-    id: 'token',
-    label: 'Token',
-    isPassword: true,
-    helpUrl: 'https://listenbrainz.org/profile/',
   );
 
   testWidgets('renders the title, the message and the fields', (tester) async {
@@ -73,6 +73,37 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Token'), findsOneWidget);
+  });
+
+  testWidgets('obscures a password field and leaves a normal one readable', (
+    tester,
+  ) async {
+    await pumpDialog(
+      tester,
+      fields: const [
+        tokenField,
+        FormInputField(id: 'user', label: 'User'),
+      ],
+    );
+
+    final widgets = tester
+        .widgetList<EditableText>(find.byType(EditableText))
+        .toList();
+    expect(widgets, hasLength(2));
+    expect(widgets[0].obscureText, isTrue);
+    expect(widgets[1].obscureText, isFalse);
+  });
+
+  testWidgets('an empty field is rejected and the dialog stays open', (
+    tester,
+  ) async {
+    await pumpDialog(tester, fields: const [tokenField]);
+
+    await tester.tap(find.text('Sign in'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('This field is required.'), findsOneWidget);
+    expect(find.byType(PluginAuthFormDialog), findsOneWidget);
   });
 
   testWidgets('shows the help action and forwards the url to onHelpTap', (

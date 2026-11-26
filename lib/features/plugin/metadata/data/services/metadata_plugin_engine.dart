@@ -10,11 +10,10 @@ import 'package:pub_semver/pub_semver.dart';
 
 class MetadataPluginEngine {
   final MetadataClient _client;
-  final MetadataAuthPresenter? _authPresenter;
   IMetadataPlugin? _metadataPlugin;
   PluginManifest? _metadataManifest;
 
-  MetadataPluginEngine({required this._client, this._authPresenter});
+  MetadataPluginEngine({required this._client});
 
   IMetadataPlugin get metadata {
     final plugin = _metadataPlugin;
@@ -36,17 +35,20 @@ class MetadataPluginEngine {
     }
   }
 
-  Future<void> loadFromDisk(String pluginDir) async {
-    final jsonFile = File(p.join(pluginDir, 'plugin.json'));
+  Future<void> loadFromDisk({
+    required String codeDir,
+    required String dataDir,
+  }) async {
+    final jsonFile = File(p.join(codeDir, 'plugin.json'));
     if (!jsonFile.existsSync()) {
-      throw PluginFileNotFoundException(pluginDir);
+      throw PluginFileNotFoundException(codeDir);
     }
 
     final manifest = PluginManifest.fromJson(
       jsonDecode(jsonFile.readAsStringSync()) as Map<String, dynamic>,
     );
     checkManifest(manifest);
-    await _loadPluginDir(manifest, pluginDir);
+    await _loadPluginDir(manifest, codeDir, dataDir);
   }
 
   void unloadMetadata() {
@@ -74,13 +76,11 @@ class MetadataPluginEngine {
 
   Future<void> _loadPluginDir(
     PluginManifest manifest,
-    String pluginDir,
+    String codeDir,
+    String dataDir,
   ) async {
-    await _client.loadPlugin(pluginDir: pluginDir);
-    _metadataPlugin = MetadataPluginAdapter(
-      caller: _client,
-      authPresenter: _authPresenter,
-    );
+    await _client.loadPlugin(codeDir: codeDir, dataDir: dataDir);
+    _metadataPlugin = MetadataPluginAdapter(caller: _client);
     _metadataManifest = manifest;
   }
 }

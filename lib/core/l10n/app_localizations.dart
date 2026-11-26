@@ -184,10 +184,16 @@ abstract class AppLocalizations {
   /// **'Could not open the link. Please try again.'**
   String get authFormHelpFailed;
 
+  /// No description provided for @authFormFieldRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required.'**
+  String get authFormFieldRequired;
+
   /// No description provided for @authSignInFailed.
   ///
   /// In en, this message translates to:
-  /// **'Metadata sign-in failed. Please check your details and try again.'**
+  /// **'Sign-in failed. Please check your details and try again.'**
   String get authSignInFailed;
 
   /// No description provided for @accountTooltip.
@@ -679,7 +685,7 @@ abstract class AppLocalizations {
   /// No description provided for @pluginErrorAuthRequired.
   ///
   /// In en, this message translates to:
-  /// **'Metadata sign-in required.'**
+  /// **'Sign-in required.'**
   String get pluginErrorAuthRequired;
 
   /// No description provided for @noSectionsFound.

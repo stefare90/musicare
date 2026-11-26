@@ -3,28 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:music_are/core/di/injection.dart';
 import 'package:music_are/core/license/app_license.dart';
 import 'package:music_are/core/services/plugin_startup_route.dart';
-import 'package:music_are/features/listening/data/services/listening_tracker.dart';
 import 'package:music_are/features/player/data/services/audio_handler.dart';
-import 'package:music_are/features/player/data/services/audio_player_service.dart';
-import 'package:music_are/features/plugin/management/data/services/plugin_manager.dart';
-import 'package:music_are/features/plugin/metadata/presentation/cubit/user_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
-import 'package:music_are/features/plugin/shared/data/services/plugin_runtime_boot.dart';
-import 'package:music_are/features/plugin/shared/data/services/plugin_switch_reset.dart';
 
 abstract class AppInitializer {
   static Future<String> initialize() async {
     AppLicense.register();
     WidgetsFlutterBinding.ensureInitialized();
 
-    await initCoreDependencies();
-    final ports = await sl<PluginRuntimeBoot>().start();
-    initRuntimeDependencies(ports);
+    final core = await initCoreDependencies();
+    final ports = await core.boot.start();
+    final runtime = initRuntimeDependencies(ports, core.storage);
 
-    sl<ListeningTracker>().start();
+    runtime.listeningTracker.start();
 
     await AudioService.init<MusicAreAudioHandler>(
-      builder: () => MusicAreAudioHandler(sl<AudioPlayerService>()),
+      builder: () => MusicAreAudioHandler(runtime.audioPlayer),
       config: const AudioServiceConfig(
         androidNotificationChannelId: 'com.musicare.audio',
         androidNotificationChannelName: 'MusicAre Playback',
@@ -33,14 +27,13 @@ abstract class AppInitializer {
       ),
     );
 
-    final manager = sl<PluginManager>();
-    sl<PluginSwitchReset>().start();
-    await manager.initialize();
-    await sl<UserCubit>().initialize();
+    runtime.switchReset.start();
+    await runtime.manager.initialize();
+    await runtime.userCubit.initialize();
 
     return pluginStartupLocation(
-      metadataState: manager.pluginState(PluginType.metadata),
-      audioState: manager.pluginState(PluginType.audioSource),
+      metadataState: runtime.manager.pluginState(PluginType.metadata),
+      audioState: runtime.manager.pluginState(PluginType.audioSource),
     );
   }
 }

@@ -141,7 +141,7 @@ void main() {
       expect(
         find.descendant(
           of: find.byType(SnackBar),
-          matching: find.text('Metadata sign-in required.'),
+          matching: find.text('Sign-in required.'),
         ),
         findsOneWidget,
       );

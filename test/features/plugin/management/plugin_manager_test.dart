@@ -146,6 +146,9 @@ void main() {
     verify(
       () => runtime.load(installed.id, '/tmp/plugin'),
     ).called(1);
+    // The auth surface is refreshed after the load: a plugin without auth has
+    // to report `unsupported` (or the account section would keep a stale one).
+    verify(() => auth.refresh()).called(1);
     verify(
       () => storage.codeDir(
         PluginType.metadata,
@@ -239,6 +242,7 @@ void main() {
     verify(
       () => preferences.setActivePluginVersionDir(PluginType.metadata, '3.0.0'),
     ).called(1);
+    verify(() => auth.refresh()).called(1);
   });
 
   test(

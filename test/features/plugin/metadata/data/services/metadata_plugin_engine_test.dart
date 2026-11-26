@@ -30,15 +30,18 @@ ListenEvent testListenEvent() {
 }
 
 class FakeMetadataClient extends Fake implements MetadataClient {
-  String? loadedPluginDir;
+  String? loadedCodeDir;
+  String? loadedDataDir;
   Object? listenError;
 
   @override
   Future<Map<String, dynamic>> loadPlugin({
-    required String pluginDir,
+    required String codeDir,
+    required String dataDir,
     String moduleName = 'main',
   }) async {
-    loadedPluginDir = pluginDir;
+    loadedCodeDir = codeDir;
+    loadedDataDir = dataDir;
     return {'loaded': 'Test Plugin', 'id': 'test', 'version': '1.0.0'};
   }
 
@@ -59,23 +62,6 @@ class FakeMetadataClient extends Fake implements MetadataClient {
         return null;
     }
   }
-}
-
-class FakeAuthPresenter implements MetadataAuthPresenter {
-  int promptFormCalls = 0;
-
-  @override
-  Future<Map<String, String>?> promptForm({
-    String? title,
-    String? message,
-    required List<FormInputField> fields,
-  }) async {
-    promptFormCalls++;
-    return null;
-  }
-
-  @override
-  Future<void> openBrowser(String url) async {}
 }
 
 String createPluginDir(
@@ -122,17 +108,18 @@ void main() {
     test('loadFromDisk loads the manifest and the runtime', () async {
       final dir = createPluginDir(tempDir);
 
-      await engine.loadFromDisk(dir);
+      await engine.loadFromDisk(codeDir: dir, dataDir: '${tempDir.path}/data');
 
       expect(engine.hasMetadata, isTrue);
       expect(engine.metadata, isA<MetadataPluginAdapter>());
       expect(engine.metadataManifest!.id, 'org.musicare.metadata.test');
-      expect(client.loadedPluginDir, dir);
+      expect(client.loadedCodeDir, dir);
+      expect(client.loadedDataDir, '${tempDir.path}/data');
     });
 
     test('loadFromDisk throws when plugin.json is missing', () {
       expect(
-        () => engine.loadFromDisk('${tempDir.path}/missing'),
+        () => engine.loadFromDisk(codeDir: '${tempDir.path}/missing', dataDir: '${tempDir.path}/data'),
         throwsA(isA<PluginFileNotFoundException>()),
       );
     });
@@ -141,7 +128,7 @@ void main() {
       final dir = createPluginDir(tempDir, type: 'audioSource');
 
       expect(
-        () => engine.loadFromDisk(dir),
+        () => engine.loadFromDisk(codeDir: dir, dataDir: '${tempDir.path}/data'),
         throwsA(isA<InvalidPluginTypeException>()),
       );
     });
@@ -150,7 +137,7 @@ void main() {
       final dir = createPluginDir(tempDir, sdkVersion: '1.0.0');
 
       expect(
-        () => engine.loadFromDisk(dir),
+        () => engine.loadFromDisk(codeDir: dir, dataDir: '${tempDir.path}/data'),
         throwsA(isA<IncompatibleSdkVersionException>()),
       );
     });
@@ -181,26 +168,19 @@ void main() {
     });
 
     test('listen.record is exposed through the adapter', () async {
-      await engine.loadFromDisk(createPluginDir(tempDir));
+      await engine.loadFromDisk(
+        codeDir: createPluginDir(tempDir),
+        dataDir: '${tempDir.path}/data',
+      );
 
       await engine.metadata.listen.record(testListenEvent());
     });
 
-    test('loadFromDisk wires the auth presenter into the adapter', () async {
-      final presenter = FakeAuthPresenter();
-      final engineWithAuth = MetadataPluginEngine(
-        client: client,
-        authPresenter: presenter,
-      );
-      await engineWithAuth.loadFromDisk(createPluginDir(tempDir));
-
-      await engineWithAuth.metadata.auth.authenticate();
-
-      expect(presenter.promptFormCalls, 1);
-    });
-
     test('unloadMetadata clears the loaded plugin', () async {
-      await engine.loadFromDisk(createPluginDir(tempDir));
+      await engine.loadFromDisk(
+        codeDir: createPluginDir(tempDir),
+        dataDir: '${tempDir.path}/data',
+      );
 
       engine.unloadMetadata();
 

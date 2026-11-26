@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
-import 'package:music_are/features/plugin/metadata/presentation/services/metadata_auth_presenter.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
-import 'package:musicare_metadata_host_sdk/musicare_metadata_host_sdk.dart';
+import 'package:music_are/features/plugin/shared/presentation/services/plugin_auth_presenter.dart';
+import 'package:musicare_auth_host_sdk/musicare_auth_host_sdk.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
@@ -25,9 +25,9 @@ class FakeUrlLauncher extends Fake
 }
 
 void main() {
-  group('MetadataAuthPresenterImpl', () {
+  group('PluginAuthPresenterImpl', () {
     late GlobalKey<NavigatorState> navigatorKey;
-    late MetadataAuthPresenterImpl presenter;
+    late PluginAuthPresenterImpl presenter;
 
     const fields = [
       FormInputField(id: 'token', label: 'Token', isPassword: true),
@@ -35,7 +35,7 @@ void main() {
 
     setUp(() {
       navigatorKey = GlobalKey<NavigatorState>();
-      presenter = MetadataAuthPresenterImpl(navigatorKey: navigatorKey);
+      presenter = PluginAuthPresenterImpl(navigatorKey: navigatorKey);
     });
 
     Future<void> pumpApp(WidgetTester tester) => tester.pumpWidget(
@@ -53,7 +53,6 @@ void main() {
       final result = presenter.promptForm(fields: fields);
       await tester.pumpAndSettle();
 
-      expect(find.text('Sign in'), findsNWidgets(2));
       await tester.enterText(find.byType(TextFormField), 'secret');
       await tester.tap(find.text('Sign in').last);
       await tester.pumpAndSettle();
@@ -73,7 +72,7 @@ void main() {
       expect(await result, isNull);
     });
 
-    testWidgets('promptForm shows the plugin-provided title and message verbatim', (
+    testWidgets('shows the plugin-provided title and message verbatim', (
       tester,
     ) async {
       await pumpApp(tester);
@@ -113,6 +112,46 @@ void main() {
         presenter.promptForm(fields: fields),
         throwsA(isA<PluginErrorNoContext>()),
       );
+    });
+
+    testWidgets('a second concurrent form is cancelled instead of queued', (
+      tester,
+    ) async {
+      await pumpApp(tester);
+
+      final first = presenter.promptForm(title: 'First', fields: fields);
+      await tester.pumpAndSettle();
+
+      final second = await presenter.promptForm(title: 'Second', fields: fields);
+
+      expect(second, isNull);
+      expect(find.text('First'), findsOneWidget);
+      expect(find.text('Second'), findsNothing);
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(await first, isNull);
+    });
+
+    testWidgets('a closed form leaves the presenter free for the next one', (
+      tester,
+    ) async {
+      await pumpApp(tester);
+
+      final first = presenter.promptForm(fields: fields);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(await first, isNull);
+
+      final second = presenter.promptForm(fields: fields);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TextFormField), findsOneWidget);
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(await second, isNull);
     });
 
     testWidgets('the help action opens the field helpUrl', (tester) async {

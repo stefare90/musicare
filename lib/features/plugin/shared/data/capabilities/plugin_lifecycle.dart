@@ -13,9 +13,9 @@ abstract interface class PluginLifecycle {
 
   Stream<PluginLifecycleState> get changes;
 
-  /// Loads the plugin from [pluginDir]. Returns null on success, otherwise the
-  /// cause of the failure.
-  Future<Object?> load(String pluginId, String pluginDir);
+  /// Loads the plugin whose immutable code lives in [codeDir]. Returns null on
+  /// success, otherwise the cause of the failure.
+  Future<Object?> load(String pluginId, String codeDir);
 
   Future<void> unload();
 

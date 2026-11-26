@@ -5,6 +5,8 @@ import 'package:music_are/core/l10n/l10n_extension.dart';
 import 'package:music_are/core/errors/error_table.dart';
 import 'package:music_are/features/player/presentation/cubit/player_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
+import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
+import 'package:music_are/features/plugin/shared/presentation/utils/plugin_account_actions.dart';
 
 class AudioErrorTable implements ErrorTable {
   const AudioErrorTable();
@@ -23,6 +25,14 @@ class AudioErrorTable implements ErrorTable {
     if (error is! AudioPluginException) return null;
     return switch (error) {
       AudioNotFoundException() => ErrorSpec(l10n.pluginErrorResourceNotFound),
+      AudioAuthRequiredException(:final message) => ErrorSpec(
+        message.isEmpty ? l10n.pluginErrorAuthRequired : message,
+        action: (context) => (
+          label: context.l10n.accountSignIn,
+          onAction: () =>
+              PluginAccountActions.signIn(context, PluginType.audioSource),
+        ),
+      ),
       AudioRateLimitedException() => ErrorSpec(l10n.pluginErrorRateLimited),
       AudioTransportException(:final message) => ErrorSpec(
         '${l10n.pluginErrorNetwork}: $message',
@@ -38,5 +48,6 @@ class AudioErrorTable implements ErrorTable {
   }
 
   @override
-  bool notifies(Object error) => error is PendingLoadException;
+  bool notifies(Object error) =>
+      error is PendingLoadException || error is AudioAuthRequiredException;
 }

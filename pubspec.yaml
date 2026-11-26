@@ -47,12 +47,22 @@ dependencies:
     git:
       url: https://github.com/stefare90/musicare_plugin_sdk.git
       path: dart/metadata_host_sdk
-      ref: main
+      ref: 839a6accec0b91ef153dc9554eb67a2ffa48c441
   musicare_audio_host_sdk:
     git:
       url: https://github.com/stefare90/musicare_plugin_sdk.git
       path: dart/audio_host_sdk
-      ref: main
+      ref: 839a6accec0b91ef153dc9554eb67a2ffa48c441
+  musicare_auth_host_sdk:
+    git:
+      url: https://github.com/stefare90/musicare_plugin_sdk.git
+      path: dart/auth_host_sdk
+      ref: 839a6accec0b91ef153dc9554eb67a2ffa48c441
+  musicare_contract_host_sdk:
+    git:
+      url: https://github.com/stefare90/musicare_plugin_sdk.git
+      path: dart/contract_host_sdk
+      ref: 839a6accec0b91ef153dc9554eb67a2ffa48c441
   http: ^1.6.0
   shared_preferences: ^2.5.6
   archive: ^4.5.2

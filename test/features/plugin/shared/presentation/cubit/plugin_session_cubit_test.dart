@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:musicare_auth_host_sdk/musicare_auth_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/notice/notice_bus.dart';
 import 'package:music_are/features/plugin/shared/presentation/cubit/plugin_session_cubit.dart';
@@ -96,7 +97,7 @@ void main() {
   });
 
   test('aggregates auth state updates', () async {
-    authChanges.add(const PluginAuthState.signedIn('listener'));
+    authChanges.add(const PluginAuthState.signedIn(Account(id: 'listener', displayName: 'Listener')));
     await Future<void>.delayed(Duration.zero);
 
     expect(cubit.authOf(PluginType.metadata).isAuthenticated, isTrue);
@@ -105,6 +106,21 @@ void main() {
       cubit.authOf(PluginType.audioSource).status,
       PluginAuthStatus.unavailable,
     );
+  });
+
+  test('hasAuth hides an auth surface the plugin reports as unsupported', () async {
+    when(
+      () => metadataAuth.authState,
+    ).thenReturn(const PluginAuthState.unavailable());
+    final unsupported = PluginSessionCubit(
+      PluginRegistry([
+        PluginEntry(lifecycle: metadata, auth: metadataAuth),
+      ]),
+      notices,
+    );
+    addTearDown(unsupported.close);
+
+    expect(unsupported.hasAuth(PluginType.metadata), isFalse);
   });
 
   test('signIn and signOut delegate to the type auth', () async {

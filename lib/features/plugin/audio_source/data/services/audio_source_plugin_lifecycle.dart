@@ -5,12 +5,14 @@ import 'package:music_are/features/plugin/shared/data/capabilities/plugin_lifecy
 import 'package:music_are/features/plugin/shared/data/exceptions/plugin_exceptions.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_manifest.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
+import 'package:music_are/features/plugin/shared/data/services/plugin_storage.dart';
 import 'package:musicare_audio_host_sdk/musicare_audio_host_sdk.dart';
 
 class AudioSourcePluginLifecycle implements PluginLifecycle {
-  AudioSourcePluginLifecycle(this._engine);
+  AudioSourcePluginLifecycle(this._engine, this._storage);
 
   final AudioSourcePluginEngine _engine;
+  final PluginStorage _storage;
   final StreamController<PluginLifecycleState> _changes =
       StreamController<PluginLifecycleState>.broadcast();
   PluginLifecycleState _state = const PluginLifecycleState.notConfigured();
@@ -34,10 +36,16 @@ class AudioSourcePluginLifecycle implements PluginLifecycle {
   void validate(PluginManifest manifest) => _engine.checkManifest(manifest);
 
   @override
-  Future<Object?> load(String pluginId, String pluginDir) async {
+  Future<Object?> load(String pluginId, String codeDir) async {
     _emit(const PluginLifecycleState.loading());
     try {
-      await _engine.loadFromDisk(pluginDir);
+      await _engine.loadFromDisk(
+        codeDir: codeDir,
+        dataDir: (await _storage.dataDir(
+          PluginType.audioSource,
+          pluginId,
+        )).path,
+      );
       _emit(
         PluginLifecycleState.loaded(
           _engine.activeManifest!,

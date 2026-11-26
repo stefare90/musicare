@@ -39,19 +39,22 @@ class AudioSourcePluginEngine {
     }
   }
 
-  Future<void> loadFromDisk(String pluginDir) async {
-    final jsonFile = File(p.join(pluginDir, 'plugin.json'));
+  Future<void> loadFromDisk({
+    required String codeDir,
+    required String dataDir,
+  }) async {
+    final jsonFile = File(p.join(codeDir, 'plugin.json'));
     if (!jsonFile.existsSync()) {
-      throw PluginFileNotFoundException(pluginDir);
+      throw PluginFileNotFoundException(codeDir);
     }
 
     final manifest = PluginManifest.fromJson(
       jsonDecode(jsonFile.readAsStringSync()) as Map<String, dynamic>,
     );
     checkManifest(manifest);
-    await _client.loadPlugin(pluginDir: pluginDir);
+    await _client.loadPlugin(codeDir: codeDir, dataDir: dataDir);
     _audioSourcePlugin = AudioSourcePluginAdapter(caller: _client);
-    _activePluginDir = pluginDir;
+    _activePluginDir = codeDir;
     _activeManifest = manifest;
   }
 

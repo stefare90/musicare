@@ -19,7 +19,7 @@ class PluginAccountTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isAuthenticated = auth.isAuthenticated;
-    final accountId = auth.accountId;
+    final displayName = auth.displayName;
 
     return ListTile(
       leading: auth.status == PluginAuthStatus.loading
@@ -27,11 +27,11 @@ class PluginAccountTile extends StatelessWidget {
               dimension: 40.0,
               child: Center(child: CircularProgressIndicator()),
             )
-          : Monogram(name: accountId, radius: 20.0),
+          : Monogram(name: displayName, radius: 20.0),
       title: Text(
         isAuthenticated
-            ? (accountId?.isNotEmpty == true
-                  ? accountId!
+            ? (displayName?.isNotEmpty == true
+                  ? displayName!
                   : l10n.accountSignedIn)
             : l10n.accountNotSignedIn,
       ),

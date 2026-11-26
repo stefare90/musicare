@@ -69,6 +69,10 @@ cp -r "$PLATFORM_DIR/python/audio/plugin_sdk/musicare_audio_plugin_sdk" \
   build/host_staging/
 cp -r "$PLATFORM_DIR/python/metadata/plugin_sdk/musicare_metadata_plugin_sdk" \
   build/host_staging/
+cp -r "$PLATFORM_DIR/python/plugin_contract/musicare_plugin_contract" \
+  build/host_staging/
+cp -r "$PLATFORM_DIR/python/plugin_auth/musicare_plugin_auth" \
+  build/host_staging/
 
 export SERIOUS_PYTHON_SITE_PACKAGES="$ROOT_DIR/build/site-packages"
 export SERIOUS_PYTHON_APP="$ROOT_DIR/build/python-app"
@@ -97,7 +101,7 @@ for FILE in "${MAIN_FILES[@]}"; do
   fi
 done
 
-SDK_DIRS=(musicare_audio_plugin_sdk musicare_metadata_plugin_sdk)
+SDK_DIRS=(musicare_audio_plugin_sdk musicare_metadata_plugin_sdk musicare_plugin_contract musicare_plugin_auth)
 for SDK in "${SDK_DIRS[@]}"; do
   if [ ! -d "build/python-app/$SDK" ] \
     || [ -z "$(ls -A "build/python-app/$SDK" 2>/dev/null)" ]; then

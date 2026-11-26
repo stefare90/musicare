@@ -57,7 +57,7 @@ void main() {
   test('falls back to the localized text when auth-required carries no cause', () {
     final spec = table.describe(const MetadataAuthRequiredException(''), l10n);
 
-    expect(spec!.text, 'Metadata sign-in required.');
+    expect(spec!.text, 'Sign-in required.');
   });
 
   test('responds null to errors from another domain', () {

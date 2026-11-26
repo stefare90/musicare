@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:musicare_auth_host_sdk/musicare_auth_host_sdk.dart';
 import 'package:music_are/features/plugin/shared/presentation/cubit/plugin_session_cubit.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_auth_state.dart';
 import 'package:music_are/features/plugin/shared/data/models/plugin_type.dart';
@@ -34,7 +35,7 @@ void main() {
     var signedIn = false;
     final plugins = buildTestPluginSessionCubit();
     plugins.onSignIn = (type) =>
-        plugins.setAuthState(type, const PluginAuthState.signedIn('listener'));
+        plugins.setAuthState(type, const PluginAuthState.signedIn(Account(id: 'listener', displayName: 'Listener')));
 
     await tester.pumpWidget(
       buildTestableWidget(plugins, onResult: (value) => signedIn = value),

@@ -74,44 +74,46 @@ void main() {
       expect(service.activePluginVersionDir(PluginType.audioSource), '1.0.0-2');
     });
 
-    test('plugin account ids are scoped per plugin', () async {
-      await service.setPluginAccountId('first.plugin', 'listener');
+    test('plugin accounts are scoped per plugin and keep id and name', () async {
+      await service.setPluginAccount('first.plugin', id: 'listener', name: 'Listener');
 
-      expect(service.pluginAccountId('first.plugin'), 'listener');
-      expect(prefs.getString('plugin_account_id_first.plugin'), 'listener');
-      expect(service.pluginAccountId('second.plugin'), isNull);
+      expect(service.pluginAccount('first.plugin'), (id: 'listener', name: 'Listener'));
+      expect(
+        prefs.getString('plugin_account_first.plugin'),
+        '{"id":"listener","name":"Listener"}',
+      );
+      expect(service.pluginAccount('second.plugin'), isNull);
     });
 
-    test('removePluginAccountId clears both generic and legacy keys', () async {
-      await service.setPluginAccountId('first.plugin', 'listener');
-      prefs.setString('metadata_user_id_first.plugin', 'listener');
+    test('a plugin account without a name round-trips id-only', () async {
+      await service.setPluginAccount('first.plugin', id: 'listener');
 
-      await service.removePluginAccountId('first.plugin');
-
-      expect(service.pluginAccountId('first.plugin'), isNull);
-      expect(prefs.getString('metadata_user_id_first.plugin'), isNull);
+      expect(service.pluginAccount('first.plugin'), (id: 'listener', name: null));
     });
 
-    test('legacy metadata account id is read and migrated', () async {
-      prefs.setString('metadata_user_id_old.plugin', 'listener');
+    test('a malformed cached account is ignored', () async {
+      prefs.setString('plugin_account_old.plugin', 'plugin_account_id_old');
 
-      expect(service.pluginAccountId('old.plugin'), 'listener');
+      expect(service.pluginAccount('old.plugin'), isNull);
+    });
 
-      await service.migratePluginAccountId('old.plugin');
+    test('removePluginAccount clears the cached account', () async {
+      await service.setPluginAccount('first.plugin', id: 'listener', name: 'Listener');
 
-      expect(prefs.getString('metadata_user_id_old.plugin'), isNull);
-      expect(prefs.getString('plugin_account_id_old.plugin'), 'listener');
+      await service.removePluginAccount('first.plugin');
+
+      expect(service.pluginAccount('first.plugin'), isNull);
     });
 
     test('removePluginScopedKeys clears keys of a non-active plugin', () async {
-      prefs.setString('metadata_user_id_old.plugin', 'listener');
-      prefs.setString('metadata_user_id_new.plugin', 'other');
+      await service.setPluginAccount('old.plugin', id: 'listener');
+      await service.setPluginAccount('new.plugin', id: 'other');
       await service.setActivePluginId(PluginType.metadata, 'new.plugin');
 
       await service.removePluginScopedKeys('old.plugin');
 
-      expect(prefs.getString('metadata_user_id_old.plugin'), isNull);
-      expect(prefs.getString('metadata_user_id_new.plugin'), 'other');
+      expect(service.pluginAccount('old.plugin'), isNull);
+      expect(service.pluginAccount('new.plugin'), (id: 'other', name: null));
     });
 
     test('theme mode defaults to null and round-trips', () async {

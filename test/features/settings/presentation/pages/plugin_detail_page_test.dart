@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:musicare_auth_host_sdk/musicare_auth_host_sdk.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:music_are/core/l10n/app_localizations.dart';
 import 'package:music_are/features/plugin/management/presentation/cubit/plugin_manager_cubit.dart';
@@ -92,7 +93,7 @@ void main() {
           metadata: testRuntimeLoaded(testPluginManifest()),
           audioSource: testRuntimeLoaded(testAudioSourceManifest()),
           authStates: {
-            PluginType.metadata: const PluginAuthState.signedIn('listener'),
+            PluginType.metadata: const PluginAuthState.signedIn(Account(id: 'listener', displayName: 'Listener')),
           },
         ),
       ),
@@ -104,9 +105,32 @@ void main() {
     expect(find.text('v1.0.0'), findsOneWidget);
     expect(find.text('Plugin SDK'), findsOneWidget);
     expect(find.text('Account'), findsOneWidget);
-    expect(find.text('listener'), findsOneWidget);
+    expect(find.text('Listener'), findsOneWidget);
     expect(find.text('Sign out'), findsOneWidget);
   });
+
+  testWidgets(
+    'an authenticated plugin without an account still shows as signed in',
+    (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          type: PluginType.metadata,
+          pluginCubit: buildTestPluginSessionCubit(
+            metadata: testRuntimeLoaded(testPluginManifest()),
+            audioSource: testRuntimeLoaded(testAudioSourceManifest()),
+            authStates: {
+              PluginType.metadata: const PluginAuthState.signedIn(),
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Signed in'), findsOneWidget);
+      expect(find.text('Sign out'), findsOneWidget);
+      expect(find.byIcon(Icons.person), findsOneWidget);
+    },
+  );
 
   testWidgets('orders version, account and actions from top to bottom', (
     tester,
@@ -121,7 +145,7 @@ void main() {
           metadata: testRuntimeLoaded(testPluginManifest()),
           audioSource: testRuntimeLoaded(testAudioSourceManifest()),
           authStates: {
-            PluginType.metadata: const PluginAuthState.signedIn('listener'),
+            PluginType.metadata: const PluginAuthState.signedIn(Account(id: 'listener', displayName: 'Listener')),
           },
         ),
       ),

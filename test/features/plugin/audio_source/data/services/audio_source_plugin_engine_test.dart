@@ -11,14 +11,17 @@ class FakeAudioSourceClient extends Fake implements AudioSourceClient {
   @override
   final Uri baseUri = Uri.parse('http://127.0.0.1:8765');
 
-  String? loadedPluginDir;
+  String? loadedCodeDir;
+  String? loadedDataDir;
 
   @override
   Future<Map<String, dynamic>> loadPlugin({
-    required String pluginDir,
+    required String codeDir,
+    required String dataDir,
     String moduleName = 'main',
   }) async {
-    loadedPluginDir = pluginDir;
+    loadedCodeDir = codeDir;
+    loadedDataDir = dataDir;
     return {'loaded': 'YouTube Audio Source', 'id': 'test', 'version': '1.0.0'};
   }
 
@@ -79,18 +82,19 @@ void main() {
     test('loadFromDisk loads the plugin from the directory', () async {
       final dir = createPluginDir(tempDir);
 
-      await engine.loadFromDisk(dir);
+      await engine.loadFromDisk(codeDir: dir, dataDir: '${tempDir.path}/data');
 
       expect(engine.isRunning, isTrue);
       expect(engine.activePluginId, 'org.musicare.audiosource.youtube');
       expect(engine.activePort, 8765);
       expect(engine.activeManifest?.name, 'YouTube Audio Source');
-      expect(client.loadedPluginDir, dir);
+      expect(client.loadedCodeDir, dir);
+      expect(client.loadedDataDir, '${tempDir.path}/data');
     });
 
     test('loadFromDisk throws when plugin.json is missing', () {
       expect(
-        () => engine.loadFromDisk('${tempDir.path}/missing'),
+        () => engine.loadFromDisk(codeDir: '${tempDir.path}/missing', dataDir: '${tempDir.path}/data'),
         throwsA(isA<PluginFileNotFoundException>()),
       );
     });
@@ -99,7 +103,7 @@ void main() {
       final dir = createPluginDir(tempDir, type: 'metadata');
 
       expect(
-        () => engine.loadFromDisk(dir),
+        () => engine.loadFromDisk(codeDir: dir, dataDir: '${tempDir.path}/data'),
         throwsA(isA<InvalidPluginTypeException>()),
       );
     });
@@ -108,7 +112,7 @@ void main() {
       final dir = createPluginDir(tempDir, sdkVersion: '9.0.0');
 
       expect(
-        () => engine.loadFromDisk(dir),
+        () => engine.loadFromDisk(codeDir: dir, dataDir: '${tempDir.path}/data'),
         throwsA(isA<IncompatibleSdkVersionException>()),
       );
     });
@@ -128,7 +132,10 @@ void main() {
     });
 
     test('searchCandidates delegates to the loaded plugin', () async {
-      await engine.loadFromDisk(createPluginDir(tempDir));
+      await engine.loadFromDisk(
+        codeDir: createPluginDir(tempDir),
+        dataDir: '${tempDir.path}/data',
+      );
 
       final candidates = await engine.searchCandidates(title: 'Test Song');
 
@@ -136,7 +143,10 @@ void main() {
     });
 
     test('resolveStream returns the resolved stream', () async {
-      await engine.loadFromDisk(createPluginDir(tempDir));
+      await engine.loadFromDisk(
+        codeDir: createPluginDir(tempDir),
+        dataDir: '${tempDir.path}/data',
+      );
 
       final stream = await engine.resolveStream('c2');
 
@@ -144,7 +154,10 @@ void main() {
     });
 
     test('terminate clears the active plugin state', () async {
-      await engine.loadFromDisk(createPluginDir(tempDir));
+      await engine.loadFromDisk(
+        codeDir: createPluginDir(tempDir),
+        dataDir: '${tempDir.path}/data',
+      );
       expect(engine.isRunning, isTrue);
 
       await engine.terminate();

@@ -40,7 +40,7 @@ The application supports two distinct plugins:
 * **Plugin Subsystem**:
   * `musicare_plugin_sdk` (Pure-Python plugin SDKs, shared host runtime and Dart host SDKs)
   * `serious_python` 6 (embedded CPython 3.14 host daemon)
-* **Covers & Persistence**: `cached_network_image` (on-disk cover cache) & `shared_preferences` (settings, plugin account ids)
+* **Covers & Persistence**: `cached_network_image` (on-disk cover cache) & `shared_preferences` (settings, plugin accounts as id + name)
 
 ---
 
@@ -69,7 +69,8 @@ MusicAre follows a decoupled, Feature-First Clean Architecture organized into we
 │  Engines: MetadataPluginEngine, AudioSourcePluginEngine  │
 │  Services: AudioPlayerService (+ AudioStreamResolver,    │
 │    MusicAreAudioHandler), PluginCatalog, PluginManager,  │
-│    PluginRegistry, PluginStorage, MetadataAuthPresenter  │
+│    PluginRegistry, PluginStorage, PluginAuthController,   │
+│    PluginAuthPresenterImpl                                │
 └──────────────────────────────────────────────────────────┘
                             │ HTTP + JSON on loopback
                             ▼
@@ -91,8 +92,8 @@ MusicAre follows a decoupled, Feature-First Clean Architecture organized into we
 3. **Data Layer**:
    * **Repositories** (`lib/features/plugin/metadata/data/repositories/`): one thin, stateless repository per domain (media, browse, search, playlist, library) that narrows the plugin engine to the calls its domain needs. The direction is always page → cubit → repository → engine: **no cubit imports a plugin engine**.
    * **Engines and player services**: `MetadataPluginEngine` and `AudioSourcePluginEngine` own the wire protocol; `AudioPlayerService` (with `AudioStreamResolver` and `MusicAreAudioHandler`) owns queue advancement, stream resolution and fallback, and the media session, and is the only path from the player to the audio engine. `ListeningTracker` reads the player stream once and feeds the listen sinks (the metadata account history today).
-   * **Plugin management**: `PluginCatalog` (GitHub releases with a TTL cache), `PluginManager` (install/activation and the active pointer), `PluginRegistry` (capabilities per plugin type), `PluginStorage` (versioned plugin store: layout and pruning), `PluginRuntimeBoot` (starts or attaches to the plugin runtime and prepares the store before the boot) and `MetadataAuthPresenter` (host-side login form).
-4. **Services & infrastructure** (`lib/core/`): `PreferencesService`, `NetworkService`, `NoticeBus` (global UI notices) and `AppInitializer`, registered in GetIt.
+   * **Plugin management**: `PluginCatalog` (GitHub releases with a TTL cache), `PluginManager` (install/activation and the active pointer), `PluginRegistry` (capabilities per plugin type), `PluginStorage` (versioned plugin store: layout and pruning), `PluginRuntimeBoot` (starts or attaches to the plugin runtime and prepares the store before the boot) and `PluginAuthPresenterImpl` (host-side login form) with `PluginAuthController` (the single auth implementation, one instance per plugin type).
+4. **Services & infrastructure** (`lib/core/`): `PreferencesService`, `NetworkService`, `NoticeBus` (global UI notices) and `AppInitializer`. GetIt holds **only** what feature code resolves (cubits, repositories, facets, infrastructure); the rest of the graph (engines, lifecycles, `PluginAuthController`s, registry, runtime boot, manager, player service, listening tracker) is built once in `injection.dart` and passed to / returned by `initCoreDependencies` / `initRuntimeDependencies`, so `AppInitializer` states its dependencies in the call instead of looking them up.
    * **Error presentation**: `NoticeBus` + `NoticeListener` (the single snackbar renderer) live in `core/notice/`. Every domain ships an `ErrorTable` (`MetadataErrorTable`, `AudioErrorTable`, `RuntimeErrorTable`, `PluginErrorTable`, `UpdateErrorTable`) that maps its own `sealed` exceptions to localized texts and, where needed, an action; `appErrorPresentation` (`core/errors/app_error_presentation.dart`) composes the tables once for both DI and the startup screen, unwraps rethrown errors and falls back to the generic message.
 5. **Plugin Subsystems**: a single `serious_python` process hosts the metadata and audio-source Flask apps on two ephemeral ports; each daemon loads its plugin `.zip` at runtime and speaks JSON over loopback.
 
@@ -113,11 +114,14 @@ The plugin store has a lifetime rule that follows from the wire protocol: a code
 The host treats plugin capabilities as independent, type-keyed services:
 
 * `PluginLifecycle` is mandatory for every plugin: load/unload, compatibility and lifecycle state.
-* `PluginAuth` is optional: authentication state, sign-in/out and account identity for plugins that expose it.
+* `PluginAuth` is optional for **any** plugin type: authentication state, sign-in/out and account identity for plugins that expose it. A plugin without `IAuth` answers `unsupported` on every `auth.*` call, which the host maps to `unavailable`.
 * A `PluginEntry` pairs the lifecycle with an optional auth adapter for one `PluginType`; its type comes from the lifecycle, so there is a single source of truth.
 * `PluginRegistry` indexes the entries and is the composition point used by `PluginManager` and `PluginSessionCubit`.
-* `MetadataPluginLifecycle` owns only the metadata engine; `MetadataPluginAuth` owns the auth flow and the account-id persistence through `PreferencesService`. `AudioSourcePluginLifecycle` has no auth entry. `PluginManager` logs out the old auth before switching plugins and refreshes the new one after activation.
-* `UserCubit` owns the saved-library index and observes `PluginAuth`; it does not authenticate. Account UI reads `PluginSessionCubit` through `PluginAccountSection`.
+* `PluginAuthController` (`lib/features/plugin/shared/data/services/`) is the app's **single** auth implementation: everything that differs between types is a parameter (`available`, `activePluginId`, the shared `AuthFlow`, and the `unsupported` predicate), never an `if (type == …)`. `injection.dart` wires two instances (metadata and audio) with one-shared `AuthFlow(caller, presenter)` over each daemon client, and is the only type-keyed point. `PreferencesService` caches the account as `{id, name}` per plugin id; the identity comes from the auth contract (`Account`), not from `IUser.me()`.
+* `PluginAuthPresenterImpl` + `PluginAuthFormDialog` live in `plugin/shared/presentation/`: one form at a time (a second `promptForm` while a dialog is open returns `null`, cancelling that flow — no queue and no UI state), password fields obscured, `help_url` opened by the host, empty fields rejected.
+* `PluginLifecycle.load(id, codeDir)` passes the immutable code dir plus `PluginStorage.dataDir(type, id)` to `/load_plugin`; the runtime never derives a path.
+* `PluginManager` logs out the old auth before switching plugins and refreshes the new one after activation; `PluginSessionCubit.hasAuth` is true only when the plugin has an auth surface **and** it is not `unavailable`, so the Account section is hidden for plugins without auth.
+* `UserCubit` owns the saved-library index and observes the metadata `PluginAuth`; it does not authenticate. Account UI reads `PluginSessionCubit` through `PluginAccountSection`.
 
 Plugin updates are offered twice: a startup prompt (`PluginUpdatePrompt`, 1.5 s after the shell appears, once per process and **after** the app-update check — an available app update suppresses it for that launch) lists every slot with `updateAvailable` and applies them in sequence, one failure not stopping the others; and a manual *Check for update* in the plugin's Actions section, which forces the catalog refresh (`forceRefresh` through `PluginManagerCubit.refresh` → `PluginManager.snapshot` → `PluginCatalog.latest`) so a stale in-memory TTL can never be reported as fresh. Incompatible plugins are excluded from both: the setup page owns them.
 
