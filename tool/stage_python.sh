@@ -116,12 +116,20 @@ for FILE in "${RUNTIME_FILES[@]}"; do
   fi
 done
 
-for ABI in arm64-v8a armeabi-v7a x86_64; do
-  if [ ! -d "build/site-packages/$ABI/flask" ] \
-    || [ -z "$(ls -A "build/site-packages/$ABI/flask" 2>/dev/null)" ]; then
-    STAGING_ERRORS+=("build/site-packages/$ABI/flask/ is missing or empty")
+if [ "$PLATFORM" = "Android" ]; then
+  for ABI in arm64-v8a armeabi-v7a x86_64; do
+    if [ ! -d "build/site-packages/$ABI/flask" ] \
+      || [ -z "$(ls -A "build/site-packages/$ABI/flask" 2>/dev/null)" ]; then
+      STAGING_ERRORS+=("build/site-packages/$ABI/flask/ is missing or empty")
+    fi
+  done
+else
+  # The Linux packaging installs the dependencies flat (no ABI split).
+  if [ ! -d "build/site-packages/flask" ] \
+    || [ -z "$(ls -A "build/site-packages/flask" 2>/dev/null)" ]; then
+    STAGING_ERRORS+=("build/site-packages/flask/ is missing or empty")
   fi
-done
+fi
 
 if [ ${#STAGING_ERRORS[@]} -gt 0 ]; then
   echo "=================================================="
@@ -132,9 +140,9 @@ if [ ${#STAGING_ERRORS[@]} -gt 0 ]; then
   done
   echo ""
   echo "The packaging command reported success, but it produces nothing when"
-  echo "SERIOUS_PYTHON_APP is unset: it is swallowed by the serious_python CLI"
-  echo "(exit 0) and skipped by its Gradle task. Without those artifacts the"
-  echo "APK contains no app.zip and no sitepackages.zip, i.e. no Python runtime."
+  echo "SERIOUS_PYTHON_APP is unset: the serious_python CLI swallows it (exit 0)"
+  echo "and the Gradle task skips it. Without those artifacts the build contains"
+  echo "no Python runtime at all (no app.zip/sitepackages.zip)."
   echo ""
   echo "Re-run the staging from the project root (it exports both variables):"
   echo "   ./tool/stage_python.sh $PLATFORM"
