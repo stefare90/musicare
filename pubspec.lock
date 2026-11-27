@@ -489,7 +489,7 @@ packages:
     dependency: "direct main"
     description:
       path: "dart/audio_host_sdk"
-      ref: "839a6accec0b91ef153dc9554eb67a2ffa48c441"
+      ref: main
       resolved-ref: "839a6accec0b91ef153dc9554eb67a2ffa48c441"
       url: "https://github.com/stefare90/musicare_plugin_sdk.git"
     source: git
@@ -498,7 +498,7 @@ packages:
     dependency: "direct main"
     description:
       path: "dart/auth_host_sdk"
-      ref: "839a6accec0b91ef153dc9554eb67a2ffa48c441"
+      ref: main
       resolved-ref: "839a6accec0b91ef153dc9554eb67a2ffa48c441"
       url: "https://github.com/stefare90/musicare_plugin_sdk.git"
     source: git
@@ -507,7 +507,7 @@ packages:
     dependency: "direct main"
     description:
       path: "dart/contract_host_sdk"
-      ref: "839a6accec0b91ef153dc9554eb67a2ffa48c441"
+      ref: main
       resolved-ref: "839a6accec0b91ef153dc9554eb67a2ffa48c441"
       url: "https://github.com/stefare90/musicare_plugin_sdk.git"
     source: git
@@ -516,7 +516,7 @@ packages:
     dependency: "direct main"
     description:
       path: "dart/metadata_host_sdk"
-      ref: "839a6accec0b91ef153dc9554eb67a2ffa48c441"
+      ref: main
       resolved-ref: "839a6accec0b91ef153dc9554eb67a2ffa48c441"
       url: "https://github.com/stefare90/musicare_plugin_sdk.git"
     source: git

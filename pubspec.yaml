@@ -47,22 +47,22 @@ dependencies:
     git:
       url: https://github.com/stefare90/musicare_plugin_sdk.git
       path: dart/metadata_host_sdk
-      ref: 839a6accec0b91ef153dc9554eb67a2ffa48c441
+      ref: main
   musicare_audio_host_sdk:
     git:
       url: https://github.com/stefare90/musicare_plugin_sdk.git
       path: dart/audio_host_sdk
-      ref: 839a6accec0b91ef153dc9554eb67a2ffa48c441
+      ref: main
   musicare_auth_host_sdk:
     git:
       url: https://github.com/stefare90/musicare_plugin_sdk.git
       path: dart/auth_host_sdk
-      ref: 839a6accec0b91ef153dc9554eb67a2ffa48c441
+      ref: main
   musicare_contract_host_sdk:
     git:
       url: https://github.com/stefare90/musicare_plugin_sdk.git
       path: dart/contract_host_sdk
-      ref: 839a6accec0b91ef153dc9554eb67a2ffa48c441
+      ref: main
   http: ^1.6.0
   shared_preferences: ^2.5.6
   archive: ^4.5.2
@@ -150,3 +150,18 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# The SDK packages live in one git repo but depend on each other through `path:`
+# (pub resolves those to the concrete revision). Mirroring the two leaves at the
+# same branch is what lets the four direct dependencies track `main`.
+dependency_overrides:
+  musicare_auth_host_sdk:
+    git:
+      url: https://github.com/stefare90/musicare_plugin_sdk.git
+      path: dart/auth_host_sdk
+      ref: main
+  musicare_contract_host_sdk:
+    git:
+      url: https://github.com/stefare90/musicare_plugin_sdk.git
+      path: dart/contract_host_sdk
+      ref: main
